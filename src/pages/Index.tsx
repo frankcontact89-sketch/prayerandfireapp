@@ -69,13 +69,6 @@ export default function Index() {
       language: "Language: ",
       logout: "Logout",
       media: "Media & Links",
-      videos: "Videos",
-      photos: "Photos",
-      news: "News",
-      youtube: "YouTube",
-      instagram: "Instagram",
-      whatsapp: "WhatsApp",
-      zoom: "Zoom",
       store: "Store",
       comingSoon: "Our products and courses are coming soon!",
       emailLabel: "Email",
@@ -102,13 +95,6 @@ export default function Index() {
       language: "Idioma: ",
       logout: "Cerrar sesión",
       media: "Medios y Enlaces",
-      videos: "Videos",
-      photos: "Fotos",
-      news: "Noticias",
-      youtube: "YouTube",
-      instagram: "Instagram",
-      whatsapp: "WhatsApp",
-      zoom: "Zoom",
       store: "Tienda",
       comingSoon: "¡Nuestros productos y cursos llegarán pronto!",
       emailLabel: "Correo electrónico",
@@ -116,6 +102,11 @@ export default function Index() {
       usernameLabel: "Usuario",
     },
   };
+
+  // Products placeholder for future use
+  const products = [
+    // Example: { id: 1, name: "Prayer & Fire T-shirt", price: 19.99, image: "https://via.placeholder.com/150" }
+  ];
 
   const t = (k: string) => text[lang as keyof typeof text][k as keyof typeof text.en] || k;
 
@@ -290,10 +281,10 @@ export default function Index() {
     <div className="absolute top-0 right-0 w-64 h-full bg-card shadow-lg p-6 z-50">
       <h2 className="text-xl font-bold text-primary mb-4">📂 {t("media")}</h2>
       <ul className="space-y-3">
-        <li><a href={YT} target="_blank">▶️ {t("youtube")}</a></li>
-        <li><a href={IG} target="_blank">📸 {t("instagram")}</a></li>
-        <li><a href={WA} target="_blank">💬 {t("whatsapp")}</a></li>
-        <li><a href={ZOOM} target="_blank">🎥 {t("zoom")}</a></li>
+        <li><a href={YT} target="_blank">▶️ YouTube</a></li>
+        <li><a href={IG} target="_blank">📸 Instagram</a></li>
+        <li><a href={WA} target="_blank">💬 WhatsApp</a></li>
+        <li><a href={ZOOM} target="_blank">🎥 Zoom</a></li>
       </ul>
       <button
         onClick={() => setRightOpen(false)}
@@ -363,7 +354,32 @@ export default function Index() {
     return (
       <Layout title={t("store")}>
         <h2 className="text-2xl font-bold text-primary mb-2">🛒 {t("store")}</h2>
-        <p className="text-muted-foreground">{t("comingSoon")}</p>
+        {products.length === 0 ? (
+          <p className="text-muted-foreground">{t("comingSoon")}</p>
+        ) : (
+          products.map((p) => (
+            <div
+              key={p.id}
+              className="p-4 border border-border rounded-lg w-80 bg-card shadow-sm mb-3"
+            >
+              <img
+                src={p.image}
+                alt={p.name}
+                className="w-full h-40 object-cover mb-2 rounded"
+              />
+              <h3 className="font-bold text-foreground">{p.name}</h3>
+              <p className="text-muted-foreground mb-2">${p.price}</p>
+              <a
+                href={STRIPE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full bg-primary text-primary-foreground py-2 rounded font-semibold text-center hover:opacity-90"
+              >
+                Buy Now
+              </a>
+            </div>
+          ))
+        )}
       </Layout>
     );
 
