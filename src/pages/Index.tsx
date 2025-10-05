@@ -14,9 +14,29 @@ const WHATSAPP_MESSAGE = "🔥 Check out the Prayer & Fire App! https://lovable.
 
 const Index = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [username, setUsername] = useState<string>("Guest");
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [showInstagram, setShowInstagram] = useState(false);
   const { toast } = useToast();
+
+  // Load username from profile
+  useEffect(() => {
+    const loadUsername = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", user.id)
+        .single();
+      
+      if (data) {
+        setUsername(data.username);
+      }
+    };
+
+    loadUsername();
+  }, [user]);
 
   useEffect(() => {
     // Check for existing session
@@ -72,7 +92,7 @@ const Index = () => {
             className="w-24 h-24 mx-auto object-contain"
           />
           <h1 className="text-xl font-bold text-primary">
-            Welcome to Prayer & Fire 🔥
+            Welcome back, {username}
           </h1>
         </div>
 
@@ -175,17 +195,51 @@ const Index = () => {
 // ============ AUTH SCREEN ============
 function AuthScreen() {
   const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin");
-  const [email, setEmail] = useState("");
+  const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Find email by username
+  const findEmailByUsername = async (uname: string): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("username", uname)
+        .single();
+      
+      if (error || !data) return null;
+      return data.email;
+    } catch {
+      return null;
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    const input = emailOrUsername.trim();
+    let email = input;
+
+    // If input doesn't contain @, try to find email by username
+    if (!input.includes("@")) {
+      const foundEmail = await findEmailByUsername(input);
+      if (!foundEmail) {
+        toast({
+          title: "Sign in failed",
+          description: "No account found with that username",
+          variant: "destructive",
+        });
+        return;
+      }
+      email = foundEmail;
+    }
+
     if (!email.includes("@") || password.length < 6) {
       toast({
         title: "Invalid input",
-        description: "Enter a valid email and password (min 6 characters)",
+        description: "Enter a valid email (or username) and password (min 6 characters)",
         variant: "destructive",
       });
       return;
@@ -193,7 +247,7 @@ function AuthScreen() {
 
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+      email: email,
       password,
     });
 
@@ -209,6 +263,18 @@ function AuthScreen() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    const email = emailOrUsername.trim();
+    const uname = username.trim();
+
+    if (!uname || uname.length < 3) {
+      toast({
+        title: "Invalid input",
+        description: "Username must be at least 3 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!email.includes("@") || password.length < 6) {
       toast({
         title: "Invalid input",
@@ -219,8 +285,8 @@ function AuthScreen() {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: email.trim(),
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
       password,
     });
 
@@ -230,28 +296,68 @@ function AuthScreen() {
         description: error.message,
         variant: "destructive",
       });
-    } else {
-      toast({
-        title: "Welcome!",
-        description: "Account created successfully",
-      });
+      setLoading(false);
+      return;
+    }
+
+    // Create profile with username
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert({
+          id: data.user.id,
+          username: uname,
+          email: email,
+        });
+
+      if (profileError) {
+        toast({
+          title: "Profile creation failed",
+          description: profileError.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Welcome!",
+          description: "Account created successfully",
+        });
+      }
     }
     setLoading(false);
   };
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.includes("@")) {
+    const input = emailOrUsername.trim();
+
+    if (!input) {
       toast({
-        title: "Invalid email",
-        description: "Please enter your email address",
+        title: "Invalid input",
+        description: "Enter your email or username",
         variant: "destructive",
       });
       return;
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    let email = input;
+
+    // If input doesn't contain @, try to find email by username
+    if (!input.includes("@")) {
+      const foundEmail = await findEmailByUsername(input);
+      if (!foundEmail) {
+        toast({
+          title: "Reset failed",
+          description: "No account found with that username",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      email = foundEmail;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/`,
     });
 
@@ -307,16 +413,33 @@ function AuthScreen() {
         }
         className="w-full max-w-md space-y-4"
       >
+        {mode === "signup" && (
+          <div className="space-y-2">
+            <Label htmlFor="username" className="text-muted-foreground font-bold">
+              Username
+            </Label>
+            <Input
+              id="username"
+              type="text"
+              placeholder="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="bg-card border-border"
+              required
+            />
+          </div>
+        )}
+
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-muted-foreground font-bold">
-            Email
+          <Label htmlFor="emailOrUsername" className="text-muted-foreground font-bold">
+            {mode === "signup" ? "Email" : "Email or Username"}
           </Label>
           <Input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            id="emailOrUsername"
+            type={mode === "signup" ? "email" : "text"}
+            placeholder={mode === "signup" ? "you@example.com" : "you@example.com or username"}
+            value={emailOrUsername}
+            onChange={(e) => setEmailOrUsername(e.target.value)}
             className="bg-card border-border"
             required
           />
