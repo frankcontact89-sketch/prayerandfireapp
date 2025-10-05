@@ -1,254 +1,115 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState } from "react";
 
 export default function Index() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState("home");
+  const [page, setPage] = useState("login");
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
   const [lang, setLang] = useState("en");
-  const [username, setUsername] = useState("");
-  const { toast } = useToast();
-
-  // Auth states
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [signupUsername, setSignupUsername] = useState("");
-  const [authMode, setAuthMode] = useState<"signin" | "signup" | "reset">("signin");
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", user.id)
-        .single()
-        .then(({ data }) => {
-          if (data) setUsername(data.username);
-        });
-    }
-  }, [user]);
 
   const text = {
     en: {
       signIn: "Sign In",
-      register: "Register",
+      register: "Create Account",
       forgot: "Forgot Password or Username?",
       home: "Home",
-      welcome: "Welcome to Prayer & Fire!",
+      welcome: "Welcome to Prayer & Fire",
       joinLive: "Join Live Service",
       live: "Live Stream",
       liveText: "Watch our livestream and join live chats soon!",
       giving: "Giving",
-      givingText: "Support Prayer & Fire for just $6.99/month.\nThank you for helping spread the fire!",
+      givingText:
+        "Support Prayer & Fire for just $6.99/month.\nThank you for helping spread the fire!",
       subscribe: "Subscribe $6.99",
       gift: "One-time Gift",
       profile: "Profile",
       profileText: "Manage your account, language, and subscription.",
-      profileMenu: "Profile Menu",
-      subscription: "Subscription",
+      store: "Store",
+      comingSoon: "Our store and courses are coming soon!",
       language: "Language: ",
       logout: "Logout",
-      media: "Media & Links",
-      store: "Store",
-      comingSoon: "Our products and courses are coming soon!",
-      emailLabel: "Email",
-      passwordLabel: "Password",
-      usernameLabel: "Username",
     },
     es: {
       signIn: "Iniciar sesión",
-      register: "Registrarse",
+      register: "Crear cuenta",
       forgot: "¿Olvidaste tu contraseña o usuario?",
       home: "Inicio",
-      welcome: "¡Bienvenido a Prayer & Fire!",
+      welcome: "Bienvenido a Prayer & Fire",
       joinLive: "Ir al Servicio en Vivo",
       live: "En Vivo",
       liveText: "Mira nuestras transmisiones y únete al chat en vivo pronto.",
       giving: "Ofrendas",
-      givingText: "Apoya a Prayer & Fire por solo $6.99/mes.\n¡Gracias por ayudar a expandir el fuego!",
+      givingText:
+        "Apoya a Prayer & Fire por solo $6.99/mes.\n¡Gracias por ayudar a expandir el fuego!",
       subscribe: "Suscribirse $6.99",
       gift: "Donación única",
       profile: "Perfil",
       profileText: "Administra tu cuenta, idioma y suscripción.",
-      profileMenu: "Menú de Perfil",
-      subscription: "Suscripción",
+      store: "Tienda",
+      comingSoon: "Nuestra tienda y cursos estarán disponibles pronto.",
       language: "Idioma: ",
       logout: "Cerrar sesión",
-      media: "Medios y Enlaces",
-      store: "Tienda",
-      comingSoon: "¡Nuestros productos y cursos llegarán pronto!",
-      emailLabel: "Correo electrónico",
-      passwordLabel: "Contraseña",
-      usernameLabel: "Usuario",
     },
   };
 
-  // Products placeholder for future use
-  const products = [
-    // Example: { id: 1, name: "Prayer & Fire T-shirt", price: 19.99, image: "https://via.placeholder.com/150" }
-  ];
-
+  const STRIPE = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
+  const YT = "https://youtube.com";
+  const IG = "https://instagram.com";
+  const WA = "https://wa.me/1XXXXXXXXXX";
+  const ZOOM = "https://zoom.us";
   const t = (k: string) => text[lang as keyof typeof text][k as keyof typeof text.en] || k;
 
-  const STRIPE = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
-  const YT = "https://youtube.com/@prayerandfire";
-  const IG = "https://www.instagram.com/prayerandfire/";
-  const WA = "https://wa.me/";
-  const ZOOM = "https://zoom.us";
-
-  const handleAuth = async () => {
-    try {
-      if (authMode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast({ title: "Welcome back!" });
-      } else if (authMode === "signup") {
-        if (!signupUsername || signupUsername.length < 3) {
-          toast({ 
-            title: "Invalid username", 
-            description: "Username must be at least 3 characters",
-            variant: "destructive" 
-          });
-          return;
-        }
-        
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: `${window.location.origin}/` }
-        });
-        if (error) throw error;
-        
-        if (data.user) {
-          await supabase.from("profiles").insert({
-            id: data.user.id,
-            username: signupUsername,
-            email: email,
-          });
-        }
-        
-        toast({ title: "Account created! Please check your email." });
-      } else if (authMode === "reset") {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/`
-        });
-        if (error) throw error;
-        toast({ title: "Password reset email sent!" });
-      }
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setPage("login");
-    toast({ title: "Logged out successfully" });
-  };
-
-  if (loading) {
+  // ===== LOGIN MODERNO =====
+  if (page === "login") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-muted-foreground">Loading Prayer & Fire...</p>
-      </div>
-    );
-  }
+      <div
+        className="flex flex-col items-center justify-center min-h-screen"
+        style={{
+          background: "linear-gradient(135deg, #fdf6f0, #f2f2f2)",
+        }}
+      >
+        <div
+          className="w-11/12 max-w-md bg-white shadow-xl rounded-2xl p-8 text-center"
+          style={{ borderTop: "6px solid #FF6600" }}
+        >
+          <h1 className="text-3xl font-bold text-[#FF6600] mb-2">
+            Prayer & Fire
+          </h1>
+          <p className="text-gray-500 mb-6">
+            Connect. Pray. Give. Transform Lives.
+          </p>
 
-  if (!user || page === "login") {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-muted/20 px-4">
-        <img
-          src="https://i.imgur.com/4Q9QpMo.png"
-          alt="Prayer & Fire Logo"
-          className="w-44 h-44 mb-6"
-        />
-        
-        {authMode === "signup" && (
           <input
-            type="text"
-            placeholder={t("usernameLabel")}
-            value={signupUsername}
-            onChange={(e) => setSignupUsername(e.target.value)}
-            className="w-80 mb-3 p-3 rounded-lg border border-input bg-background"
+            type="email"
+            placeholder="Email"
+            className="w-full p-3 mb-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
           />
-        )}
-        <input
-          type="email"
-          placeholder={t("emailLabel")}
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-80 mb-3 p-3 rounded-lg border border-input bg-background"
-        />
-        {authMode !== "reset" && (
           <input
             type="password"
-            placeholder={t("passwordLabel")}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-80 mb-4 p-3 rounded-lg border border-input bg-background"
+            placeholder="Password"
+            className="w-full p-3 mb-5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
           />
-        )}
 
-        <button
-          onClick={handleAuth}
-          className="w-80 bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90"
-        >
-          {authMode === "signin" ? t("signIn") : authMode === "signup" ? t("register") : t("forgot")}
-        </button>
-
-        {authMode === "signin" && (
-          <>
-            <button
-              onClick={() => setAuthMode("signup")}
-              className="w-80 text-primary mt-3 font-medium"
-            >
-              {t("register")}
-            </button>
-            <button
-              onClick={() => setAuthMode("reset")}
-              className="w-80 text-primary font-medium"
-            >
-              {t("forgot")}
-            </button>
-          </>
-        )}
-
-        {(authMode === "signup" || authMode === "reset") && (
           <button
-            onClick={() => setAuthMode("signin")}
-            className="w-80 text-primary mt-3 font-medium"
+            onClick={() => setPage("home")}
+            className="w-full bg-[#FF6600] text-white py-3 rounded-lg font-semibold shadow-md hover:bg-orange-600 transition"
           >
-            ← {t("signIn")}
+            {t("signIn")}
           </button>
-        )}
+
+          <div className="flex justify-between mt-4 text-sm text-[#FF6600] font-medium">
+            <button>{t("register")}</button>
+            <button>{t("forgot")}</button>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // ===== MENÚ IZQUIERDO =====
   const LeftMenu = () => (
-    <div className="absolute top-0 left-0 w-64 h-full bg-card shadow-lg p-6 z-50">
-      <h2 className="text-xl font-bold text-primary mb-4">👤 {t("profileMenu")}</h2>
-      <ul className="space-y-3">
+    <div className="absolute top-0 left-0 w-64 h-full bg-white shadow-2xl p-6 z-50 rounded-r-xl">
+      <h2 className="text-xl font-semibold text-[#FF6600] mb-4">Profile</h2>
+      <ul className="space-y-3 text-gray-700">
         <li>
           <button onClick={() => { setPage("profile"); setLeftOpen(false); }}>
             {t("profile")}
@@ -256,7 +117,7 @@ export default function Index() {
         </li>
         <li>
           <a href={STRIPE} target="_blank" rel="noopener noreferrer">
-            💳 {t("subscription")}
+            💳 Subscription
           </a>
         </li>
         <li>
@@ -265,22 +126,23 @@ export default function Index() {
           </button>
         </li>
         <li>
-          <button onClick={handleLogout}>🚪 {t("logout")}</button>
+          <button onClick={() => setPage("login")}>🚪 {t("logout")}</button>
         </li>
       </ul>
       <button
         onClick={() => setLeftOpen(false)}
-        className="absolute top-3 right-3 text-muted-foreground text-2xl"
+        className="absolute top-3 right-3 text-gray-500 text-2xl"
       >
         ✕
       </button>
     </div>
   );
 
+  // ===== MENÚ DERECHO =====
   const RightMenu = () => (
-    <div className="absolute top-0 right-0 w-64 h-full bg-card shadow-lg p-6 z-50">
-      <h2 className="text-xl font-bold text-primary mb-4">📂 {t("media")}</h2>
-      <ul className="space-y-3">
+    <div className="absolute top-0 right-0 w-64 h-full bg-white shadow-2xl p-6 z-50 rounded-l-xl">
+      <h2 className="text-xl font-semibold text-[#FF6600] mb-4">Media</h2>
+      <ul className="space-y-3 text-gray-700">
         <li><a href={YT} target="_blank">▶️ YouTube</a></li>
         <li><a href={IG} target="_blank">📸 Instagram</a></li>
         <li><a href={WA} target="_blank">💬 WhatsApp</a></li>
@@ -288,26 +150,30 @@ export default function Index() {
       </ul>
       <button
         onClick={() => setRightOpen(false)}
-        className="absolute top-3 right-3 text-muted-foreground text-2xl"
+        className="absolute top-3 right-3 text-gray-500 text-2xl"
       >
         ✕
       </button>
     </div>
   );
 
+  // ===== LAYOUT BASE =====
   const Layout = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="relative flex flex-col min-h-screen bg-background">
+    <div className="relative flex flex-col min-h-screen bg-[#f9f9f9]">
       {leftOpen && <LeftMenu />}
       {rightOpen && <RightMenu />}
-      <div className="flex justify-between items-center px-4 py-3 bg-card border-b border-border shadow-sm">
-        <button onClick={() => setLeftOpen(true)}>☰</button>
-        <h1 className="text-xl font-bold text-primary">{title}</h1>
-        <button onClick={() => setRightOpen(true)}>⋮</button>
+
+      <div className="flex justify-between items-center px-5 py-4 bg-white shadow-md border-b border-gray-200">
+        <button onClick={() => setLeftOpen(true)} className="text-xl">☰</button>
+        <h1 className="text-xl font-semibold text-[#FF6600]">{title}</h1>
+        <button onClick={() => setRightOpen(true)} className="text-xl">⋮</button>
       </div>
+
       <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
         {children}
       </div>
-      <div className="flex justify-around bg-card border-t border-border py-3">
+
+      <div className="flex justify-around bg-white border-t border-gray-200 py-3 shadow-inner text-xl text-gray-700">
         <button onClick={() => setPage("home")}>🏠</button>
         <button onClick={() => setPage("live")}>📡</button>
         <button onClick={() => setPage("store")}>🛒</button>
@@ -317,17 +183,22 @@ export default function Index() {
     </div>
   );
 
+  // ===== PÁGINAS =====
+  const STRIPE_LINK = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
+
   if (page === "home")
     return (
       <Layout title={t("home")}>
-        <h2 className="text-2xl font-bold text-primary mb-2">🏠 {t("home")}</h2>
-        <p className="mb-4">{t("welcome")}</p>
-        <p className="text-foreground mb-6">Welcome back, {username || user.email}! 🔥</p>
+        <h2 className="text-3xl font-semibold text-[#FF6600] mb-3">
+          {t("welcome")}
+        </h2>
+        <p className="text-gray-600 mb-5">
+          Join our mission to ignite hearts and change lives.
+        </p>
         <a
           href={YT}
           target="_blank"
-          rel="noopener noreferrer"
-          className="w-80 bg-primary text-primary-foreground py-3 rounded-lg font-semibold block"
+          className="w-64 bg-[#FF6600] text-white py-3 rounded-lg font-semibold shadow hover:bg-orange-600 transition"
         >
           {t("joinLive")}
         </a>
@@ -337,13 +208,14 @@ export default function Index() {
   if (page === "live")
     return (
       <Layout title={t("live")}>
-        <h2 className="text-2xl font-bold text-primary mb-2">📡 {t("live")}</h2>
-        <p className="mb-4">{t("liveText")}</p>
+        <h2 className="text-2xl font-semibold text-[#FF6600] mb-3">
+          📡 {t("live")}
+        </h2>
+        <p className="text-gray-600 mb-5">{t("liveText")}</p>
         <a
           href={YT}
           target="_blank"
-          rel="noopener noreferrer"
-          className="w-80 bg-primary text-primary-foreground py-3 rounded-lg font-semibold block mt-4"
+          className="w-64 bg-[#FF6600] text-white py-3 rounded-lg font-semibold shadow hover:bg-orange-600 transition"
         >
           {t("joinLive")}
         </a>
@@ -353,50 +225,24 @@ export default function Index() {
   if (page === "store")
     return (
       <Layout title={t("store")}>
-        <h2 className="text-2xl font-bold text-primary mb-2">🛒 {t("store")}</h2>
-        {products.length === 0 ? (
-          <p className="text-muted-foreground">{t("comingSoon")}</p>
-        ) : (
-          products.map((p) => (
-            <div
-              key={p.id}
-              className="p-4 border border-border rounded-lg w-80 bg-card shadow-sm mb-3"
-            >
-              <img
-                src={p.image}
-                alt={p.name}
-                className="w-full h-40 object-cover mb-2 rounded"
-              />
-              <h3 className="font-bold text-foreground">{p.name}</h3>
-              <p className="text-muted-foreground mb-2">${p.price}</p>
-              <a
-                href={STRIPE}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full bg-primary text-primary-foreground py-2 rounded font-semibold text-center hover:opacity-90"
-              >
-                Buy Now
-              </a>
-            </div>
-          ))
-        )}
+        <h2 className="text-2xl font-semibold text-[#FF6600] mb-2">🛒 {t("store")}</h2>
+        <p className="text-gray-600">{t("comingSoon")}</p>
       </Layout>
     );
 
   if (page === "giving")
     return (
       <Layout title={t("giving")}>
-        <h2 className="text-2xl font-bold text-primary mb-4">❤️ {t("giving")}</h2>
-        <p className="mb-6 whitespace-pre-line">{t("givingText")}</p>
+        <h2 className="text-2xl font-semibold text-[#FF6600] mb-4">❤️ {t("giving")}</h2>
+        <p className="text-gray-600 mb-6 whitespace-pre-line">{t("givingText")}</p>
         <a
-          href={STRIPE}
+          href={STRIPE_LINK}
           target="_blank"
-          rel="noopener noreferrer"
-          className="w-80 bg-primary text-primary-foreground py-3 rounded-lg font-semibold block mb-3"
+          className="w-64 bg-[#FF6600] text-white py-3 rounded-lg font-semibold shadow hover:bg-orange-600 transition block mb-3"
         >
           {t("subscribe")}
         </a>
-        <button className="w-80 bg-secondary text-secondary-foreground py-3 rounded-lg font-semibold">
+        <button className="w-64 bg-gray-400 text-white py-3 rounded-lg font-semibold shadow">
           {t("gift")}
         </button>
       </Layout>
@@ -405,12 +251,8 @@ export default function Index() {
   if (page === "profile")
     return (
       <Layout title={t("profile")}>
-        <h2 className="text-2xl font-bold text-primary mb-2">👤 {t("profile")}</h2>
-        <p className="mb-4">{t("profileText")}</p>
-        <div className="text-foreground space-y-2">
-          <p><strong>Username:</strong> {username}</p>
-          <p><strong>Email:</strong> {user.email}</p>
-        </div>
+        <h2 className="text-2xl font-semibold text-[#FF6600] mb-3">👤 {t("profile")}</h2>
+        <p className="text-gray-600">{t("profileText")}</p>
       </Layout>
     );
 }
