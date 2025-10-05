@@ -1,569 +1,407 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { Loader2, X } from "lucide-react";
-
-const INSTAGRAM_URL = "https://www.instagram.com/prayerandfire/";
-const YOUTUBE_URL = "https://youtube.com/";
-const ZOOM_URL = "https://zoom.us/";
-const WHATSAPP_MESSAGE = "🔥 Check out the Prayer & Fire App! https://lovable.app/prayerandfire";
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 
 const Index = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [username, setUsername] = useState<string>("Guest");
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [showInstagram, setShowInstagram] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState("home");
+  const [leftMenuOpen, setLeftMenuOpen] = useState(false);
+  const [rightMenuOpen, setRightMenuOpen] = useState(false);
+  const [language, setLanguage] = useState("en");
+  const [username, setUsername] = useState("");
   const { toast } = useToast();
 
-  // Load username from profile
-  useEffect(() => {
-    const loadUsername = async () => {
-      if (!user) return;
-      
-      const { data } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", user.id)
-        .single();
-      
-      if (data) {
-        setUsername(data.username);
-      }
-    };
-
-    loadUsername();
-  }, [user]);
+  // Auth form states
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [signupUsername, setSignupUsername] = useState("");
+  const [authMode, setAuthMode] = useState<"signin" | "signup" | "reset">("signin");
 
   useEffect(() => {
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setCheckingAuth(false);
-    });
-
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setUser(session?.user ?? null);
+        setLoading(false);
       }
     );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const shareOnWhatsApp = () => {
-    const url = `https://wa.me/?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
-    window.open(url, "_blank");
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) setUsername(data.username);
+        });
+    }
+  }, [user]);
+
+  const t = (key: string) => {
+    const texts: Record<string, Record<string, string>> = {
+      en: {
+        signIn: "Sign In",
+        register: "Register",
+        forgot: "Forgot Password?",
+        home: "Home",
+        welcome: "Welcome to Prayer & Fire!",
+        joinLive: "Join Live Service",
+        live: "Live Stream",
+        liveText: "Watch our livestream and join live chats soon!",
+        giving: "Giving",
+        givingText: "Support Prayer & Fire for just $6.99/month.\nThank you for helping spread the fire!",
+        subscribe: "Subscribe $6.99",
+        gift: "One-time Gift",
+        profile: "Profile",
+        profileText: "Manage your account, language, and subscription.",
+        profileMenu: "Profile Menu",
+        subscription: "Subscription",
+        language: "Language: ",
+        logout: "Logout",
+        media: "Media & Links",
+        youtube: "YouTube",
+        instagram: "Instagram",
+        whatsapp: "WhatsApp",
+        zoom: "Zoom",
+        emailLabel: "Email",
+        passwordLabel: "Password",
+        usernameLabel: "Username",
+      },
+      es: {
+        signIn: "Iniciar sesión",
+        register: "Registrarse",
+        forgot: "¿Olvidaste tu contraseña?",
+        home: "Inicio",
+        welcome: "¡Bienvenido a Prayer & Fire!",
+        joinLive: "Ir al Servicio en Vivo",
+        live: "En Vivo",
+        liveText: "Mira nuestras transmisiones y únete al chat en vivo pronto.",
+        giving: "Ofrendas",
+        givingText: "Apoya a Prayer & Fire por solo $6.99/mes.\n¡Gracias por ayudar a expandir el fuego!",
+        subscribe: "Suscribirse $6.99",
+        gift: "Donación única",
+        profile: "Perfil",
+        profileText: "Administra tu cuenta, idioma y suscripción.",
+        profileMenu: "Menú de Perfil",
+        subscription: "Suscripción",
+        language: "Idioma: ",
+        logout: "Cerrar sesión",
+        media: "Medios y Enlaces",
+        youtube: "YouTube",
+        instagram: "Instagram",
+        whatsapp: "WhatsApp",
+        zoom: "Zoom",
+        emailLabel: "Correo electrónico",
+        passwordLabel: "Contraseña",
+        usernameLabel: "Usuario",
+      },
+    };
+    return (texts[language]?.[key]) || key;
   };
 
-  const handleSignOut = async () => {
+  const STRIPE_LINK = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
+  const YOUTUBE_LINK = "https://youtube.com/@prayerandfire";
+  const INSTAGRAM_LINK = "https://www.instagram.com/prayerandfire/";
+  const WHATSAPP_LINK = "https://wa.me/";
+  const ZOOM_LINK = "https://zoom.us";
+
+  const handleAuth = async () => {
+    try {
+      if (authMode === "signin") {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        toast({ title: "Welcome back!" });
+      } else if (authMode === "signup") {
+        if (!signupUsername || signupUsername.length < 3) {
+          toast({ 
+            title: "Invalid username", 
+            description: "Username must be at least 3 characters",
+            variant: "destructive" 
+          });
+          return;
+        }
+        
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${window.location.origin}/` }
+        });
+        if (error) throw error;
+        
+        if (data.user) {
+          await supabase.from("profiles").insert({
+            id: data.user.id,
+            username: signupUsername,
+            email: email,
+          });
+        }
+        
+        toast({ title: "Account created! Please check your email." });
+      } else if (authMode === "reset") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/`
+        });
+        if (error) throw error;
+        toast({ title: "Password reset email sent!" });
+      }
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleLogout = async () => {
     await supabase.auth.signOut();
-    toast({ title: "Signed out successfully" });
+    setPage("home");
+    toast({ title: "Logged out successfully" });
   };
 
-  // Loading state
-  if (checkingAuth) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-muted-foreground mt-4">Loading…</p>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-muted-foreground">Loading Prayer & Fire...</p>
       </div>
     );
   }
 
-  // Auth screen
   if (!user) {
-    return <AuthScreen />;
-  }
-
-  // Main app content
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8 pb-16">
-        {/* HEADER */}
-        <div className="text-center space-y-4">
-          <img
-            src="https://i.imgur.com/4Q9QpMo.png"
-            alt="Prayer & Fire Logo"
-            className="w-24 h-24 mx-auto object-contain"
-          />
-          <h1 className="text-xl font-bold text-primary">
-            Welcome back, {username}
-          </h1>
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-muted/20 px-4">
+        <div className="mb-8 text-center">
+          <h1 className="text-5xl font-black text-primary mb-2">Prayer & Fire</h1>
+          <p className="text-muted-foreground">🔥 Spreading the Fire</p>
         </div>
 
-        {/* MAIN BUTTONS */}
-        <div className="space-y-5 w-full">
-          <Button
-            onClick={() => window.open(YOUTUBE_URL, "_blank")}
-            className="w-full h-14 text-base font-bold gap-3"
-            size="lg"
-          >
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/1384/1384060.png"
-              alt="YouTube"
-              className="w-6 h-6 brightness-0 invert"
-            />
-            Live Service
-          </Button>
-
-          <Button
-            onClick={() => window.open(ZOOM_URL, "_blank")}
-            className="w-full h-14 text-base font-bold gap-3"
-            size="lg"
-          >
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/882/882704.png"
-              alt="Zoom"
-              className="w-6 h-6 brightness-0 invert"
-            />
-            Zoom
-          </Button>
-
-          <Button
-            onClick={() => setShowInstagram(true)}
-            className="w-full h-14 text-base font-bold gap-3"
-            size="lg"
-          >
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png"
-              alt="Instagram"
-              className="w-6 h-6 brightness-0 invert"
-            />
-            Instagram
-          </Button>
-        </div>
-
-        {/* WHATSAPP BUTTON */}
-        <button
-          onClick={shareOnWhatsApp}
-          className="w-full flex items-center justify-center gap-3 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold py-4 px-5 rounded-xl transition-colors"
-        >
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/733/733585.png"
-            alt="WhatsApp"
-            className="w-6 h-6 brightness-0 invert"
-          />
-          Share this app on WhatsApp
-        </button>
-
-        {/* SIGN OUT BUTTON */}
-        <Button
-          onClick={handleSignOut}
-          variant="outline"
-          size="lg"
-          className="w-full font-bold"
-        >
-          Sign Out
-        </Button>
-
-        {/* FOOTER */}
-        <p className="text-center text-muted-foreground text-sm mt-10">
-          Powered by Prayer & Fire
-        </p>
-      </div>
-
-      {/* INSTAGRAM MODAL */}
-      {showInstagram && (
-        <div className="fixed inset-0 bg-background z-50 flex flex-col">
-          <div className="bg-card p-3 flex justify-end border-b border-border">
-            <Button
-              onClick={() => setShowInstagram(false)}
-              variant="ghost"
-              size="sm"
-              className="gap-2 text-primary hover:text-primary"
-            >
-              <X className="w-5 h-5" />
-              Close
-            </Button>
-          </div>
-          <iframe
-            src={INSTAGRAM_URL}
-            className="flex-1 w-full h-full border-0"
-            title="Instagram"
-          />
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ============ AUTH SCREEN ============
-function AuthScreen() {
-  const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin");
-  const [emailOrUsername, setEmailOrUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
-
-  // Find email by username
-  const findEmailByUsername = async (uname: string): Promise<string | null> => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("email")
-        .eq("username", uname)
-        .single();
-      
-      if (error || !data) return null;
-      return data.email;
-    } catch {
-      return null;
-    }
-  };
-
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const input = emailOrUsername.trim();
-    let email = input;
-
-    // If input doesn't contain @, try to find email by username
-    if (!input.includes("@")) {
-      const foundEmail = await findEmailByUsername(input);
-      if (!foundEmail) {
-        toast({
-          title: "Sign in failed",
-          description: "No account found with that username",
-          variant: "destructive",
-        });
-        return;
-      }
-      email = foundEmail;
-    }
-
-    if (!email.includes("@") || password.length < 6) {
-      toast({
-        title: "Invalid input",
-        description: "Enter a valid email (or username) and password (min 6 characters)",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password,
-    });
-
-    if (error) {
-      toast({
-        title: "Sign in failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-    setLoading(false);
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const email = emailOrUsername.trim();
-    const uname = username.trim();
-
-    if (!uname || uname.length < 3) {
-      toast({
-        title: "Invalid input",
-        description: "Username must be at least 3 characters",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!email.includes("@") || password.length < 6) {
-      toast({
-        title: "Invalid input",
-        description: "Enter a valid email and password (min 6 characters)",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email: email,
-      password,
-    });
-
-    if (error) {
-      toast({
-        title: "Sign up failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      setLoading(false);
-      return;
-    }
-
-    // Create profile with username
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          id: data.user.id,
-          username: uname,
-          email: email,
-        });
-
-      if (profileError) {
-        toast({
-          title: "Profile creation failed",
-          description: profileError.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Welcome!",
-          description: "Account created successfully",
-        });
-      }
-    }
-    setLoading(false);
-  };
-
-  const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const input = emailOrUsername.trim();
-
-    if (!input) {
-      toast({
-        title: "Invalid input",
-        description: "Enter your email or username",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    let email = input;
-
-    // If input doesn't contain @, try to find email by username
-    if (!input.includes("@")) {
-      const foundEmail = await findEmailByUsername(input);
-      if (!foundEmail) {
-        toast({
-          title: "Reset failed",
-          description: "No account found with that username",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-      email = foundEmail;
-    }
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/`,
-    });
-
-    if (error) {
-      toast({
-        title: "Reset failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Check your email",
-        description: "We sent you a password reset link",
-      });
-      setMode("signin");
-    }
-    setLoading(false);
-  };
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <img
-        src="https://i.imgur.com/4Q9QpMo.png"
-        alt="Prayer & Fire Logo"
-        className="w-40 h-40 mb-3 object-contain"
-      />
-      <h1 className="text-3xl font-extrabold text-primary mb-6">
-        Prayer & Fire
-      </h1>
-
-      {/* Language pill */}
-      <div className="mb-4">
-        <button
-          onClick={() =>
-            toast({
-              title: "Language",
-              description: "English is set as the primary language.",
-            })
-          }
-          className="bg-card border border-border px-4 py-2 rounded-full text-xs font-bold text-muted-foreground tracking-wide hover:bg-accent transition-colors"
-        >
-          English
-        </button>
-      </div>
-
-      <form
-        onSubmit={
-          mode === "signin"
-            ? handleSignIn
-            : mode === "signup"
-            ? handleSignUp
-            : handleReset
-        }
-        className="w-full max-w-md space-y-4"
-      >
-        {mode === "signup" && (
-          <div className="space-y-2">
-            <Label htmlFor="username" className="text-muted-foreground font-bold">
-              Username
-            </Label>
+        <div className="w-full max-w-sm space-y-3">
+          {authMode === "signup" && (
             <Input
-              id="username"
               type="text"
-              placeholder="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="bg-card border-border"
-              required
+              placeholder={t("usernameLabel")}
+              value={signupUsername}
+              onChange={(e) => setSignupUsername(e.target.value)}
+              className="bg-background border-input"
             />
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <Label htmlFor="emailOrUsername" className="text-muted-foreground font-bold">
-            {mode === "signup" ? "Email" : "Email or Username"}
-          </Label>
+          )}
           <Input
-            id="emailOrUsername"
-            type={mode === "signup" ? "email" : "text"}
-            placeholder={mode === "signup" ? "you@example.com" : "you@example.com or username"}
-            value={emailOrUsername}
-            onChange={(e) => setEmailOrUsername(e.target.value)}
-            className="bg-card border-border"
-            required
+            type="email"
+            placeholder={t("emailLabel")}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="bg-background border-input"
           />
-        </div>
-
-        {mode !== "reset" && (
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-muted-foreground font-bold">
-              Password
-            </Label>
+          {authMode !== "reset" && (
             <Input
-              id="password"
               type="password"
-              placeholder="••••••••"
+              placeholder={t("passwordLabel")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-card border-border"
-              required
+              className="bg-background border-input"
             />
-          </div>
-        )}
+          )}
 
-        {mode === "signin" && (
-          <>
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full font-extrabold"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing In…
-                </>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
+          <button
+            onClick={handleAuth}
+            className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition"
+          >
+            {authMode === "signin" ? t("signIn") : authMode === "signup" ? t("register") : t("forgot")}
+          </button>
 
-            <div className="flex items-center justify-center gap-3 mt-4 text-sm">
+          {authMode === "signin" && (
+            <>
               <button
-                type="button"
-                onClick={() => setMode("signup")}
-                className="text-blue-400 font-bold hover:underline"
+                onClick={() => setAuthMode("signup")}
+                className="w-full text-primary py-2 font-medium hover:underline"
               >
-                Create Account
+                {t("register")}
               </button>
-              <span className="text-muted-foreground">·</span>
               <button
-                type="button"
-                onClick={() => setMode("reset")}
-                className="text-blue-400 font-bold hover:underline"
+                onClick={() => setAuthMode("reset")}
+                className="w-full text-primary py-2 font-medium hover:underline"
               >
-                Forgot Password?
+                {t("forgot")}
               </button>
-            </div>
-          </>
-        )}
+            </>
+          )}
 
-        {mode === "signup" && (
-          <>
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full font-extrabold"
-              disabled={loading}
+          {(authMode === "signup" || authMode === "reset") && (
+            <button
+              onClick={() => setAuthMode("signin")}
+              className="w-full text-primary py-2 font-medium hover:underline"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating…
-                </>
-              ) : (
-                "Create Account"
-              )}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => setMode("signin")}
-              variant="outline"
-              size="lg"
-              className="w-full font-bold"
-            >
-              Back to Sign In
-            </Button>
-          </>
-        )}
+              ← {t("signIn")}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
-        {mode === "reset" && (
-          <>
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full font-extrabold"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending…
-                </>
-              ) : (
-                "Send Reset Link"
-              )}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => setMode("signin")}
-              variant="outline"
-              size="lg"
-              className="w-full font-bold"
-            >
-              Back to Sign In
-            </Button>
-          </>
-        )}
-      </form>
-
-      <p className="text-center text-muted-foreground text-sm mt-16">
-        Powered by Prayer & Fire
-      </p>
+  const LeftMenu = () => (
+    <div className="fixed top-0 left-0 w-64 h-full bg-card shadow-2xl p-6 z-50 animate-in slide-in-from-left">
+      <h2 className="text-xl font-bold text-primary mb-6">👤 {t("profileMenu")}</h2>
+      <ul className="space-y-4 text-foreground">
+        <li>
+          <button onClick={() => { setPage("profile"); setLeftMenuOpen(false); }} className="hover:text-primary transition">
+            {t("profile")}
+          </button>
+        </li>
+        <li>
+          <a href={STRIPE_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition">
+            💳 {t("subscription")}
+          </a>
+        </li>
+        <li>
+          <button onClick={() => setLanguage(language === "en" ? "es" : "en")} className="hover:text-primary transition">
+            🌐 {t("language")} {language === "en" ? "English" : "Español"}
+          </button>
+        </li>
+        <li>
+          <button onClick={handleLogout} className="hover:text-primary transition">
+            🚪 {t("logout")}
+          </button>
+        </li>
+      </ul>
+      <button
+        onClick={() => setLeftMenuOpen(false)}
+        className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-2xl"
+      >
+        ✕
+      </button>
     </div>
   );
-}
+
+  const RightMenu = () => (
+    <div className="fixed top-0 right-0 w-64 h-full bg-card shadow-2xl p-6 z-50 animate-in slide-in-from-right">
+      <h2 className="text-xl font-bold text-primary mb-6">📂 {t("media")}</h2>
+      <ul className="space-y-4 text-foreground">
+        <li><a href={YOUTUBE_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition">▶️ {t("youtube")}</a></li>
+        <li><a href={INSTAGRAM_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition">📸 {t("instagram")}</a></li>
+        <li><a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition">💬 {t("whatsapp")}</a></li>
+        <li><a href={ZOOM_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition">🎥 {t("zoom")}</a></li>
+      </ul>
+      <button
+        onClick={() => setRightMenuOpen(false)}
+        className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-2xl"
+      >
+        ✕
+      </button>
+    </div>
+  );
+
+  const Layout = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div className="relative flex flex-col min-h-screen bg-background">
+      {leftMenuOpen && <LeftMenu />}
+      {rightMenuOpen && <RightMenu />}
+      {(leftMenuOpen || rightMenuOpen) && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40"
+          onClick={() => { setLeftMenuOpen(false); setRightMenuOpen(false); }}
+        />
+      )}
+
+      <div className="flex justify-between items-center px-4 py-4 bg-card border-b border-border shadow-sm">
+        <button onClick={() => setLeftMenuOpen(true)} className="text-2xl hover:text-primary transition">☰</button>
+        <h1 className="text-xl font-bold text-primary">{title}</h1>
+        <button onClick={() => setRightMenuOpen(true)} className="text-2xl hover:text-primary transition">⋮</button>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-4 py-8">
+        {children}
+      </div>
+
+      <div className="flex justify-around bg-card border-t border-border py-4 shadow-lg">
+        <button onClick={() => setPage("home")} className={`text-2xl transition ${page === "home" ? "text-primary" : "hover:text-primary"}`}>🏠</button>
+        <button onClick={() => setPage("live")} className={`text-2xl transition ${page === "live" ? "text-primary" : "hover:text-primary"}`}>📡</button>
+        <button onClick={() => setPage("giving")} className={`text-2xl transition ${page === "giving" ? "text-primary" : "hover:text-primary"}`}>❤️</button>
+        <button onClick={() => setPage("profile")} className={`text-2xl transition ${page === "profile" ? "text-primary" : "hover:text-primary"}`}>👤</button>
+      </div>
+    </div>
+  );
+
+  if (page === "home") {
+    return (
+      <Layout title={t("home")}>
+        <h2 className="text-3xl font-bold text-primary mb-4">🏠 {t("home")}</h2>
+        <p className="text-muted-foreground mb-6 max-w-md">{t("welcome")}</p>
+        <p className="text-foreground mb-8">Welcome back, {username || user.email}! 🔥</p>
+        <a
+          href={YOUTUBE_LINK}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full max-w-sm bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition block text-center"
+        >
+          {t("joinLive")}
+        </a>
+      </Layout>
+    );
+  }
+
+  if (page === "live") {
+    return (
+      <Layout title={t("live")}>
+        <h2 className="text-3xl font-bold text-primary mb-4">📡 {t("live")}</h2>
+        <p className="text-muted-foreground mb-8 max-w-md">{t("liveText")}</p>
+        <a
+          href={YOUTUBE_LINK}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full max-w-sm bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition block text-center"
+        >
+          {t("joinLive")}
+        </a>
+      </Layout>
+    );
+  }
+
+  if (page === "giving") {
+    return (
+      <Layout title={t("giving")}>
+        <h2 className="text-3xl font-bold text-primary mb-4">❤️ {t("giving")}</h2>
+        <p className="text-muted-foreground mb-8 max-w-md whitespace-pre-line">{t("givingText")}</p>
+
+        <div className="w-full max-w-sm space-y-3">
+          <a
+            href={STRIPE_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition text-center"
+          >
+            {t("subscribe")}
+          </a>
+
+          <button className="w-full bg-secondary text-secondary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition">
+            {t("gift")}
+          </button>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (page === "profile") {
+    return (
+      <Layout title={t("profile")}>
+        <h2 className="text-3xl font-bold text-primary mb-4">👤 {t("profile")}</h2>
+        <p className="text-muted-foreground mb-4 max-w-md">{t("profileText")}</p>
+        <div className="text-foreground space-y-2">
+          <p><strong>Username:</strong> {username}</p>
+          <p><strong>Email:</strong> {user.email}</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  return null;
+};
 
 export default Index;
