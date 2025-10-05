@@ -1,20 +1,19 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useToast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
 
-const Index = () => {
+export default function Index() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState("home");
-  const [leftMenuOpen, setLeftMenuOpen] = useState(false);
-  const [rightMenuOpen, setRightMenuOpen] = useState(false);
-  const [language, setLanguage] = useState("en");
+  const [leftOpen, setLeftOpen] = useState(false);
+  const [rightOpen, setRightOpen] = useState(false);
+  const [lang, setLang] = useState("en");
   const [username, setUsername] = useState("");
   const { toast } = useToast();
 
-  // Auth form states
+  // Auth states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [signupUsername, setSignupUsername] = useState("");
@@ -49,73 +48,78 @@ const Index = () => {
     }
   }, [user]);
 
-  const t = (key: string) => {
-    const texts: Record<string, Record<string, string>> = {
-      en: {
-        signIn: "Sign In",
-        register: "Register",
-        forgot: "Forgot Password?",
-        home: "Home",
-        welcome: "Welcome to Prayer & Fire!",
-        joinLive: "Join Live Service",
-        live: "Live Stream",
-        liveText: "Watch our livestream and join live chats soon!",
-        giving: "Giving",
-        givingText: "Support Prayer & Fire for just $6.99/month.\nThank you for helping spread the fire!",
-        subscribe: "Subscribe $6.99",
-        gift: "One-time Gift",
-        profile: "Profile",
-        profileText: "Manage your account, language, and subscription.",
-        profileMenu: "Profile Menu",
-        subscription: "Subscription",
-        language: "Language: ",
-        logout: "Logout",
-        media: "Media & Links",
-        youtube: "YouTube",
-        instagram: "Instagram",
-        whatsapp: "WhatsApp",
-        zoom: "Zoom",
-        emailLabel: "Email",
-        passwordLabel: "Password",
-        usernameLabel: "Username",
-      },
-      es: {
-        signIn: "Iniciar sesión",
-        register: "Registrarse",
-        forgot: "¿Olvidaste tu contraseña?",
-        home: "Inicio",
-        welcome: "¡Bienvenido a Prayer & Fire!",
-        joinLive: "Ir al Servicio en Vivo",
-        live: "En Vivo",
-        liveText: "Mira nuestras transmisiones y únete al chat en vivo pronto.",
-        giving: "Ofrendas",
-        givingText: "Apoya a Prayer & Fire por solo $6.99/mes.\n¡Gracias por ayudar a expandir el fuego!",
-        subscribe: "Suscribirse $6.99",
-        gift: "Donación única",
-        profile: "Perfil",
-        profileText: "Administra tu cuenta, idioma y suscripción.",
-        profileMenu: "Menú de Perfil",
-        subscription: "Suscripción",
-        language: "Idioma: ",
-        logout: "Cerrar sesión",
-        media: "Medios y Enlaces",
-        youtube: "YouTube",
-        instagram: "Instagram",
-        whatsapp: "WhatsApp",
-        zoom: "Zoom",
-        emailLabel: "Correo electrónico",
-        passwordLabel: "Contraseña",
-        usernameLabel: "Usuario",
-      },
-    };
-    return (texts[language]?.[key]) || key;
+  const text = {
+    en: {
+      signIn: "Sign In",
+      register: "Register",
+      forgot: "Forgot Password or Username?",
+      home: "Home",
+      welcome: "Welcome to Prayer & Fire!",
+      joinLive: "Join Live Service",
+      live: "Live Stream",
+      liveText: "Watch our livestream and join live chats soon!",
+      giving: "Giving",
+      givingText: "Support Prayer & Fire for just $6.99/month.\nThank you for helping spread the fire!",
+      subscribe: "Subscribe $6.99",
+      gift: "One-time Gift",
+      profile: "Profile",
+      profileText: "Manage your account, language, and subscription.",
+      profileMenu: "Profile Menu",
+      subscription: "Subscription",
+      language: "Language: ",
+      logout: "Logout",
+      media: "Media & Links",
+      videos: "Videos",
+      photos: "Photos",
+      news: "News",
+      youtube: "YouTube",
+      instagram: "Instagram",
+      whatsapp: "WhatsApp",
+      zoom: "Zoom",
+      emailLabel: "Email",
+      passwordLabel: "Password",
+      usernameLabel: "Username",
+    },
+    es: {
+      signIn: "Iniciar sesión",
+      register: "Registrarse",
+      forgot: "¿Olvidaste tu contraseña o usuario?",
+      home: "Inicio",
+      welcome: "¡Bienvenido a Prayer & Fire!",
+      joinLive: "Ir al Servicio en Vivo",
+      live: "En Vivo",
+      liveText: "Mira nuestras transmisiones y únete al chat en vivo pronto.",
+      giving: "Ofrendas",
+      givingText: "Apoya a Prayer & Fire por solo $6.99/mes.\n¡Gracias por ayudar a expandir el fuego!",
+      subscribe: "Suscribirse $6.99",
+      gift: "Donación única",
+      profile: "Perfil",
+      profileText: "Administra tu cuenta, idioma y suscripción.",
+      profileMenu: "Menú de Perfil",
+      subscription: "Suscripción",
+      language: "Idioma: ",
+      logout: "Cerrar sesión",
+      media: "Medios y Enlaces",
+      videos: "Videos",
+      photos: "Fotos",
+      news: "Noticias",
+      youtube: "YouTube",
+      instagram: "Instagram",
+      whatsapp: "WhatsApp",
+      zoom: "Zoom",
+      emailLabel: "Correo electrónico",
+      passwordLabel: "Contraseña",
+      usernameLabel: "Usuario",
+    },
   };
 
-  const STRIPE_LINK = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
-  const YOUTUBE_LINK = "https://youtube.com/@prayerandfire";
-  const INSTAGRAM_LINK = "https://www.instagram.com/prayerandfire/";
-  const WHATSAPP_LINK = "https://wa.me/";
-  const ZOOM_LINK = "https://zoom.us";
+  const t = (k: string) => text[lang as keyof typeof text][k as keyof typeof text.en] || k;
+
+  const STRIPE = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
+  const YT = "https://youtube.com/@prayerandfire";
+  const IG = "https://www.instagram.com/prayerandfire/";
+  const WA = "https://wa.me/";
+  const ZOOM = "https://zoom.us";
 
   const handleAuth = async () => {
     try {
@@ -163,7 +167,7 @@ const Index = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setPage("home");
+    setPage("login");
     toast({ title: "Logged out successfully" });
   };
 
@@ -175,106 +179,103 @@ const Index = () => {
     );
   }
 
-  if (!user) {
+  if (!user || page === "login") {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-muted/20 px-4">
-        <div className="mb-8 text-center">
-          <h1 className="text-5xl font-black text-primary mb-2">Prayer & Fire</h1>
-          <p className="text-muted-foreground">🔥 Spreading the Fire</p>
-        </div>
-
-        <div className="w-full max-w-sm space-y-3">
-          {authMode === "signup" && (
-            <Input
-              type="text"
-              placeholder={t("usernameLabel")}
-              value={signupUsername}
-              onChange={(e) => setSignupUsername(e.target.value)}
-              className="bg-background border-input"
-            />
-          )}
-          <Input
-            type="email"
-            placeholder={t("emailLabel")}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="bg-background border-input"
+        <img
+          src="https://i.imgur.com/4Q9QpMo.png"
+          alt="Prayer & Fire Logo"
+          className="w-44 h-44 mb-6"
+        />
+        
+        {authMode === "signup" && (
+          <input
+            type="text"
+            placeholder={t("usernameLabel")}
+            value={signupUsername}
+            onChange={(e) => setSignupUsername(e.target.value)}
+            className="w-80 mb-3 p-3 rounded-lg border border-input bg-background"
           />
-          {authMode !== "reset" && (
-            <Input
-              type="password"
-              placeholder={t("passwordLabel")}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-background border-input"
-            />
-          )}
+        )}
+        <input
+          type="email"
+          placeholder={t("emailLabel")}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-80 mb-3 p-3 rounded-lg border border-input bg-background"
+        />
+        {authMode !== "reset" && (
+          <input
+            type="password"
+            placeholder={t("passwordLabel")}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-80 mb-4 p-3 rounded-lg border border-input bg-background"
+          />
+        )}
 
-          <button
-            onClick={handleAuth}
-            className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition"
-          >
-            {authMode === "signin" ? t("signIn") : authMode === "signup" ? t("register") : t("forgot")}
-          </button>
+        <button
+          onClick={handleAuth}
+          className="w-80 bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90"
+        >
+          {authMode === "signin" ? t("signIn") : authMode === "signup" ? t("register") : t("forgot")}
+        </button>
 
-          {authMode === "signin" && (
-            <>
-              <button
-                onClick={() => setAuthMode("signup")}
-                className="w-full text-primary py-2 font-medium hover:underline"
-              >
-                {t("register")}
-              </button>
-              <button
-                onClick={() => setAuthMode("reset")}
-                className="w-full text-primary py-2 font-medium hover:underline"
-              >
-                {t("forgot")}
-              </button>
-            </>
-          )}
-
-          {(authMode === "signup" || authMode === "reset") && (
+        {authMode === "signin" && (
+          <>
             <button
-              onClick={() => setAuthMode("signin")}
-              className="w-full text-primary py-2 font-medium hover:underline"
+              onClick={() => setAuthMode("signup")}
+              className="w-80 text-primary mt-3 font-medium"
             >
-              ← {t("signIn")}
+              {t("register")}
             </button>
-          )}
-        </div>
+            <button
+              onClick={() => setAuthMode("reset")}
+              className="w-80 text-primary font-medium"
+            >
+              {t("forgot")}
+            </button>
+          </>
+        )}
+
+        {(authMode === "signup" || authMode === "reset") && (
+          <button
+            onClick={() => setAuthMode("signin")}
+            className="w-80 text-primary mt-3 font-medium"
+          >
+            ← {t("signIn")}
+          </button>
+        )}
       </div>
     );
   }
 
   const LeftMenu = () => (
-    <div className="fixed top-0 left-0 w-64 h-full bg-card shadow-2xl p-6 z-50 animate-in slide-in-from-left">
-      <h2 className="text-xl font-bold text-primary mb-6">👤 {t("profileMenu")}</h2>
-      <ul className="space-y-4 text-foreground">
+    <div className="absolute top-0 left-0 w-64 h-full bg-card shadow-lg p-6 z-50">
+      <h2 className="text-xl font-bold text-primary mb-4">👤 {t("profileMenu")}</h2>
+      <ul className="space-y-3">
         <li>
-          <button onClick={() => { setPage("profile"); setLeftMenuOpen(false); }} className="hover:text-primary transition">
+          <button onClick={() => { setPage("profile"); setLeftOpen(false); }}>
             {t("profile")}
           </button>
         </li>
         <li>
-          <a href={STRIPE_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition">
+          <a href={STRIPE} target="_blank" rel="noopener noreferrer">
             💳 {t("subscription")}
           </a>
         </li>
         <li>
-          <button onClick={() => setLanguage(language === "en" ? "es" : "en")} className="hover:text-primary transition">
-            🌐 {t("language")} {language === "en" ? "English" : "Español"}
+          <button onClick={() => setLang(lang === "en" ? "es" : "en")}>
+            🌐 {t("language")} {lang === "en" ? "English" : "Español"}
           </button>
         </li>
         <li>
-          <button onClick={handleLogout} className="hover:text-primary transition">
-            🚪 {t("logout")}
-          </button>
+          <button onClick={handleLogout}>🚪 {t("logout")}</button>
         </li>
       </ul>
       <button
-        onClick={() => setLeftMenuOpen(false)}
-        className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-2xl"
+        onClick={() => setLeftOpen(false)}
+        className="absolute top-3 right-3 text-muted-foreground text-2xl"
       >
         ✕
       </button>
@@ -282,17 +283,20 @@ const Index = () => {
   );
 
   const RightMenu = () => (
-    <div className="fixed top-0 right-0 w-64 h-full bg-card shadow-2xl p-6 z-50 animate-in slide-in-from-right">
-      <h2 className="text-xl font-bold text-primary mb-6">📂 {t("media")}</h2>
-      <ul className="space-y-4 text-foreground">
-        <li><a href={YOUTUBE_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition">▶️ {t("youtube")}</a></li>
-        <li><a href={INSTAGRAM_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition">📸 {t("instagram")}</a></li>
-        <li><a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition">💬 {t("whatsapp")}</a></li>
-        <li><a href={ZOOM_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition">🎥 {t("zoom")}</a></li>
+    <div className="absolute top-0 right-0 w-64 h-full bg-card shadow-lg p-6 z-50">
+      <h2 className="text-xl font-bold text-primary mb-4">📂 {t("media")}</h2>
+      <ul className="space-y-3">
+        <li><a href={YT} target="_blank">▶️ {t("youtube")}</a></li>
+        <li><a href={IG} target="_blank">📸 {t("instagram")}</a></li>
+        <li><a href={WA} target="_blank">💬 {t("whatsapp")}</a></li>
+        <li><a href={ZOOM} target="_blank">🎥 {t("zoom")}</a></li>
+        <li><button>🎞️ {t("videos")}</button></li>
+        <li><button>🖼️ {t("photos")}</button></li>
+        <li><button>📰 {t("news")}</button></li>
       </ul>
       <button
-        onClick={() => setRightMenuOpen(false)}
-        className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-2xl"
+        onClick={() => setRightOpen(false)}
+        className="absolute top-3 right-3 text-muted-foreground text-2xl"
       >
         ✕
       </button>
@@ -301,107 +305,86 @@ const Index = () => {
 
   const Layout = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="relative flex flex-col min-h-screen bg-background">
-      {leftMenuOpen && <LeftMenu />}
-      {rightMenuOpen && <RightMenu />}
-      {(leftMenuOpen || rightMenuOpen) && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40"
-          onClick={() => { setLeftMenuOpen(false); setRightMenuOpen(false); }}
-        />
-      )}
-
-      <div className="flex justify-between items-center px-4 py-4 bg-card border-b border-border shadow-sm">
-        <button onClick={() => setLeftMenuOpen(true)} className="text-2xl hover:text-primary transition">☰</button>
+      {leftOpen && <LeftMenu />}
+      {rightOpen && <RightMenu />}
+      <div className="flex justify-between items-center px-4 py-3 bg-card border-b border-border shadow-sm">
+        <button onClick={() => setLeftOpen(true)}>☰</button>
         <h1 className="text-xl font-bold text-primary">{title}</h1>
-        <button onClick={() => setRightMenuOpen(true)} className="text-2xl hover:text-primary transition">⋮</button>
+        <button onClick={() => setRightOpen(true)}>⋮</button>
       </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center text-center px-4 py-8">
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
         {children}
       </div>
-
-      <div className="flex justify-around bg-card border-t border-border py-4 shadow-lg">
-        <button onClick={() => setPage("home")} className={`text-2xl transition ${page === "home" ? "text-primary" : "hover:text-primary"}`}>🏠</button>
-        <button onClick={() => setPage("live")} className={`text-2xl transition ${page === "live" ? "text-primary" : "hover:text-primary"}`}>📡</button>
-        <button onClick={() => setPage("giving")} className={`text-2xl transition ${page === "giving" ? "text-primary" : "hover:text-primary"}`}>❤️</button>
-        <button onClick={() => setPage("profile")} className={`text-2xl transition ${page === "profile" ? "text-primary" : "hover:text-primary"}`}>👤</button>
+      <div className="flex justify-around bg-card border-t border-border py-3">
+        <button onClick={() => setPage("home")}>🏠</button>
+        <button onClick={() => setPage("live")}>📡</button>
+        <button onClick={() => setPage("giving")}>❤️</button>
+        <button onClick={() => setPage("profile")}>👤</button>
       </div>
     </div>
   );
 
-  if (page === "home") {
+  if (page === "home")
     return (
       <Layout title={t("home")}>
-        <h2 className="text-3xl font-bold text-primary mb-4">🏠 {t("home")}</h2>
-        <p className="text-muted-foreground mb-6 max-w-md">{t("welcome")}</p>
-        <p className="text-foreground mb-8">Welcome back, {username || user.email}! 🔥</p>
+        <h2 className="text-2xl font-bold text-primary mb-2">🏠 {t("home")}</h2>
+        <p className="mb-4">{t("welcome")}</p>
+        <p className="text-foreground mb-6">Welcome back, {username || user.email}! 🔥</p>
         <a
-          href={YOUTUBE_LINK}
+          href={YT}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full max-w-sm bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition block text-center"
+          className="w-80 bg-primary text-primary-foreground py-3 rounded-lg font-semibold block"
         >
           {t("joinLive")}
         </a>
       </Layout>
     );
-  }
 
-  if (page === "live") {
+  if (page === "live")
     return (
       <Layout title={t("live")}>
-        <h2 className="text-3xl font-bold text-primary mb-4">📡 {t("live")}</h2>
-        <p className="text-muted-foreground mb-8 max-w-md">{t("liveText")}</p>
+        <h2 className="text-2xl font-bold text-primary mb-2">📡 {t("live")}</h2>
+        <p className="mb-4">{t("liveText")}</p>
         <a
-          href={YOUTUBE_LINK}
+          href={YT}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full max-w-sm bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition block text-center"
+          className="w-80 bg-primary text-primary-foreground py-3 rounded-lg font-semibold block mt-4"
         >
           {t("joinLive")}
         </a>
       </Layout>
     );
-  }
 
-  if (page === "giving") {
+  if (page === "giving")
     return (
       <Layout title={t("giving")}>
-        <h2 className="text-3xl font-bold text-primary mb-4">❤️ {t("giving")}</h2>
-        <p className="text-muted-foreground mb-8 max-w-md whitespace-pre-line">{t("givingText")}</p>
-
-        <div className="w-full max-w-sm space-y-3">
-          <a
-            href={STRIPE_LINK}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition text-center"
-          >
-            {t("subscribe")}
-          </a>
-
-          <button className="w-full bg-secondary text-secondary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition">
-            {t("gift")}
-          </button>
-        </div>
+        <h2 className="text-2xl font-bold text-primary mb-4">❤️ {t("giving")}</h2>
+        <p className="mb-6 whitespace-pre-line">{t("givingText")}</p>
+        <a
+          href={STRIPE}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-80 bg-primary text-primary-foreground py-3 rounded-lg font-semibold block mb-3"
+        >
+          {t("subscribe")}
+        </a>
+        <button className="w-80 bg-secondary text-secondary-foreground py-3 rounded-lg font-semibold">
+          {t("gift")}
+        </button>
       </Layout>
     );
-  }
 
-  if (page === "profile") {
+  if (page === "profile")
     return (
       <Layout title={t("profile")}>
-        <h2 className="text-3xl font-bold text-primary mb-4">👤 {t("profile")}</h2>
-        <p className="text-muted-foreground mb-4 max-w-md">{t("profileText")}</p>
+        <h2 className="text-2xl font-bold text-primary mb-2">👤 {t("profile")}</h2>
+        <p className="mb-4">{t("profileText")}</p>
         <div className="text-foreground space-y-2">
           <p><strong>Username:</strong> {username}</p>
           <p><strong>Email:</strong> {user.email}</p>
         </div>
       </Layout>
     );
-  }
-
-  return null;
-};
-
-export default Index;
+}
