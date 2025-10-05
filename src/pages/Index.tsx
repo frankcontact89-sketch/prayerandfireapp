@@ -52,7 +52,7 @@ export default function Index() {
         style={{ fontFamily: "Inter, system-ui, sans-serif" }}
       >
         <div className="w-11/12 max-w-md text-center">
-          <h1 className="text-5xl font-semibold text-[#111] mb-3 tracking-tight">
+          <h1 className="text-5xl font-semibold mb-3 tracking-tight" style={{ color: "#FF6600" }}>
             Prayer & Fire
           </h1>
           <p className="text-gray-500 text-lg mb-10 tracking-wide">
@@ -172,16 +172,47 @@ export default function Index() {
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-start text-left px-4 pt-6 overflow-y-auto">
+      {/* Contenido (deja espacio abajo para la barra flotante) */}
+      <div className="flex-1 flex flex-col items-center justify-start text-left px-4 pt-6 pb-28 overflow-y-auto">
         {children}
       </div>
 
-      <div className="flex justify-around bg-[#fafafa] border-t border-gray-200 py-3 text-gray-700 text-sm font-medium">
-        <button onClick={() => setPage("home")}>Home</button>
-        <button onClick={() => setPage("live")}>Live</button>
-        <button onClick={() => setPage("store")}>Store</button>
-        <button onClick={() => setPage("giving")}>Giving</button>
-        <button onClick={() => setPage("profile")}>Profile</button>
+      {/* Barra inferior flotante (elevada y más arriba) */}
+      <div
+        style={{
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 12,                 // <- la levantamos un poco
+          display: "flex",
+          justifyContent: "center",
+          pointerEvents: "none",      // contenedor no interactúa
+          zIndex: 40,
+        }}
+      >
+        <nav
+          style={{
+            pointerEvents: "auto",    // el nav sí es clickeable
+            background: "#fff",
+            border: "1px solid #e5e7eb",
+            borderRadius: 16,
+            boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+            padding: "10px 14px",
+            display: "flex",
+            gap: 18,
+            alignItems: "center",
+            fontSize: 14,
+            color: "#4b5563",
+            maxWidth: 520,
+            width: "92%",
+          }}
+        >
+          <button onClick={() => setPage("home")}>Home</button>
+          <button onClick={() => setPage("live")}>Live</button>
+          <button onClick={() => setPage("store")}>Store</button>
+          <button onClick={() => setPage("giving")}>Giving</button>
+          <button onClick={() => setPage("profile")}>Profile</button>
+        </nav>
       </div>
     </div>
   );
