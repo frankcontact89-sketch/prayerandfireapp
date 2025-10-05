@@ -76,6 +76,8 @@ export default function Index() {
       instagram: "Instagram",
       whatsapp: "WhatsApp",
       zoom: "Zoom",
+      store: "Store",
+      comingSoon: "Our products and courses are coming soon!",
       emailLabel: "Email",
       passwordLabel: "Password",
       usernameLabel: "Username",
@@ -107,6 +109,8 @@ export default function Index() {
       instagram: "Instagram",
       whatsapp: "WhatsApp",
       zoom: "Zoom",
+      store: "Tienda",
+      comingSoon: "¡Nuestros productos y cursos llegarán pronto!",
       emailLabel: "Correo electrónico",
       passwordLabel: "Contraseña",
       usernameLabel: "Usuario",
@@ -290,9 +294,6 @@ export default function Index() {
         <li><a href={IG} target="_blank">📸 {t("instagram")}</a></li>
         <li><a href={WA} target="_blank">💬 {t("whatsapp")}</a></li>
         <li><a href={ZOOM} target="_blank">🎥 {t("zoom")}</a></li>
-        <li><button>🎞️ {t("videos")}</button></li>
-        <li><button>🖼️ {t("photos")}</button></li>
-        <li><button>📰 {t("news")}</button></li>
       </ul>
       <button
         onClick={() => setRightOpen(false)}
@@ -318,6 +319,7 @@ export default function Index() {
       <div className="flex justify-around bg-card border-t border-border py-3">
         <button onClick={() => setPage("home")}>🏠</button>
         <button onClick={() => setPage("live")}>📡</button>
+        <button onClick={() => setPage("store")}>🛒</button>
         <button onClick={() => setPage("giving")}>❤️</button>
         <button onClick={() => setPage("profile")}>👤</button>
       </div>
@@ -354,6 +356,14 @@ export default function Index() {
         >
           {t("joinLive")}
         </a>
+      </Layout>
+    );
+
+  if (page === "store")
+    return (
+      <Layout title={t("store")}>
+        <h2 className="text-2xl font-bold text-primary mb-2">🛒 {t("store")}</h2>
+        <p className="text-muted-foreground">{t("comingSoon")}</p>
       </Layout>
     );
 
