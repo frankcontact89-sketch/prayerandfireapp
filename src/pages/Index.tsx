@@ -6,9 +6,10 @@ const APP_TITLE = "Prayer & Fire App";
 const INSTAGRAM_URL = "https://www.instagram.com/prayerandfire/";
 const YOUTUBE_URL = "https://youtube.com/";
 const ZOOM_URL = "https://zoom.us/";
-const WHATSAPP_MESSAGE = "🔥 Check out the Prayer & Fire App!";
+const WHATSAPP_MESSAGE = "🔥 Check out the Prayer & Fire App! https://lovable.app/prayerandfire";
 
 const Index = () => {
+  const [loggedIn, setLoggedIn] = useState(false);
   const [showInstagram, setShowInstagram] = useState(false);
 
   const shareOnWhatsApp = () => {
@@ -16,17 +17,44 @@ const Index = () => {
     window.open(url, "_blank");
   };
 
+  // --- LOGIN SCREEN ---
+  if (!loggedIn) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <img
+          src="https://i.imgur.com/4Q9QpMo.png"
+          alt="Prayer & Fire Logo"
+          className="w-40 h-40 mb-6 object-contain"
+        />
+        <h1 className="text-3xl font-extrabold text-primary mb-8">
+          Prayer & Fire
+        </h1>
+        <Button
+          onClick={() => setLoggedIn(true)}
+          size="lg"
+          className="px-12 py-6 text-lg font-bold"
+        >
+          Enter App
+        </Button>
+        <p className="text-center text-muted-foreground text-sm mt-16">
+          Powered by Prayer & Fire
+        </p>
+      </div>
+    );
+  }
+
+  // --- MAIN APP CONTENT ---
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8 pb-16">
-        {/* LOGO */}
-        <div className="text-center space-y-6">
+        {/* HEADER */}
+        <div className="text-center space-y-4">
           <img
             src="https://i.imgur.com/4Q9QpMo.png"
             alt="Prayer & Fire Logo"
-            className="w-32 h-32 mx-auto object-contain"
+            className="w-24 h-24 mx-auto object-contain"
           />
-          <h1 className="text-2xl font-bold text-primary">
+          <h1 className="text-xl font-bold text-primary">
             Welcome to Prayer & Fire 🔥
           </h1>
         </div>
