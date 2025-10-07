@@ -5,6 +5,7 @@ export default function Index() {
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [language, setLanguage] = useState("en");
 
   const STRIPE = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
   const YT = "https://youtube.com";
@@ -211,7 +212,6 @@ export default function Index() {
           <button onClick={() => setPage("live")}>Live</button>
           <button onClick={() => setPage("store")}>Store</button>
           <button onClick={() => setPage("giving")}>Giving</button>
-          <button onClick={() => setPage("profile")}>Profile</button>
         </nav>
       </div>
     </div>
@@ -337,7 +337,34 @@ export default function Index() {
       <Layout title="Profile">
         <div className="w-full max-w-xl mx-auto">
           <h2 className="text-2xl font-semibold text-[#111] mb-4">Account</h2>
-          <p className="text-gray-500">Manage your account and preferences.</p>
+          <p className="text-gray-500 mb-6">Manage your account and preferences.</p>
+          
+          {/* Language Selection */}
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <h3 className="text-lg font-semibold text-[#111] mb-4">Language / Idioma</h3>
+            <div className="space-y-3">
+              <button
+                onClick={() => setLanguage("en")}
+                className={`w-full p-3 rounded-lg border text-left transition ${
+                  language === "en"
+                    ? "border-[#FF6600] bg-orange-50 text-[#FF6600] font-semibold"
+                    : "border-gray-300 text-gray-700 hover:border-gray-400"
+                }`}
+              >
+                English
+              </button>
+              <button
+                onClick={() => setLanguage("es")}
+                className={`w-full p-3 rounded-lg border text-left transition ${
+                  language === "es"
+                    ? "border-[#FF6600] bg-orange-50 text-[#FF6600] font-semibold"
+                    : "border-gray-300 text-gray-700 hover:border-gray-400"
+                }`}
+              >
+                Español
+              </button>
+            </div>
+          </div>
         </div>
       </Layout>
     );
