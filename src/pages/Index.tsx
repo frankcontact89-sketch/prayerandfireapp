@@ -8,7 +8,7 @@ export default function Index() {
 
   const STRIPE = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
   const YT = "https://youtube.com";
-  const IG = "https://instagram.com";
+  const IG = "https://instagram.com/seloprayerandfire";
   const WA = "https://wa.me/1XXXXXXXXXX";
   const ZOOM = "https://zoom.us";
 
