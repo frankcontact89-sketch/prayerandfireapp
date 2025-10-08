@@ -6,7 +6,19 @@ export function useUserRole() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkUserRole();
+    let mounted = true;
+    
+    const init = async () => {
+      if (mounted) {
+        await checkUserRole();
+      }
+    };
+    
+    init();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const checkUserRole = async () => {
