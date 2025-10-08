@@ -1,0 +1,53 @@
+import React from "react";
+import { Button } from "@/components/ui/button";
+
+interface GivingScreenProps {
+  t: (en: string, es: string) => string;
+}
+
+export function GivingScreen({ t }: GivingScreenProps) {
+  const STRIPE = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
+
+  const givingOptions = [
+    { title: t("Offering", "Ofrenda"), action: () => window.open(STRIPE, "_blank") },
+    { title: t("One-Time Give", "Donación Única"), action: () => window.open(STRIPE, "_blank") },
+    { title: t("Support Project", "Apoyar Proyecto"), action: () => window.open(STRIPE, "_blank") },
+  ];
+
+  return (
+    <div className="max-w-xl mx-auto p-6 space-y-8">
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl font-extrabold text-foreground">
+          {t("Giving", "Ofrendas")}
+        </h2>
+        <p className="text-muted-foreground">
+          {t(
+            "Support Prayer & Fire and fuel the movement.",
+            "Apoya Prayer & Fire y alimenta el movimiento."
+          )}
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        {givingOptions.map((option, index) => (
+          <Button
+            key={index}
+            onClick={option.action}
+            className="w-full h-14 text-lg font-bold"
+          >
+            {option.title}
+          </Button>
+        ))}
+      </div>
+
+      <div className="bg-card border border-border rounded-xl p-6 text-center space-y-2">
+        <p className="text-sm text-muted-foreground">
+          {t(
+            "Thank you for fueling the fire and supporting our mission.",
+            "Gracias por alimentar el fuego y apoyar nuestra misión."
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
