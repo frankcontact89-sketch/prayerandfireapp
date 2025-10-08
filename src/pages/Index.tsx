@@ -20,10 +20,21 @@ import { supabase } from "@/integrations/supabase/client";
 export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState("home");
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem("app_language") || "en";
+  });
   const [loading, setLoading] = useState(true);
 
-  const t = (en: string, es: string) => (language === "en" ? en : es);
+  const t = (en: string, es: string) => {
+    // Only English and Spanish are fully supported in the UI
+    // All other languages default to English
+    return language === "es" ? es : en;
+  };
+
+  const handleLanguageChange = (newLang: string) => {
+    setLanguage(newLang);
+    localStorage.setItem("app_language", newLang);
+  };
 
   useEffect(() => {
     // Check for existing session
@@ -125,7 +136,7 @@ export default function Index() {
           <ProfileScreen
             t={t}
             language={language}
-            setLanguage={setLanguage}
+            setLanguage={handleLanguageChange}
             signOut={async () => {
               await supabase.auth.signOut();
               setUser(null);
@@ -136,7 +147,7 @@ export default function Index() {
           <SettingsScreen 
             t={t} 
             language={language}
-            setLanguage={setLanguage}
+            setLanguage={handleLanguageChange}
             onAdminClick={() => setPage("admin")}
             onProfileClick={() => setPage("profile")}
           />

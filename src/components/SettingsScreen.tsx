@@ -62,26 +62,29 @@ export function SettingsScreen({ t, language, setLanguage, onAdminClick, onProfi
         <h3 className="text-lg font-bold text-foreground">
           {t("Language", "Idioma")}
         </h3>
+        <p className="text-sm text-muted-foreground">
+          {t("UI available in English and Spanish", "Interfaz disponible en inglés y español")}
+        </p>
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
           className="w-full py-3 px-4 rounded-lg font-bold bg-primary text-primary-foreground border-none cursor-pointer"
         >
-          <option value="en">English</option>
-          <option value="es">Español</option>
-          <option value="pt">Português</option>
-          <option value="fr">Français</option>
-          <option value="de">Deutsch</option>
-          <option value="it">Italiano</option>
-          <option value="nl">Nederlands</option>
-          <option value="pl">Polski</option>
-          <option value="ru">Русский</option>
-          <option value="zh">中文</option>
-          <option value="ja">日本語</option>
-          <option value="ko">한국어</option>
-          <option value="ar">العربية</option>
-          <option value="hi">हिन्दी</option>
-          <option value="tr">Türkçe</option>
+          <option value="en">🇺🇸 English (UI Supported)</option>
+          <option value="es">🇪🇸 Español (UI Supported)</option>
+          <option value="pt">🇧🇷 Português</option>
+          <option value="fr">🇫🇷 Français</option>
+          <option value="de">🇩🇪 Deutsch</option>
+          <option value="it">🇮🇹 Italiano</option>
+          <option value="nl">🇳🇱 Nederlands</option>
+          <option value="pl">🇵🇱 Polski</option>
+          <option value="ru">🇷🇺 Русский</option>
+          <option value="zh">🇨🇳 中文</option>
+          <option value="ja">🇯🇵 日本語</option>
+          <option value="ko">🇰🇷 한국어</option>
+          <option value="ar">🇸🇦 العربية</option>
+          <option value="hi">🇮🇳 हिन्दी</option>
+          <option value="tr">🇹🇷 Türkçe</option>
         </select>
       </div>
 
