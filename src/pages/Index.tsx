@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SignInScreen } from "@/components/SignInScreen";
 import { HomeScreen } from "@/components/HomeScreen";
 import { GivingScreen } from "@/components/GivingScreen";
@@ -12,13 +12,40 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState("home");
   const [language, setLanguage] = useState("en");
+  const [loading, setLoading] = useState(true);
 
   const t = (en: string, es: string) => (language === "en" ? en : es);
+
+  useEffect(() => {
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-primary text-lg">{t("Loading...", "Cargando...")}</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return <SignInScreen setUser={setUser} t={t} />;
@@ -84,7 +111,10 @@ export default function Index() {
             t={t}
             language={language}
             setLanguage={setLanguage}
-            signOut={() => setUser(null)}
+            signOut={async () => {
+              await supabase.auth.signOut();
+              setUser(null);
+            }}
           />
         )}
         {page === "settings" && <SettingsScreen t={t} onAdminClick={() => setPage("admin")} />}

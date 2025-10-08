@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface SignInScreenProps {
   setUser: (user: any) => void;
@@ -10,9 +12,69 @@ interface SignInScreenProps {
 export function SignInScreen({ setUser, t }: SignInScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleSignIn = () => {
-    setUser({ id: 1, name: "Guest", email: "guest@prayerfire.app" });
+  const handleAuth = async () => {
+    if (!email || !password) {
+      toast({
+        title: t("Error", "Error"),
+        description: t("Please fill all fields", "Por favor llena todos los campos"),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (isSignUp) {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          // Create profile
+          await supabase.from("profiles").insert([
+            {
+              id: data.user.id,
+              email: data.user.email,
+              username: email.split("@")[0],
+            },
+          ]);
+
+          toast({
+            title: t("Account created!", "¡Cuenta creada!"),
+            description: t("You can now sign in", "Ya puedes iniciar sesión"),
+          });
+          setIsSignUp(false);
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+        if (data.user) {
+          setUser(data.user);
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: t("Error", "Error"),
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,17 +109,22 @@ export function SignInScreen({ setUser, t }: SignInScreenProps) {
             className="h-12"
           />
 
-          <Button onClick={handleSignIn} className="w-full h-12 text-base font-bold">
-            Sign In
+          <Button 
+            onClick={handleAuth} 
+            className="w-full h-12 text-base font-bold"
+            disabled={loading}
+          >
+            {loading ? t("Loading...", "Cargando...") : (isSignUp ? t("Create Account", "Crear Cuenta") : t("Sign In", "Iniciar Sesión"))}
           </Button>
 
-          <Button variant="outline" className="w-full h-12 text-base font-bold border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-            Create Account
+          <Button 
+            variant="outline" 
+            onClick={() => setIsSignUp(!isSignUp)}
+            className="w-full h-12 text-base font-bold border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            disabled={loading}
+          >
+            {isSignUp ? t("Already have an account? Sign In", "¿Ya tienes cuenta? Inicia Sesión") : t("Create Account", "Crear Cuenta")}
           </Button>
-
-          <button className="w-full text-center text-primary font-bold text-sm">
-            Forgot Password / Username?
-          </button>
         </div>
       </div>
     </div>
