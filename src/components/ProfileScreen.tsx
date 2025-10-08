@@ -107,12 +107,12 @@ export function ProfileScreen({
       {/* Language Toggle */}
       <div className="bg-card border border-border rounded-xl p-5 space-y-4">
         <h3 className="text-lg font-bold text-foreground">
-          {t("Language / Idioma", "Language / Idioma")}
+          {t("Language", "Idioma")}
         </h3>
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setLanguage("en")}
-            className={`flex-1 py-3 rounded-lg font-bold transition-colors ${
+            className={`py-3 rounded-lg font-bold transition-colors ${
               language === "en"
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -122,7 +122,7 @@ export function ProfileScreen({
           </button>
           <button
             onClick={() => setLanguage("es")}
-            className={`flex-1 py-3 rounded-lg font-bold transition-colors ${
+            className={`py-3 rounded-lg font-bold transition-colors ${
               language === "es"
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -130,27 +130,29 @@ export function ProfileScreen({
           >
             Español
           </button>
+          <button
+            onClick={() => setLanguage("pt")}
+            className={`py-3 rounded-lg font-bold transition-colors ${
+              language === "pt"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            Português
+          </button>
+          <button
+            onClick={() => setLanguage("fr")}
+            className={`py-3 rounded-lg font-bold transition-colors ${
+              language === "fr"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            Français
+          </button>
         </div>
       </div>
 
-      {/* Social Links */}
-      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
-        <h3 className="text-lg font-bold text-foreground">
-          {t("Connect With Us", "Conéctate Con Nosotros")}
-        </h3>
-        <div className="flex justify-center gap-4">
-          {socialLinks.map((link, index) => (
-            <button
-              key={index}
-              onClick={() => window.open(link.url, "_blank")}
-              className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
-              aria-label={link.label}
-            >
-              <link.icon className="w-5 h-5" />
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Sign Out */}
       <button

@@ -4,7 +4,7 @@ import { HomeScreen } from "@/components/HomeScreen";
 import { GivingScreen } from "@/components/GivingScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
-import { Home, Heart, User, Settings } from "lucide-react";
+import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video } from "lucide-react";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -21,10 +21,52 @@ export default function Index() {
     <div className="flex flex-col min-h-screen bg-background font-sans">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
-        <div className="flex justify-center items-center px-6 py-4">
+        <div className="flex justify-between items-center px-6 py-4">
+          {/* Settings Left */}
+          <button
+            onClick={() => setPage("settings")}
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+          >
+            <Settings className="w-5 h-5" />
+            <span className="text-sm font-semibold hidden sm:inline">Settings</span>
+          </button>
+
+          {/* Title Center */}
           <h1 className="text-xl font-extrabold text-primary tracking-tight">
             PRAYER AND FIRE
           </h1>
+
+          {/* Social Links Right */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => window.open("https://instagram.com/seloprayerandfire", "_blank")}
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label="Instagram"
+            >
+              <Instagram className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => window.open("https://wa.me/1XXXXXXXXXX", "_blank")}
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label="WhatsApp"
+            >
+              <MessageCircle className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => window.open("https://youtube.com", "_blank")}
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label="YouTube"
+            >
+              <Youtube className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => window.open("https://zoom.us", "_blank")}
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label="Zoom"
+            >
+              <Video className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -45,7 +87,7 @@ export default function Index() {
 
       {/* Floating Bottom Navigation */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center pointer-events-none z-40">
-        <nav className="pointer-events-auto bg-card border border-border rounded-2xl shadow-2xl px-6 py-3 flex gap-8 items-center max-w-md">
+        <nav className="pointer-events-auto bg-card border border-border rounded-2xl shadow-2xl px-8 py-3 flex gap-12 items-center max-w-md">
           <button
             onClick={() => setPage("home")}
             className={`flex flex-col items-center gap-1 transition-colors ${
@@ -72,17 +114,6 @@ export default function Index() {
           >
             <User className="w-5 h-5" />
             <span className="text-xs font-bold">{t("Profile", "Perfil")}</span>
-          </button>
-          <button
-            onClick={() => setPage("settings")}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              page === "settings" ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <Settings className="w-5 h-5" />
-            <span className="text-xs font-bold">
-              {t("Settings", "Ajustes")}
-            </span>
           </button>
         </nav>
       </div>
