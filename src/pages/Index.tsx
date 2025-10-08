@@ -2,20 +2,12 @@ import React, { useState, useEffect } from "react";
 import { SignInScreen } from "@/components/SignInScreen";
 import { HomeScreen } from "@/components/HomeScreen";
 import { LiveStreamScreen } from "@/components/LiveStreamScreen";
-import { LiveChatScreen } from "@/components/LiveChatScreen";
 import { EventsScreen } from "@/components/EventsScreen";
 import { GivingScreen } from "@/components/GivingScreen";
 import { ShoppingScreen } from "@/components/ShoppingScreen";
-import { ProfileScreen } from "@/components/ProfileScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
-import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, Flame, Share2, Tv, Calendar, ShoppingBag } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Home, Heart, Settings, Instagram, Youtube, MessageCircle, Video, Share2, Tv, Calendar, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Index() {
@@ -25,6 +17,7 @@ export default function Index() {
     return localStorage.getItem("app_language") || "en";
   });
   const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState("");
 
   const t = (en: string, es: string) => {
     if (language === "es") return es;
@@ -110,78 +103,39 @@ export default function Index() {
           {/* Settings Left */}
           <button
             onClick={() => setPage("settings")}
-            className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+            className="text-primary hover:text-primary/80 transition-colors"
           >
-            <Settings className="w-5 h-5" />
-            <span className="text-sm font-semibold hidden sm:inline">Settings</span>
+            <Settings className="w-6 h-6" />
           </button>
 
-          {/* Title Center with Icon */}
-          <div className="flex items-center gap-2">
-            <Flame className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-extrabold text-primary tracking-tight">
-              PRAYER & FIRE
-            </h1>
-          </div>
+          {/* Title Center */}
+          <h1 className="text-xl font-bold text-foreground">
+            Prayer & Fire
+          </h1>
 
-          {/* Menu Right */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="text-muted-foreground hover:text-primary transition-colors">
-                <Share2 className="w-5 h-5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => setPage("events")}>
-                <Calendar className="w-4 h-4 mr-2" />
-                {t("Events", "Eventos")}
-              </DropdownMenuItem>
-              <div className="h-px bg-border my-1" />
-              <DropdownMenuItem onClick={() => window.open("https://instagram.com/seloprayerandfire", "_blank")}>
-                <Instagram className="w-4 h-4 mr-2 text-pink-600" />
-                Instagram
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.open("https://wa.me/1XXXXXXXXXX", "_blank")}>
-                <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
-                WhatsApp
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.open("https://youtube.com", "_blank")}>
-                <Youtube className="w-4 h-4 mr-2 text-red-600" />
-                YouTube
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.open("https://zoom.us", "_blank")}>
-                <Video className="w-4 h-4 mr-2 text-blue-600" />
-                Zoom
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Social Right */}
+          <button
+            onClick={() => setPage("social")}
+            className="text-primary hover:text-primary/80 transition-colors"
+          >
+            <Share2 className="w-6 h-6" />
+          </button>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto pb-28">
+      <div className="flex-1 overflow-y-auto pb-20">
         {page === "home" && <HomeScreen t={t} />}
         {page === "stream" && <LiveStreamScreen t={t} />}
-        {page === "chat" && <LiveChatScreen t={t} />}
-        {page === "events" && <EventsScreen t={t} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
-        {page === "profile" && (
-          <ProfileScreen
-            t={t}
-            language={language}
-            setLanguage={handleLanguageChange}
-            signOut={async () => {
-              await supabase.auth.signOut();
-              setUser(null);
-            }}
-          />
-        )}
         {page === "settings" && (
           <SettingsScreen 
             t={t} 
             language={language}
             setLanguage={handleLanguageChange}
+            userName={userName}
+            userEmail={user?.email || ""}
             onAdminClick={() => setPage("admin")}
             onProfileClick={() => setPage("profile")}
             onSignOut={async () => {
@@ -190,20 +144,74 @@ export default function Index() {
             }}
           />
         )}
+        {page === "social" && (
+          <div className="max-w-2xl mx-auto p-6 space-y-4">
+            <h2 className="text-2xl font-bold text-foreground mb-6">
+              {t("🌐 Connect", "🌐 Conectar")}
+            </h2>
+            
+            <button
+              onClick={() => window.open("https://youtube.com", "_blank")}
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
+            >
+              <Youtube className="w-5 h-5" />
+              YouTube
+            </button>
+
+            <button
+              onClick={() => window.open("https://wa.me/1XXXXXXXXXX", "_blank")}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
+            >
+              <MessageCircle className="w-5 h-5" />
+              WhatsApp
+            </button>
+
+            <button
+              onClick={() => window.open("https://instagram.com/seloprayerandfire", "_blank")}
+              className="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
+            >
+              <Instagram className="w-5 h-5" />
+              Instagram
+            </button>
+
+            <button
+              onClick={() => window.open("https://zoom.us", "_blank")}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
+            >
+              <Video className="w-5 h-5" />
+              Zoom
+            </button>
+
+            <button
+              onClick={() => setPage("events")}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
+            >
+              <Calendar className="w-5 h-5" />
+              {t("Events", "Eventos")}
+            </button>
+
+            <button
+              onClick={() => setPage("home")}
+              className="mt-6 text-primary hover:text-primary/80 font-semibold text-center w-full"
+            >
+              {t("Back", "Volver")}
+            </button>
+          </div>
+        )}
+        {page === "events" && <EventsScreen t={t} />}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
       </div>
 
-      {/* Floating Bottom Navigation */}
-      <div className="fixed bottom-4 left-0 right-0 flex justify-center pointer-events-none z-40">
-        <nav className="pointer-events-auto bg-card border border-border rounded-2xl shadow-2xl px-6 py-3 flex gap-8 items-center">
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border">
+        <nav className="flex justify-around items-center py-3 px-4 max-w-2xl mx-auto">
           <button
             onClick={() => setPage("home")}
             className={`flex flex-col items-center gap-1 transition-colors ${
               page === "home" ? "text-primary" : "text-muted-foreground"
             }`}
           >
-            <Home className="w-5 h-5" />
-            <span className="text-xs font-bold whitespace-nowrap">{t("Home", "Inicio")}</span>
+            <Home className="w-6 h-6" />
           </button>
           <button
             onClick={() => setPage("stream")}
@@ -211,17 +219,7 @@ export default function Index() {
               page === "stream" ? "text-primary" : "text-muted-foreground"
             }`}
           >
-            <Tv className="w-5 h-5" />
-            <span className="text-xs font-bold whitespace-nowrap">{t("Stream", "Stream")}</span>
-          </button>
-          <button
-            onClick={() => setPage("chat")}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              page === "chat" ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <MessageCircle className="w-5 h-5" />
-            <span className="text-xs font-bold whitespace-nowrap">{t("Chat", "Chat")}</span>
+            <Tv className="w-6 h-6" />
           </button>
           <button
             onClick={() => setPage("giving")}
@@ -229,8 +227,7 @@ export default function Index() {
               page === "giving" ? "text-primary" : "text-muted-foreground"
             }`}
           >
-            <Heart className="w-5 h-5" />
-            <span className="text-xs font-bold whitespace-nowrap">{t("Give", "Dar")}</span>
+            <Heart className="w-6 h-6" />
           </button>
           <button
             onClick={() => setPage("shopping")}
@@ -238,8 +235,15 @@ export default function Index() {
               page === "shopping" ? "text-primary" : "text-muted-foreground"
             }`}
           >
-            <ShoppingBag className="w-5 h-5" />
-            <span className="text-xs font-bold whitespace-nowrap">{t("Shop", "Tienda")}</span>
+            <ShoppingBag className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => setPage("settings")}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              page === "settings" ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <Settings className="w-6 h-6" />
           </button>
         </nav>
       </div>

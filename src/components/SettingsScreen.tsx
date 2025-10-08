@@ -1,126 +1,116 @@
 import React from "react";
-import { ChevronRight, Shield, User, LogOut } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface SettingsScreenProps {
   t: (en: string, es: string) => string;
   language: string;
   setLanguage: (lang: string) => void;
+  userName: string;
+  userEmail: string;
   onAdminClick: () => void;
   onProfileClick: () => void;
   onSignOut: () => void;
 }
 
-export function SettingsScreen({ t, language, setLanguage, onAdminClick, onProfileClick, onSignOut }: SettingsScreenProps) {
+export function SettingsScreen({ t, language, setLanguage, userName, userEmail, onAdminClick, onProfileClick, onSignOut }: SettingsScreenProps) {
   const { isAdmin, loading } = useUserRole();
-  
-  const settingsOptions = [
-    { title: t("General", "General") },
-    { title: t("Notifications", "Notificaciones") },
-    { title: t("Help", "Ayuda") },
-  ];
 
   return (
-    <div className="max-w-xl mx-auto p-6 space-y-6">
-      <h2 className="text-3xl font-extrabold text-foreground">
-        {t("Settings", "Ajustes")}
+    <div className="max-w-2xl mx-auto p-6 space-y-6">
+      <h2 className="text-2xl font-bold text-foreground mb-6">
+        {t("⚙️ Settings", "⚙️ Configuración")}
       </h2>
 
-      {!loading && isAdmin && (
-        <button
-          onClick={onAdminClick}
-          className="w-full flex items-center justify-between p-5 bg-primary/10 border-2 border-primary rounded-xl hover:bg-primary/20 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <Shield className="w-6 h-6 text-primary" />
-            <div className="text-left">
-              <span className="font-bold text-lg text-foreground">
-                {t("Admin Panel", "Panel de Administración")}
-              </span>
-              <p className="text-sm text-muted-foreground">
-                {t("Manage app content and settings", "Administrar contenido y configuración")}
-              </p>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-primary" />
-        </button>
-      )}
+      {/* Profile Section */}
+      <div className="space-y-2">
+        <h3 className="text-lg font-bold text-primary">
+          {t("Profile", "Perfil")}
+        </h3>
+        <p className="text-foreground">
+          {t("Name:", "Nombre:")} {userName || t("User", "Usuario")}
+        </p>
+        <p className="text-foreground">
+          {t("Email:", "Email:")} {userEmail}
+        </p>
+      </div>
 
-      <button
-        onClick={onProfileClick}
-        className="w-full flex items-center justify-between p-5 bg-card border border-border rounded-xl hover:bg-muted/50 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <User className="w-6 h-6 text-foreground" />
-          <span className="font-bold text-lg text-foreground">
-            {t("Profile", "Perfil")}
-          </span>
-        </div>
-        <ChevronRight className="w-5 h-5 text-muted-foreground" />
-      </button>
-
-      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
-        <h3 className="text-lg font-bold text-foreground">
+      {/* Language Section */}
+      <div className="space-y-3">
+        <h3 className="text-lg font-bold text-primary">
           {t("Language", "Idioma")}
         </h3>
-        <p className="text-sm text-muted-foreground">
-          {t("UI available in English and Spanish", "Interfaz disponible en inglés y español")}
-        </p>
-        <select
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-          className="w-full py-3 px-4 rounded-lg font-bold bg-muted text-foreground border border-border cursor-pointer"
-        >
-          <option value="en">🇺🇸 English (UI Supported)</option>
-          <option value="es">🇪🇸 Español (UI Supported)</option>
-          <option value="pt">🇧🇷 Português</option>
-          <option value="fr">🇫🇷 Français</option>
-          <option value="de">🇩🇪 Deutsch</option>
-          <option value="it">🇮🇹 Italiano</option>
-          <option value="nl">🇳🇱 Nederlands</option>
-          <option value="pl">🇵🇱 Polski</option>
-          <option value="ru">🇷🇺 Русский</option>
-          <option value="zh">🇨🇳 中文</option>
-          <option value="ja">🇯🇵 日本語</option>
-          <option value="ko">🇰🇷 한국어</option>
-          <option value="ar">🇸🇦 العربية</option>
-          <option value="hi">🇮🇳 हिन्दी</option>
-          <option value="tr">🇹🇷 Türkçe</option>
-        </select>
-        <button
-          onClick={() => {
-            const message = language === "es" 
-              ? "Idioma guardado correctamente" 
-              : "Language saved successfully";
-            alert(message);
-          }}
-          className="w-full py-3 px-4 rounded-lg font-bold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-        >
-          {t("Save", "Guardar")}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setLanguage("en")}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+              language === "en" 
+                ? "bg-primary text-primary-foreground" 
+                : "bg-card text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            EN
+          </button>
+          <button
+            onClick={() => setLanguage("es")}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+              language === "es" 
+                ? "bg-primary text-primary-foreground" 
+                : "bg-card text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            ES
+          </button>
+          <button
+            onClick={() => setLanguage("fr")}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+              language === "fr" 
+                ? "bg-primary text-primary-foreground" 
+                : "bg-card text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            FR
+          </button>
+        </div>
       </div>
 
-      <div className="bg-card border border-border rounded-xl overflow-hidden divide-y divide-border">
-        {settingsOptions.map((option, index) => (
-          <button
-            key={index}
-            className="w-full flex items-center justify-between p-5 hover:bg-muted/50 transition-colors"
-          >
-            <span className="font-semibold text-foreground">{option.title}</span>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
-          </button>
-        ))}
-        <button
-          onClick={onSignOut}
-          className="w-full flex items-center justify-between p-5 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <LogOut className="w-5 h-5 text-red-600" />
-            <span className="font-semibold text-red-600">{t("Sign Out", "Cerrar Sesión")}</span>
-          </div>
-          <ChevronRight className="w-5 h-5 text-red-600" />
-        </button>
+      {/* Notifications Section */}
+      <div className="space-y-2">
+        <h3 className="text-lg font-bold text-primary">
+          {t("Notifications", "Notificaciones")}
+        </h3>
+        <p className="text-muted-foreground">
+          🔔 {t("Enabled (simulated)", "Habilitado (simulado)")}
+        </p>
       </div>
+
+      {/* Admin Panel Section */}
+      {loading ? (
+        <div className="text-muted-foreground">
+          {t("Loading admin status...", "Cargando estado de administrador...")}
+        </div>
+      ) : (
+        isAdmin && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-bold text-primary">
+              {t("Admin", "Administrador")}
+            </h3>
+            <button
+              onClick={onAdminClick}
+              className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors font-semibold"
+            >
+              {t("Open Admin Panel", "Abrir Panel de Administración")}
+            </button>
+          </div>
+        )
+      )}
+
+      {/* Sign Out Button */}
+      <button
+        onClick={onSignOut}
+        className="mt-8 text-primary hover:text-primary/80 font-semibold text-center w-full"
+      >
+        {t("Sign Out", "Cerrar Sesión")}
+      </button>
     </div>
   );
 }
