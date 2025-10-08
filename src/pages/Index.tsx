@@ -4,7 +4,8 @@ import { HomeScreen } from "@/components/HomeScreen";
 import { GivingScreen } from "@/components/GivingScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
-import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video } from "lucide-react";
+import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, ShoppingBag } from "lucide-react";
+import fireIcon from "@/assets/fire-icon.jpeg";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -31,10 +32,13 @@ export default function Index() {
             <span className="text-sm font-semibold hidden sm:inline">Settings</span>
           </button>
 
-          {/* Title Center */}
-          <h1 className="text-xl font-extrabold text-primary tracking-tight">
-            PRAYER AND FIRE
-          </h1>
+          {/* Title Center with Icon */}
+          <div className="flex items-center gap-2">
+            <img src={fireIcon} alt="Fire" className="w-6 h-6 object-contain" />
+            <h1 className="text-xl font-extrabold text-primary tracking-tight">
+              PRAYER & FIRE
+            </h1>
+          </div>
 
           {/* Social Links Right */}
           <div className="flex items-center gap-3">
@@ -87,7 +91,7 @@ export default function Index() {
 
       {/* Floating Bottom Navigation */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center pointer-events-none z-40">
-        <nav className="pointer-events-auto bg-card border border-border rounded-2xl shadow-2xl px-8 py-3 flex gap-12 items-center max-w-md">
+        <nav className="pointer-events-auto bg-card border border-border rounded-2xl shadow-2xl px-6 py-3 flex gap-8 items-center max-w-md">
           <button
             onClick={() => setPage("home")}
             className={`flex flex-col items-center gap-1 transition-colors ${
@@ -105,6 +109,13 @@ export default function Index() {
           >
             <Heart className="w-5 h-5" />
             <span className="text-xs font-bold">{t("Giving", "Ofrendas")}</span>
+          </button>
+          <button
+            onClick={() => window.open("https://store.example.com", "_blank")}
+            className="flex flex-col items-center gap-1 transition-colors text-muted-foreground hover:text-primary"
+          >
+            <ShoppingBag className="w-5 h-5" />
+            <span className="text-xs font-bold">{t("Store", "Tienda")}</span>
           </button>
           <button
             onClick={() => setPage("profile")}
