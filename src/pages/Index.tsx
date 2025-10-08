@@ -138,19 +138,19 @@ export default function Index() {
               </DropdownMenuItem>
               <div className="h-px bg-border my-1" />
               <DropdownMenuItem onClick={() => window.open("https://instagram.com/seloprayerandfire", "_blank")}>
-                <Instagram className="w-4 h-4 mr-2" />
+                <Instagram className="w-4 h-4 mr-2 text-pink-600" />
                 Instagram
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => window.open("https://wa.me/1XXXXXXXXXX", "_blank")}>
-                <MessageCircle className="w-4 h-4 mr-2" />
+                <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
                 WhatsApp
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => window.open("https://youtube.com", "_blank")}>
-                <Youtube className="w-4 h-4 mr-2" />
+                <Youtube className="w-4 h-4 mr-2 text-red-600" />
                 YouTube
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => window.open("https://zoom.us", "_blank")}>
-                <Video className="w-4 h-4 mr-2" />
+                <Video className="w-4 h-4 mr-2 text-blue-600" />
                 Zoom
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -184,6 +184,10 @@ export default function Index() {
             setLanguage={handleLanguageChange}
             onAdminClick={() => setPage("admin")}
             onProfileClick={() => setPage("profile")}
+            onSignOut={async () => {
+              await supabase.auth.signOut();
+              setUser(null);
+            }}
           />
         )}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}

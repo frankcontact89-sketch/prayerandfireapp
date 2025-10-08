@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronRight, Shield, User } from "lucide-react";
+import { ChevronRight, Shield, User, LogOut } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface SettingsScreenProps {
@@ -8,9 +8,10 @@ interface SettingsScreenProps {
   setLanguage: (lang: string) => void;
   onAdminClick: () => void;
   onProfileClick: () => void;
+  onSignOut: () => void;
 }
 
-export function SettingsScreen({ t, language, setLanguage, onAdminClick, onProfileClick }: SettingsScreenProps) {
+export function SettingsScreen({ t, language, setLanguage, onAdminClick, onProfileClick, onSignOut }: SettingsScreenProps) {
   const { isAdmin, loading } = useUserRole();
   
   const settingsOptions = [
@@ -109,6 +110,16 @@ export function SettingsScreen({ t, language, setLanguage, onAdminClick, onProfi
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </button>
         ))}
+        <button
+          onClick={onSignOut}
+          className="w-full flex items-center justify-between p-5 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <LogOut className="w-5 h-5 text-red-600" />
+            <span className="font-semibold text-red-600">{t("Sign Out", "Cerrar Sesión")}</span>
+          </div>
+          <ChevronRight className="w-5 h-5 text-red-600" />
+        </button>
       </div>
     </div>
   );
