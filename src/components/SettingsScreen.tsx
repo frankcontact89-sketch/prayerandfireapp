@@ -1,19 +1,21 @@
 import React from "react";
-import { ChevronRight, Shield } from "lucide-react";
+import { ChevronRight, Shield, User } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface SettingsScreenProps {
   t: (en: string, es: string) => string;
+  language: string;
+  setLanguage: (lang: string) => void;
   onAdminClick: () => void;
+  onProfileClick: () => void;
 }
 
-export function SettingsScreen({ t, onAdminClick }: SettingsScreenProps) {
+export function SettingsScreen({ t, language, setLanguage, onAdminClick, onProfileClick }: SettingsScreenProps) {
   const { isAdmin, loading } = useUserRole();
   
   const settingsOptions = [
     { title: t("General", "General") },
     { title: t("Notifications", "Notificaciones") },
-    { title: t("Account", "Cuenta") },
     { title: t("Help", "Ayuda") },
   ];
 
@@ -42,6 +44,35 @@ export function SettingsScreen({ t, onAdminClick }: SettingsScreenProps) {
           <ChevronRight className="w-5 h-5 text-primary" />
         </button>
       )}
+
+      <button
+        onClick={onProfileClick}
+        className="w-full flex items-center justify-between p-5 bg-card border border-border rounded-xl hover:bg-muted/50 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <User className="w-6 h-6 text-foreground" />
+          <span className="font-bold text-lg text-foreground">
+            {t("Profile", "Perfil")}
+          </span>
+        </div>
+        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+      </button>
+
+      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
+        <h3 className="text-lg font-bold text-foreground">
+          {t("Language", "Idioma")}
+        </h3>
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          className="w-full py-3 px-4 rounded-lg font-bold bg-primary text-primary-foreground border-none cursor-pointer"
+        >
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="pt">Português</option>
+          <option value="fr">Français</option>
+        </select>
+      </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden divide-y divide-border">
         {settingsOptions.map((option, index) => (

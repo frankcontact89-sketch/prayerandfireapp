@@ -6,12 +6,21 @@ interface GivingScreenProps {
 }
 
 export function GivingScreen({ t }: GivingScreenProps) {
-  const STRIPE = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
+  const STRIPE_SUBSCRIPTION = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
 
   const givingOptions = [
-    { title: t("Offering", "Ofrenda"), action: () => window.open(STRIPE, "_blank") },
-    { title: t("One-Time Give", "Donación Única"), action: () => window.open(STRIPE, "_blank") },
-    { title: t("Support Project", "Apoyar Proyecto"), action: () => window.open(STRIPE, "_blank") },
+    { 
+      title: t("Monthly Subscription", "Suscripción Mensual"), 
+      action: () => window.open(STRIPE_SUBSCRIPTION, "_blank") 
+    },
+    { 
+      title: t("One-Time Give", "Donación Única"), 
+      action: () => {} 
+    },
+    { 
+      title: t("Support Project", "Apoyar Proyecto"), 
+      action: () => {} 
+    },
   ];
 
   return (

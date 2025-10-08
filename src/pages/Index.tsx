@@ -3,13 +3,12 @@ import { SignInScreen } from "@/components/SignInScreen";
 import { HomeScreen } from "@/components/HomeScreen";
 import { LiveStreamScreen } from "@/components/LiveStreamScreen";
 import { LiveChatScreen } from "@/components/LiveChatScreen";
-import { TranslationScreen } from "@/components/TranslationScreen";
 import { EventsScreen } from "@/components/EventsScreen";
 import { GivingScreen } from "@/components/GivingScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
-import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, ShoppingBag, Flame, Share2, Tv, Languages, Calendar } from "lucide-react";
+import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, Flame, Share2, Tv, Calendar } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -120,7 +119,6 @@ export default function Index() {
         {page === "home" && <HomeScreen t={t} />}
         {page === "stream" && <LiveStreamScreen t={t} />}
         {page === "chat" && <LiveChatScreen t={t} />}
-        {page === "translate" && <TranslationScreen t={t} />}
         {page === "events" && <EventsScreen t={t} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "profile" && (
@@ -134,7 +132,15 @@ export default function Index() {
             }}
           />
         )}
-        {page === "settings" && <SettingsScreen t={t} onAdminClick={() => setPage("admin")} />}
+        {page === "settings" && (
+          <SettingsScreen 
+            t={t} 
+            language={language}
+            setLanguage={setLanguage}
+            onAdminClick={() => setPage("admin")}
+            onProfileClick={() => setPage("profile")}
+          />
+        )}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
       </div>
 
@@ -167,15 +173,6 @@ export default function Index() {
           >
             <MessageCircle className="w-5 h-5" />
             <span className="text-xs font-bold whitespace-nowrap">{t("Chat", "Chat")}</span>
-          </button>
-          <button
-            onClick={() => setPage("translate")}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              page === "translate" ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <Languages className="w-5 h-5" />
-            <span className="text-xs font-bold whitespace-nowrap">{t("Translate", "Traducir")}</span>
           </button>
           <button
             onClick={() => setPage("giving")}
