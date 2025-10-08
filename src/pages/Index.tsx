@@ -26,14 +26,50 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
 
   const t = (en: string, es: string) => {
-    // Only English and Spanish are fully supported in the UI
-    // All other languages default to English
-    return language === "es" ? es : en;
+    if (language === "es") return es;
+    if (language === "en") return en;
+    
+    // For other languages, try to use cached translation or return English
+    const cacheKey = `${language}_${en}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) return cached;
+    
+    return en; // Fallback to English while translation loads
+  };
+
+  // Function to translate text to selected language
+  const translateText = async (text: string, targetLang: string) => {
+    if (targetLang === "en" || targetLang === "es") return;
+    
+    const cacheKey = `${targetLang}_${text}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('translate', {
+        body: { text, targetLang }
+      });
+      
+      if (!error && data?.translatedText) {
+        localStorage.setItem(cacheKey, data.translatedText);
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+    }
   };
 
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang);
     localStorage.setItem("app_language", newLang);
+    
+    // Pre-translate common UI strings when language changes
+    if (newLang !== "en" && newLang !== "es") {
+      const commonStrings = [
+        "Home", "Stream", "Chat", "Giving", "Settings", "Profile", 
+        "Events", "Sign Out", "Loading...", "Welcome"
+      ];
+      commonStrings.forEach(str => translateText(str, newLang));
+    }
   };
 
   useEffect(() => {
@@ -98,10 +134,6 @@ export default function Index() {
               <DropdownMenuItem onClick={() => setPage("events")}>
                 <Calendar className="w-4 h-4 mr-2" />
                 {t("Events", "Eventos")}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setPage("profile")}>
-                <User className="w-4 h-4 mr-2" />
-                {t("Profile", "Perfil")}
               </DropdownMenuItem>
               <div className="h-px bg-border my-1" />
               <DropdownMenuItem onClick={() => window.open("https://instagram.com/seloprayerandfire", "_blank")}>

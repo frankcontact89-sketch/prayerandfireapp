@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Flame } from "lucide-react";
 
 interface SignInScreenProps {
   setUser: (user: any) => void;
@@ -82,11 +83,7 @@ export function SignInScreen({ setUser, t }: SignInScreenProps) {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
-            <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Fire_icon.svg/512px-Fire_icon.svg.png"
-              alt="Fire Icon"
-              className="w-24 h-24"
-            />
+            <Flame className="w-24 h-24 text-primary" />
           </div>
           <h1 className="text-5xl font-extrabold text-primary tracking-tight">
             PRAYER & FIRE
