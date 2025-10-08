@@ -68,7 +68,7 @@ export function SettingsScreen({ t, language, setLanguage, onAdminClick, onProfi
         <select
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
-          className="w-full py-3 px-4 rounded-lg font-bold bg-primary text-primary-foreground border-none cursor-pointer"
+          className="w-full py-3 px-4 rounded-lg font-bold bg-muted text-foreground border border-border cursor-pointer"
         >
           <option value="en">🇺🇸 English (UI Supported)</option>
           <option value="es">🇪🇸 Español (UI Supported)</option>
@@ -86,6 +86,17 @@ export function SettingsScreen({ t, language, setLanguage, onAdminClick, onProfi
           <option value="hi">🇮🇳 हिन्दी</option>
           <option value="tr">🇹🇷 Türkçe</option>
         </select>
+        <button
+          onClick={() => {
+            const message = language === "es" 
+              ? "Idioma guardado correctamente" 
+              : "Language saved successfully";
+            alert(message);
+          }}
+          className="w-full py-3 px-4 rounded-lg font-bold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+        >
+          {t("Save", "Guardar")}
+        </button>
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden divide-y divide-border">

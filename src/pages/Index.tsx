@@ -5,10 +5,11 @@ import { LiveStreamScreen } from "@/components/LiveStreamScreen";
 import { LiveChatScreen } from "@/components/LiveChatScreen";
 import { EventsScreen } from "@/components/EventsScreen";
 import { GivingScreen } from "@/components/GivingScreen";
+import { ShoppingScreen } from "@/components/ShoppingScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
-import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, Flame, Share2, Tv, Calendar } from "lucide-react";
+import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, Flame, Share2, Tv, Calendar, ShoppingBag } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -164,6 +165,7 @@ export default function Index() {
         {page === "chat" && <LiveChatScreen t={t} />}
         {page === "events" && <EventsScreen t={t} />}
         {page === "giving" && <GivingScreen t={t} />}
+        {page === "shopping" && <ShoppingScreen t={t} />}
         {page === "profile" && (
           <ProfileScreen
             t={t}
@@ -224,7 +226,16 @@ export default function Index() {
             }`}
           >
             <Heart className="w-5 h-5" />
-            <span className="text-xs font-bold whitespace-nowrap">{t("Giving", "Ofrendas")}</span>
+            <span className="text-xs font-bold whitespace-nowrap">{t("Give", "Dar")}</span>
+          </button>
+          <button
+            onClick={() => setPage("shopping")}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              page === "shopping" ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <ShoppingBag className="w-5 h-5" />
+            <span className="text-xs font-bold whitespace-nowrap">{t("Shop", "Tienda")}</span>
           </button>
         </nav>
       </div>

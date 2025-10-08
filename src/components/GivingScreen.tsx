@@ -62,7 +62,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
     <div className="max-w-xl mx-auto p-6 space-y-8">
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-extrabold text-foreground">
-          {t("Giving", "Ofrendas")}
+          {t("Give", "Dar")}
         </h2>
         <p className="text-muted-foreground">
           {t("Support Prayer & Fire", "Apoya Prayer & Fire")}
