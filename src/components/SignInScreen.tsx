@@ -27,7 +27,7 @@ export function SignInScreen({ setUser, t }: SignInScreenProps) {
             />
           </div>
           <h1 className="text-5xl font-extrabold text-primary tracking-tight">
-            PRAYER AND FIRE
+            PRAYER & FIRE
           </h1>
         </div>
 
