@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { SignInScreen } from "@/components/SignInScreen";
 import { HomeScreen } from "@/components/HomeScreen";
+import { LiveStreamScreen } from "@/components/LiveStreamScreen";
+import { LiveChatScreen } from "@/components/LiveChatScreen";
+import { TranslationScreen } from "@/components/TranslationScreen";
+import { EventsScreen } from "@/components/EventsScreen";
 import { GivingScreen } from "@/components/GivingScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
-import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, ShoppingBag, Flame, Share2 } from "lucide-react";
+import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, ShoppingBag, Flame, Share2, Tv, Languages, Calendar } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -105,6 +109,10 @@ export default function Index() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto pb-28">
         {page === "home" && <HomeScreen t={t} />}
+        {page === "stream" && <LiveStreamScreen t={t} />}
+        {page === "chat" && <LiveChatScreen t={t} />}
+        {page === "translate" && <TranslationScreen t={t} />}
+        {page === "events" && <EventsScreen t={t} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "profile" && (
           <ProfileScreen
@@ -123,7 +131,7 @@ export default function Index() {
 
       {/* Floating Bottom Navigation */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center pointer-events-none z-40">
-        <nav className="pointer-events-auto bg-card border border-border rounded-2xl shadow-2xl px-6 py-3 flex gap-8 items-center max-w-md">
+        <nav className="pointer-events-auto bg-card border border-border rounded-2xl shadow-2xl px-4 py-3 flex gap-4 items-center overflow-x-auto max-w-[95vw]">
           <button
             onClick={() => setPage("home")}
             className={`flex flex-col items-center gap-1 transition-colors ${
@@ -131,7 +139,43 @@ export default function Index() {
             }`}
           >
             <Home className="w-5 h-5" />
-            <span className="text-xs font-bold">{t("Home", "Inicio")}</span>
+            <span className="text-xs font-bold whitespace-nowrap">{t("Home", "Inicio")}</span>
+          </button>
+          <button
+            onClick={() => setPage("stream")}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              page === "stream" ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <Tv className="w-5 h-5" />
+            <span className="text-xs font-bold whitespace-nowrap">{t("Stream", "Stream")}</span>
+          </button>
+          <button
+            onClick={() => setPage("chat")}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              page === "chat" ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <MessageCircle className="w-5 h-5" />
+            <span className="text-xs font-bold whitespace-nowrap">{t("Chat", "Chat")}</span>
+          </button>
+          <button
+            onClick={() => setPage("translate")}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              page === "translate" ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <Languages className="w-5 h-5" />
+            <span className="text-xs font-bold whitespace-nowrap">{t("Translate", "Traducir")}</span>
+          </button>
+          <button
+            onClick={() => setPage("events")}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              page === "events" ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <Calendar className="w-5 h-5" />
+            <span className="text-xs font-bold whitespace-nowrap">{t("Events", "Eventos")}</span>
           </button>
           <button
             onClick={() => setPage("giving")}
@@ -140,14 +184,7 @@ export default function Index() {
             }`}
           >
             <Heart className="w-5 h-5" />
-            <span className="text-xs font-bold">{t("Giving", "Ofrendas")}</span>
-          </button>
-          <button
-            onClick={() => window.open("https://store.example.com", "_blank")}
-            className="flex flex-col items-center gap-1 transition-colors text-muted-foreground hover:text-primary"
-          >
-            <ShoppingBag className="w-5 h-5" />
-            <span className="text-xs font-bold">{t("Store", "Tienda")}</span>
+            <span className="text-xs font-bold whitespace-nowrap">{t("Giving", "Ofrendas")}</span>
           </button>
           <button
             onClick={() => setPage("profile")}
@@ -156,7 +193,7 @@ export default function Index() {
             }`}
           >
             <User className="w-5 h-5" />
-            <span className="text-xs font-bold">{t("Profile", "Perfil")}</span>
+            <span className="text-xs font-bold whitespace-nowrap">{t("Profile", "Perfil")}</span>
           </button>
         </nav>
       </div>
