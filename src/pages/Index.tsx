@@ -4,8 +4,7 @@ import { HomeScreen } from "@/components/HomeScreen";
 import { GivingScreen } from "@/components/GivingScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
-import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, ShoppingBag } from "lucide-react";
-import fireIcon from "@/assets/fire-icon.jpeg";
+import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, ShoppingBag, Flame } from "lucide-react";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -34,7 +33,7 @@ export default function Index() {
 
           {/* Title Center with Icon */}
           <div className="flex items-center gap-2">
-            <img src={fireIcon} alt="Fire" className="w-6 h-6 object-contain" />
+            <Flame className="w-6 h-6 text-primary" />
             <h1 className="text-xl font-extrabold text-primary tracking-tight">
               PRAYER & FIRE
             </h1>
