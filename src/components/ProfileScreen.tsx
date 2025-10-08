@@ -109,48 +109,16 @@ export function ProfileScreen({
         <h3 className="text-lg font-bold text-foreground">
           {t("Language", "Idioma")}
         </h3>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => setLanguage("en")}
-            className={`py-3 rounded-lg font-bold transition-colors ${
-              language === "en"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            English
-          </button>
-          <button
-            onClick={() => setLanguage("es")}
-            className={`py-3 rounded-lg font-bold transition-colors ${
-              language === "es"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            Español
-          </button>
-          <button
-            onClick={() => setLanguage("pt")}
-            className={`py-3 rounded-lg font-bold transition-colors ${
-              language === "pt"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            Português
-          </button>
-          <button
-            onClick={() => setLanguage("fr")}
-            className={`py-3 rounded-lg font-bold transition-colors ${
-              language === "fr"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            Français
-          </button>
-        </div>
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          className="w-full py-3 px-4 rounded-lg font-bold bg-primary text-primary-foreground border-none cursor-pointer"
+        >
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="pt">Português</option>
+          <option value="fr">Français</option>
+        </select>
       </div>
 
 

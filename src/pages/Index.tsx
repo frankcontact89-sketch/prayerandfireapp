@@ -4,7 +4,13 @@ import { HomeScreen } from "@/components/HomeScreen";
 import { GivingScreen } from "@/components/GivingScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
-import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, ShoppingBag, Flame } from "lucide-react";
+import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, ShoppingBag, Flame, Share2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -40,36 +46,31 @@ export default function Index() {
           </div>
 
           {/* Social Links Right */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => window.open("https://instagram.com/seloprayerandfire", "_blank")}
-              className="text-muted-foreground hover:text-primary transition-colors"
-              aria-label="Instagram"
-            >
-              <Instagram className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => window.open("https://wa.me/1XXXXXXXXXX", "_blank")}
-              className="text-muted-foreground hover:text-primary transition-colors"
-              aria-label="WhatsApp"
-            >
-              <MessageCircle className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => window.open("https://youtube.com", "_blank")}
-              className="text-muted-foreground hover:text-primary transition-colors"
-              aria-label="YouTube"
-            >
-              <Youtube className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => window.open("https://zoom.us", "_blank")}
-              className="text-muted-foreground hover:text-primary transition-colors"
-              aria-label="Zoom"
-            >
-              <Video className="w-5 h-5" />
-            </button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="text-muted-foreground hover:text-primary transition-colors">
+                <Share2 className="w-5 h-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => window.open("https://instagram.com/seloprayerandfire", "_blank")}>
+                <Instagram className="w-4 h-4 mr-2" />
+                Instagram
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.open("https://wa.me/1XXXXXXXXXX", "_blank")}>
+                <MessageCircle className="w-4 h-4 mr-2" />
+                WhatsApp
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.open("https://youtube.com", "_blank")}>
+                <Youtube className="w-4 h-4 mr-2" />
+                YouTube
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.open("https://zoom.us", "_blank")}>
+                <Video className="w-4 h-4 mr-2" />
+                Zoom
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

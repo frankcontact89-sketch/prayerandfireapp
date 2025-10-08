@@ -22,8 +22,8 @@ export function GivingScreen({ t }: GivingScreenProps) {
         </h2>
         <p className="text-muted-foreground">
           {t(
-            "Support Prayer & Fire and fuel the movement.",
-            "Apoya Prayer & Fire y alimenta el movimiento."
+            "Support Prayer & Fire.",
+            "Apoya Prayer & Fire."
           )}
         </p>
       </div>
@@ -43,8 +43,8 @@ export function GivingScreen({ t }: GivingScreenProps) {
       <div className="bg-card border border-border rounded-xl p-6 text-center space-y-2">
         <p className="text-sm text-muted-foreground">
           {t(
-            "Thank you for fueling the fire and supporting our mission.",
-            "Gracias por alimentar el fuego y apoyar nuestra misión."
+            "Thank you for supporting our mission.",
+            "Gracias por apoyar nuestra misión."
           )}
         </p>
       </div>
