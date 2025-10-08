@@ -14,7 +14,11 @@ export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState("home");
   const [language, setLanguage] = useState(() => {
-    return localStorage.getItem("app_language") || "en";
+    const saved = localStorage.getItem("app_language");
+    if (saved) return saved;
+    // Auto-detect from browser
+    const browserLang = navigator.language.slice(0, 2);
+    return ["en", "es", "fr"].includes(browserLang) ? browserLang : "en";
   });
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");

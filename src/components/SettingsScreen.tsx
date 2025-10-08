@@ -35,42 +35,13 @@ export function SettingsScreen({ t, language, setLanguage, userName, userEmail, 
       </div>
 
       {/* Language Section */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <h3 className="text-lg font-bold text-primary">
           {t("Language", "Idioma")}
         </h3>
-        <div className="flex gap-3">
-          <button
-            onClick={() => setLanguage("en")}
-            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-              language === "en" 
-                ? "bg-primary text-primary-foreground" 
-                : "bg-card text-muted-foreground hover:bg-accent"
-            }`}
-          >
-            EN
-          </button>
-          <button
-            onClick={() => setLanguage("es")}
-            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-              language === "es" 
-                ? "bg-primary text-primary-foreground" 
-                : "bg-card text-muted-foreground hover:bg-accent"
-            }`}
-          >
-            ES
-          </button>
-          <button
-            onClick={() => setLanguage("fr")}
-            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-              language === "fr" 
-                ? "bg-primary text-primary-foreground" 
-                : "bg-card text-muted-foreground hover:bg-accent"
-            }`}
-          >
-            FR
-          </button>
-        </div>
+        <p className="text-foreground">
+          🌐 {t("Auto-detect (150+ languages)", "Auto-detectar (150+ idiomas)")}
+        </p>
       </div>
 
       {/* Notifications Section */}
