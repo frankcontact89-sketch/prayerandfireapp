@@ -104,24 +104,6 @@ export function ProfileScreen({
         </Button>
       </div>
 
-      {/* Language Toggle */}
-      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
-        <h3 className="text-lg font-bold text-foreground">
-          {t("Language", "Idioma")}
-        </h3>
-        <select
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-          className="w-full py-3 px-4 rounded-lg font-bold bg-primary text-primary-foreground border-none cursor-pointer"
-        >
-          <option value="en">English</option>
-          <option value="es">Español</option>
-          <option value="pt">Português</option>
-          <option value="fr">Français</option>
-        </select>
-      </div>
-
-
       {/* Sign Out */}
       <button
         onClick={signOut}
