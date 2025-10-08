@@ -77,14 +77,23 @@ export default function Index() {
             </h1>
           </div>
 
-          {/* Social Links Right */}
+          {/* Menu Right */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="text-muted-foreground hover:text-primary transition-colors">
                 <Share2 className="w-5 h-5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => setPage("events")}>
+                <Calendar className="w-4 h-4 mr-2" />
+                {t("Events", "Eventos")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setPage("profile")}>
+                <User className="w-4 h-4 mr-2" />
+                {t("Profile", "Perfil")}
+              </DropdownMenuItem>
+              <div className="h-px bg-border my-1" />
               <DropdownMenuItem onClick={() => window.open("https://instagram.com/seloprayerandfire", "_blank")}>
                 <Instagram className="w-4 h-4 mr-2" />
                 Instagram
@@ -131,7 +140,7 @@ export default function Index() {
 
       {/* Floating Bottom Navigation */}
       <div className="fixed bottom-4 left-0 right-0 flex justify-center pointer-events-none z-40">
-        <nav className="pointer-events-auto bg-card border border-border rounded-2xl shadow-2xl px-4 py-3 flex gap-4 items-center overflow-x-auto max-w-[95vw]">
+        <nav className="pointer-events-auto bg-card border border-border rounded-2xl shadow-2xl px-6 py-3 flex gap-8 items-center">
           <button
             onClick={() => setPage("home")}
             className={`flex flex-col items-center gap-1 transition-colors ${
@@ -169,15 +178,6 @@ export default function Index() {
             <span className="text-xs font-bold whitespace-nowrap">{t("Translate", "Traducir")}</span>
           </button>
           <button
-            onClick={() => setPage("events")}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              page === "events" ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <Calendar className="w-5 h-5" />
-            <span className="text-xs font-bold whitespace-nowrap">{t("Events", "Eventos")}</span>
-          </button>
-          <button
             onClick={() => setPage("giving")}
             className={`flex flex-col items-center gap-1 transition-colors ${
               page === "giving" ? "text-primary" : "text-muted-foreground"
@@ -185,15 +185,6 @@ export default function Index() {
           >
             <Heart className="w-5 h-5" />
             <span className="text-xs font-bold whitespace-nowrap">{t("Giving", "Ofrendas")}</span>
-          </button>
-          <button
-            onClick={() => setPage("profile")}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              page === "profile" ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <User className="w-5 h-5" />
-            <span className="text-xs font-bold whitespace-nowrap">{t("Profile", "Perfil")}</span>
           </button>
         </nav>
       </div>

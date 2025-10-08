@@ -6,25 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Languages, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { LANGUAGES } from "@/config/languages";
 
 interface TranslationScreenProps {
   t: (en: string, es: string) => string;
 }
-
-const LANGUAGES = [
-  { code: "en", name: "English" },
-  { code: "es", name: "Español" },
-  { code: "fr", name: "Français" },
-  { code: "pt", name: "Português" },
-  { code: "de", name: "Deutsch" },
-  { code: "it", name: "Italiano" },
-  { code: "zh", name: "中文" },
-  { code: "ja", name: "日本語" },
-  { code: "ar", name: "العربية" },
-  { code: "ko", name: "한국어" },
-  { code: "ru", name: "Русский" },
-  { code: "hi", name: "हिन्दी" },
-];
 
 export function TranslationScreen({ t }: TranslationScreenProps) {
   const [text, setText] = useState("");
@@ -88,13 +74,13 @@ export function TranslationScreen({ t }: TranslationScreenProps) {
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              {t("Target language", "Idioma objetivo")}
+              {t("Target language (130+ available)", "Idioma objetivo (130+ disponibles)")}
             </label>
             <Select value={targetLang} onValueChange={setTargetLang}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[300px]">
                 {LANGUAGES.map((lang) => (
                   <SelectItem key={lang.code} value={lang.code}>
                     {lang.name}
