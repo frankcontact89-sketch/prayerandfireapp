@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Book, GraduationCap, ExternalLink } from "lucide-react";
+import { BookOpen, GraduationCap, ExternalLink } from "lucide-react";
 
 interface ShoppingScreenProps {
   t: (en: string, es: string) => string;
@@ -13,14 +13,14 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
       title: t("The Power of Prayer", "El Poder de la Oración"),
       description: t("Discover the transformative power of prayer in your daily life", "Descubre el poder transformador de la oración en tu vida diaria"),
       price: "$15.99",
-      image: "📖",
+      color: "text-blue-600",
       link: "#"
     },
     {
       title: t("Walking in Fire", "Caminando en Fuego"),
       description: t("A guide to living a Spirit-filled life", "Una guía para vivir una vida llena del Espíritu"),
       price: "$19.99",
-      image: "📖",
+      color: "text-orange-600",
       link: "#"
     }
   ];
@@ -30,14 +30,14 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
       title: t("Foundations of Faith", "Fundamentos de la Fe"),
       description: t("8-week course on Christian basics", "Curso de 8 semanas sobre los fundamentos cristianos"),
       price: "$49.99",
-      image: "🎓",
+      color: "text-purple-600",
       link: "#"
     },
     {
       title: t("Prayer Ministry Training", "Entrenamiento en Ministerio de Oración"),
       description: t("Learn to lead powerful prayer sessions", "Aprende a dirigir sesiones poderosas de oración"),
       price: "$79.99",
-      image: "🎓",
+      color: "text-green-600",
       link: "#"
     }
   ];
@@ -56,7 +56,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
       {/* Books Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Book className="w-6 h-6 text-primary" />
+          <BookOpen className="w-6 h-6 text-blue-600" />
           <h3 className="text-2xl font-bold text-foreground">
             {t("Books", "Libros")}
           </h3>
@@ -64,7 +64,9 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {books.map((book, index) => (
             <Card key={index} className="p-6 space-y-4 hover:shadow-lg transition-shadow">
-              <div className="text-5xl mb-2">{book.image}</div>
+              <div className="flex justify-center mb-2">
+                <BookOpen className={`w-20 h-20 ${book.color}`} strokeWidth={1.5} />
+              </div>
               <h4 className="text-xl font-bold text-foreground">{book.title}</h4>
               <p className="text-sm text-muted-foreground">{book.description}</p>
               <div className="flex items-center justify-between">
@@ -82,7 +84,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
       {/* Courses Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <GraduationCap className="w-6 h-6 text-primary" />
+          <GraduationCap className="w-6 h-6 text-purple-600" />
           <h3 className="text-2xl font-bold text-foreground">
             {t("Courses", "Cursos")}
           </h3>
@@ -90,7 +92,9 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {courses.map((course, index) => (
             <Card key={index} className="p-6 space-y-4 hover:shadow-lg transition-shadow">
-              <div className="text-5xl mb-2">{course.image}</div>
+              <div className="flex justify-center mb-2">
+                <GraduationCap className={`w-20 h-20 ${course.color}`} strokeWidth={1.5} />
+              </div>
               <h4 className="text-xl font-bold text-foreground">{course.title}</h4>
               <p className="text-sm text-muted-foreground">{course.description}</p>
               <div className="flex items-center justify-between">
