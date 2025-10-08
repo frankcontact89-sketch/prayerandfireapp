@@ -4,6 +4,7 @@ import { HomeScreen } from "@/components/HomeScreen";
 import { GivingScreen } from "@/components/GivingScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
+import { AdminPanel } from "@/components/AdminPanel";
 import { Home, Heart, User, Settings, Instagram, Youtube, MessageCircle, Video, ShoppingBag, Flame, Share2 } from "lucide-react";
 import {
   DropdownMenu,
@@ -86,7 +87,8 @@ export default function Index() {
             signOut={() => setUser(null)}
           />
         )}
-        {page === "settings" && <SettingsScreen t={t} />}
+        {page === "settings" && <SettingsScreen t={t} onAdminClick={() => setPage("admin")} />}
+        {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
       </div>
 
       {/* Floating Bottom Navigation */}
