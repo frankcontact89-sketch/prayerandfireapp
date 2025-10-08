@@ -92,6 +92,35 @@ export type Database = {
         }
         Relationships: []
       }
+      event_rsvps: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_rsvps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string | null
@@ -106,6 +135,7 @@ export type Database = {
           location: string | null
           max_attendees: number | null
           registration_url: string | null
+          rsvp_count: number | null
           title: string
           updated_at: string | null
         }
@@ -122,6 +152,7 @@ export type Database = {
           location?: string | null
           max_attendees?: number | null
           registration_url?: string | null
+          rsvp_count?: number | null
           title: string
           updated_at?: string | null
         }
@@ -138,8 +169,33 @@ export type Database = {
           location?: string | null
           max_attendees?: number | null
           registration_url?: string | null
+          rsvp_count?: number | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          username?: string
         }
         Relationships: []
       }
