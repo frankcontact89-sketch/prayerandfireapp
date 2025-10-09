@@ -2,7 +2,7 @@ import React from "react";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface SettingsScreenProps {
-  t: (en: string, es: string) => string;
+  t: (key: string) => string;
   language: string;
   setLanguage: (lang: string) => void;
   userName: string;
@@ -18,58 +18,58 @@ export function SettingsScreen({ t, language, setLanguage, userName, userEmail, 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <h2 className="text-2xl font-bold text-foreground mb-6">
-        {t("⚙️ Settings", "⚙️ Configuración")}
+        ⚙️ {t("settings")}
       </h2>
 
       {/* Profile Section */}
       <div className="space-y-2">
         <h3 className="text-lg font-bold text-primary">
-          {t("Profile", "Perfil")}
+          {t("profile")}
         </h3>
         <p className="text-foreground">
-          {t("Name:", "Nombre:")} {userName || t("User", "Usuario")}
+          Name: {userName || "User"}
         </p>
         <p className="text-foreground">
-          {t("Email:", "Email:")} {userEmail}
+          Email: {userEmail}
         </p>
       </div>
 
       {/* Language Section */}
       <div className="space-y-2">
         <h3 className="text-lg font-bold text-primary">
-          {t("Language", "Idioma")}
+          {t("language")}
         </h3>
         <p className="text-foreground">
-          🌐 {t("Auto-detect (150+ languages)", "Auto-detectar (150+ idiomas)")}
+          🌐 Auto-detect (150+ languages)
         </p>
       </div>
 
       {/* Notifications Section */}
       <div className="space-y-2">
         <h3 className="text-lg font-bold text-primary">
-          {t("Notifications", "Notificaciones")}
+          {t("notifications")}
         </h3>
         <p className="text-muted-foreground">
-          🔔 {t("Enabled (simulated)", "Habilitado (simulado)")}
+          🔔 Enabled (simulated)
         </p>
       </div>
 
       {/* Admin Panel Section */}
       {loading ? (
         <div className="text-muted-foreground">
-          {t("Loading admin status...", "Cargando estado de administrador...")}
+          Loading admin status...
         </div>
       ) : (
         isAdmin && (
           <div className="space-y-3">
             <h3 className="text-lg font-bold text-primary">
-              {t("Admin", "Administrador")}
+              {t("admin")}
             </h3>
             <button
               onClick={onAdminClick}
               className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors font-semibold"
             >
-              {t("Open Admin Panel", "Abrir Panel de Administración")}
+              {t("adminPanel")}
             </button>
           </div>
         )
@@ -80,7 +80,7 @@ export function SettingsScreen({ t, language, setLanguage, userName, userEmail, 
         onClick={onSignOut}
         className="mt-8 text-primary hover:text-primary/80 font-semibold text-center w-full"
       >
-        {t("Sign Out", "Cerrar Sesión")}
+        {t("signout")}
       </button>
     </div>
   );

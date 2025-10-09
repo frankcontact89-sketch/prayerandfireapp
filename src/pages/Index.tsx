@@ -9,6 +9,7 @@ import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
 import { Home, Heart, Settings, Instagram, Youtube, MessageCircle, Video, Share2, Tv, Calendar, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { translations, SupportedLanguage } from "@/config/translations";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -23,16 +24,9 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
 
-  const t = (en: string, es: string) => {
-    if (language === "es") return es;
-    if (language === "en") return en;
-    
-    // For other languages, try to use cached translation or return English
-    const cacheKey = `${language}_${en}`;
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) return cached;
-    
-    return en; // Fallback to English while translation loads
+  const t = (key: keyof typeof translations.en): string => {
+    const lang = language as SupportedLanguage;
+    return translations[lang]?.[key] || translations.en[key] || key;
   };
 
   // Function to translate text to selected language
@@ -90,7 +84,7 @@ export default function Index() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-primary text-lg">{t("Loading...", "Cargando...")}</div>
+        <div className="text-primary text-lg">{t("loading")}</div>
       </div>
     );
   }
@@ -151,7 +145,7 @@ export default function Index() {
         {page === "social" && (
           <div className="max-w-2xl mx-auto p-6 space-y-4">
             <h2 className="text-2xl font-bold text-foreground mb-6">
-              {t("🌐 Connect", "🌐 Conectar")}
+              🌐 {t("connect")}
             </h2>
             
             <button
@@ -191,14 +185,14 @@ export default function Index() {
               className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
             >
               <Calendar className="w-5 h-5" />
-              {t("Events", "Eventos")}
+              {t("events")}
             </button>
 
             <button
               onClick={() => setPage("home")}
               className="mt-6 text-primary hover:text-primary/80 font-semibold text-center w-full"
             >
-              {t("Back", "Volver")}
+              {t("back")}
             </button>
           </div>
         )}

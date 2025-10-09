@@ -3,14 +3,14 @@ import { YouTubeFeed } from "@/components/YouTubeFeed";
 import { YOUTUBE_CONFIG } from "@/config/youtube";
 
 interface HomeScreenProps {
-  t: (en: string, es: string) => string;
+  t: (key: string) => string;
 }
 
 export function HomeScreen({ t }: HomeScreenProps) {
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <h2 className="text-2xl font-extrabold text-foreground">
-        {t("Recent Services", "Servicios Recientes")}
+        {t("recentServices")}
       </h2>
 
       <YouTubeFeed
