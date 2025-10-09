@@ -64,35 +64,26 @@ export function YouTubeFeed({ apiKey, channelId, maxResults = 6, t }: YouTubeFee
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {videos.map((video) => (
         <div
           key={video.id}
-          className="bg-card rounded-xl overflow-hidden"
+          className="bg-card rounded-2xl overflow-hidden p-5 max-w-lg mx-auto"
         >
-          <div className="flex gap-4 p-4">
-            <div className="w-32 h-24 flex-shrink-0 bg-muted rounded-lg overflow-hidden">
-              <img
-                src={video.thumb}
-                alt={video.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-1 flex flex-col justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-foreground mb-1">{video.title}</h3>
-                <p className="text-sm text-muted-foreground">{video.date}</p>
-              </div>
-              <Button
-                onClick={() => window.open(video.url, "_blank")}
-                className="w-full font-bold gap-2"
-                size="sm"
-              >
-                <Play className="w-4 h-4" />
-                {t("watch")}
-              </Button>
-            </div>
-          </div>
+          <img
+            src={video.thumb}
+            alt={video.title}
+            className="w-full rounded-xl mb-4"
+          />
+          <h2 className="text-xl font-semibold text-foreground mb-1">{video.title}</h2>
+          <p className="text-sm text-muted-foreground mb-4">{video.date}</p>
+          <Button
+            onClick={() => window.open(video.url, "_blank")}
+            className="w-full font-bold gap-2"
+          >
+            <Play className="w-4 h-4" />
+            {t("watch")}
+          </Button>
         </div>
       ))}
     </div>
