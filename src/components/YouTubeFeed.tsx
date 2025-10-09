@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Play } from "lucide-react";
 
 interface Video {
   id: string;
@@ -13,7 +14,7 @@ interface YouTubeFeedProps {
   apiKey: string;
   channelId: string;
   maxResults?: number;
-  t: (en: string, es: string) => string;
+  t: (key: string) => string;
 }
 
 export function YouTubeFeed({ apiKey, channelId, maxResults = 6, t }: YouTubeFeedProps) {
@@ -49,7 +50,7 @@ export function YouTubeFeed({ apiKey, channelId, maxResults = 6, t }: YouTubeFee
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <p className="text-muted-foreground">{t("Loading latest services...", "Cargando servicios...")}</p>
+        <p className="text-muted-foreground">{t("loading")}</p>
       </div>
     );
   }
@@ -57,34 +58,40 @@ export function YouTubeFeed({ apiKey, channelId, maxResults = 6, t }: YouTubeFee
   if (videos.length === 0) {
     return (
       <p className="text-muted-foreground text-center py-8">
-        {t("No services found.", "No se encontraron servicios.")}
+        {t("noServicesFound")}
       </p>
     );
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {videos.map((video) => (
         <div
           key={video.id}
-          className="bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+          className="bg-card rounded-xl overflow-hidden"
         >
-          <div className="w-full h-48 bg-muted">
-            <img
-              src={video.thumb}
-              alt={video.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="p-5 space-y-3">
-            <p className="text-sm text-muted-foreground">{video.date}</p>
-            <h3 className="text-lg font-bold text-foreground">{video.title}</h3>
-            <Button
-              onClick={() => window.open(video.url, "_blank")}
-              className="w-full font-bold"
-            >
-              {t("Watch Now", "Ver Ahora")}
-            </Button>
+          <div className="flex gap-4 p-4">
+            <div className="w-32 h-24 flex-shrink-0 bg-muted rounded-lg overflow-hidden">
+              <img
+                src={video.thumb}
+                alt={video.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex-1 flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-foreground mb-1">{video.title}</h3>
+                <p className="text-sm text-muted-foreground">{video.date}</p>
+              </div>
+              <Button
+                onClick={() => window.open(video.url, "_blank")}
+                className="w-full font-bold gap-2"
+                size="sm"
+              >
+                <Play className="w-4 h-4" />
+                {t("watch")}
+              </Button>
+            </div>
           </div>
         </div>
       ))}

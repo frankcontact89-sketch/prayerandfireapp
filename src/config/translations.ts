@@ -24,6 +24,7 @@ export const translations = {
     events: "Events",
     recentServices: "Recent Services",
     loading: "Loading...",
+    noServicesFound: "No services found",
     welcome: "Welcome",
     connect: "Connect"
   },
@@ -52,6 +53,7 @@ export const translations = {
     events: "Eventos",
     recentServices: "Servicios Recientes",
     loading: "Cargando...",
+    noServicesFound: "No se encontraron servicios",
     welcome: "Bienvenido",
     connect: "Conectar"
   },
@@ -80,6 +82,7 @@ export const translations = {
     events: "Événements",
     recentServices: "Services Récents",
     loading: "Chargement...",
+    noServicesFound: "Aucun service trouvé",
     welcome: "Bienvenue",
     connect: "Connecter"
   }
