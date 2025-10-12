@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import prayerFireLogo from "@/assets/prayer-fire-logo-new.jpg";
+import prayerFireLogo from "@/assets/prayer-fire-main-logo.jpg";
 
 interface SignInScreenProps {
   setUser: (user: any) => void;
