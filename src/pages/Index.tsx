@@ -235,14 +235,6 @@ export default function Index() {
           >
             <ShoppingBag className="w-6 h-6" />
           </button>
-          <button
-            onClick={() => setPage("settings")}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              page === "settings" ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <Settings className="w-6 h-6" />
-          </button>
         </nav>
       </div>
     </div>

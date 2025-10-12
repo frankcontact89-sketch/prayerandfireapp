@@ -35,12 +35,30 @@ export function SettingsScreen({ t, language, setLanguage, userName, userEmail, 
       </div>
 
       {/* Language Section */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <h3 className="text-lg font-bold text-primary">
           {t("language")}
         </h3>
-        <p className="text-foreground">
-          🌐 Auto-detect (150+ languages)
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          className="w-full px-4 py-3 bg-secondary text-foreground rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="en">🇺🇸 English</option>
+          <option value="es">🇪🇸 Español</option>
+          <option value="fr">🇫🇷 Français</option>
+          <option value="de">🇩🇪 Deutsch</option>
+          <option value="pt">🇵🇹 Português</option>
+          <option value="it">🇮🇹 Italiano</option>
+          <option value="zh">🇨🇳 中文</option>
+          <option value="ja">🇯🇵 日本語</option>
+          <option value="ko">🇰🇷 한국어</option>
+          <option value="ar">🇸🇦 العربية</option>
+          <option value="ru">🇷🇺 Русский</option>
+          <option value="hi">🇮🇳 हिन्दी</option>
+        </select>
+        <p className="text-sm text-muted-foreground">
+          🌐 Selecciona tu idioma preferido
         </p>
       </div>
 

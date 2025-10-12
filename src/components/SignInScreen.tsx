@@ -120,13 +120,9 @@ export function SignInScreen({ setUser, t }: SignInScreenProps) {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-4">
-            <img 
-              src={FLAME_LOGO} 
-              alt="Prayer & Fire Logo" 
-              className="w-32 h-32 object-contain"
-            />
+            <div className="text-8xl">🔥</div>
           </div>
-          <h1 className="text-5xl font-extrabold text-primary tracking-tight">
+          <h1 className="text-4xl font-extrabold text-primary tracking-tight">
             PRAYER & FIRE
           </h1>
         </div>
