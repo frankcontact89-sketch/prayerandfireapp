@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState("home");
+  const [showLanguages, setShowLanguages] = useState(false);
   const [language, setLanguage] = useState(() => {
     const saved = localStorage.getItem("pf_lang");
     if (saved) return saved;
@@ -103,7 +104,27 @@ export default function Index() {
   }
 
   if (!user) {
-    return <SignInScreen setUser={setUser} t={t} />;
+    if (showLanguages) {
+      return (
+        <LanguagesScreen
+          t={t}
+          currentLanguage={language}
+          onLanguageChange={(code, name) => {
+            handleLanguageChange(code, name);
+            setShowLanguages(false);
+          }}
+          onBack={() => setShowLanguages(false)}
+        />
+      );
+    }
+    return (
+      <SignInScreen
+        setUser={setUser}
+        t={t}
+        onShowLanguages={() => setShowLanguages(true)}
+        currentLanguage={language}
+      />
+    );
   }
 
   return (

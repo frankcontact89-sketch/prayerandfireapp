@@ -7,9 +7,11 @@ import { useToast } from "@/hooks/use-toast";
 interface SignInScreenProps {
   setUser: (user: any) => void;
   t: (key: string) => string;
+  onShowLanguages?: () => void;
+  currentLanguage?: string;
 }
 
-export function SignInScreen({ setUser, t }: SignInScreenProps) {
+export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "en" }: SignInScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
@@ -171,9 +173,13 @@ export function SignInScreen({ setUser, t }: SignInScreenProps) {
             {isForgotPassword ? t("back") : "Forgot Password?"}
           </button>
 
-          <div className="text-center mt-[30px]">
-            <span className="text-white text-sm">English ▸</span>
-          </div>
+          <button
+            onClick={onShowLanguages}
+            className="w-full text-center mt-[30px] text-white text-sm hover:text-[#FF6A00] transition-colors"
+            disabled={loading}
+          >
+            {currentLanguage === "en" ? "English" : currentLanguage === "es" ? "Español" : currentLanguage.toUpperCase()} ▸
+          </button>
         </div>
       </div>
     </div>
