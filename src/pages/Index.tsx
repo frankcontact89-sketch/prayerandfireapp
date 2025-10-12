@@ -8,22 +8,23 @@ import { ShoppingScreen } from "@/components/ShoppingScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
 import { SocialLinksScreen } from "@/components/SocialLinksScreen";
+import { LanguagesScreen } from "@/components/LanguagesScreen";
 import { Home, Heart, Settings, Share2, Tv, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState("home");
   const [language, setLanguage] = useState(() => {
-    const saved = localStorage.getItem("app_language");
+    const saved = localStorage.getItem("pf_lang");
     if (saved) return saved;
-    // Auto-detect from browser
-    const browserLang = navigator.language.slice(0, 2);
-    return ["en", "es", "fr"].includes(browserLang) ? browserLang : "en";
+    return "en";
   });
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  const { toast } = useToast();
 
   const t = (key: keyof typeof translations.en): string => {
     const lang = language as SupportedLanguage;
@@ -51,17 +52,28 @@ export default function Index() {
     }
   };
 
-  const handleLanguageChange = (newLang: string) => {
-    setLanguage(newLang);
-    localStorage.setItem("app_language", newLang);
-    
-    // Pre-translate common UI strings when language changes
-    if (newLang !== "en" && newLang !== "es") {
-      const commonStrings = [
-        "Home", "Stream", "Chat", "Giving", "Settings", "Profile", 
-        "Events", "Sign Out", "Loading...", "Welcome"
-      ];
-      commonStrings.forEach(str => translateText(str, newLang));
+  const handleLanguageChange = async (langCode: string, langName: string) => {
+    try {
+      localStorage.setItem("pf_lang", langCode);
+      setLanguage(langCode);
+      
+      // Pre-translate common UI strings for non-supported languages
+      if (!["en", "es", "fr"].includes(langCode)) {
+        const commonStrings = [
+          "Home", "Stream", "Chat", "Giving", "Settings", "Profile", 
+          "Events", "Sign Out", "Loading...", "Welcome", "Links", "Shopping"
+        ];
+        await Promise.all(commonStrings.map(str => translateText(str, langCode)));
+      }
+      
+      toast({
+        title: "Success",
+        description: `Language changed to: ${langName} ✅`,
+      });
+      
+      setPage("home");
+    } catch (error) {
+      console.error("Language change error:", error);
     }
   };
 
@@ -132,7 +144,7 @@ export default function Index() {
           <SettingsScreen 
             t={t} 
             language={language}
-            setLanguage={handleLanguageChange}
+            setLanguage={() => setPage("languages")}
             userName={userName}
             userEmail={user?.email || ""}
             onAdminClick={() => setPage("admin")}
@@ -141,6 +153,14 @@ export default function Index() {
               await supabase.auth.signOut();
               setUser(null);
             }}
+          />
+        )}
+        {page === "languages" && (
+          <LanguagesScreen 
+            t={t} 
+            currentLanguage={language}
+            onLanguageChange={handleLanguageChange}
+            onBack={() => setPage("settings")}
           />
         )}
         {page === "social" && <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />}
