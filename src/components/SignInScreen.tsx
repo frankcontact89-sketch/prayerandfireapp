@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import prayerFireLogo from "@/assets/prayer-fire-main-logo.jpg";
 
 interface SignInScreenProps {
   setUser: (user: any) => void;
@@ -117,15 +116,7 @@ export function SignInScreen({ setUser, t }: SignInScreenProps) {
   return (
     <div className="flex items-center justify-center min-h-screen bg-black p-6">
       <div className="w-full max-w-md">
-        <div className="flex justify-center mt-[100px]">
-          <img 
-            src={prayerFireLogo} 
-            alt="Prayer & Fire Logo" 
-            className="w-[120px] h-[120px] object-contain"
-          />
-        </div>
-        
-        <h1 className="text-[28px] font-bold text-[#FF6A00] text-center mt-5">
+        <h1 className="text-[28px] font-bold text-[#FF6A00] text-center mt-[100px]">
           Prayer & Fire
         </h1>
 
