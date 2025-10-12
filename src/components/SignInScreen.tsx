@@ -115,53 +115,57 @@ export function SignInScreen({ setUser, t }: SignInScreenProps) {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background p-6">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center space-y-2">
-          <div className="flex justify-center mb-4">
-            <img src={prayerFireLogo} alt="Prayer & Fire Logo" className="w-32 h-32 rounded-full" />
-          </div>
-          <h1 className="text-4xl font-extrabold text-primary tracking-tight">
-            PRAYER & FIRE
-          </h1>
+    <div className="flex items-center justify-center min-h-screen bg-black p-6">
+      <div className="w-full max-w-md">
+        <div className="flex justify-center mt-[100px]">
+          <img 
+            src={prayerFireLogo} 
+            alt="Prayer & Fire Logo" 
+            className="w-[120px] h-[120px] object-contain"
+          />
         </div>
+        
+        <h1 className="text-[28px] font-bold text-[#FF6A00] text-center mt-5">
+          Prayer & Fire
+        </h1>
 
-        <div className="space-y-4">
+        <div className="mt-10 space-y-[15px]">
           <Input
             type="email"
-            placeholder={t("email")}
+            placeholder="Email or Username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-12"
+            className="w-full bg-[#1A1A1A] border-0 rounded-[10px] text-white h-12 px-3"
           />
+          
           {!isForgotPassword && (
             <Input
               type="password"
-              placeholder={t("password")}
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="h-12"
+              className="w-full bg-[#1A1A1A] border-0 rounded-[10px] text-white h-12 px-3"
             />
           )}
 
           <Button 
             onClick={handleAuth} 
-            className="w-full h-12 text-base font-bold"
+            className="w-full bg-[#FF6A00] hover:bg-[#FF6A00]/90 text-white rounded-[10px] h-12 text-base font-medium mt-[25px]"
             disabled={loading}
           >
             {loading ? t("loading") : 
               isForgotPassword ? t("send") :
-              (isSignUp ? t("signup") : t("signin"))}
+              (isSignUp ? t("signup") : "Sign In")}
           </Button>
 
           {!isForgotPassword && (
             <Button 
               variant="outline" 
               onClick={() => setIsSignUp(!isSignUp)}
-              className="w-full h-12 text-base font-bold border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              className="w-full bg-transparent border-2 border-[#FF6A00] text-[#FF6A00] hover:bg-[#FF6A00] hover:text-white rounded-[10px] h-12 text-base font-medium"
               disabled={loading}
             >
-              {isSignUp ? "Already have account?" : t("signup")}
+              {isSignUp ? "Already have account?" : "Register"}
             </Button>
           )}
 
@@ -170,11 +174,15 @@ export function SignInScreen({ setUser, t }: SignInScreenProps) {
               setIsForgotPassword(!isForgotPassword);
               setIsSignUp(false);
             }}
-            className="w-full text-sm text-muted-foreground hover:text-primary transition-colors underline"
+            className="w-full text-sm text-[#999999] hover:text-[#FF6A00] transition-colors text-center mt-[15px] block"
             disabled={loading}
           >
-            {isForgotPassword ? t("back") : t("forgot")}
+            {isForgotPassword ? t("back") : "Forgot Password?"}
           </button>
+
+          <div className="text-center mt-[30px]">
+            <span className="text-white text-sm">English ▸</span>
+          </div>
         </div>
       </div>
     </div>
