@@ -7,7 +7,8 @@ import { GivingScreen } from "@/components/GivingScreen";
 import { ShoppingScreen } from "@/components/ShoppingScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
-import { Home, Heart, Settings, Instagram, Youtube, MessageCircle, Video, Share2, Tv, Calendar, ShoppingBag } from "lucide-react";
+import { SocialLinksScreen } from "@/components/SocialLinksScreen";
+import { Home, Heart, Settings, Share2, Tv, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 
@@ -142,60 +143,7 @@ export default function Index() {
             }}
           />
         )}
-        {page === "social" && (
-          <div className="max-w-2xl mx-auto p-6 space-y-4">
-            <h2 className="text-2xl font-bold text-foreground mb-6">
-              🌐 {t("connect")}
-            </h2>
-            
-            <button
-              onClick={() => window.open("https://youtube.com", "_blank")}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
-            >
-              <Youtube className="w-5 h-5" />
-              YouTube
-            </button>
-
-            <button
-              onClick={() => window.open("https://wa.me/18572612862", "_blank")}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
-            >
-              <MessageCircle className="w-5 h-5" />
-              WhatsApp
-            </button>
-
-            <button
-              onClick={() => window.open("https://instagram.com/seloprayerandfire", "_blank")}
-              className="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
-            >
-              <Instagram className="w-5 h-5" />
-              Instagram
-            </button>
-
-            <button
-              onClick={() => window.open("https://us06web.zoom.us/j/82541167837?pwd=7422SYMhbDEVX4I2zgelaaXXpjZUdZ.1", "_blank")}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
-            >
-              <Video className="w-5 h-5" />
-              Zoom
-            </button>
-
-            <button
-              onClick={() => setPage("events")}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
-            >
-              <Calendar className="w-5 h-5" />
-              {t("events")}
-            </button>
-
-            <button
-              onClick={() => setPage("home")}
-              className="mt-6 text-primary hover:text-primary/80 font-semibold text-center w-full"
-            >
-              {t("back")}
-            </button>
-          </div>
-        )}
+        {page === "social" && <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />}
         {page === "events" && <EventsScreen t={t} />}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
       </div>
