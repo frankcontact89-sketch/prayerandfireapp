@@ -157,7 +157,7 @@ export default function Index() {
             </button>
 
             <button
-              onClick={() => window.open("https://wa.me/1XXXXXXXXXX", "_blank")}
+              onClick={() => window.open("https://wa.me/18572612862", "_blank")}
               className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
             >
               <MessageCircle className="w-5 h-5" />
@@ -173,7 +173,7 @@ export default function Index() {
             </button>
 
             <button
-              onClick={() => window.open("https://zoom.us", "_blank")}
+              onClick={() => window.open("https://us06web.zoom.us/j/82541167837?pwd=7422SYMhbDEVX4I2zgelaaXXpjZUdZ.1", "_blank")}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
             >
               <Video className="w-5 h-5" />
