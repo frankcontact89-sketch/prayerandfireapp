@@ -122,7 +122,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         <div className="flex flex-col items-center mb-8">
           <AnimatedFireLogo />
           <h1 className="text-[32px] font-bold text-foreground text-center mt-6 tracking-tight">
-            Prayer & Fire
+            {t("appName")}
           </h1>
         </div>
 

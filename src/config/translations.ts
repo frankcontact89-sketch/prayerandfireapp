@@ -1,6 +1,7 @@
 export const translations = {
   en: {
     title: "Prayer & Fire",
+    appName: "Prayer & Fire",
     email: "Email or Username",
     password: "Password",
     signin: "Sign In",
@@ -33,6 +34,7 @@ export const translations = {
   },
   es: {
     title: "Prayer & Fire",
+    appName: "Oración y Fuego",
     email: "Email o Usuario",
     password: "Contraseña",
     signin: "Iniciar Sesión",
@@ -65,6 +67,7 @@ export const translations = {
   },
   fr: {
     title: "Prayer & Fire",
+    appName: "Prière et Feu",
     email: "Email ou Utilisateur",
     password: "Mot de passe",
     signin: "Se Connecter",

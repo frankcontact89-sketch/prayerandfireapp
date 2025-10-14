@@ -12,7 +12,7 @@ export function HomeScreen({ t }: HomeScreenProps) {
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="flex flex-col items-center mb-10 gap-3">
         <AnimatedFireLogo />
-        <h1 className="text-4xl font-bold text-foreground tracking-tight">Prayer & Fire</h1>
+        <h1 className="text-4xl font-bold text-foreground tracking-tight">{t("appName")}</h1>
       </div>
 
       <YouTubeFeed

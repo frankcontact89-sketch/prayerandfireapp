@@ -12,15 +12,14 @@ interface LanguagesScreenProps {
 
 const LANGUAGES = [
   ["English", "en"], ["Español", "es"], ["Português", "pt"], ["Français", "fr"], ["Deutsch", "de"],
-  ["Italiano", "it"], ["Русский", "ru"], ["Українська", "uk"], ["Polski", "pl"], ["Nederlands", "nl"],
-  ["Svenska", "sv"], ["Norsk", "no"], ["Dansk", "da"], ["Suomi", "fi"], ["Română", "ro"],
+  ["Italiano", "it"], ["Русский", "ru"], ["Polski", "pl"], ["Nederlands", "nl"],
+  ["Svenska", "sv"], ["Dansk", "da"], ["Suomi", "fi"], ["Română", "ro"],
   ["Čeština", "cs"], ["Magyar", "hu"], ["Ελληνικά", "el"], ["Türkçe", "tr"],
-  ["العربية", "ar"], ["עברית", "he"], ["فارسی", "fa"], ["हिन्दी", "hi"], ["বাংলা", "bn"],
-  ["தமிழ்", "ta"], ["తెలుగు", "te"], ["मराठी", "mr"], ["ਪੰਜਾਬੀ", "pa"], ["ગુજરાતી", "gu"],
+  ["العربية", "ar"], ["עברית", "he"], ["हिन्दी", "hi"], ["বাংলা", "bn"],
+  ["தமிழ்", "ta"], ["తెలుగు", "te"], ["मराठी", "mr"], ["ગુજરાતી", "gu"],
   ["中文(简体)", "zh-CN"], ["中文(繁體)", "zh-TW"], ["日本語", "ja"], ["한국어", "ko"], ["ไทย", "th"],
-  ["Tiếng Việt", "vi"], ["Bahasa Indonesia", "id"], ["Bahasa Melayu", "ms"], ["Filipino", "tl"],
-  ["Kiswahili", "sw"], ["Amharic", "am"], ["Yorùbá", "yo"], ["Igbo", "ig"], ["Zulu", "zu"],
-  ["Afrikaans", "af"], ["Kinyarwanda", "rw"], ["Somali", "so"], ["Hausa", "ha"], ["Shona", "sn"],
+  ["Tiếng Việt", "vi"], ["Bahasa Indonesia", "id"], ["Filipino", "tl"],
+  ["Kiswahili", "sw"], ["Afrikaans", "af"], ["Hausa", "ha"],
 ];
 
 export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }: LanguagesScreenProps) {
