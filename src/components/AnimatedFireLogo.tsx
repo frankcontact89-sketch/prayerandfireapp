@@ -1,5 +1,5 @@
 import React from "react";
-import fireLogo from "@/assets/prayer-fire-circle-logo.jpg";
+import fireLogo from "@/assets/prayer-fire-hands-logo.png";
 
 export function AnimatedFireLogo() {
   return (
