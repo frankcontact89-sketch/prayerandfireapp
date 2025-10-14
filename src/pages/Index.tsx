@@ -176,14 +176,6 @@ export default function Index() {
             }}
           />
         )}
-        {page === "languages" && (
-          <LanguagesScreen 
-            t={t} 
-            currentLanguage={language}
-            onLanguageChange={handleLanguageChange}
-            onBack={() => setPage("settings")}
-          />
-        )}
         {page === "social" && <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />}
         {page === "events" && <EventsScreen t={t} />}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
