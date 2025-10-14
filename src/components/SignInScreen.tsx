@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AnimatedFireLogo } from "@/components/AnimatedFireLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -116,19 +117,22 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black p-6">
+    <div className="flex items-center justify-center min-h-screen bg-background p-6">
       <div className="w-full max-w-md">
-        <h1 className="text-[28px] font-bold text-[#FF6A00] text-center mt-[100px]">
-          Prayer & Fire
-        </h1>
+        <div className="flex flex-col items-center mb-8">
+          <AnimatedFireLogo />
+          <h1 className="text-[32px] font-bold text-foreground text-center mt-6 tracking-tight">
+            Prayer & Fire
+          </h1>
+        </div>
 
-        <div className="mt-10 space-y-[15px]">
+        <div className="mt-6 space-y-[15px]">
           <Input
             type="email"
             placeholder="Email or Username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-[#1A1A1A] border-0 rounded-[10px] text-white h-12 px-3"
+            className="w-full bg-card border border-border rounded-xl text-foreground h-12 px-4 focus:border-primary transition-colors"
           />
           
           {!isForgotPassword && (
@@ -137,13 +141,13 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#1A1A1A] border-0 rounded-[10px] text-white h-12 px-3"
+              className="w-full bg-card border border-border rounded-xl text-foreground h-12 px-4 focus:border-primary transition-colors"
             />
           )}
 
           <Button 
             onClick={handleAuth} 
-            className="w-full bg-[#FF6A00] hover:bg-[#FF6A00]/90 text-white rounded-[10px] h-12 text-base font-medium mt-[25px]"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 text-base font-semibold mt-[25px] transition-all duration-200 hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/20"
             disabled={loading}
           >
             {loading ? t("loading") : 
@@ -155,7 +159,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
             <Button 
               variant="outline" 
               onClick={() => setIsSignUp(!isSignUp)}
-              className="w-full bg-transparent border-2 border-[#FF6A00] text-[#FF6A00] hover:bg-[#FF6A00] hover:text-white rounded-[10px] h-12 text-base font-medium"
+              className="w-full bg-transparent border-2 border-border text-foreground hover:bg-secondary hover:border-primary rounded-xl h-12 text-base font-medium transition-all duration-200"
               disabled={loading}
             >
               {isSignUp ? "Already have account?" : "Register"}
@@ -167,7 +171,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
               setIsForgotPassword(!isForgotPassword);
               setIsSignUp(false);
             }}
-            className="w-full text-sm text-[#999999] hover:text-[#FF6A00] transition-colors text-center mt-[15px] block"
+            className="w-full text-sm text-muted-foreground hover:text-primary transition-colors text-center mt-[15px] block"
             disabled={loading}
           >
             {isForgotPassword ? t("back") : "Forgot Password?"}
@@ -175,7 +179,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
 
           <button
             onClick={onShowLanguages}
-            className="w-full text-center mt-[30px] text-white text-sm hover:text-[#FF6A00] transition-colors"
+            className="w-full text-center mt-[30px] text-foreground text-sm hover:text-primary transition-colors"
             disabled={loading}
           >
             {currentLanguage === "en" ? "English" : currentLanguage === "es" ? "Español" : currentLanguage.toUpperCase()} ▸

@@ -64,26 +64,42 @@ export function YouTubeFeed({ apiKey, channelId, maxResults = 6, t }: YouTubeFee
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-2xl mx-auto">
       {videos.map((video) => (
         <div
           key={video.id}
-          className="bg-card rounded-2xl overflow-hidden p-5 max-w-lg mx-auto"
+          className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 transition-all duration-300 group"
         >
-          <img
-            src={video.thumb}
-            alt={video.title}
-            className="w-full rounded-xl mb-4"
-          />
-          <h2 className="text-xl font-semibold text-foreground mb-1">{video.title}</h2>
-          <p className="text-sm text-muted-foreground mb-4">{video.date}</p>
-          <Button
-            onClick={() => window.open(video.url, "_blank")}
-            className="w-full font-bold gap-2"
-          >
-            <Play className="w-4 h-4" />
-            {t("watch")}
-          </Button>
+          <div className="flex items-center gap-4 p-4">
+            {/* Thumbnail */}
+            <div className="relative w-28 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-black">
+              <img
+                src={video.thumb}
+                alt={video.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors"></div>
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-foreground mb-1 line-clamp-2">
+                {video.title}
+              </h3>
+              <p className="text-sm text-muted-foreground">{video.date}</p>
+            </div>
+          </div>
+          
+          {/* Watch Button */}
+          <div className="px-4 pb-4">
+            <Button
+              onClick={() => window.open(video.url, "_blank")}
+              className="w-full font-semibold gap-2 rounded-xl h-12 bg-primary hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/20"
+            >
+              <Play className="w-5 h-5" />
+              Watch Now
+            </Button>
+          </div>
         </div>
       ))}
     </div>

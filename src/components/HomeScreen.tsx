@@ -9,8 +9,8 @@ interface HomeScreenProps {
 
 export function HomeScreen({ t }: HomeScreenProps) {
   return (
-    <div className="min-h-screen bg-background py-10 px-5">
-      <div className="flex flex-col items-center mb-8 gap-4">
+    <div className="min-h-screen bg-background py-8 px-4">
+      <div className="flex flex-col items-center mb-10 gap-3">
         <AnimatedFireLogo />
         <h1 className="text-4xl font-bold text-foreground tracking-tight">Prayer & Fire</h1>
       </div>

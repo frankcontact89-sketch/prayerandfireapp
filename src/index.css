@@ -80,8 +80,33 @@ All colors MUST be HSL.
 
 /* Custom animations for fire logo */
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-8px) rotate(2deg); }
+  66% { transform: translateY(-5px) rotate(-2deg); }
+}
+
+@keyframes intensePulse {
+  0%, 100% { 
+    filter: brightness(1) drop-shadow(0 0 35px rgba(255,106,0,0.9));
+  }
+  50% { 
+    filter: brightness(1.3) drop-shadow(0 0 50px rgba(255,106,0,1));
+  }
+}
+
+@keyframes flameRise {
+  0% { 
+    opacity: 1; 
+    transform: translateY(0) scale(1);
+  }
+  50% { 
+    opacity: 0.6; 
+    transform: translateY(-30px) scale(1.5);
+  }
+  100% { 
+    opacity: 0; 
+    transform: translateY(-60px) scale(0.5);
+  }
 }
 
 @keyframes flicker {
