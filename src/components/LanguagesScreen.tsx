@@ -11,15 +11,12 @@ interface LanguagesScreenProps {
 }
 
 const LANGUAGES = [
-  ["English", "en"], ["Español", "es"], ["Português", "pt"], ["Français", "fr"], ["Deutsch", "de"],
-  ["Italiano", "it"], ["Русский", "ru"], ["Polski", "pl"], ["Nederlands", "nl"],
-  ["Svenska", "sv"], ["Dansk", "da"], ["Suomi", "fi"], ["Română", "ro"],
-  ["Čeština", "cs"], ["Magyar", "hu"], ["Ελληνικά", "el"], ["Türkçe", "tr"],
-  ["العربية", "ar"], ["עברית", "he"], ["हिन्दी", "hi"], ["বাংলা", "bn"],
-  ["தமிழ்", "ta"], ["తెలుగు", "te"], ["मराठी", "mr"], ["ગુજરાતી", "gu"],
-  ["中文(简体)", "zh-CN"], ["中文(繁體)", "zh-TW"], ["日本語", "ja"], ["한국어", "ko"], ["ไทย", "th"],
-  ["Tiếng Việt", "vi"], ["Bahasa Indonesia", "id"], ["Filipino", "tl"],
-  ["Kiswahili", "sw"], ["Afrikaans", "af"], ["Hausa", "ha"],
+  ["English", "en"],
+  ["Español", "es"],
+  ["Français", "fr"],
+  ["Português", "pt"],
+  ["Deutsch", "de"],
+  ["Italiano", "it"],
 ];
 
 export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }: LanguagesScreenProps) {

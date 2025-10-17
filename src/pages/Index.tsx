@@ -9,7 +9,7 @@ import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
 import { SocialLinksScreen } from "@/components/SocialLinksScreen";
 import { LanguagesScreen } from "@/components/LanguagesScreen";
-import { Home, Heart, Settings, Share2, Tv, ShoppingBag } from "lucide-react";
+import { Heart, Settings, Share2, Tv, ShoppingBag, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
@@ -23,9 +23,28 @@ export default function Index() {
     if (saved) return saved;
     return "en";
   });
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem("pf_dark_mode");
+    return saved === "true" || saved === null;
+  });
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
   const { toast } = useToast();
+
+  // Apply dark mode class to html element
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem("pf_dark_mode", String(newMode));
+  };
 
   const t = (key: keyof typeof translations.en): string => {
     const lang = language as SupportedLanguage;
@@ -104,25 +123,26 @@ export default function Index() {
   }
 
   if (!user) {
-    if (showLanguages) {
-      return (
-        <LanguagesScreen
-          t={t}
-          currentLanguage={language}
-          onLanguageChange={(code, name) => {
-            handleLanguageChange(code, name);
-            setShowLanguages(false);
-          }}
-          onBack={() => setShowLanguages(false)}
-        />
-      );
-    }
     return (
       <SignInScreen
         setUser={setUser}
         t={t}
-        onShowLanguages={() => setShowLanguages(true)}
+        onShowLanguages={() => {}}
         currentLanguage={language}
+      />
+    );
+  }
+
+  if (showLanguages) {
+    return (
+      <LanguagesScreen
+        t={t}
+        currentLanguage={language}
+        onLanguageChange={(code, name) => {
+          handleLanguageChange(code, name);
+          setShowLanguages(false);
+        }}
+        onBack={() => setShowLanguages(false)}
       />
     );
   }
@@ -165,11 +185,13 @@ export default function Index() {
           <SettingsScreen 
             t={t} 
             language={language}
-            setLanguage={() => setPage("languages")}
+            setLanguage={() => setShowLanguages(true)}
             userName={userName}
             userEmail={user?.email || ""}
             onAdminClick={() => setPage("admin")}
             onProfileClick={() => setPage("profile")}
+            isDarkMode={isDarkMode}
+            onToggleDarkMode={toggleDarkMode}
             onSignOut={async () => {
               await supabase.auth.signOut();
               setUser(null);
@@ -186,11 +208,11 @@ export default function Index() {
         <nav className="flex justify-around items-center py-3 px-4 max-w-2xl mx-auto">
           <button
             onClick={() => setPage("home")}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              page === "home" ? "text-primary" : "text-muted-foreground"
+            className={`flex flex-col items-center gap-1 transition-all ${
+              page === "home" ? "text-primary animate-pulse" : "text-muted-foreground hover:scale-110"
             }`}
           >
-            <Home className="w-6 h-6" />
+            <Flame className="w-6 h-6" />
           </button>
           <button
             onClick={() => setPage("stream")}

@@ -1,19 +1,21 @@
 import React from "react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Bell, Moon, Zap, Shield, Download, Globe, Smartphone, User } from "lucide-react";
+import { Bell, Moon, Sun, Shield, Globe, User, Languages } from "lucide-react";
 
 interface SettingsScreenProps {
   t: (key: string) => string;
   language: string;
-  setLanguage: (lang: string) => void;
+  setLanguage: () => void;
   userName: string;
   userEmail: string;
   onAdminClick: () => void;
   onProfileClick: () => void;
   onSignOut: () => void;
+  isDarkMode: boolean;
+  onToggleDarkMode: () => void;
 }
 
-export function SettingsScreen({ t, userName, userEmail, onAdminClick, onSignOut }: SettingsScreenProps) {
+export function SettingsScreen({ t, userName, userEmail, onAdminClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
   const { isAdmin, loading } = useUserRole();
 
   return (
@@ -45,65 +47,44 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onSignOut
         {/* Push Notifications */}
         <button className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
           <Bell className="w-6 h-6 text-primary mb-2" />
-          <p className="text-sm font-medium text-foreground">Push Alerts</p>
-          <p className="text-xs text-muted-foreground mt-1">On</p>
+          <p className="text-sm font-medium text-foreground">{t("notifications")}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("on")}</p>
         </button>
 
-        {/* Dark Mode */}
-        <button className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
-          <Moon className="w-6 h-6 text-primary mb-2" />
-          <p className="text-sm font-medium text-foreground">Dark Mode</p>
-          <p className="text-xs text-muted-foreground mt-1">Active</p>
+        {/* Dark Mode Toggle */}
+        <button 
+          onClick={onToggleDarkMode}
+          className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95"
+        >
+          {isDarkMode ? (
+            <Moon className="w-6 h-6 text-primary mb-2" />
+          ) : (
+            <Sun className="w-6 h-6 text-primary mb-2" />
+          )}
+          <p className="text-sm font-medium text-foreground">{t("theme")}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {isDarkMode ? t("dark") : t("light")}
+          </p>
         </button>
 
-        {/* Performance */}
-        <button className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
-          <Zap className="w-6 h-6 text-primary mb-2" />
-          <p className="text-sm font-medium text-foreground">Performance</p>
-          <p className="text-xs text-muted-foreground mt-1">Optimized</p>
+        {/* Language Selection */}
+        <button 
+          onClick={setLanguage}
+          className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95"
+        >
+          <Languages className="w-6 h-6 text-primary mb-2" />
+          <p className="text-sm font-medium text-foreground">{t("language")}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("changeLanguage")}</p>
         </button>
 
         {/* Privacy */}
         <button className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
           <Shield className="w-6 h-6 text-primary mb-2" />
-          <p className="text-sm font-medium text-foreground">Privacy</p>
-          <p className="text-xs text-muted-foreground mt-1">Secure</p>
+          <p className="text-sm font-medium text-foreground">{t("privacy")}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("secure")}</p>
         </button>
       </div>
 
-      {/* Advanced Features */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Advanced
-        </h3>
-        
-        {/* Offline Mode */}
-        <button className="w-full bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-colors text-left flex items-center gap-3">
-          <Download className="w-5 h-5 text-primary" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Offline Mode</p>
-            <p className="text-xs text-muted-foreground">Download content for offline access</p>
-          </div>
-        </button>
-
-        {/* Multi-Device Sync */}
-        <button className="w-full bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-colors text-left flex items-center gap-3">
-          <Smartphone className="w-5 h-5 text-primary" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Device Sync</p>
-            <p className="text-xs text-muted-foreground">Sync across all your devices</p>
-          </div>
-        </button>
-
-        {/* Auto-Translation */}
-        <button className="w-full bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-colors text-left flex items-center gap-3">
-          <Globe className="w-5 h-5 text-primary" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Auto-Translate</p>
-            <p className="text-xs text-muted-foreground">Automatic content translation</p>
-          </div>
-        </button>
-      </div>
 
       {/* Admin Panel Section */}
       {loading ? (

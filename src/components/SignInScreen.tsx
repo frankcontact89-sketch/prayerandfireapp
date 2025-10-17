@@ -176,14 +176,6 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
           >
             {isForgotPassword ? t("back") : "Forgot Password?"}
           </button>
-
-          <button
-            onClick={onShowLanguages}
-            className="w-full text-center mt-[30px] text-foreground text-sm hover:text-primary transition-colors"
-            disabled={loading}
-          >
-            {currentLanguage === "en" ? "English" : currentLanguage === "es" ? "Español" : currentLanguage.toUpperCase()} ▸
-          </button>
         </div>
       </div>
     </div>
