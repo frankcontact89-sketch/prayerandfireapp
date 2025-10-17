@@ -1,6 +1,5 @@
 import React from "react";
 import { YouTubeFeed } from "@/components/YouTubeFeed";
-import { AnimatedFireLogo } from "@/components/AnimatedFireLogo";
 import { YOUTUBE_CONFIG } from "@/config/youtube";
 import fireBackground from "@/assets/fire-background-wallpaper.png";
 
@@ -25,7 +24,6 @@ export function HomeScreen({ t }: HomeScreenProps) {
       {/* Content */}
       <div className="relative z-10">
         <div className="flex flex-col items-center mb-10 gap-3">
-          <AnimatedFireLogo />
           <h1 className="text-4xl font-bold text-foreground tracking-tight">{t("appName")}</h1>
         </div>
 

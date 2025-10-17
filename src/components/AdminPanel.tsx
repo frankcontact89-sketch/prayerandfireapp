@@ -5,6 +5,7 @@ import { AdminVideos } from "./admin/AdminVideos";
 import { AdminEvents } from "./admin/AdminEvents";
 import { AdminNotifications } from "./admin/AdminNotifications";
 import { AdminProducts } from "./admin/AdminProducts";
+import { AdminStaff } from "./admin/AdminStaff";
 import { Shield, ArrowLeft } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -33,12 +34,13 @@ export function AdminPanel({ t, onBack }: AdminPanelProps) {
       </div>
 
       <Tabs defaultValue="links" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 bg-muted">
+        <TabsList className="grid w-full grid-cols-6 bg-muted">
           <TabsTrigger value="links">{t("Links", "Enlaces")}</TabsTrigger>
           <TabsTrigger value="videos">{t("Videos", "Videos")}</TabsTrigger>
           <TabsTrigger value="events">{t("Events", "Eventos")}</TabsTrigger>
           <TabsTrigger value="products">{t("Products", "Productos")}</TabsTrigger>
           <TabsTrigger value="notifications">{t("Notifications", "Notificaciones")}</TabsTrigger>
+          <TabsTrigger value="staff">{t("Staff", "Personal")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="links" className="mt-6">
@@ -59,6 +61,10 @@ export function AdminPanel({ t, onBack }: AdminPanelProps) {
 
         <TabsContent value="notifications" className="mt-6">
           <AdminNotifications t={t} />
+        </TabsContent>
+
+        <TabsContent value="staff" className="mt-6">
+          <AdminStaff t={t} />
         </TabsContent>
       </Tabs>
     </div>

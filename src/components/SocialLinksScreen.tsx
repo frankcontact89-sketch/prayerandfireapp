@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Youtube, MessageCircle, Instagram, Video, Calendar } from "lucide-react";
+import { Youtube, MessageCircle, Instagram, Video, Calendar, Flame } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SocialLink {
@@ -112,9 +112,9 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
       <button
         onClick={onBack}
-        className="mt-6 text-primary hover:text-primary/80 font-semibold text-center w-full"
+        className="mt-6 flex items-center justify-center gap-2 w-full text-primary hover:text-primary/80 font-semibold transition-all hover:scale-110 active:scale-95"
       >
-        {t("back")}
+        <Flame className="w-5 h-5 animate-pulse" />
       </button>
     </div>
   );

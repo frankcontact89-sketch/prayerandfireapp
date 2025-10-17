@@ -36,7 +36,8 @@ export const translations = {
     light: "Light",
     on: "On",
     privacy: "Privacy",
-    secure: "Secure"
+    secure: "Secure",
+    staff: "Staff"
   },
   es: {
     title: "Prayer & Fire",
@@ -75,7 +76,8 @@ export const translations = {
     light: "Claro",
     on: "Activado",
     privacy: "Privacidad",
-    secure: "Seguro"
+    secure: "Seguro",
+    staff: "Personal"
   },
   fr: {
     title: "Prayer & Fire",
@@ -114,7 +116,8 @@ export const translations = {
     light: "Clair",
     on: "Activé",
     privacy: "Confidentialité",
-    secure: "Sécurisé"
+    secure: "Sécurisé",
+    staff: "Personnel"
   },
   pt: {
     title: "Prayer & Fire",
@@ -153,7 +156,8 @@ export const translations = {
     light: "Claro",
     on: "Ativado",
     privacy: "Privacidade",
-    secure: "Seguro"
+    secure: "Seguro",
+    staff: "Equipe"
   },
   de: {
     title: "Prayer & Fire",
@@ -192,7 +196,8 @@ export const translations = {
     light: "Hell",
     on: "An",
     privacy: "Datenschutz",
-    secure: "Sicher"
+    secure: "Sicher",
+    staff: "Personal"
   },
   it: {
     title: "Prayer & Fire",
@@ -231,7 +236,8 @@ export const translations = {
     light: "Chiaro",
     on: "Attivo",
     privacy: "Privacy",
-    secure: "Sicuro"
+    secure: "Sicuro",
+    staff: "Staff"
   }
 };
 
