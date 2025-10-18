@@ -1,6 +1,6 @@
 import React from "react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Bell, Moon, Sun, Shield, Globe, User, Languages } from "lucide-react";
+import { Bell, Globe, User, Languages } from "lucide-react";
 
 interface SettingsScreenProps {
   t: (key: string) => string;
@@ -51,22 +51,6 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onSignOut
           <p className="text-xs text-muted-foreground mt-1">{t("on")}</p>
         </button>
 
-        {/* Dark Mode Toggle */}
-        <button 
-          onClick={onToggleDarkMode}
-          className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95"
-        >
-          {isDarkMode ? (
-            <Moon className="w-6 h-6 text-primary mb-2" />
-          ) : (
-            <Sun className="w-6 h-6 text-primary mb-2" />
-          )}
-          <p className="text-sm font-medium text-foreground">{t("theme")}</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            {isDarkMode ? t("dark") : t("light")}
-          </p>
-        </button>
-
         {/* Language Selection */}
         <button 
           onClick={setLanguage}
@@ -75,13 +59,6 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onSignOut
           <Languages className="w-6 h-6 text-primary mb-2" />
           <p className="text-sm font-medium text-foreground">{t("language")}</p>
           <p className="text-xs text-muted-foreground mt-1">{t("changeLanguage")}</p>
-        </button>
-
-        {/* Privacy */}
-        <button className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
-          <Shield className="w-6 h-6 text-primary mb-2" />
-          <p className="text-sm font-medium text-foreground">{t("privacy")}</p>
-          <p className="text-xs text-muted-foreground mt-1">{t("secure")}</p>
         </button>
       </div>
 
