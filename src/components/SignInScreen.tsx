@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AnimatedFireLogo } from "@/components/AnimatedFireLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import entryLogo from "@/assets/prayer-fire-entry-logo.png";
 
 interface SignInScreenProps {
   setUser: (user: any) => void;
@@ -120,7 +120,11 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
     <div className="flex items-center justify-center min-h-screen bg-background p-6">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <AnimatedFireLogo />
+          <img 
+            src={entryLogo} 
+            alt="Prayer & Fire Logo" 
+            className="w-32 h-32 object-contain animate-pulse"
+          />
           <h1 className="text-[32px] font-bold text-foreground text-center mt-6 tracking-tight">
             {t("appName")}
           </h1>
