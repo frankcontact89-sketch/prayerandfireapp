@@ -9,11 +9,10 @@ import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
 import { SocialLinksScreen } from "@/components/SocialLinksScreen";
 import { LanguagesScreen } from "@/components/LanguagesScreen";
-import { Heart, Settings, Share2, Tv, ShoppingBag } from "lucide-react";
+import { Heart, Settings, Share2, Tv, ShoppingBag, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
-import modernFireIcon from "@/assets/modern-fire-icon.png";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -210,10 +209,10 @@ export default function Index() {
           <button
             onClick={() => setPage("home")}
             className={`flex flex-col items-center gap-1 transition-all ${
-              page === "home" ? "animate-pulse" : "hover:scale-110"
+              page === "home" ? "text-primary animate-pulse" : "text-muted-foreground hover:scale-110"
             }`}
           >
-            <img src={modernFireIcon} alt="Fire" className="w-6 h-6" />
+            <Flame className="w-6 h-6" />
           </button>
           <button
             onClick={() => setPage("stream")}
