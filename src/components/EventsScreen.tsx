@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Calendar, MapPin, Users, Video } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import modernFireIcon from "@/assets/modern-fire-icon.png";
 
 interface Event {
   id: string;
@@ -126,7 +127,7 @@ export function EventsScreen({ t }: EventsScreenProps) {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3">
-        <Calendar className="w-8 h-8 text-primary" />
+        <img src={modernFireIcon} alt="Fire" className="w-8 h-8" />
         <h1 className="text-3xl font-extrabold text-foreground">
           {t("Upcoming Events", "Próximos Eventos")}
         </h1>
