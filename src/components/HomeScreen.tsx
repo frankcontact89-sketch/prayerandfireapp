@@ -1,7 +1,7 @@
 import React from "react";
 import { YouTubeFeed } from "@/components/YouTubeFeed";
 import { YOUTUBE_CONFIG } from "@/config/youtube";
-import fireBackground from "@/assets/fire-background-wallpaper.png";
+import realisticFlame from "@/assets/realistic-flame.png";
 
 interface HomeScreenProps {
   t: (key: string) => string;
@@ -12,9 +12,9 @@ export function HomeScreen({ t }: HomeScreenProps) {
     <div className="relative min-h-screen py-8 px-4">
       {/* Fire background */}
       <div 
-        className="fixed inset-0 z-0 opacity-20 dark:opacity-10"
+        className="fixed inset-0 z-0 opacity-30 dark:opacity-15"
         style={{
-          backgroundImage: `url(${fireBackground})`,
+          backgroundImage: `url(${realisticFlame})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'

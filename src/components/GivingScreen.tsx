@@ -18,6 +18,7 @@ interface GivingScreenProps {
 
 export function GivingScreen({ t }: GivingScreenProps) {
   const STRIPE_SUBSCRIPTION = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
+  const STRIPE_ONETIME = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
   
   const [givingType, setGivingType] = useState<"subscription" | "onetime" | "project">("subscription");
   const [amount, setAmount] = useState("");
@@ -43,18 +44,11 @@ export function GivingScreen({ t }: GivingScreenProps) {
     if (givingType === "subscription") {
       window.open(STRIPE_SUBSCRIPTION, "_blank");
     } else if (givingType === "onetime") {
-      // Handle one-time giving based on payment method
-      const paymentLinks: Record<string, string> = {
-        stripe: `https://buy.stripe.com/test_onetime?amount=${amount}`,
-        cashapp: `https://cash.app/$PrayerAndFire/${amount}`,
-        paypal: `https://paypal.me/prayerandfire/${amount}`,
-        venmo: `https://venmo.com/prayerandfire?amount=${amount}`,
-        zelle: `mailto:giving@prayerandfire.org?subject=Zelle Payment ${amount}`,
-      };
-      window.open(paymentLinks[paymentMethod], "_blank");
+      // All payment methods now redirect to Stripe
+      window.open(STRIPE_ONETIME, "_blank");
     } else if (givingType === "project") {
-      // Handle project support
-      window.open(`https://buy.stripe.com/test_project_${selectedProject}?amount=${amount}`, "_blank");
+      // Project support also goes through Stripe
+      window.open(STRIPE_ONETIME, "_blank");
     }
   };
 

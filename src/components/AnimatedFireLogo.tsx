@@ -1,14 +1,14 @@
 import React from "react";
-import fireBackground from "@/assets/fire-background-wallpaper.png";
+import realisticFlame from "@/assets/realistic-flame.png";
 
 export function AnimatedFireLogo() {
   return (
     <div className="relative w-32 h-32">
       {/* Fire background - full size */}
       <img 
-        src={fireBackground} 
+        src={realisticFlame} 
         alt="Fire" 
-        className="absolute inset-0 w-full h-full object-cover rounded-lg opacity-60"
+        className="absolute inset-0 w-full h-full object-cover rounded-lg opacity-80"
       />
       
       {/* Animated flame particles on top */}
