@@ -20,6 +20,7 @@ interface Product {
 }
 
 export function ShoppingScreen({ t }: ShoppingScreenProps) {
+  const STRIPE_PAYMENT = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -103,7 +104,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                   <span className="text-2xl font-bold text-primary">${product.price}</span>
                 )}
                 {!product.price && <span></span>}
-                <Button onClick={() => window.open(product.purchase_url, "_blank")}>
+                <Button onClick={() => window.open(product.purchase_url || STRIPE_PAYMENT, "_blank")}>
                   {t("buy")}
                   <ExternalLink className="w-4 h-4 ml-2" />
                 </Button>
