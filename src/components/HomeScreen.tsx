@@ -1,6 +1,4 @@
 import React from "react";
-import { YouTubeFeed } from "@/components/YouTubeFeed";
-import { YOUTUBE_CONFIG } from "@/config/youtube";
 import realisticFlame from "@/assets/realistic-flame.png";
 
 interface HomeScreenProps {
@@ -23,15 +21,12 @@ export function HomeScreen({ t }: HomeScreenProps) {
       
       {/* Content */}
       <div className="relative z-10">
-        <div className="flex flex-col items-center mb-10 gap-3">
-          <h1 className="text-4xl font-bold text-foreground tracking-tight">{t("appName")}</h1>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
+          <h1 className="text-4xl font-bold text-foreground tracking-tight text-center">{t("appName")}</h1>
+          <p className="text-lg text-muted-foreground text-center max-w-md">
+            {t("welcome")}
+          </p>
         </div>
-
-        <YouTubeFeed
-          apiKey={YOUTUBE_CONFIG.apiKey}
-          channelId={YOUTUBE_CONFIG.channelId}
-          t={t}
-        />
       </div>
     </div>
   );
