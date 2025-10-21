@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Youtube, MessageCircle, Instagram, Video, Calendar, Flame } from "lucide-react";
+import { MessageCircle, Instagram, Calendar, Flame } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SocialLink {
@@ -47,14 +47,10 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
   const getIconComponent = (iconName?: string) => {
     switch (iconName?.toLowerCase()) {
-      case "youtube":
-        return <Youtube className="w-5 h-5" />;
       case "whatsapp":
         return <MessageCircle className="w-5 h-5" />;
       case "instagram":
         return <Instagram className="w-5 h-5" />;
-      case "zoom":
-        return <Video className="w-5 h-5" />;
       default:
         return null;
     }
@@ -62,14 +58,10 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
   const getButtonColor = (iconName?: string) => {
     switch (iconName?.toLowerCase()) {
-      case "youtube":
-        return "bg-red-600 hover:bg-red-700";
       case "whatsapp":
         return "bg-green-600 hover:bg-green-700";
       case "instagram":
         return "bg-pink-600 hover:bg-pink-700";
-      case "zoom":
-        return "bg-blue-600 hover:bg-blue-700";
       default:
         return "bg-primary hover:bg-primary/90";
     }
