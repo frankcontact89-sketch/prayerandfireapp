@@ -27,10 +27,6 @@ export function GivingScreen({ t }: GivingScreenProps) {
 
   const paymentMethods = [
     { value: "stripe", label: t("Credit/Debit Card", "Tarjeta de Crédito/Débito"), icon: CreditCard },
-    { value: "cashapp", label: "Cash App", icon: DollarSign },
-    { value: "paypal", label: "PayPal", icon: Heart },
-    { value: "venmo", label: "Venmo", icon: DollarSign },
-    { value: "zelle", label: "Zelle", icon: DollarSign },
   ];
 
   const projects = [
