@@ -34,7 +34,7 @@ export default function ProfileAvatarScreen() {
 
       const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = fileName;
 
       const { error: uploadError } = await supabase.storage
         .from("avatars")
