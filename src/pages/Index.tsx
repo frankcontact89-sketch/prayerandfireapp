@@ -8,6 +8,7 @@ import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
 import { SocialLinksScreen } from "@/components/SocialLinksScreen";
 import { LanguagesScreen } from "@/components/LanguagesScreen";
+import { CancelSubscriptionScreen } from "@/components/CancelSubscriptionScreen";
 import { Heart, Settings, Share2, ShoppingBag, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
@@ -188,6 +189,7 @@ export default function Index() {
             userEmail={user?.email || ""}
             onAdminClick={() => setPage("admin")}
             onProfileClick={() => setPage("profile")}
+            onCancelSubscriptionClick={() => setPage("cancelSubscription")}
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
             onSignOut={async () => {
@@ -199,6 +201,7 @@ export default function Index() {
         {page === "social" && <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />}
         {page === "events" && <EventsScreen t={t} />}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
+        {page === "cancelSubscription" && <CancelSubscriptionScreen t={t} onBack={() => setPage("settings")} />}
       </div>
 
       {/* Bottom Navigation */}
