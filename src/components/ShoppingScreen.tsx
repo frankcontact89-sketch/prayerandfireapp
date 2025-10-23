@@ -71,15 +71,11 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
       </div>
 
       {products.length === 0 ? (
-        <div className="text-center p-12 space-y-4">
+        <div className="text-center p-12">
           <ShoppingBag className="w-20 h-20 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-muted-foreground text-lg">
             No hay productos disponibles en este momento.
           </p>
-          <Button onClick={() => window.open('https://a.co/d/elJnRBA', '_blank')} className="inline-flex items-center gap-2">
-            Ir a nuestra tienda en Amazon
-            <ExternalLink className="w-4 h-4" />
-          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

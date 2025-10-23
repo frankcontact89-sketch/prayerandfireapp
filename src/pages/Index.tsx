@@ -9,7 +9,7 @@ import { AdminPanel } from "@/components/AdminPanel";
 import { SocialLinksScreen } from "@/components/SocialLinksScreen";
 import { LanguagesScreen } from "@/components/LanguagesScreen";
 import { CancelSubscriptionScreen } from "@/components/CancelSubscriptionScreen";
-import { ProfileScreen } from "@/components/ProfileScreen";
+import ProfileAvatarScreen from "@/components/ProfileAvatarScreen";
 import { Heart, Settings, Share2, ShoppingBag, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
@@ -189,7 +189,7 @@ export default function Index() {
             userName={userName}
             userEmail={user?.email || ""}
             onAdminClick={() => setPage("admin")}
-            onProfileClick={() => setPage("profile")}
+            onProfileClick={() => setPage("profileAvatar")}
             onCancelSubscriptionClick={() => setPage("cancelSubscription")}
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
@@ -202,17 +202,7 @@ export default function Index() {
         {page === "social" && <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />}
         {page === "events" && <EventsScreen t={t} />}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
-        {page === "profile" && (
-          <ProfileScreen
-            t={t}
-            language={language}
-            setLanguage={setLanguage}
-            signOut={async () => {
-              await supabase.auth.signOut();
-              setUser(null);
-            }}
-          />
-        )}
+        {page === "profileAvatar" && <ProfileAvatarScreen />}
         {page === "cancelSubscription" && <CancelSubscriptionScreen t={t} onBack={() => setPage("settings")} />}
       </div>
 
