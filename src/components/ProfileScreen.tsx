@@ -205,6 +205,33 @@ export function ProfileScreen({
           </p>
         </div>
 
+        {/* Photo/Avatar Actions */}
+        <div className="space-y-3">
+          <Button
+            onClick={() => setShowImageDialog(true)}
+            disabled={loading}
+            className="w-full h-12 font-bold inline-flex items-center justify-center gap-2"
+          >
+            <Camera className="w-5 h-5" />
+            {t("Upload Photo or Take Photo", "Subir Foto o Tomar Foto")}
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full h-12 font-bold"
+            onClick={() =>
+              toast({
+                title: t("Coming soon", "Próximamente"),
+                description: t(
+                  "You'll be able to create an AI avatar soon.",
+                  "Pronto podrás crear tu avatar con IA."
+                ),
+              })
+            }
+          >
+            {t("Create Avatar", "Crear Avatar")}
+          </Button>
+        </div>
+
         {/* Profile Form */}
         <div className="space-y-4">
           <Input
