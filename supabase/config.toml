@@ -2,3 +2,6 @@ project_id = "yufzlqcuvmirniruwyio"
 
 [functions.translate]
 verify_jwt = false
+
+[functions.generate-avatar]
+verify_jwt = true

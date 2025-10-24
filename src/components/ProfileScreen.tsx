@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { Instagram, Youtube, MessageCircle, Video, Camera, Upload, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +35,9 @@ export function ProfileScreen({
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [showAvatarDialog, setShowAvatarDialog] = useState(false);
+  const [avatarDescription, setAvatarDescription] = useState("");
+  const [generatingAvatar, setGeneratingAvatar] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -135,6 +139,85 @@ export function ProfileScreen({
     setShowImageDialog(false);
   };
 
+  const handleGenerateAvatar = async () => {
+    if (!avatarDescription.trim()) {
+      toast({
+        title: "Error",
+        description: t("Please describe your avatar", "Por favor describe tu avatar"),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setGeneratingAvatar(true);
+
+      const { data, error } = await supabase.functions.invoke('generate-avatar', {
+        body: { description: avatarDescription }
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (!data.imageUrl) {
+        throw new Error("No image generated");
+      }
+
+      // Convert base64 to blob
+      const base64Response = await fetch(data.imageUrl);
+      const blob = await base64Response.blob();
+
+      // Upload to storage
+      const fileExt = 'png';
+      const fileName = `${userId}/${Math.random()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, blob, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
+
+      // Update profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
+
+      setImage(urlWithTimestamp);
+      setShowAvatarDialog(false);
+      setAvatarDescription("");
+
+      toast({
+        title: t("Success", "Éxito"),
+        description: t("Avatar generated successfully", "Avatar generado exitosamente"),
+      });
+    } catch (error: any) {
+      console.error("Error generating avatar:", error);
+      toast({
+        title: "Error",
+        description: error.message || t("Could not generate avatar", "No se pudo generar el avatar"),
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingAvatar(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!userId) return;
 
@@ -224,17 +307,10 @@ export function ProfileScreen({
           <Button
             variant="outline"
             className="w-full h-12 font-bold"
-            onClick={() =>
-              toast({
-                title: t("Coming soon", "Próximamente"),
-                description: t(
-                  "You'll be able to create an AI avatar soon.",
-                  "Pronto podrás crear tu avatar con IA."
-                ),
-              })
-            }
+            onClick={() => setShowAvatarDialog(true)}
+            disabled={loading}
           >
-            {t("Create Avatar", "Crear Avatar")}
+            {t("Create Avatar with AI", "Crear Avatar con IA")}
           </Button>
         </div>
 
@@ -302,6 +378,49 @@ export function ProfileScreen({
             <AlertDialogCancel>
               {t("Cancel", "Cancelar")}
             </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Avatar Generation Dialog */}
+      <AlertDialog open={showAvatarDialog} onOpenChange={setShowAvatarDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("Create AI Avatar", "Crear Avatar con IA")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("Describe how you want your avatar to look", "Describe cómo quieres que se vea tu avatar")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Input
+              placeholder={t(
+                "Example: A friendly person with glasses and a smile", 
+                "Ejemplo: Una persona amigable con lentes y sonrisa"
+              )}
+              value={avatarDescription}
+              onChange={(e) => setAvatarDescription(e.target.value)}
+              disabled={generatingAvatar}
+              className="mb-4"
+            />
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "Tip: Be specific about appearance, style, and mood",
+                "Consejo: Sé específico sobre apariencia, estilo y estado de ánimo"
+              )}
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={generatingAvatar}>
+              {t("Cancel", "Cancelar")}
+            </AlertDialogCancel>
+            <Button 
+              onClick={handleGenerateAvatar}
+              disabled={generatingAvatar || !avatarDescription.trim()}
+            >
+              {generatingAvatar ? t("Generating...", "Generando...") : t("Generate", "Generar")}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
