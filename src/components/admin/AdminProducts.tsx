@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Trash2, Edit, Upload, X } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 
 interface Product {
   id: string;
@@ -29,9 +29,6 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
     description: "",
     purchase_url: "",
   });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -56,59 +53,6 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
     setLoading(false);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Error",
-          description: "Por favor selecciona solo archivos de imagen",
-          variant: "destructive",
-        });
-        return;
-      }
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const uploadImage = async (): Promise<string | null> => {
-    if (!selectedFile) return formData.image_url || null;
-
-    setUploading(true);
-    try {
-      const fileExt = selectedFile.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = fileName;
-
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, selectedFile);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo subir la imagen",
-        variant: "destructive",
-      });
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -121,12 +65,10 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
       return;
     }
 
-    const uploadedImageUrl = await uploadImage();
-
     const productData = {
       name: formData.name,
       price: formData.price ? parseFloat(formData.price) : null,
-      image_url: uploadedImageUrl,
+      image_url: formData.image_url || null,
       description: formData.description || null,
       purchase_url: formData.purchase_url,
       is_active: true,
@@ -149,8 +91,6 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
         setDialogOpen(false);
         setEditingProduct(null);
         setFormData({ name: "", price: "", image_url: "", description: "", purchase_url: "" });
-        setSelectedFile(null);
-        setImagePreview(null);
         fetchProducts();
       }
     } else {
@@ -166,8 +106,6 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
         toast({ title: "Éxito", description: "Producto agregado ✅" });
         setDialogOpen(false);
         setFormData({ name: "", price: "", image_url: "", description: "", purchase_url: "" });
-        setSelectedFile(null);
-        setImagePreview(null);
         fetchProducts();
       }
     }
@@ -199,8 +137,6 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
       description: product.description || "",
       purchase_url: product.purchase_url,
     });
-    setImagePreview(product.image_url || null);
-    setSelectedFile(null);
     setDialogOpen(true);
   };
 
@@ -218,8 +154,6 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
               onClick={() => {
                 setEditingProduct(null);
                 setFormData({ name: "", price: "", image_url: "", description: "", purchase_url: "" });
-                setSelectedFile(null);
-                setImagePreview(null);
               }}
             >
               {t("Add Product", "Agregar Producto")}
@@ -245,54 +179,11 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               />
-              
-              {/* Image upload section */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  {t("Product Image", "Imagen del producto")}
-                </label>
-                
-                {imagePreview && (
-                  <div className="relative inline-block">
-                    <img 
-                      src={imagePreview} 
-                      alt="Preview" 
-                      className="w-32 h-32 object-cover rounded-lg border"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                      onClick={() => {
-                        setImagePreview(null);
-                        setSelectedFile(null);
-                        setFormData({ ...formData, image_url: "" });
-                      }}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    id="product-image-upload"
-                  />
-                  <label
-                    htmlFor="product-image-upload"
-                    className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 cursor-pointer"
-                  >
-                    <Upload className="w-4 h-4" />
-                    {t("Select Image", "Seleccionar Imagen")}
-                  </label>
-                </div>
-              </div>
-              
+              <Input
+                placeholder={t("Image URL", "URL de la imagen")}
+                value={formData.image_url}
+                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+              />
               <Textarea
                 placeholder={t("Product description", "Descripción del producto")}
                 value={formData.description}
@@ -304,11 +195,8 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
                 onChange={(e) => setFormData({ ...formData, purchase_url: e.target.value })}
                 required
               />
-              <Button type="submit" className="w-full" disabled={uploading}>
-                {uploading 
-                  ? t("Uploading...", "Subiendo...") 
-                  : `${editingProduct ? t("Update", "Actualizar") : t("Add", "Agregar")} ${t("Product", "Producto")}`
-                }
+              <Button type="submit" className="w-full">
+                {editingProduct ? t("Update", "Actualizar") : t("Add", "Agregar")} {t("Product", "Producto")}
               </Button>
             </form>
           </DialogContent>
