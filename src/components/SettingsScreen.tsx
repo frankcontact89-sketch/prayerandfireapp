@@ -11,12 +11,13 @@ interface SettingsScreenProps {
   onAdminClick: () => void;
   onProfileClick: () => void;
   onCancelSubscriptionClick: () => void;
+  onNotificationsClick: () => void;
   onSignOut: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
 }
 
-export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onCancelSubscriptionClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
+export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onCancelSubscriptionClick, onNotificationsClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
   const { isAdmin, loading } = useUserRole();
 
   return (
@@ -52,10 +53,13 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-2 gap-4">
         {/* Push Notifications */}
-        <button className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
+        <button 
+          onClick={onNotificationsClick}
+          className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95"
+        >
           <Bell className="w-6 h-6 text-primary mb-2" />
           <p className="text-sm font-medium text-foreground">{t("notifications")}</p>
-          <p className="text-xs text-muted-foreground mt-1">{t("on")}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("view")}</p>
         </button>
 
         {/* Language Selection */}
