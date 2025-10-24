@@ -13,7 +13,7 @@ export function FloatingFireButton({ onClick }: FloatingFireButtonProps) {
         role="button"
         aria-label="Fire button"
       >
-        🔥
+        
       </div>
     </>
   );
