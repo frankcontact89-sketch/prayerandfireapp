@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, Instagram, Calendar, Flame } from "lucide-react";
+import { MessageCircle, Instagram, Calendar, Flame, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FloatingFireButton } from "@/components/FloatingFireButton";
 
@@ -21,6 +21,7 @@ interface SocialLinksScreenProps {
 export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinksScreenProps) {
   const [links, setLinks] = useState<SocialLink[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showWhatsAppContacts, setShowWhatsAppContacts] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -78,13 +79,64 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
     );
   }
 
+  const whatsappLinks = links.filter(link => link.icon?.toLowerCase() === "whatsapp");
+  const otherLinks = links.filter(link => link.icon?.toLowerCase() !== "whatsapp");
+
+  if (showWhatsAppContacts) {
+    return (
+      <div className="max-w-2xl mx-auto p-6 space-y-4">
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => setShowWhatsAppContacts(false)}
+            className="text-primary hover:text-primary/80 transition-colors"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <h2 className="text-2xl font-bold text-foreground">
+            💬 Contactos de WhatsApp
+          </h2>
+        </div>
+        
+        {whatsappLinks.map((link) => (
+          <button
+            key={link.id}
+            onClick={() => window.open(link.url, "_blank")}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
+          >
+            <MessageCircle className="w-5 h-5" />
+            {link.title}
+          </button>
+        ))}
+
+        <button
+          onClick={() => setShowWhatsAppContacts(false)}
+          className="mt-6 flex items-center justify-center gap-2 w-full text-primary hover:text-primary/80 font-semibold transition-all hover:scale-110 active:scale-95"
+        >
+          <Flame className="w-5 h-5 animate-pulse" />
+        </button>
+
+        <FloatingFireButton onClick={() => setShowWhatsAppContacts(false)} />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-4">
       <h2 className="text-2xl font-bold text-foreground mb-6">
         🌐 {t("connect")}
       </h2>
       
-      {links.map((link) => (
+      {whatsappLinks.length > 0 && (
+        <button
+          onClick={() => setShowWhatsAppContacts(true)}
+          className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"
+        >
+          <MessageCircle className="w-5 h-5" />
+          WhatsApp
+        </button>
+      )}
+
+      {otherLinks.map((link) => (
         <button
           key={link.id}
           onClick={() => window.open(link.url, "_blank")}
