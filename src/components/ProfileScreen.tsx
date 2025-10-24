@@ -59,7 +59,9 @@ export function ProfileScreen({
       if (profile) {
         setName(profile.username || "");
         if (profile.avatar_url) {
-          setImage(profile.avatar_url);
+          // Agregar timestamp para evitar caché
+          const urlWithTimestamp = `${profile.avatar_url}?t=${Date.now()}`;
+          setImage(urlWithTimestamp);
         }
       }
     } catch (error) {
@@ -92,6 +94,9 @@ export function ProfileScreen({
         .from('avatars')
         .getPublicUrl(fileName);
 
+      // Agregar timestamp para evitar caché del navegador
+      const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
+
       // Actualizar el perfil con la nueva URL
       const { error: updateError } = await supabase
         .from('profiles')
@@ -100,7 +105,8 @@ export function ProfileScreen({
 
       if (updateError) throw updateError;
 
-      setImage(publicUrl);
+      // Usar la URL con timestamp para actualizar la imagen inmediatamente
+      setImage(urlWithTimestamp);
       
       toast({
         title: t("Success", "Éxito"),
