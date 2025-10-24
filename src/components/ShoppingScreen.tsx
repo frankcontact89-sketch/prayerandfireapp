@@ -76,10 +76,6 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
           <p className="text-muted-foreground text-lg">
             No hay productos disponibles en este momento.
           </p>
-          <Button onClick={() => window.open('https://a.co/d/elJnRBA', '_blank')} className="inline-flex items-center gap-2">
-            Ir a nuestra tienda en Amazon
-            <ExternalLink className="w-4 h-4" />
-          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
