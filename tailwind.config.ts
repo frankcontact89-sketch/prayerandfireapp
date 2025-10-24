@@ -64,6 +64,20 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
+        "fire-pulse": {
+          "0%": { 
+            opacity: "0.6", 
+            transform: "scale(0.9) translateX(-50%)" 
+          },
+          "50%": { 
+            opacity: "1", 
+            transform: "scale(1.1) translateX(-50%)" 
+          },
+          "100%": { 
+            opacity: "0.6", 
+            transform: "scale(0.9) translateX(-50%)" 
+          },
+        },
         "accordion-down": {
           from: {
             height: "0",
@@ -82,6 +96,7 @@ export default {
         },
       },
       animation: {
+        "fire-pulse": "fire-pulse 1.5s ease-in-out infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },

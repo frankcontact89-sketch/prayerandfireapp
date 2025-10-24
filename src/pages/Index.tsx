@@ -14,6 +14,7 @@ import { Heart, Settings, Share2, ShoppingBag, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
+import { FloatingFireButton } from "@/components/FloatingFireButton";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -245,6 +246,9 @@ export default function Index() {
           </button>
         </nav>
       </div>
+
+      {/* Floating Fire Button */}
+      <FloatingFireButton onClick={() => setPage("home")} />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MessageCircle, Instagram, Calendar, Flame } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { FloatingFireButton } from "@/components/FloatingFireButton";
 
 interface SocialLink {
   id: string;
@@ -108,6 +109,9 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
       >
         <Flame className="w-5 h-5 animate-pulse" />
       </button>
+
+      {/* Floating Fire Button */}
+      <FloatingFireButton onClick={onBack} />
     </div>
   );
 }
