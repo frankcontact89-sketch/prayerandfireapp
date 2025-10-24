@@ -10,11 +10,10 @@ import { SocialLinksScreen } from "@/components/SocialLinksScreen";
 import { LanguagesScreen } from "@/components/LanguagesScreen";
 import { CancelSubscriptionScreen } from "@/components/CancelSubscriptionScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
-import { Heart, Settings, Share2, ShoppingBag } from "lucide-react";
+import { Heart, Settings, Share2, ShoppingBag, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
-import realisticFlame from "@/assets/realistic-flame.png";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -223,14 +222,10 @@ export default function Index() {
           <button
             onClick={() => setPage("home")}
             className={`flex flex-col items-center gap-1 transition-all ${
-              page === "home" ? "animate-pulse" : "hover:scale-110"
+              page === "home" ? "text-primary animate-pulse" : "text-muted-foreground hover:scale-110"
             }`}
           >
-            <img 
-              src={realisticFlame} 
-              alt="Fire" 
-              className="w-8 h-8 object-cover rounded-md animate-[flicker_1.5s_ease-in-out_infinite]"
-            />
+            <Flame className="w-6 h-6" />
           </button>
           <button
             onClick={() => setPage("giving")}

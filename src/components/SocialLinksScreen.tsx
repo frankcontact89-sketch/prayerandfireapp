@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, Instagram, Calendar } from "lucide-react";
+import { MessageCircle, Instagram, Calendar, Flame } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import realisticFlame from "@/assets/realistic-flame.png";
 
 interface SocialLink {
   id: string;
@@ -105,13 +104,9 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
       <button
         onClick={onBack}
-        className="mt-6 flex items-center justify-center gap-2 w-full transition-all hover:scale-110 active:scale-95"
+        className="mt-6 flex items-center justify-center gap-2 w-full text-primary hover:text-primary/80 font-semibold transition-all hover:scale-110 active:scale-95"
       >
-        <img 
-          src={realisticFlame} 
-          alt="Fire" 
-          className="w-8 h-8 object-cover rounded-md animate-[flicker_1.5s_ease-in-out_infinite]"
-        />
+        <Flame className="w-5 h-5 animate-pulse" />
       </button>
     </div>
   );
