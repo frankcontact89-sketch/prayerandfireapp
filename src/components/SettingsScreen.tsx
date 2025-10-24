@@ -16,7 +16,7 @@ interface SettingsScreenProps {
   onToggleDarkMode: () => void;
 }
 
-export function SettingsScreen({ t, userName, userEmail, onAdminClick, onCancelSubscriptionClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
+export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onCancelSubscriptionClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
   const { isAdmin, loading } = useUserRole();
 
   return (
@@ -26,12 +26,18 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onCancelS
       </h2>
 
       {/* Profile Section */}
-      <div className="bg-card border border-border rounded-xl p-5 space-y-3">
-        <div className="flex items-center gap-3">
-          <User className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold text-foreground">
-            {t("profile")}
-          </h3>
+      <button
+        onClick={onProfileClick}
+        className="w-full bg-card border border-border rounded-xl p-5 space-y-3 hover:bg-secondary transition-all duration-200 hover:scale-[1.02] active:scale-95 text-left"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <User className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold text-foreground">
+              {t("profile")}
+            </h3>
+          </div>
+          <span className="text-xs text-muted-foreground">{t("edit")}</span>
         </div>
         <div className="space-y-2 text-sm">
           <p className="text-muted-foreground">
@@ -41,7 +47,7 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onCancelS
             <span className="text-foreground font-medium">Email:</span> {userEmail}
           </p>
         </div>
-      </div>
+      </button>
 
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-2 gap-4">
