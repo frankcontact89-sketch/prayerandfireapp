@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { CreditCard, DollarSign, Heart, BookOpen, ShoppingBag, ExternalLink } from "lucide-react";
+import { CreditCard, DollarSign, Heart, BookOpen, ExternalLink } from "lucide-react";
 
 interface GivingScreenProps {
   t: (en: string, es: string) => string;
@@ -286,66 +286,6 @@ export function GivingScreen({ t }: GivingScreenProps) {
             </div>
           </div>
         </Card>
-      </div>
-
-      <Separator className="my-8" />
-
-      {/* Store Section */}
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2">
-            <ShoppingBag className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold text-foreground">
-              {t("Prayer & Fire Store", "Tienda Prayer & Fire")}
-            </h2>
-          </div>
-          <p className="text-muted-foreground">
-            {t(
-              "Explore our upcoming collection — shirts, mugs, and more.",
-              "Explora nuestra próxima colección — camisetas, tazas y más."
-            )}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          {/* Product 1: T-Shirt */}
-          <Card className="p-4 space-y-3">
-            <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-              <img
-                src="https://m.media-amazon.com/images/I/61eVgftN2bL._AC_UY879_.jpg"
-                alt="Prayer & Fire T-Shirt"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="text-center">
-              <p className="font-semibold text-foreground text-sm">
-                {t("T-Shirt", "Camiseta")}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t("Coming Soon", "Próximamente")}
-              </p>
-            </div>
-          </Card>
-
-          {/* Product 2: Mug */}
-          <Card className="p-4 space-y-3">
-            <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-              <img
-                src="https://m.media-amazon.com/images/I/61DPOamA5JL._AC_SX679_.jpg"
-                alt="Prayer & Fire Mug"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="text-center">
-              <p className="font-semibold text-foreground text-sm">
-                {t("Mug", "Taza")}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {t("Coming Soon", "Próximamente")}
-              </p>
-            </div>
-          </Card>
-        </div>
       </div>
 
       {/* Footer Note */}
