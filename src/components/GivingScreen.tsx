@@ -10,7 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CreditCard, DollarSign, Heart } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { CreditCard, DollarSign, Heart, BookOpen, ShoppingBag, ExternalLink } from "lucide-react";
 
 interface GivingScreenProps {
   t: (en: string, es: string) => string;
@@ -18,7 +19,8 @@ interface GivingScreenProps {
 
 export function GivingScreen({ t }: GivingScreenProps) {
   const STRIPE_SUBSCRIPTION = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
-  const STRIPE_ONETIME = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
+  const STRIPE_ONETIME = "https://buy.stripe.com/test_4gM4gz4Tqc2xgdr365gUM02";
+  const BOOK_LINK = "https://a.co/d/dfgHEvM";
   
   const [givingType, setGivingType] = useState<"subscription" | "onetime" | "project">("subscription");
   const [amount, setAmount] = useState("");
@@ -240,6 +242,124 @@ export function GivingScreen({ t }: GivingScreenProps) {
           {t(
             "All donations are tax-deductible",
             "Todas las donaciones son deducibles de impuestos"
+          )}
+        </p>
+      </div>
+
+      <Separator className="my-8" />
+
+      {/* Featured Book Section */}
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            <BookOpen className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-bold text-foreground">
+              {t("Featured Book", "Libro Destacado")}
+            </h2>
+          </div>
+          <p className="text-muted-foreground">
+            {t(
+              "Discover The Fire Within — a devotional that ignites your faith and passion for God's presence.",
+              "Descubre The Fire Within — un devocional que enciende tu fe y pasión por la presencia de Dios."
+            )}
+          </p>
+        </div>
+
+        <Card className="p-6 space-y-4">
+          <div className="flex flex-col items-center gap-4">
+            <img
+              src="https://m.media-amazon.com/images/I/61fZ3n6J2lL._SY466_.jpg"
+              alt="The Fire Within"
+              className="w-40 h-auto rounded-lg shadow-lg"
+            />
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-foreground mb-2">The Fire Within</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                {t("Available on Amazon", "Disponible en Amazon")}
+              </p>
+              <Button asChild className="w-full gap-2">
+                <a href={BOOK_LINK} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4" />
+                  {t("Buy on Amazon", "Comprar en Amazon")}
+                </a>
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <Separator className="my-8" />
+
+      {/* Store Section */}
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            <ShoppingBag className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-bold text-foreground">
+              {t("Prayer & Fire Store", "Tienda Prayer & Fire")}
+            </h2>
+          </div>
+          <p className="text-muted-foreground">
+            {t(
+              "Explore our upcoming collection — shirts, mugs, and more.",
+              "Explora nuestra próxima colección — camisetas, tazas y más."
+            )}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          {/* Product 1: T-Shirt */}
+          <Card className="p-4 space-y-3">
+            <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+              <img
+                src="https://m.media-amazon.com/images/I/61eVgftN2bL._AC_UY879_.jpg"
+                alt="Prayer & Fire T-Shirt"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="text-center">
+              <p className="font-semibold text-foreground text-sm">
+                {t("T-Shirt", "Camiseta")}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("Coming Soon", "Próximamente")}
+              </p>
+            </div>
+          </Card>
+
+          {/* Product 2: Mug */}
+          <Card className="p-4 space-y-3">
+            <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+              <img
+                src="https://m.media-amazon.com/images/I/61DPOamA5JL._AC_SX679_.jpg"
+                alt="Prayer & Fire Mug"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="text-center">
+              <p className="font-semibold text-foreground text-sm">
+                {t("Mug", "Taza")}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("Coming Soon", "Próximamente")}
+              </p>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Footer Note */}
+      <div className="mt-8 text-center text-xs text-muted-foreground space-y-1">
+        <p>
+          {t(
+            "Donations are processed securely through Stripe.",
+            "Las donaciones se procesan de forma segura a través de Stripe."
+          )}
+        </p>
+        <p>
+          {t(
+            "Books and products are available via Amazon and our official store soon.",
+            "Los libros y productos están disponibles en Amazon y próximamente en nuestra tienda oficial."
           )}
         </p>
       </div>
