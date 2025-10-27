@@ -10,14 +10,13 @@ interface SettingsScreenProps {
   userEmail: string;
   onAdminClick: () => void;
   onProfileClick: () => void;
-  onCancelSubscriptionClick: () => void;
   onNotificationsClick: () => void;
   onSignOut: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
 }
 
-export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onCancelSubscriptionClick, onNotificationsClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
+export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onNotificationsClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
   const { isAdmin, loading } = useUserRole();
 
   return (
@@ -73,14 +72,6 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
         </button>
       </div>
 
-
-      {/* Subscription Management */}
-      <button
-        onClick={onCancelSubscriptionClick}
-        className="w-full px-4 py-4 bg-card border border-border text-foreground rounded-xl hover:bg-secondary transition-all duration-200 hover:scale-[1.02] active:scale-95 font-medium"
-      >
-        Cancelar Suscripción
-      </button>
 
       {/* Admin Panel Section */}
       {loading ? (

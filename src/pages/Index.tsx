@@ -8,7 +8,6 @@ import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
 import { SocialLinksScreen } from "@/components/SocialLinksScreen";
 import { LanguagesScreen } from "@/components/LanguagesScreen";
-import { CancelSubscriptionScreen } from "@/components/CancelSubscriptionScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { Module2Screen } from "@/components/Module2Screen";
@@ -194,7 +193,6 @@ export default function Index() {
             userEmail={user?.email || ""}
             onAdminClick={() => setPage("admin")}
             onProfileClick={() => setPage("profile")}
-            onCancelSubscriptionClick={() => setPage("cancelSubscription")}
             onNotificationsClick={() => setPage("notifications")}
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
@@ -218,7 +216,6 @@ export default function Index() {
             }}
           />
         )}
-        {page === "cancelSubscription" && <CancelSubscriptionScreen t={t} onBack={() => setPage("settings")} />}
         {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
       </div>
 
