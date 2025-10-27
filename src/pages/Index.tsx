@@ -12,7 +12,7 @@ import { CancelSubscriptionScreen } from "@/components/CancelSubscriptionScreen"
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { Module2Screen } from "@/components/Module2Screen";
-import { Heart, Settings, Share2, ShoppingBag, Flame } from "lucide-react";
+import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
@@ -181,7 +181,7 @@ export default function Index() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto pb-20">
-        {page === "home" && <HomeScreen t={t} onNavigateToModule2={() => setPage("module2")} />}
+        {page === "home" && <HomeScreen t={t} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
         {page === "module2" && <Module2Screen t={t} onBack={() => setPage("home")} />}
@@ -240,6 +240,14 @@ export default function Index() {
             }`}
           >
             <Heart className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => setPage("module2")}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              page === "module2" ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <GraduationCap className="w-6 h-6" />
           </button>
           <button
             onClick={() => setPage("shopping")}
