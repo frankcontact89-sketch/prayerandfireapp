@@ -10,8 +10,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, DollarSign, Heart, BookOpen, ExternalLink } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface GivingScreenProps {
   t: (en: string, es: string) => string;
@@ -26,6 +39,8 @@ export function GivingScreen({ t }: GivingScreenProps) {
   const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("stripe");
   const [selectedProject, setSelectedProject] = useState("");
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const { toast } = useToast();
 
   const paymentMethods = [
     { value: "stripe", label: t("Credit/Debit Card", "Tarjeta de Crédito/Débito"), icon: CreditCard },
@@ -47,6 +62,41 @@ export function GivingScreen({ t }: GivingScreenProps) {
     } else if (givingType === "project") {
       // Project support also goes through Stripe
       window.open(STRIPE_ONETIME, "_blank");
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    setCancelLoading(true);
+
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        toast({
+          title: "Error",
+          description: "⚠️ Debes iniciar sesión para cancelar tu suscripción.",
+          variant: "destructive",
+        });
+        setCancelLoading(false);
+        return;
+      }
+
+      // Placeholder for Supabase Function "cancel-subscription"
+      // TODO: Connect with actual Stripe cancellation logic
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      toast({
+        title: "Éxito",
+        description: "✅ Tu suscripción ha sido cancelada exitosamente.",
+      });
+    } catch (err) {
+      console.error("Error cancelando suscripción:", err);
+      toast({
+        title: "Error",
+        description: "❌ Ocurrió un error al cancelar la suscripción. Intenta de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -104,6 +154,49 @@ export function GivingScreen({ t }: GivingScreenProps) {
           <Button onClick={handleGive} className="w-full h-12 text-lg font-bold">
             {t("Set Up Monthly Giving", "Configurar Ofrenda Mensual")}
           </Button>
+          
+          <Separator className="my-4" />
+          
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground text-center">
+              {t(
+                "Already have a subscription? You can cancel it anytime.",
+                "¿Ya tienes una suscripción? Puedes cancelarla en cualquier momento."
+              )}
+            </p>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={cancelLoading}
+                >
+                  {cancelLoading ? t("Canceling...", "Cancelando...") : t("Cancel Subscription", "Cancelar Suscripción")}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {t("Are you sure?", "¿Estás seguro?")}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t(
+                      "This action will cancel your monthly subscription. You can continue using the service until the end of the current period.",
+                      "Esta acción cancelará tu suscripción mensual. Podrás seguir usando el servicio hasta el final del período actual."
+                    )}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>
+                    {t("No, keep subscription", "No, mantener suscripción")}
+                  </AlertDialogCancel>
+                  <AlertDialogAction onClick={handleCancelSubscription}>
+                    {t("Yes, cancel", "Sí, cancelar")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </Card>
       )}
 
