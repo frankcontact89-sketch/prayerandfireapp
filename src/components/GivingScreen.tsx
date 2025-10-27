@@ -245,64 +245,6 @@ export function GivingScreen({ t }: GivingScreenProps) {
           )}
         </p>
       </div>
-
-      <Separator className="my-8" />
-
-      {/* Featured Book Section */}
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2">
-            <BookOpen className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold text-foreground">
-              {t("Featured Book", "Libro Destacado")}
-            </h2>
-          </div>
-          <p className="text-muted-foreground">
-            {t(
-              "Discover The Fire Within — a devotional that ignites your faith and passion for God's presence.",
-              "Descubre The Fire Within — un devocional que enciende tu fe y pasión por la presencia de Dios."
-            )}
-          </p>
-        </div>
-
-        <Card className="p-6 space-y-4">
-          <div className="flex flex-col items-center gap-4">
-            <img
-              src="https://m.media-amazon.com/images/I/61fZ3n6J2lL._SY466_.jpg"
-              alt="The Fire Within"
-              className="w-40 h-auto rounded-lg shadow-lg"
-            />
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-foreground mb-2">The Fire Within</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {t("Available on Amazon", "Disponible en Amazon")}
-              </p>
-              <Button asChild className="w-full gap-2">
-                <a href={BOOK_LINK} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="w-4 h-4" />
-                  {t("Buy on Amazon", "Comprar en Amazon")}
-                </a>
-              </Button>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Footer Note */}
-      <div className="mt-8 text-center text-xs text-muted-foreground space-y-1">
-        <p>
-          {t(
-            "Donations are processed securely through Stripe.",
-            "Las donaciones se procesan de forma segura a través de Stripe."
-          )}
-        </p>
-        <p>
-          {t(
-            "Books and products are available via Amazon and our official store soon.",
-            "Los libros y productos están disponibles en Amazon y próximamente en nuestra tienda oficial."
-          )}
-        </p>
-      </div>
     </div>
   );
 }

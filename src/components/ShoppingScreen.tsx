@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ShoppingBag, ExternalLink } from "lucide-react";
+import { ShoppingBag, ExternalLink, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,6 +22,7 @@ interface Product {
 
 export function ShoppingScreen({ t }: ShoppingScreenProps) {
   const STRIPE_PAYMENT = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
+  const BOOK_LINK = "https://a.co/d/dfgHEvM";
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -114,6 +115,45 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
           ))}
         </div>
       )}
+
+      <Separator className="my-8" />
+
+      {/* Featured Book Section */}
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2">
+            <BookOpen className="w-6 h-6 text-primary" />
+            <h3 className="text-2xl font-bold text-foreground">
+              📖 Featured Book
+            </h3>
+          </div>
+          <p className="text-muted-foreground">
+            Discover The Fire Within — a devotional that ignites your faith and passion for God's presence.
+          </p>
+        </div>
+
+        <Card className="p-6 space-y-4 max-w-md mx-auto hover:shadow-lg transition-shadow">
+          <div className="flex flex-col items-center gap-4">
+            <img
+              src="https://m.media-amazon.com/images/I/61fZ3n6J2lL._SY466_.jpg"
+              alt="The Fire Within"
+              className="w-40 h-auto rounded-lg shadow-lg"
+            />
+            <div className="text-center">
+              <h4 className="text-lg font-semibold text-foreground mb-2">The Fire Within</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Available on Amazon
+              </p>
+              <Button asChild className="w-full gap-2">
+                <a href={BOOK_LINK} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4" />
+                  Buy on Amazon
+                </a>
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
 
       <Separator className="my-8" />
 
