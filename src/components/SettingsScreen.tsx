@@ -34,7 +34,7 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
       const { data } = await (supabase as any)
         .from("profiles")
         .select("avatar_url")
-        .eq("user_id", user.id)
+        .eq("id", user.id)
         .maybeSingle();
 
       if (data?.avatar_url) {
