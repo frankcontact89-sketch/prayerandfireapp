@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { ShoppingBag, ExternalLink, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import vozInteriorBook from "@/assets/voz-interior-book.jpg";
 
 interface ShoppingScreenProps {
   t: (key: string) => string;
@@ -128,21 +129,21 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
             </h3>
           </div>
           <p className="text-muted-foreground">
-            Discover The Fire Within — a devotional that ignites your faith and passion for God's presence.
+            Descubre VOZ INTERIOR por Aline Ramiro — un libro que te ayuda a activar tu identidad interior.
           </p>
         </div>
 
         <Card className="p-6 space-y-4 max-w-md mx-auto hover:shadow-lg transition-shadow">
           <div className="flex flex-col items-center gap-4">
             <img
-              src="https://m.media-amazon.com/images/I/61fZ3n6J2lL._SY466_.jpg"
-              alt="The Fire Within"
+              src={vozInteriorBook}
+              alt="VOZ INTERIOR - Aline Ramiro"
               className="w-40 h-auto rounded-lg shadow-lg"
             />
             <div className="text-center">
-              <h4 className="text-lg font-semibold text-foreground mb-2">The Fire Within</h4>
+              <h4 className="text-lg font-semibold text-foreground mb-2">VOZ INTERIOR</h4>
               <p className="text-sm text-muted-foreground mb-4">
-                Available on Amazon
+                por Aline Ramiro • Disponible en Amazon
               </p>
               <Button asChild className="w-full gap-2">
                 <a href={BOOK_LINK} target="_blank" rel="noopener noreferrer">
