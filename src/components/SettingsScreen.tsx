@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Bell, Globe, User, Languages } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SettingsScreenProps {
   t: (key: string) => string;
@@ -18,6 +20,30 @@ interface SettingsScreenProps {
 
 export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onNotificationsClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
   const { isAdmin, loading } = useUserRole();
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
+
+  useEffect(() => {
+    loadAvatar();
+  }, []);
+
+  const loadAvatar = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await (supabase as any)
+        .from("profiles")
+        .select("avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (data?.avatar_url) {
+        setAvatarUrl(data.avatar_url);
+      }
+    } catch (error) {
+      console.error("Error loading avatar:", error);
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
@@ -32,7 +58,12 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <User className="w-5 h-5 text-primary" />
+            <Avatar className="w-10 h-10">
+              <AvatarImage src={avatarUrl} alt={userName || "User"} />
+              <AvatarFallback className="bg-primary/10">
+                <User className="w-5 h-5 text-primary" />
+              </AvatarFallback>
+            </Avatar>
             <h3 className="text-lg font-semibold text-foreground">
               {t("profile")}
             </h3>
