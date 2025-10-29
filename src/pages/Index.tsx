@@ -21,11 +21,7 @@ export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState("home");
   const [showLanguages, setShowLanguages] = useState(false);
-  const [language, setLanguage] = useState(() => {
-    const saved = localStorage.getItem("pf_lang");
-    if (saved) return saved;
-    return "en";
-  });
+  const [language, setLanguage] = useState("en");
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem("pf_dark_mode");
     return saved === "true" || saved === null;
