@@ -17,10 +17,57 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isForgotUsername, setIsForgotUsername] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const handleAuth = async () => {
+    if (isForgotUsername) {
+      if (!email) {
+        toast({
+          title: "Error",
+          description: "Please enter your email",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+          toast({
+            title: "Error",
+            description: "No account found with that email",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        toast({
+          title: "Username Found!",
+          description: `Your username is: ${data.username}`,
+        });
+        setIsForgotUsername(false);
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (isForgotPassword) {
       if (!email) {
         toast({
@@ -139,7 +186,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
             className="w-full bg-card border border-border rounded-xl text-foreground h-12 px-4 focus:border-primary transition-colors"
           />
           
-          {!isForgotPassword && (
+          {!isForgotPassword && !isForgotUsername && (
             <Input
               type="password"
               placeholder="Password"
@@ -155,11 +202,12 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
             disabled={loading}
           >
             {loading ? t("loading") : 
+              isForgotUsername ? "Find Username" :
               isForgotPassword ? t("send") :
               (isSignUp ? t("signup") : "Sign In")}
           </Button>
 
-          {!isForgotPassword && (
+          {!isForgotPassword && !isForgotUsername && (
             <Button 
               variant="outline" 
               onClick={() => setIsSignUp(!isSignUp)}
@@ -170,16 +218,47 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
             </Button>
           )}
 
-          <button
-            onClick={() => {
-              setIsForgotPassword(!isForgotPassword);
-              setIsSignUp(false);
-            }}
-            className="w-full text-sm text-muted-foreground hover:text-primary transition-colors text-center mt-[15px] block"
-            disabled={loading}
-          >
-            {isForgotPassword ? t("back") : "Forgot Password?"}
-          </button>
+          {(isForgotPassword || isForgotUsername) && (
+            <button
+              onClick={() => {
+                setIsForgotPassword(false);
+                setIsForgotUsername(false);
+                setIsSignUp(false);
+              }}
+              className="w-full text-sm text-muted-foreground hover:text-primary transition-colors text-center mt-[15px] block"
+              disabled={loading}
+            >
+              {t("back")}
+            </button>
+          )}
+
+          {!isForgotPassword && !isForgotUsername && (
+            <div className="flex justify-center gap-4 mt-[15px]">
+              <button
+                onClick={() => {
+                  setIsForgotPassword(true);
+                  setIsForgotUsername(false);
+                  setIsSignUp(false);
+                }}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                disabled={loading}
+              >
+                Forgot Password?
+              </button>
+              <span className="text-muted-foreground">|</span>
+              <button
+                onClick={() => {
+                  setIsForgotUsername(true);
+                  setIsForgotPassword(false);
+                  setIsSignUp(false);
+                }}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                disabled={loading}
+              >
+                Forgot Username?
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
