@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { UserPlus, Trash2, Shield } from "lucide-react";
 
 interface AdminStaffProps {
-  t: (en: string, es: string) => string;
+  t: (key: string) => string;
 }
 
 interface StaffMember {
@@ -54,8 +54,8 @@ export function AdminStaff({ t }: AdminStaffProps) {
     } catch (error) {
       console.error("Error fetching staff:", error);
       toast({
-        title: t("Error", "Error"),
-        description: t("Failed to load staff members", "Error al cargar el personal"),
+        title: "Error",
+        description: "Failed to load staff members",
         variant: "destructive",
       });
     }
@@ -64,8 +64,8 @@ export function AdminStaff({ t }: AdminStaffProps) {
   const addStaffMember = async () => {
     if (!newStaffEmail.trim()) {
       toast({
-        title: t("Error", "Error"),
-        description: t("Please enter an email", "Por favor ingrese un correo"),
+        title: "Error",
+        description: "Please enter an email",
         variant: "destructive",
       });
       return;
@@ -82,8 +82,8 @@ export function AdminStaff({ t }: AdminStaffProps) {
 
       if (profileError || !profile) {
         toast({
-          title: t("Error", "Error"),
-          description: t("User not found with that email", "Usuario no encontrado con ese correo"),
+          title: "Error",
+          description: "User not found with that email",
           variant: "destructive",
         });
         return;
@@ -97,8 +97,8 @@ export function AdminStaff({ t }: AdminStaffProps) {
       if (roleError) {
         if (roleError.code === "23505") {
           toast({
-            title: t("Error", "Error"),
-            description: t("User is already an admin", "El usuario ya es administrador"),
+            title: "Error",
+            description: "User is already an admin",
             variant: "destructive",
           });
         } else {
@@ -106,8 +106,8 @@ export function AdminStaff({ t }: AdminStaffProps) {
         }
       } else {
         toast({
-          title: t("Success", "Éxito"),
-          description: t("Admin added successfully", "Administrador agregado exitosamente"),
+          title: "Success",
+          description: "Admin added successfully",
         });
         setNewStaffEmail("");
         fetchStaffMembers();
@@ -115,8 +115,8 @@ export function AdminStaff({ t }: AdminStaffProps) {
     } catch (error) {
       console.error("Error adding staff:", error);
       toast({
-        title: t("Error", "Error"),
-        description: t("Failed to add admin", "Error al agregar administrador"),
+        title: "Error",
+        description: "Failed to add admin",
         variant: "destructive",
       });
     } finally {
@@ -125,7 +125,7 @@ export function AdminStaff({ t }: AdminStaffProps) {
   };
 
   const removeStaffMember = async (roleId: string, username: string) => {
-    if (!confirm(t(`Remove ${username} as admin?`, `¿Remover a ${username} como administrador?`))) {
+    if (!confirm(`Remove ${username} as admin?`)) {
       return;
     }
 
@@ -138,15 +138,15 @@ export function AdminStaff({ t }: AdminStaffProps) {
       if (error) throw error;
 
       toast({
-        title: t("Success", "Éxito"),
-        description: t("Admin removed successfully", "Administrador removido exitosamente"),
+        title: "Success",
+        description: "Admin removed successfully",
       });
       fetchStaffMembers();
     } catch (error) {
       console.error("Error removing staff:", error);
       toast({
-        title: t("Error", "Error"),
-        description: t("Failed to remove admin", "Error al remover administrador"),
+        title: "Error",
+        description: "Failed to remove admin",
         variant: "destructive",
       });
     }
@@ -158,14 +158,14 @@ export function AdminStaff({ t }: AdminStaffProps) {
         <div className="flex items-center gap-3 mb-4">
           <Shield className="w-6 h-6 text-primary" />
           <h3 className="text-xl font-bold text-foreground">
-            {t("Add Admin Staff", "Agregar Personal Administrativo")}
+            Add Admin Staff
           </h3>
         </div>
         
         <div className="flex gap-2">
           <Input
             type="email"
-            placeholder={t("Enter user email", "Ingrese correo del usuario")}
+            placeholder="Enter user email"
             value={newStaffEmail}
             onChange={(e) => setNewStaffEmail(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && addStaffMember()}
@@ -173,20 +173,20 @@ export function AdminStaff({ t }: AdminStaffProps) {
           />
           <Button onClick={addStaffMember} disabled={loading}>
             <UserPlus className="w-4 h-4 mr-2" />
-            {t("Add", "Agregar")}
+            Add
           </Button>
         </div>
       </Card>
 
       <Card className="p-6">
         <h3 className="text-xl font-bold text-foreground mb-4">
-          {t("Current Admin Staff", "Personal Administrativo Actual")}
+          Current Admin Staff
         </h3>
         
         <div className="space-y-3">
           {staffMembers.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">
-              {t("No admin staff members yet", "Aún no hay personal administrativo")}
+              No admin staff members yet
             </p>
           ) : (
             staffMembers.map((member) => (
@@ -196,7 +196,7 @@ export function AdminStaff({ t }: AdminStaffProps) {
               >
                 <div>
                   <p className="font-semibold text-foreground">
-                    {member.profile?.username || t("Unknown User", "Usuario Desconocido")}
+                    {member.profile?.username || "Unknown User"}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {member.profile?.email}

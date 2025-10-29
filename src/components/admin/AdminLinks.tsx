@@ -29,7 +29,7 @@ interface Link {
   is_active: boolean;
 }
 
-export function AdminLinks({ t }: { t: (en: string, es: string) => string }) {
+export function AdminLinks({ t }: { t: (key: string) => string }) {
   const [links, setLinks] = useState<Link[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<Link | null>(null);
@@ -104,23 +104,23 @@ export function AdminLinks({ t }: { t: (en: string, es: string) => string }) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">{t("Manage Links", "Administrar Enlaces")}</h2>
+        <h2 className="text-2xl font-bold">Manage Links</h2>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => { setEditingLink(null); setFormData({ title: "", url: "", icon: "" }); }}>
               <Plus className="w-4 h-4 mr-2" />
-              {t("Add Link", "Agregar Enlace")}
+              Add Link
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {editingLink ? t("Edit Link", "Editar Enlace") : t("Add Link", "Agregar Enlace")}
+                {editingLink ? "Edit Link" : "Add Link"}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
-                placeholder={t("Title", "Título")}
+                placeholder="Title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
@@ -133,12 +133,12 @@ export function AdminLinks({ t }: { t: (en: string, es: string) => string }) {
                 required
               />
               <Input
-                placeholder={t("Icon (optional)", "Icono (opcional)")}
+                placeholder="Icon (optional)"
                 value={formData.icon}
                 onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
               />
               <Button type="submit" className="w-full">
-                {editingLink ? t("Update", "Actualizar") : t("Create", "Crear")}
+                {editingLink ? "Update" : "Create"}
               </Button>
             </form>
           </DialogContent>
@@ -149,10 +149,10 @@ export function AdminLinks({ t }: { t: (en: string, es: string) => string }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("Title", "Título")}</TableHead>
+              <TableHead>Title</TableHead>
               <TableHead>URL</TableHead>
-              <TableHead>{t("Status", "Estado")}</TableHead>
-              <TableHead>{t("Actions", "Acciones")}</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -162,7 +162,7 @@ export function AdminLinks({ t }: { t: (en: string, es: string) => string }) {
                 <TableCell className="text-sm text-muted-foreground">{link.url}</TableCell>
                 <TableCell>
                   <span className={`px-2 py-1 rounded-full text-xs ${link.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                    {link.is_active ? t("Active", "Activo") : t("Inactive", "Inactivo")}
+                    {link.is_active ? "Active" : "Inactive"}
                   </span>
                 </TableCell>
                 <TableCell>

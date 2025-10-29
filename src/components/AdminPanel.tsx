@@ -10,7 +10,7 @@ import { Shield, ArrowLeft } from "lucide-react";
 import { Button } from "./ui/button";
 
 interface AdminPanelProps {
-  t: (en: string, es: string) => string;
+  t: (key: string) => string;
   onBack: () => void;
 }
 
@@ -28,19 +28,19 @@ export function AdminPanel({ t, onBack }: AdminPanelProps) {
         <div className="flex items-center gap-3">
           <Shield className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-extrabold text-foreground">
-            {t("Admin Panel", "Panel de Administración")}
+            Admin Panel
           </h1>
         </div>
       </div>
 
       <Tabs defaultValue="links" className="w-full">
         <TabsList className="grid w-full grid-cols-6 bg-muted">
-          <TabsTrigger value="links">{t("Links", "Enlaces")}</TabsTrigger>
-          <TabsTrigger value="videos">{t("Videos", "Videos")}</TabsTrigger>
-          <TabsTrigger value="events">{t("Events", "Eventos")}</TabsTrigger>
-          <TabsTrigger value="products">{t("Products", "Productos")}</TabsTrigger>
-          <TabsTrigger value="notifications">{t("Notifications", "Notificaciones")}</TabsTrigger>
-          <TabsTrigger value="staff">{t("Staff", "Personal")}</TabsTrigger>
+          <TabsTrigger value="links">Links</TabsTrigger>
+          <TabsTrigger value="videos">Videos</TabsTrigger>
+          <TabsTrigger value="events">Events</TabsTrigger>
+          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="staff">Staff</TabsTrigger>
         </TabsList>
 
         <TabsContent value="links" className="mt-6">

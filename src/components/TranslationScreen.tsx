@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LANGUAGES } from "@/config/languages";
 
 interface TranslationScreenProps {
-  t: (en: string, es: string) => string;
+  t: (key: string) => string;
 }
 
 export function TranslationScreen({ t }: TranslationScreenProps) {
@@ -22,8 +22,8 @@ export function TranslationScreen({ t }: TranslationScreenProps) {
   const handleTranslate = async () => {
     if (!text.trim()) {
       toast({
-        title: t("Error", "Error"),
-        description: t("Please enter text to translate", "Por favor ingresa texto para traducir"),
+        title: "Error",
+        description: "Please enter text to translate",
         variant: "destructive",
       });
       return;
@@ -40,8 +40,8 @@ export function TranslationScreen({ t }: TranslationScreenProps) {
     } catch (error) {
       console.error("Translation error:", error);
       toast({
-        title: t("Error", "Error"),
-        description: t("Translation failed", "La traducción falló"),
+        title: "Error",
+        description: "Translation failed",
         variant: "destructive",
       });
     } finally {
@@ -54,7 +54,7 @@ export function TranslationScreen({ t }: TranslationScreenProps) {
       <div className="flex items-center gap-3">
         <Languages className="w-8 h-8 text-primary" />
         <h1 className="text-3xl font-extrabold text-foreground">
-          {t("Translation (130+ languages)", "Traducción (130+ idiomas)")}
+          Translation (130+ languages)
         </h1>
       </div>
 
@@ -62,10 +62,10 @@ export function TranslationScreen({ t }: TranslationScreenProps) {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">
-              {t("Text to translate", "Texto a traducir")}
+              Text to translate
             </label>
             <Textarea
-              placeholder={t("Enter text here...", "Ingresa texto aquí...")}
+              placeholder="Enter text here..."
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={5}
@@ -74,7 +74,7 @@ export function TranslationScreen({ t }: TranslationScreenProps) {
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              {t("Target language (130+ available)", "Idioma objetivo (130+ disponibles)")}
+              Target language (130+ available)
             </label>
             <Select value={targetLang} onValueChange={setTargetLang}>
               <SelectTrigger>
@@ -94,16 +94,16 @@ export function TranslationScreen({ t }: TranslationScreenProps) {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                {t("Translating...", "Traduciendo...")}
+                Translating...
               </>
             ) : (
-              t("Translate", "Traducir")
+              "Translate"
             )}
           </Button>
 
           {translated && (
             <div className="mt-4 p-4 bg-muted rounded-lg">
-              <h3 className="font-semibold mb-2">{t("Translation:", "Traducción:")}</h3>
+              <h3 className="font-semibold mb-2">Translation:</h3>
               <p className="text-foreground">{translated}</p>
             </div>
           )}

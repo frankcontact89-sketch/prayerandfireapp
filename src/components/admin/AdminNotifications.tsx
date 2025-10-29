@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-export function AdminNotifications({ t }: { t: (en: string, es: string) => string }) {
+export function AdminNotifications({ t }: { t: (key: string) => string }) {
   const [formData, setFormData] = useState({
     title: "",
     message: "",
@@ -31,18 +31,18 @@ export function AdminNotifications({ t }: { t: (en: string, es: string) => strin
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold">{t("Send Push Notification", "Enviar Notificación Push")}</h2>
+      <h2 className="text-2xl font-bold">Send Push Notification</h2>
       
       <div className="bg-card border border-border rounded-lg p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            placeholder={t("Notification Title", "Título de Notificación")}
+            placeholder="Notification Title"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             required
           />
           <Textarea
-            placeholder={t("Message", "Mensaje")}
+            placeholder="Message"
             value={formData.message}
             onChange={(e) => setFormData({ ...formData, message: e.target.value })}
             required
@@ -50,17 +50,14 @@ export function AdminNotifications({ t }: { t: (en: string, es: string) => strin
           />
           <Button type="submit" className="w-full">
             <Send className="w-4 h-4 mr-2" />
-            {t("Send to All Users", "Enviar a Todos los Usuarios")}
+            Send to All Users
           </Button>
         </form>
       </div>
 
       <div className="bg-muted/50 border border-border rounded-lg p-4">
         <p className="text-sm text-muted-foreground">
-          {t(
-            "This will send a notification to all users. Make sure your message is clear and relevant.",
-            "Esto enviará una notificación a todos los usuarios. Asegúrate de que tu mensaje sea claro y relevante."
-          )}
+          This will send a notification to all users. Make sure your message is clear and relevant.
         </p>
       </div>
     </div>
