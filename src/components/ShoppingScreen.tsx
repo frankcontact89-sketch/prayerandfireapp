@@ -34,6 +34,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
   const BOOK_LINK = "https://a.co/d/dfgHEvM";
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showBooks, setShowBooks] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -142,41 +143,48 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
 
       <Separator className="my-8" />
 
-      {/* Featured Book Section */}
+      {/* Books Section */}
       <div className="space-y-6">
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
             <BookOpen className="w-6 h-6 text-primary" />
-            <h3 className="text-2xl font-bold text-foreground">
-              📖 Featured Book
+            <h3 
+              className="text-2xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors"
+              onClick={() => setShowBooks(!showBooks)}
+            >
+              Books
             </h3>
           </div>
-          <p className="text-muted-foreground">
-            Descubre VOZ INTERIOR por Aline Ramiro — un libro que te ayuda a activar tu identidad interior.
+          <p className="text-muted-foreground text-sm">
+            Click on "Books" to {showBooks ? "hide" : "explore our collection"}
           </p>
         </div>
 
-        <Card className="p-6 space-y-4 max-w-md mx-auto hover:shadow-lg transition-shadow">
-          <div className="flex flex-col items-center gap-4">
-            <img
-              src={vozInteriorBook}
-              alt="VOZ INTERIOR - Aline Ramiro"
-              className="w-40 h-auto rounded-lg shadow-lg"
-            />
-            <div className="text-center">
-              <h4 className="text-lg font-semibold text-foreground mb-2">VOZ INTERIOR</h4>
-              <p className="text-sm text-muted-foreground mb-4">
-                por Aline Ramiro • Disponible en Amazon
-              </p>
-              <Button asChild className="w-full gap-2">
-                <a href={BOOK_LINK} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="w-4 h-4" />
-                  Buy on Amazon
-                </a>
-              </Button>
-            </div>
+        {showBooks && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <Card className="p-6 space-y-4 hover:shadow-lg transition-shadow">
+              <div className="flex flex-col items-center gap-4">
+                <img
+                  src={vozInteriorBook}
+                  alt="VOZ INTERIOR - Aline Ramiro"
+                  className="w-40 h-auto rounded-lg shadow-lg"
+                />
+                <div className="text-center">
+                  <h4 className="text-lg font-semibold text-foreground mb-2">VOZ INTERIOR</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    by Aline Ramiro • Available on Amazon
+                  </p>
+                  <Button asChild className="w-full gap-2">
+                    <a href={BOOK_LINK} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-4 h-4" />
+                      Buy on Amazon
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </Card>
           </div>
-        </Card>
+        )}
       </div>
 
       <Separator className="my-8" />
