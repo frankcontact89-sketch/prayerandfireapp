@@ -35,6 +35,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBooks, setShowBooks] = useState(false);
+  const [showStore, setShowStore] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -192,53 +193,58 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
       {/* Prayer & Fire Store Section */}
       <div className="space-y-6">
         <div className="text-center space-y-2">
-          <h3 className="text-2xl font-bold text-foreground">
-            🔥 Prayer & Fire Store
+          <h3 
+            className="text-2xl font-bold text-foreground cursor-pointer hover:text-primary transition-colors"
+            onClick={() => setShowStore(!showStore)}
+          >
+            Prayer & Fire Store
           </h3>
-          <p className="text-muted-foreground">
-            Explore our upcoming collection — shirts, mugs, and more.
+          <p className="text-muted-foreground text-sm">
+            Click to {showStore ? "hide" : "explore our upcoming collection"}
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-          {/* Product 1: T-Shirt */}
-          <Card className="p-4 space-y-3 hover:shadow-lg transition-shadow">
-            <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-              <img
-                src="https://m.media-amazon.com/images/I/61eVgftN2bL._AC_UY879_.jpg"
-                alt="Prayer & Fire T-Shirt"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="text-center">
-              <p className="font-semibold text-foreground text-sm">
-                T-Shirt
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Coming Soon
-              </p>
-            </div>
-          </Card>
+        {showStore && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {/* Product 1: T-Shirt */}
+            <Card className="p-4 space-y-3 hover:shadow-lg transition-shadow">
+              <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+                <img
+                  src="https://m.media-amazon.com/images/I/61eVgftN2bL._AC_UY879_.jpg"
+                  alt="Prayer & Fire T-Shirt"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="text-center">
+                <p className="font-semibold text-foreground text-sm">
+                  T-Shirt
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Coming Soon
+                </p>
+              </div>
+            </Card>
 
-          {/* Product 2: Mug */}
-          <Card className="p-4 space-y-3 hover:shadow-lg transition-shadow">
-            <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-              <img
-                src="https://m.media-amazon.com/images/I/61DPOamA5JL._AC_SX679_.jpg"
-                alt="Prayer & Fire Mug"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="text-center">
-              <p className="font-semibold text-foreground text-sm">
-                Mug
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Coming Soon
-              </p>
-            </div>
-          </Card>
-        </div>
+            {/* Product 2: Mug */}
+            <Card className="p-4 space-y-3 hover:shadow-lg transition-shadow">
+              <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+                <img
+                  src="https://m.media-amazon.com/images/I/61DPOamA5JL._AC_SX679_.jpg"
+                  alt="Prayer & Fire Mug"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="text-center">
+                <p className="font-semibold text-foreground text-sm">
+                  Mug
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Coming Soon
+                </p>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
