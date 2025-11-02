@@ -36,7 +36,6 @@ export function GivingScreen({ t }: GivingScreenProps) {
   const BOOK_LINK = "https://a.co/d/dfgHEvM";
   
   const [givingType, setGivingType] = useState<"subscription" | "onetime" | "project">("subscription");
-  const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("stripe");
   const [selectedProject, setSelectedProject] = useState("");
   const [cancelLoading, setCancelLoading] = useState(false);
@@ -206,21 +205,6 @@ export function GivingScreen({ t }: GivingScreenProps) {
           <h3 className="text-xl font-bold text-foreground">
             {t("One-Time Gift", "Donación Única")}
           </h3>
-          
-          <div className="space-y-2">
-            <Label htmlFor="amount">{t("Amount", "Cantidad")}</Label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                id="amount"
-                type="number"
-                placeholder="50.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="pl-10 h-12"
-              />
-            </div>
-          </div>
 
           <div className="space-y-2">
             <Label>{t("Payment Method", "Método de Pago")}</Label>
@@ -247,7 +231,6 @@ export function GivingScreen({ t }: GivingScreenProps) {
           <Button 
             onClick={handleGive} 
             className="w-full h-12 text-lg font-bold"
-            disabled={!amount || parseFloat(amount) <= 0}
           >
             {t("Giving Now", "Dar Ahora")}
           </Button>
@@ -278,21 +261,6 @@ export function GivingScreen({ t }: GivingScreenProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="project-amount">{t("Amount", "Cantidad")}</Label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                id="project-amount"
-                type="number"
-                placeholder="100.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="pl-10 h-12"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
             <Label>{t("Payment Method", "Método de Pago")}</Label>
             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
               <SelectTrigger className="h-12">
@@ -317,7 +285,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
           <Button 
             onClick={handleGive} 
             className="w-full h-12 text-lg font-bold"
-            disabled={!selectedProject || !amount || parseFloat(amount) <= 0}
+            disabled={!selectedProject}
           >
             {t("Support Project", "Apoyar Proyecto")}
           </Button>
