@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import vozInteriorBook from "@/assets/voz-interior-book.jpg";
 import prayerFireTshirt from "@/assets/prayer-fire-tshirt.png";
+import prayerFireMug from "@/assets/prayer-fire-mug.png";
 import { Badge } from "@/components/ui/badge";
 
 interface ShoppingScreenProps {
@@ -428,7 +429,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
             <Card className="p-4 space-y-3 hover:shadow-lg transition-shadow">
               <div className="aspect-square rounded-lg overflow-hidden bg-muted">
                 <img
-                  src="https://m.media-amazon.com/images/I/61DPOamA5JL._AC_SX679_.jpg"
+                  src={prayerFireMug}
                   alt="Prayer & Fire Mug"
                   className="w-full h-full object-cover"
                 />
