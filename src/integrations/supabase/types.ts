@@ -295,6 +295,41 @@ export type Database = {
         }
         Relationships: []
       }
+      purchases: {
+        Row: {
+          created_at: string
+          id: string
+          price_paid: number | null
+          product_id: string
+          purchase_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          price_paid?: number | null
+          product_id: string
+          purchase_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          price_paid?: number | null
+          product_id?: string
+          purchase_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
