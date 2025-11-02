@@ -36,7 +36,6 @@ export function GivingScreen({ t }: GivingScreenProps) {
   const BOOK_LINK = "https://a.co/d/dfgHEvM";
   
   const [givingType, setGivingType] = useState<"subscription" | "onetime" | "project">("subscription");
-  const [paymentMethod, setPaymentMethod] = useState("stripe");
   const [selectedProject, setSelectedProject] = useState("");
   const [cancelLoading, setCancelLoading] = useState(false);
   const { toast } = useToast();
@@ -206,28 +205,6 @@ export function GivingScreen({ t }: GivingScreenProps) {
             {t("One-Time Gift", "Donación Única")}
           </h3>
 
-          <div className="space-y-2">
-            <Label>{t("Payment Method", "Método de Pago")}</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger className="h-12">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {paymentMethods.map((method) => {
-                  const Icon = method.icon;
-                  return (
-                    <SelectItem key={method.value} value={method.value}>
-                      <div className="flex items-center gap-2">
-                        <Icon className="w-4 h-4" />
-                        {method.label}
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-
           <Button 
             onClick={handleGive} 
             className="w-full h-12 text-lg font-bold"
@@ -256,28 +233,6 @@ export function GivingScreen({ t }: GivingScreenProps) {
                     {project.label}
                   </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("Payment Method", "Método de Pago")}</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger className="h-12">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {paymentMethods.map((method) => {
-                  const Icon = method.icon;
-                  return (
-                    <SelectItem key={method.value} value={method.value}>
-                      <div className="flex items-center gap-2">
-                        <Icon className="w-4 h-4" />
-                        {method.label}
-                      </div>
-                    </SelectItem>
-                  );
-                })}
               </SelectContent>
             </Select>
           </div>
