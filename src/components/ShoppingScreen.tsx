@@ -9,6 +9,13 @@ import vozInteriorBook from "@/assets/voz-interior-book.jpg";
 import prayerFireTshirt from "@/assets/prayer-fire-tshirt.png";
 import prayerFireMug from "@/assets/prayer-fire-mug.png";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ShoppingScreenProps {
   t: (key: string) => string;
@@ -42,6 +49,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
   const [showBooks, setShowBooks] = useState(false);
   const [showStore, setShowStore] = useState(false);
   const [showCart, setShowCart] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -337,7 +345,11 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => (
-              <Card key={product.id} className="p-6 space-y-4 hover:shadow-lg transition-shadow flex flex-col">
+              <Card 
+                key={product.id} 
+                className="p-6 space-y-4 hover:shadow-lg transition-shadow flex flex-col cursor-pointer"
+                onClick={() => setSelectedProduct(product)}
+              >
                 {product.image_url && (
                   <div className="flex justify-center mb-2 overflow-hidden rounded-lg">
                     <img
@@ -354,7 +366,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                 )}
                 <h4 className="text-xl font-bold text-foreground">{product.name}</h4>
                 {product.description && (
-                  <p className="text-sm text-muted-foreground flex-1">{product.description}</p>
+                  <p className="text-sm text-muted-foreground flex-1 line-clamp-2">{product.description}</p>
                 )}
                 <div className="space-y-3 pt-4 border-t">
                   {product.price && (
@@ -362,25 +374,6 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                       <span className="text-2xl font-bold text-primary">${product.price}</span>
                     </div>
                   )}
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => addToCart(product)}
-                      className="flex-1 gap-2"
-                      variant="outline"
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                      Add to Cart
-                    </Button>
-                    <Button
-                      asChild
-                      className="flex-1 gap-2"
-                    >
-                      <a href={product.purchase_url} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="w-4 h-4" />
-                        Buy Now
-                      </a>
-                    </Button>
-                  </div>
                 </div>
               </Card>
             ))}
@@ -407,7 +400,18 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
         {showStore && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {/* Product 1: T-Shirt */}
-            <Card className="p-4 space-y-3 hover:shadow-lg transition-shadow">
+            <Card 
+              className="p-4 space-y-3 hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => setSelectedProduct({
+                id: 'tshirt-preview',
+                name: 'Prayer & Fire T-Shirt',
+                price: null,
+                image_url: prayerFireTshirt,
+                description: 'Coming Soon - Premium quality Prayer & Fire branded t-shirt',
+                purchase_url: '#',
+                is_active: false
+              })}
+            >
               <div className="aspect-square rounded-lg overflow-hidden bg-muted">
                 <img
                   src={prayerFireTshirt}
@@ -426,7 +430,18 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
             </Card>
 
             {/* Product 2: Mug */}
-            <Card className="p-4 space-y-3 hover:shadow-lg transition-shadow">
+            <Card 
+              className="p-4 space-y-3 hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => setSelectedProduct({
+                id: 'mug-preview',
+                name: 'Prayer & Fire Mug',
+                price: null,
+                image_url: prayerFireMug,
+                description: 'Coming Soon - Premium ceramic mug with Prayer & Fire branding',
+                purchase_url: '#',
+                is_active: false
+              })}
+            >
               <div className="aspect-square rounded-lg overflow-hidden bg-muted">
                 <img
                   src={prayerFireMug}
@@ -446,6 +461,74 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
           </div>
         )}
       </div>
+
+      {/* Product Detail Dialog */}
+      <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">{selectedProduct?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (
+            <div className="space-y-6">
+              {selectedProduct.image_url && (
+                <div className="flex justify-center overflow-hidden rounded-lg">
+                  <img
+                    src={selectedProduct.image_url}
+                    alt={selectedProduct.name}
+                    className="w-full max-h-96 object-contain"
+                  />
+                </div>
+              )}
+              
+              {selectedProduct.price && (
+                <div className="text-center">
+                  <span className="text-3xl font-bold text-primary">${selectedProduct.price}</span>
+                </div>
+              )}
+
+              {selectedProduct.description && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-foreground">Description</h4>
+                  <p className="text-muted-foreground">{selectedProduct.description}</p>
+                </div>
+              )}
+
+              {selectedProduct.is_active && (
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(selectedProduct);
+                    }}
+                    className="flex-1 gap-2"
+                    variant="outline"
+                    size="lg"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    Add to Cart
+                  </Button>
+                  <Button
+                    asChild
+                    className="flex-1 gap-2"
+                    size="lg"
+                  >
+                    <a href={selectedProduct.purchase_url} target="_blank" rel="noopener noreferrer">
+                      <ShoppingBag className="w-5 h-5" />
+                      Buy Now
+                    </a>
+                  </Button>
+                </div>
+              )}
+
+              {!selectedProduct.is_active && (
+                <div className="text-center p-4 bg-muted rounded-lg">
+                  <p className="text-muted-foreground font-medium">This product is coming soon!</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
