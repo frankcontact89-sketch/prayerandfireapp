@@ -173,9 +173,11 @@ export function ProfileScreen({
             <div className="w-32 h-32 rounded-full bg-muted border-4 border-border flex items-center justify-center overflow-hidden group-hover:border-primary transition-colors">
               {image ? (
                 <img
+                  key={image}
                   src={image}
                   alt="Profile"
                   className="w-full h-full object-cover"
+                  crossOrigin="anonymous"
                 />
               ) : (
                 <User className="w-16 h-16 text-muted-foreground group-hover:text-primary transition-colors" />
