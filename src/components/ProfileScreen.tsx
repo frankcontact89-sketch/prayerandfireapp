@@ -47,16 +47,34 @@ export function ProfileScreen({
 
       setUserId(user.id);
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (profile) {
-        setName(profile.username || "");
-        if (profile.avatar_url) {
-          const urlWithTimestamp = `${profile.avatar_url}?t=${Date.now()}`;
+      if (profileError) {
+        console.error("Profile load error:", profileError);
+      }
+
+      let currentProfile = profile;
+      if (!currentProfile) {
+        const { data: inserted, error: insertError } = await supabase
+          .from("profiles")
+          .insert({ id: user.id, username: user.email?.split("@")[0] || "", email: user.email || "" })
+          .select()
+          .single();
+        if (insertError) {
+          console.error("Profile insert error:", insertError);
+        } else {
+          currentProfile = inserted;
+        }
+      }
+
+      if (currentProfile) {
+        setName(currentProfile.username || "");
+        if (currentProfile.avatar_url) {
+          const urlWithTimestamp = `${currentProfile.avatar_url}?t=${Date.now()}`;
           setImage(urlWithTimestamp);
         }
       }
@@ -96,12 +114,23 @@ export function ProfileScreen({
 
       if (updateError) throw updateError;
 
+      // Preload the image to ensure immediate render, then update state
+      await new Promise<void>((resolve) => {
+        const img = new window.Image();
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+        img.src = urlWithTimestamp;
+      });
+
       setImage(urlWithTimestamp);
       
       toast({
         title: t("Success", "Éxito"),
         description: t("Profile photo updated", "Foto de perfil actualizada"),
       });
+
+      // Refresh profile from backend to keep in sync
+      await loadProfile();
 
       return publicUrl;
     } catch (error: any) {
@@ -178,6 +207,9 @@ export function ProfileScreen({
                   alt="Profile"
                   className="w-full h-full object-cover"
                   crossOrigin="anonymous"
+                  onError={() => {
+                    setImage(null);
+                  }}
                 />
               ) : (
                 <User className="w-16 h-16 text-muted-foreground group-hover:text-primary transition-colors" />
