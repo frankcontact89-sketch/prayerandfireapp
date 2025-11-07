@@ -405,11 +405,11 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
               onClick={() => setSelectedProduct({
                 id: 'tshirt-preview',
                 name: 'Prayer & Fire T-Shirt',
-                price: null,
+                price: 25.99,
                 image_url: prayerFireTshirt,
-                description: 'Coming Soon - Premium quality Prayer & Fire branded t-shirt',
-                purchase_url: '#',
-                is_active: false
+                description: 'Premium quality Prayer & Fire branded t-shirt. Comfortable cotton blend, available in multiple sizes.',
+                purchase_url: 'https://buy.stripe.com/test_tshirt_prayerfire',
+                is_active: true
               })}
             >
               <div className="aspect-square rounded-lg overflow-hidden bg-muted">
@@ -423,8 +423,8 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                 <p className="font-semibold text-foreground text-sm">
                   T-Shirt
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Coming Soon
+                <p className="text-xs text-primary font-semibold">
+                  $25.99
                 </p>
               </div>
             </Card>
@@ -435,11 +435,11 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
               onClick={() => setSelectedProduct({
                 id: 'mug-preview',
                 name: 'Prayer & Fire Mug',
-                price: null,
+                price: 15.99,
                 image_url: prayerFireMug,
-                description: 'Coming Soon - Premium ceramic mug with Prayer & Fire branding',
-                purchase_url: '#',
-                is_active: false
+                description: 'Premium ceramic mug with Prayer & Fire branding. Perfect for your morning coffee or tea.',
+                purchase_url: 'https://buy.stripe.com/test_mug_prayerfire',
+                is_active: true
               })}
             >
               <div className="aspect-square rounded-lg overflow-hidden bg-muted">
@@ -453,8 +453,8 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                 <p className="font-semibold text-foreground text-sm">
                   Mug
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Coming Soon
+                <p className="text-xs text-primary font-semibold">
+                  $15.99
                 </p>
               </div>
             </Card>
