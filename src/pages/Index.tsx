@@ -179,7 +179,7 @@ export default function Index() {
         {page === "home" && <HomeScreen t={t} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
-        {page === "module2" && <Module2Screen t={t} onBack={() => setPage("home")} />}
+        {page === "module2" && <Module2Screen t={t} onBack={() => setPage("shopping")} />}
         {page === "settings" && (
           <SettingsScreen 
             t={t} 
