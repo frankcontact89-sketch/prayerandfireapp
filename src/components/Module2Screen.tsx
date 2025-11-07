@@ -24,12 +24,9 @@ export function Module2Screen({ t, onBack }: Module2ScreenProps) {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary mb-3">
-            🔥 Escuela Prayer & Fire
-          </h1>
-          <h2 className="text-xl md:text-2xl font-semibold text-primary/90 mb-6">
+          <h1 className="text-xl md:text-2xl font-semibold text-primary mb-6">
             🙏 Módulo 2: El Poder del Ayuno y la Oración
-          </h2>
+          </h1>
           
           <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             En este segundo módulo aprenderás cómo el ayuno y la oración abren
