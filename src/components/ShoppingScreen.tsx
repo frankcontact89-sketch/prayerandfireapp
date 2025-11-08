@@ -179,10 +179,10 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
           </div>
         </div>
         <h2 className="text-3xl font-extrabold text-foreground">
-          📦 My Purchases
+          🛍️ Store
         </h2>
         <p className="text-muted-foreground">
-          View all your purchased products
+          Browse and purchase our products
         </p>
       </div>
 
