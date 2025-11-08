@@ -76,10 +76,36 @@ export function ProfileScreen({
         if (currentProfile.avatar_url) {
           const urlWithTimestamp = `${currentProfile.avatar_url}?t=${Date.now()}`;
           setImage(urlWithTimestamp);
+        } else {
+          // Generate a default avatar if none exists
+          await generateDefaultAvatar(user.id, currentProfile.username || user.email || "User");
         }
       }
     } catch (error) {
       console.error("Error loading profile:", error);
+    }
+  };
+
+  const generateDefaultAvatar = async (userId: string, name: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-avatar', {
+        body: { userId, name }
+      });
+
+      if (error) throw error;
+
+      if (data?.avatarUrl) {
+        const urlWithTimestamp = `${data.avatarUrl}?t=${Date.now()}`;
+        setImage(urlWithTimestamp);
+        
+        // Update profile with generated avatar
+        await supabase
+          .from('profiles')
+          .update({ avatar_url: data.avatarUrl })
+          .eq('id', userId);
+      }
+    } catch (error) {
+      console.error("Error generating avatar:", error);
     }
   };
 
@@ -207,12 +233,20 @@ export function ProfileScreen({
                   alt="Profile"
                   className="w-full h-full object-cover"
                   crossOrigin="anonymous"
-                  onError={() => {
+                  onError={async () => {
+                    // If image fails to load, generate a new one
                     setImage(null);
+                    if (userId && name) {
+                      await generateDefaultAvatar(userId, name);
+                    }
                   }}
                 />
               ) : (
-                <User className="w-16 h-16 text-muted-foreground group-hover:text-primary transition-colors" />
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                  <span className="text-4xl font-bold text-primary">
+                    {name ? name.charAt(0).toUpperCase() : "?"}
+                  </span>
+                </div>
               )}
             </div>
             <div className="absolute bottom-0 right-0 bg-primary rounded-full p-2 group-hover:scale-110 transition-transform">
