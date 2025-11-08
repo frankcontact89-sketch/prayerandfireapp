@@ -56,7 +56,7 @@ export function Module2Screen({ t, onBack }: Module2ScreenProps) {
           onClick={onBack}
           size="lg"
         >
-          Prayer & Fire Courses
+          My Courses
         </Button>
       </div>
     );
