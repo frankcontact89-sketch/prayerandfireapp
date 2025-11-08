@@ -77,7 +77,7 @@ export function Module2Screen({ t, onBack }: Module2ScreenProps) {
             <div className="flex items-center gap-3">
               <GraduationCap className="w-8 h-8 text-primary" />
               <h1 className="text-3xl font-extrabold text-foreground">
-                Prayer & Fire School
+                My Courses
               </h1>
             </div>
           </div>
