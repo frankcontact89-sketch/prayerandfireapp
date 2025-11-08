@@ -52,36 +52,12 @@ export function Module2Screen({ t, onBack }: Module2ScreenProps) {
   if (!hasPurchased) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
-        <Card className="max-w-2xl w-full p-8 text-center space-y-6 border-primary/20">
-          <div className="flex justify-center">
-            <GraduationCap className="w-20 h-20 text-primary" />
-          </div>
-          
-          <h1 className="text-3xl md:text-4xl font-bold text-primary">
-            Prayer & Fire Courses
-          </h1>
-          
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Our spiritual courses are now available in the store. 
-            Learn about fasting, prayer, worship and more to deepen your 
-            relationship with God.
-          </p>
-
-          <div className="pt-4 space-y-3">
-            <Button
-              onClick={onBack}
-              size="lg"
-              className="w-full gap-2"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              View Courses in Store
-            </Button>
-            
-            <p className="text-sm text-muted-foreground">
-              Click to explore all available courses
-            </p>
-          </div>
-        </Card>
+        <Button
+          onClick={onBack}
+          size="lg"
+        >
+          Prayer & Fire Courses
+        </Button>
       </div>
     );
   }
