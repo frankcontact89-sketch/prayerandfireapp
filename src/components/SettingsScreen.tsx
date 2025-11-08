@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Bell, User, Languages } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SettingsScreenProps {
   t: (key: string) => string;
@@ -18,6 +19,26 @@ interface SettingsScreenProps {
 
 export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onNotificationsClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
   const { isAdmin, loading } = useUserRole();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadAvatar();
+  }, []);
+
+  const loadAvatar = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile?.avatar_url) {
+      setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
@@ -32,8 +53,17 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  crossOrigin="anonymous"
+                />
+              ) : (
+                <User className="w-5 h-5 text-primary" />
+              )}
             </div>
             <h3 className="text-lg font-semibold text-foreground">
               {t("profile")}
