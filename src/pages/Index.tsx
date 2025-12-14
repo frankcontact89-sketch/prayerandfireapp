@@ -28,6 +28,7 @@ export default function Index() {
   });
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const { toast } = useToast();
 
   // Apply dark mode class to html element
@@ -96,6 +97,21 @@ export default function Index() {
     }
   };
 
+  const fetchUnreadNotifications = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("id")
+      .or(`user_id.eq.${user.id},user_id.is.null`)
+      .eq("is_read", false);
+
+    if (!error && data) {
+      setUnreadNotifications(data.length);
+    }
+  };
+
   useEffect(() => {
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -112,6 +128,32 @@ export default function Index() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Fetch unread notifications and subscribe to changes
+  useEffect(() => {
+    if (user) {
+      fetchUnreadNotifications();
+      
+      const channel = supabase
+        .channel('notifications-unread')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications'
+          },
+          () => {
+            fetchUnreadNotifications();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -151,13 +193,26 @@ export default function Index() {
       {/* Header */}
       <div className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
         <div className="flex justify-between items-center px-6 py-4">
-          {/* Settings Left */}
-          <button
-            onClick={() => setPage("settings")}
-            className="text-primary hover:text-primary/80 transition-colors"
-          >
-            <Settings className="w-6 h-6" />
-          </button>
+          {/* Settings Left with Notification Flame */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage("settings")}
+              className="text-primary hover:text-primary/80 transition-colors"
+            >
+              <Settings className="w-6 h-6" />
+            </button>
+            {unreadNotifications > 0 && (
+              <button
+                onClick={() => setPage("notifications")}
+                className="relative animate-vibrate"
+              >
+                <Flame className="w-6 h-6 text-orange-500" />
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {unreadNotifications}
+                </span>
+              </button>
+            )}
+          </div>
 
           {/* Title Center */}
           <h1 className="text-xl font-bold text-foreground">
