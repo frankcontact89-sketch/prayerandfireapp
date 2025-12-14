@@ -139,6 +139,23 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     }
   };
 
+  const deleteNotification = async (id: string) => {
+    const { error } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete notification",
+        variant: "destructive",
+      });
+    } else {
+      fetchNotifications();
+    }
+  };
+
   const getNotificationIcon = (type: string) => {
     return type === "info" ? <Bell className="w-5 h-5" /> : <Bell className="w-5 h-5" />;
   };
@@ -261,6 +278,13 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
                         View more
                       </button>
                     )}
+                    <button
+                      onClick={() => deleteNotification(notification.id)}
+                      className="text-xs text-destructive hover:text-destructive/80 transition-colors font-medium flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Delete
+                    </button>
                   </div>
                 </div>
               </div>
