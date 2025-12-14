@@ -203,7 +203,10 @@ export default function Index() {
             </button>
             {unreadNotifications > 0 && (
               <button
-                onClick={() => setPage("notifications")}
+                onClick={() => {
+                  setUnreadNotifications(0);
+                  setPage("notifications");
+                }}
                 className="relative animate-vibrate"
               >
                 <Flame className="w-6 h-6 text-orange-500" />
