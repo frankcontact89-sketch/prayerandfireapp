@@ -229,7 +229,6 @@ export function AdminEvents({ t }: { t: (en: string, es: string) => string }) {
               <TableHead>{t("Date", "Fecha")}</TableHead>
               <TableHead>{t("Location", "Ubicación")}</TableHead>
               <TableHead>{t("Type", "Tipo")}</TableHead>
-              <TableHead>{t("Attendees", "Asistentes")}</TableHead>
               <TableHead>{t("Actions", "Acciones")}</TableHead>
             </TableRow>
           </TableHeader>
@@ -248,21 +247,10 @@ export function AdminEvents({ t }: { t: (en: string, es: string) => string }) {
                   {event.is_online ? t("Online", "En Línea") : t("In-Person", "Presencial")}
                 </TableCell>
                 <TableCell>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => fetchAttendees(event.id, event.title)}
-                    className="flex items-center gap-1"
-                  >
-                    <Users className="w-4 h-4" />
-                    {event.rsvp_count || 0}
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
-                      size="icon"
-                      variant="ghost"
+                      size="sm"
+                      variant="outline"
                       onClick={() => {
                         setEditingEvent(event);
                         setFormData({
@@ -270,19 +258,29 @@ export function AdminEvents({ t }: { t: (en: string, es: string) => string }) {
                           description: event.description || "",
                           event_date: event.event_date,
                           location: event.location || "",
-                          is_online: event.is_online
+                          is_online: event.is_online,
                         });
                         setIsOpen(true);
                       }}
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-4 h-4 mr-1" />
+                      {t("Edit", "Editar")}
                     </Button>
                     <Button
-                      size="icon"
-                      variant="ghost"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => fetchAttendees(event.id, event.title)}
+                    >
+                      <Users className="w-4 h-4 mr-1" />
+                      {t("Attendees", "Asistentes")} ({event.rsvp_count || 0})
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
                       onClick={() => handleDelete(event.id)}
                     >
-                      <Trash2 className="w-4 h-4 text-destructive" />
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      {t("Delete", "Borrar")}
                     </Button>
                   </div>
                 </TableCell>
@@ -321,9 +319,7 @@ export function AdminEvents({ t }: { t: (en: string, es: string) => string }) {
                         {attendee.profile?.email || "-"}
                       </p>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      #{index + 1}
-                    </span>
+                    <span className="text-xs text-muted-foreground">#{index + 1}</span>
                   </div>
                 ))}
               </div>
@@ -334,3 +330,4 @@ export function AdminEvents({ t }: { t: (en: string, es: string) => string }) {
     </div>
   );
 }
+
