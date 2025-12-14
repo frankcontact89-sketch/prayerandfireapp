@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, BellOff, ArrowLeft, Trash2, MessageSquarePlus, Send } from "lucide-react";
+import { Bell, BellOff, ArrowLeft, Trash2, MessageSquarePlus, Send, Flame, X, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -34,10 +35,14 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [sendingFeedback, setSendingFeedback] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchNotifications();
+    loadNotificationSettings();
     
     // Subscribe to real-time notifications
     const channel = supabase
@@ -59,6 +64,22 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const loadNotificationSettings = () => {
+    const saved = localStorage.getItem('notifications_enabled');
+    if (saved !== null) {
+      setNotificationsEnabled(JSON.parse(saved));
+    }
+  };
+
+  const toggleNotifications = (enabled: boolean) => {
+    setNotificationsEnabled(enabled);
+    localStorage.setItem('notifications_enabled', JSON.stringify(enabled));
+    toast({
+      title: enabled ? "Notifications Enabled" : "Notifications Disabled",
+      description: enabled ? "You will receive notifications" : "You will not receive notifications",
+    });
+  };
 
   const fetchNotifications = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -167,8 +188,11 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     }
   };
 
-  const getNotificationIcon = (type: string) => {
-    return type === "info" ? <Bell className="w-5 h-5" /> : <Bell className="w-5 h-5" />;
+  const openNotification = async (notification: Notification) => {
+    setSelectedNotification(notification);
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+    }
   };
 
   const sendFeedback = async () => {
@@ -213,6 +237,74 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
+  // Full screen notification view
+  if (selectedNotification) {
+    return (
+      <div className="fixed inset-0 bg-background z-50 flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b">
+          <button
+            onClick={() => setSelectedNotification(null)}
+            className="text-primary hover:text-primary/80 transition-colors"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <h2 className="text-lg font-semibold text-foreground">Notification</h2>
+          <button
+            onClick={() => setSelectedNotification(null)}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-auto p-6">
+          <div className="max-w-2xl mx-auto space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full bg-primary text-primary-foreground">
+                <Bell className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground">{selectedNotification.title}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {new Date(selectedNotification.created_at).toLocaleDateString("en-US", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })}
+                </p>
+              </div>
+            </div>
+            <div className="bg-muted/30 rounded-lg p-6">
+              <p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap">
+                {selectedNotification.message}
+              </p>
+            </div>
+            {selectedNotification.link && (
+              <Button
+                onClick={() => window.open(selectedNotification.link!, "_blank")}
+                className="w-full"
+              >
+                View More
+              </Button>
+            )}
+            <Button
+              variant="destructive"
+              onClick={() => {
+                deleteNotification(selectedNotification.id);
+                setSelectedNotification(null);
+              }}
+              className="w-full"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Notification
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto p-6">
@@ -233,18 +325,56 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <div>
+          <div className="flex items-center gap-2">
             <h2 className="text-2xl font-bold text-foreground">
               🔔 {t("notifications")}
             </h2>
             {unreadCount > 0 && (
-              <p className="text-sm text-muted-foreground">
-                {unreadCount} {unreadCount === 1 ? "new" : "new"}
-              </p>
+              <div className="relative">
+                <Flame className="w-6 h-6 text-orange-500 animate-pulse" />
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              </div>
             )}
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
+          {/* Settings Dialog */}
+          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Settings className="w-4 h-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Notification Settings</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    {notificationsEnabled ? (
+                      <Bell className="w-5 h-5 text-primary" />
+                    ) : (
+                      <BellOff className="w-5 h-5 text-muted-foreground" />
+                    )}
+                    <div>
+                      <p className="font-medium text-foreground">Enable Notifications</p>
+                      <p className="text-sm text-muted-foreground">
+                        {notificationsEnabled ? "You will receive notifications" : "Notifications are disabled"}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={notificationsEnabled}
+                    onCheckedChange={toggleNotifications}
+                  />
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
@@ -305,6 +435,17 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
         </div>
       </div>
 
+      {!notificationsEnabled && (
+        <Card className="p-4 bg-muted/30 border-dashed">
+          <div className="flex items-center gap-3">
+            <BellOff className="w-5 h-5 text-muted-foreground" />
+            <p className="text-muted-foreground">
+              Notifications are disabled. Enable them in settings to receive updates.
+            </p>
+          </div>
+        </Card>
+      )}
+
       {notifications.length === 0 ? (
         <div className="text-center p-12 space-y-4">
           <BellOff className="w-20 h-20 text-muted-foreground/30 mx-auto mb-4" />
@@ -317,15 +458,19 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
           {notifications.map((notification) => (
             <Card
               key={notification.id}
-              className={`p-4 transition-all duration-200 hover:shadow-md ${
+              className={`p-4 transition-all duration-200 hover:shadow-md cursor-pointer ${
                 !notification.is_read ? "bg-primary/5 border-primary/20" : ""
               }`}
+              onClick={() => openNotification(notification)}
             >
               <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-full ${
+                <div className={`p-2 rounded-full relative ${
                   !notification.is_read ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                 }`}>
-                  {getNotificationIcon(notification.type)}
+                  <Bell className="w-5 h-5" />
+                  {!notification.is_read && (
+                    <Flame className="w-4 h-4 text-orange-500 absolute -top-1 -right-1 animate-pulse" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
@@ -338,7 +483,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
                       <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2" />
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                     {notification.message}
                   </p>
                   <div className="flex items-center gap-3 mt-3">
@@ -350,24 +495,11 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
                         minute: "2-digit"
                       })}
                     </span>
-                    {!notification.is_read && (
-                      <button
-                        onClick={() => markAsRead(notification.id)}
-                        className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
-                      >
-                        Mark as read
-                      </button>
-                    )}
-                    {notification.link && (
-                      <button
-                        onClick={() => window.open(notification.link!, "_blank")}
-                        className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
-                      >
-                        View more
-                      </button>
-                    )}
                     <button
-                      onClick={() => deleteNotification(notification.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteNotification(notification.id);
+                      }}
                       className="text-xs text-destructive hover:text-destructive/80 transition-colors font-medium flex items-center gap-1"
                     >
                       <Trash2 className="w-3 h-3" />
