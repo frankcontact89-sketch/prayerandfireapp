@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Globe, Check } from "lucide-react";
+import { Globe, Check, Save } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 interface LanguagesScreenProps {
   t: (key: string) => string;
@@ -20,6 +21,28 @@ const LANGUAGES = [
 ];
 
 export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }: LanguagesScreenProps) {
+  const [selectedLanguage, setSelectedLanguage] = useState(currentLanguage);
+  const [selectedName, setSelectedName] = useState(() => {
+    const found = LANGUAGES.find(([, code]) => code === currentLanguage);
+    return found ? found[0] : "English";
+  });
+  const { toast } = useToast();
+
+  const handleSelectLanguage = (code: string, name: string) => {
+    setSelectedLanguage(code);
+    setSelectedName(name);
+  };
+
+  const handleSaveChanges = () => {
+    onLanguageChange(selectedLanguage, selectedName);
+    toast({
+      title: "Language saved",
+      description: `Your language preference has been set to ${selectedName}`,
+    });
+  };
+
+  const hasChanges = selectedLanguage !== currentLanguage;
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex items-center gap-4 mb-6">
@@ -43,16 +66,27 @@ export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }
           {LANGUAGES.map(([name, code]) => (
             <Button
               key={code}
-              variant={currentLanguage === code ? "default" : "outline"}
+              variant={selectedLanguage === code ? "default" : "outline"}
               className="justify-between"
-              onClick={() => onLanguageChange(code as string, name as string)}
+              onClick={() => handleSelectLanguage(code as string, name as string)}
             >
               <span>{name}</span>
-              {currentLanguage === code && <Check className="w-4 h-4" />}
+              {selectedLanguage === code && <Check className="w-4 h-4" />}
             </Button>
           ))}
         </div>
       </Card>
+
+      <div className="flex justify-center">
+        <Button 
+          onClick={handleSaveChanges}
+          disabled={!hasChanges}
+          className="gap-2"
+        >
+          <Save className="w-4 h-4" />
+          Save Changes
+        </Button>
+      </div>
 
       <p className="text-center text-sm text-muted-foreground">
         {t("translation_note")}
