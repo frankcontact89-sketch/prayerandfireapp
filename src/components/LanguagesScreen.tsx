@@ -36,8 +36,8 @@ export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }
   const handleSaveChanges = () => {
     onLanguageChange(selectedLanguage, selectedName);
     toast({
-      title: "Language saved",
-      description: `Your language preference has been set to ${selectedName}`,
+      title: t("languageSaved"),
+      description: `${t("languagePreferenceSet")} ${selectedName}`,
     });
   };
 
@@ -84,7 +84,7 @@ export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }
           className="gap-2"
         >
           <Save className="w-4 h-4" />
-          Save Changes
+          {t("saveChanges")}
         </Button>
       </div>
 
