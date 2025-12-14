@@ -6,8 +6,6 @@ import { ShoppingBag, ExternalLink, BookOpen, Package, ShoppingCart, Trash2 } fr
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import vozInteriorBook from "@/assets/voz-interior-book.jpg";
-import prayerFireTshirt from "@/assets/prayer-fire-tshirt.png";
-import prayerFireMug from "@/assets/prayer-fire-mug.png";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -398,66 +396,10 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
         </div>
 
         {showStore && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {/* Product 1: T-Shirt */}
-            <Card 
-              className="p-4 space-y-3 hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setSelectedProduct({
-                id: 'tshirt-preview',
-                name: 'Prayer & Fire T-Shirt',
-                price: 25.99,
-                image_url: prayerFireTshirt,
-                description: 'Premium quality Prayer & Fire branded t-shirt. Comfortable cotton blend, available in multiple sizes.',
-                purchase_url: 'https://buy.stripe.com/test_tshirt_prayerfire',
-                is_active: true
-              })}
-            >
-              <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-                <img
-                  src={prayerFireTshirt}
-                  alt="Prayer & Fire T-Shirt"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="text-center">
-                <p className="font-semibold text-foreground text-sm">
-                  T-Shirt
-                </p>
-                <p className="text-xs text-primary font-semibold">
-                  $25.99
-                </p>
-              </div>
-            </Card>
-
-            {/* Product 2: Mug */}
-            <Card 
-              className="p-4 space-y-3 hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setSelectedProduct({
-                id: 'mug-preview',
-                name: 'Prayer & Fire Mug',
-                price: 15.99,
-                image_url: prayerFireMug,
-                description: 'Premium ceramic mug with Prayer & Fire branding. Perfect for your morning coffee or tea.',
-                purchase_url: 'https://buy.stripe.com/test_mug_prayerfire',
-                is_active: true
-              })}
-            >
-              <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-                <img
-                  src={prayerFireMug}
-                  alt="Prayer & Fire Mug"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="text-center">
-                <p className="font-semibold text-foreground text-sm">
-                  Mug
-                </p>
-                <p className="text-xs text-primary font-semibold">
-                  $15.99
-                </p>
-              </div>
-            </Card>
+          <div className="text-center p-8">
+            <p className="text-muted-foreground">
+              Coming soon! Check back later for new products.
+            </p>
           </div>
         )}
       </div>
