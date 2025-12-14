@@ -2,8 +2,13 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { Calendar, MapPin, Users, Video } from "lucide-react";
+import { Calendar, MapPin, Users, Video, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "./ui/popover";
 
 interface Event {
   id: string;
@@ -18,11 +23,16 @@ interface Event {
 
 interface EventsScreenProps {
   t: (en: string, es: string) => string;
+  onNewEvents?: (count: number) => void;
 }
 
-export function EventsScreen({ t }: EventsScreenProps) {
+const EMOJI_OPTIONS = ["🔥", "🙏", "❤️", "🙌", "✨", "💪"];
+
+export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [rsvps, setRsvps] = useState<Set<string>>(new Set());
+  const [declines, setDeclines] = useState<Set<string>>(new Set());
+  const [reactions, setReactions] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -108,6 +118,13 @@ export function EventsScreen({ t }: EventsScreenProps) {
         });
       }
 
+      // Remove from declines if was declined
+      setDeclines((prev) => {
+        const next = new Set(prev);
+        next.delete(eventId);
+        return next;
+      });
+      
       loadEvents();
     } catch (error) {
       console.error("Error with RSVP:", error);
@@ -117,6 +134,38 @@ export function EventsScreen({ t }: EventsScreenProps) {
         variant: "destructive",
       });
     }
+  };
+
+  const handleDecline = (eventId: string) => {
+    setDeclines((prev) => new Set(prev).add(eventId));
+    setRsvps((prev) => {
+      const next = new Set(prev);
+      next.delete(eventId);
+      return next;
+    });
+    toast({
+      title: t("Response saved", "Respuesta guardada"),
+      description: t("You declined the event", "Declinaste el evento"),
+    });
+  };
+
+  const handleUndecline = (eventId: string) => {
+    setDeclines((prev) => {
+      const next = new Set(prev);
+      next.delete(eventId);
+      return next;
+    });
+  };
+
+  const handleReaction = (eventId: string, emoji: string) => {
+    setReactions((prev) => ({
+      ...prev,
+      [eventId]: emoji
+    }));
+    toast({
+      title: emoji,
+      description: t("Reaction added!", "¡Reacción agregada!"),
+    });
   };
 
   if (loading) {
@@ -181,14 +230,72 @@ export function EventsScreen({ t }: EventsScreenProps) {
                     </div>
                   </div>
 
-                  <Button
-                    onClick={() => handleRSVP(event.id)}
-                    variant={rsvps.has(event.id) ? "secondary" : "default"}
-                  >
-                    {rsvps.has(event.id)
-                      ? t("Cancel RSVP", "Cancelar Asistencia")
-                      : t("RSVP", "Confirmar Asistencia")}
-                  </Button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {!rsvps.has(event.id) && !declines.has(event.id) && (
+                      <>
+                        <Button
+                          onClick={() => handleRSVP(event.id)}
+                          variant="default"
+                        >
+                          {t("Confirm", "Confirmar")}
+                        </Button>
+                        <Button
+                          onClick={() => handleDecline(event.id)}
+                          variant="outline"
+                          className="flex items-center gap-1"
+                        >
+                          <XCircle className="w-4 h-4" />
+                          {t("Can't Attend", "No podré asistir")}
+                        </Button>
+                      </>
+                    )}
+                    
+                    {rsvps.has(event.id) && (
+                      <Button
+                        onClick={() => handleRSVP(event.id)}
+                        variant="secondary"
+                      >
+                        {t("Cancel RSVP", "Cancelar Asistencia")}
+                      </Button>
+                    )}
+                    
+                    {declines.has(event.id) && (
+                      <Button
+                        onClick={() => handleUndecline(event.id)}
+                        variant="outline"
+                      >
+                        {t("Change Mind", "Cambiar de opinión")}
+                      </Button>
+                    )}
+
+                    {/* Emoji Reaction */}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-xl px-2">
+                          {reactions[event.id] || "😊"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-2">
+                        <div className="flex gap-1">
+                          {EMOJI_OPTIONS.map((emoji) => (
+                            <button
+                              key={emoji}
+                              onClick={() => handleReaction(event.id, emoji)}
+                              className={`text-2xl p-1 hover:bg-muted rounded transition-colors ${
+                                reactions[event.id] === emoji ? "bg-primary/20" : ""
+                              }`}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    
+                    {reactions[event.id] && (
+                      <span className="text-lg">{reactions[event.id]}</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </Card>
