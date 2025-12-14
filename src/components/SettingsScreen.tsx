@@ -144,8 +144,8 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
           className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95 col-span-2"
         >
           <Share2 className="w-6 h-6 text-primary mb-2" />
-          <p className="text-sm font-medium text-foreground">Compartir Prayer & Fire App</p>
-          <p className="text-xs text-muted-foreground mt-1">Invita a tus amigos</p>
+          <p className="text-sm font-medium text-foreground">Share Prayer & Fire App</p>
+          <p className="text-xs text-muted-foreground mt-1">Invite your friends</p>
         </button>
       </div>
 
