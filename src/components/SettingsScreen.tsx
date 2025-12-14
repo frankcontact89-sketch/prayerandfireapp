@@ -46,23 +46,32 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
     const appUrl = window.location.origin;
     const shareData = {
       title: "Prayer & Fire",
-      text: "Check out Prayer & Fire app!",
+      text: "🔥 ¡Descubre Prayer & Fire! Una app para fortalecer tu vida espiritual. Únete a nuestra comunidad.",
       url: appUrl,
     };
 
     try {
-      if (navigator.share) {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(appUrl);
+        // Fallback for browsers that don't support Web Share API
+        await navigator.clipboard.writeText(`${shareData.text}\n${appUrl}`);
         toast({
           title: t("linkCopied") || "Link copied!",
           description: t("shareLinkCopied") || "App link copied to clipboard",
         });
       }
-    } catch (error) {
-      // User cancelled or error
-      console.log("Share cancelled or failed");
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        // Only show toast if it's not a user cancellation
+        await navigator.clipboard.writeText(`${shareData.text}\n${appUrl}`);
+        toast({
+          title: t("linkCopied") || "Link copied!",
+          description: t("shareLinkCopied") || "App link copied to clipboard",
+        });
+      }
     }
   };
 
