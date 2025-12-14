@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, BellOff, ArrowLeft, Trash2, MessageSquarePlus, Send, Flame, X, Settings } from "lucide-react";
+import { Flame, ArrowLeft, Trash2, MessageSquarePlus, Send, X, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -260,7 +260,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
           <div className="max-w-2xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-full bg-primary text-primary-foreground">
-                <Bell className="w-6 h-6" />
+                <Flame className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-foreground">{selectedNotification.title}</h3>
@@ -354,11 +354,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
                   <div className="flex items-center gap-3">
-                    {notificationsEnabled ? (
-                      <Bell className="w-5 h-5 text-primary" />
-                    ) : (
-                      <BellOff className="w-5 h-5 text-muted-foreground" />
-                    )}
+                    <Flame className={`w-5 h-5 ${notificationsEnabled ? "text-orange-500" : "text-muted-foreground"}`} />
                     <div>
                       <p className="font-medium text-foreground">Enable Notifications</p>
                       <p className="text-sm text-muted-foreground">
@@ -438,7 +434,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
       {!notificationsEnabled && (
         <Card className="p-4 bg-muted/30 border-dashed">
           <div className="flex items-center gap-3">
-            <BellOff className="w-5 h-5 text-muted-foreground" />
+            <Flame className="w-5 h-5 text-muted-foreground" />
             <p className="text-muted-foreground">
               Notifications are disabled. Enable them in settings to receive updates.
             </p>
@@ -448,7 +444,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
 
       {notifications.length === 0 ? (
         <div className="text-center p-12 space-y-4">
-          <BellOff className="w-20 h-20 text-muted-foreground/30 mx-auto mb-4" />
+          <Flame className="w-20 h-20 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-muted-foreground text-lg">
             You have no notifications
           </p>
@@ -465,12 +461,9 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
             >
               <div className="flex items-start gap-3">
                 <div className={`p-2 rounded-full relative ${
-                  !notification.is_read ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  !notification.is_read ? "bg-orange-500/20 text-orange-500" : "bg-muted text-muted-foreground"
                 }`}>
-                  <Bell className="w-5 h-5" />
-                  {!notification.is_read && (
-                    <Flame className="w-4 h-4 text-orange-500 absolute -top-1 -right-1 animate-pulse" />
-                  )}
+                  <Flame className={`w-5 h-5 ${!notification.is_read ? "animate-pulse" : ""}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
