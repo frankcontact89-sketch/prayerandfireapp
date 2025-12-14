@@ -43,35 +43,41 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
   };
 
   const handleShareApp = async () => {
-    const appUrl = window.location.origin;
+    const appUrl = "https://prayerandfire.app"; // Use your actual app URL
+    const shareText = "🔥 Check out Prayer & Fire! An app to strengthen your spiritual life. Join our community.";
+    
     const shareData = {
       title: "Prayer & Fire",
-      text: "🔥 ¡Descubre Prayer & Fire! Una app para fortalecer tu vida espiritual. Únete a nuestra comunidad.",
+      text: shareText,
       url: appUrl,
     };
 
+    // Check if Web Share API is available (works on mobile devices)
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share(shareData);
+        return; // Success, exit function
+      } catch (error: any) {
+        // If user cancelled, don't show fallback
+        if (error.name === 'AbortError') {
+          return;
+        }
+        // If share failed for other reason, continue to fallback
+      }
+    }
+    
+    // Fallback: Copy to clipboard (for desktop browsers)
     try {
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-      } else if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        // Fallback for browsers that don't support Web Share API
-        await navigator.clipboard.writeText(`${shareData.text}\n${appUrl}`);
-        toast({
-          title: t("linkCopied") || "Link copied!",
-          description: t("shareLinkCopied") || "App link copied to clipboard",
-        });
-      }
-    } catch (error: any) {
-      if (error.name !== 'AbortError') {
-        // Only show toast if it's not a user cancellation
-        await navigator.clipboard.writeText(`${shareData.text}\n${appUrl}`);
-        toast({
-          title: t("linkCopied") || "Link copied!",
-          description: t("shareLinkCopied") || "App link copied to clipboard",
-        });
-      }
+      await navigator.clipboard.writeText(`${shareText}\n${appUrl}`);
+      toast({
+        title: "Link copied!",
+        description: "Share this link with your friends via WhatsApp or Messages",
+      });
+    } catch (err) {
+      toast({
+        title: "Share",
+        description: `Share this link: ${appUrl}`,
+      });
     }
   };
 
