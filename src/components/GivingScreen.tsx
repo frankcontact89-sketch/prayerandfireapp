@@ -27,7 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface GivingScreenProps {
-  t: (en: string, es: string) => string;
+  t: (key: string) => string;
 }
 
 export function GivingScreen({ t }: GivingScreenProps) {
@@ -40,15 +40,11 @@ export function GivingScreen({ t }: GivingScreenProps) {
   const [cancelLoading, setCancelLoading] = useState(false);
   const { toast } = useToast();
 
-  const paymentMethods = [
-    { value: "stripe", label: t("Credit/Debit Card", "Tarjeta de Crédito/Débito"), icon: CreditCard },
-  ];
-
   const projects = [
-    { value: "missions", label: t("Missions", "Misiones") },
-    { value: "youth", label: t("Youth Ministry", "Ministerio Juvenil") },
-    { value: "building", label: t("Building Fund", "Fondo de Construcción") },
-    { value: "outreach", label: t("Community Outreach", "Alcance Comunitario") },
+    { value: "missions", label: t("missions") },
+    { value: "youth", label: t("youthMinistry") },
+    { value: "building", label: t("buildingFund") },
+    { value: "outreach", label: t("communityOutreach") },
   ];
 
   const handleGive = () => {
@@ -102,10 +98,10 @@ export function GivingScreen({ t }: GivingScreenProps) {
     <div className="max-w-xl mx-auto p-6 space-y-8">
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-extrabold text-foreground">
-          {t("Giving", "Dar")}
+          {t("giving")}
         </h2>
         <p className="text-muted-foreground">
-          {t("Support Prayer & Fire", "Apoya Prayer & Fire")}
+          {t("supportPrayerFire")}
         </p>
       </div>
 
@@ -117,7 +113,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
           className="h-20 flex flex-col gap-1"
         >
           <Heart className="w-5 h-5" />
-          <span className="text-xs">{t("Monthly", "Mensual")}</span>
+          <span className="text-xs">{t("monthly")}</span>
         </Button>
         <Button
           variant={givingType === "onetime" ? "default" : "outline"}
@@ -125,7 +121,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
           className="h-20 flex flex-col gap-1"
         >
           <DollarSign className="w-5 h-5" />
-          <span className="text-xs">{t("One-Time", "Una Vez")}</span>
+          <span className="text-xs">{t("oneTime")}</span>
         </Button>
         <Button
           variant={givingType === "project" ? "default" : "outline"}
@@ -133,7 +129,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
           className="h-20 flex flex-col gap-1"
         >
           <CreditCard className="w-5 h-5" />
-          <span className="text-xs">{t("Project", "Proyecto")}</span>
+          <span className="text-xs">{t("project")}</span>
         </Button>
       </div>
 
@@ -141,26 +137,20 @@ export function GivingScreen({ t }: GivingScreenProps) {
       {givingType === "subscription" && (
         <Card className="p-6 space-y-4">
           <h3 className="text-xl font-bold text-foreground">
-            {t("Monthly Subscription", "Suscripción Mensual")}
+            {t("monthlySubscription")}
           </h3>
           <p className="text-sm text-muted-foreground">
-            {t(
-              "Support our ministry with a monthly recurring gift",
-              "Apoya nuestro ministerio con una ofrenda mensual recurrente"
-            )}
+            {t("supportMinistryMonthly")}
           </p>
           <Button onClick={handleGive} className="w-full h-12 text-lg font-bold">
-            {t("Set Up Monthly Giving", "Configurar Ofrenda Mensual")}
+            {t("setUpMonthlyGiving")}
           </Button>
           
           <Separator className="my-4" />
           
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground text-center">
-              {t(
-                "Already have a subscription? You can cancel it anytime.",
-                "¿Ya tienes una suscripción? Puedes cancelarla en cualquier momento."
-              )}
+              {t("alreadyHaveSubscription")}
             </p>
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -169,27 +159,24 @@ export function GivingScreen({ t }: GivingScreenProps) {
                   className="w-full"
                   disabled={cancelLoading}
                 >
-                  {cancelLoading ? t("Canceling...", "Cancelando...") : t("Cancel Subscription", "Cancelar Suscripción")}
+                  {cancelLoading ? t("canceling") : t("cancelSubscription")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>
-                    {t("Are you sure?", "¿Estás seguro?")}
+                    {t("areYouSure")}
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    {t(
-                      "This action will cancel your monthly subscription. You can continue using the service until the end of the current period.",
-                      "Esta acción cancelará tu suscripción mensual. Podrás seguir usando el servicio hasta el final del período actual."
-                    )}
+                    {t("cancelSubscriptionWarning")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>
-                    {t("No, keep subscription", "No, mantener suscripción")}
+                    {t("noKeepSubscription")}
                   </AlertDialogCancel>
                   <AlertDialogAction onClick={handleCancelSubscription}>
-                    {t("Yes, cancel", "Sí, cancelar")}
+                    {t("yesCancel")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -202,14 +189,14 @@ export function GivingScreen({ t }: GivingScreenProps) {
       {givingType === "onetime" && (
         <Card className="p-6 space-y-4">
           <h3 className="text-xl font-bold text-foreground">
-            {t("One-Time Gift", "Donación Única")}
+            {t("oneTimeGift")}
           </h3>
 
           <Button 
             onClick={handleGive} 
             className="w-full h-12 text-lg font-bold"
           >
-            {t("Giving Now", "Dar Ahora")}
+            {t("giveNow")}
           </Button>
         </Card>
       )}
@@ -218,14 +205,14 @@ export function GivingScreen({ t }: GivingScreenProps) {
       {givingType === "project" && (
         <Card className="p-6 space-y-4">
           <h3 className="text-xl font-bold text-foreground">
-            {t("Support a Project", "Apoyar un Proyecto")}
+            {t("supportProject")}
           </h3>
           
           <div className="space-y-2">
-            <Label>{t("Select Project", "Seleccionar Proyecto")}</Label>
+            <Label>{t("selectProject")}</Label>
             <Select value={selectedProject} onValueChange={setSelectedProject}>
               <SelectTrigger className="h-12">
-                <SelectValue placeholder={t("Choose a project", "Elige un proyecto")} />
+                <SelectValue placeholder={t("chooseProject")} />
               </SelectTrigger>
               <SelectContent>
                 {projects.map((project) => (
@@ -242,23 +229,17 @@ export function GivingScreen({ t }: GivingScreenProps) {
             className="w-full h-12 text-lg font-bold"
             disabled={!selectedProject}
           >
-            {t("Support Project", "Apoyar Proyecto")}
+            {t("supportProjectBtn")}
           </Button>
         </Card>
       )}
 
       <div className="bg-card border border-border rounded-xl p-6 text-center space-y-2">
         <p className="text-sm text-muted-foreground">
-          {t(
-            "Thank you for supporting our mission.",
-            "Gracias por apoyar nuestra misión."
-          )}
+          {t("thankYouSupporting")}
         </p>
         <p className="text-xs text-muted-foreground">
-          {t(
-            "All donations are tax-deductible",
-            "Todas las donaciones son deducibles de impuestos"
-          )}
+          {t("taxDeductible")}
         </p>
       </div>
     </div>
