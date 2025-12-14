@@ -63,7 +63,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     if (error) {
       toast({
         title: "Error",
-        description: "No se pudieron cargar las notificaciones",
+        description: "Failed to load notifications",
         variant: "destructive",
       });
     } else {
@@ -81,7 +81,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     if (error) {
       toast({
         title: "Error",
-        description: "No se pudo marcar como leída",
+        description: "Failed to mark as read",
         variant: "destructive",
       });
     } else {
@@ -102,13 +102,38 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     if (error) {
       toast({
         title: "Error",
-        description: "No se pudieron marcar todas como leídas",
+        description: "Failed to mark all as read",
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Éxito",
-        description: "Todas las notificaciones marcadas como leídas",
+        title: "Success",
+        description: "All notifications marked as read",
+      });
+      fetchNotifications();
+    }
+  };
+
+  const deleteAllRead = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("notifications")
+      .delete()
+      .or(`user_id.eq.${user.id},user_id.is.null`)
+      .eq("is_read", true);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete notifications",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Read notifications deleted",
       });
       fetchNotifications();
     }
@@ -146,27 +171,40 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
             </h2>
             {unreadCount > 0 && (
               <p className="text-sm text-muted-foreground">
-                {unreadCount} {unreadCount === 1 ? "nueva" : "nuevas"}
+                {unreadCount} {unreadCount === 1 ? "new" : "new"}
               </p>
             )}
           </div>
         </div>
-        {unreadCount > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={markAllAsRead}
-          >
-            Marcar todas como leídas
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {unreadCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={markAllAsRead}
+            >
+              Mark all as read
+            </Button>
+          )}
+          {notifications.filter(n => n.is_read).length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={deleteAllRead}
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              Delete read
+            </Button>
+          )}
+        </div>
       </div>
 
       {notifications.length === 0 ? (
         <div className="text-center p-12 space-y-4">
           <BellOff className="w-20 h-20 text-muted-foreground/30 mx-auto mb-4" />
           <p className="text-muted-foreground text-lg">
-            No tienes notificaciones
+            You have no notifications
           </p>
         </div>
       ) : (
@@ -200,7 +238,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
                   </p>
                   <div className="flex items-center gap-3 mt-3">
                     <span className="text-xs text-muted-foreground">
-                      {new Date(notification.created_at).toLocaleDateString("es-ES", {
+                      {new Date(notification.created_at).toLocaleDateString("en-US", {
                         day: "numeric",
                         month: "short",
                         hour: "2-digit",
@@ -212,7 +250,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
                         onClick={() => markAsRead(notification.id)}
                         className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
                       >
-                        Marcar como leída
+                        Mark as read
                       </button>
                     )}
                     {notification.link && (
@@ -220,7 +258,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
                         onClick={() => window.open(notification.link!, "_blank")}
                         className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
                       >
-                        Ver más
+                        View more
                       </button>
                     )}
                   </div>
