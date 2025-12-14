@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Bell, User, Languages } from "lucide-react";
+import { Bell, User, Languages, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface SettingsScreenProps {
   t: (key: string) => string;
@@ -20,6 +21,7 @@ interface SettingsScreenProps {
 export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onNotificationsClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
   const { isAdmin, loading } = useUserRole();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadAvatar();
@@ -37,6 +39,30 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
 
     if (profile?.avatar_url) {
       setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
+    }
+  };
+
+  const handleShareApp = async () => {
+    const appUrl = window.location.origin;
+    const shareData = {
+      title: "Prayer & Fire",
+      text: "Check out Prayer & Fire app!",
+      url: appUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(appUrl);
+        toast({
+          title: t("linkCopied") || "Link copied!",
+          description: t("shareLinkCopied") || "App link copied to clipboard",
+        });
+      }
+    } catch (error) {
+      // User cancelled or error
+      console.log("Share cancelled or failed");
     }
   };
 
@@ -101,6 +127,16 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
           <Languages className="w-6 h-6 text-primary mb-2" />
           <p className="text-sm font-medium text-foreground">{t("language")}</p>
           <p className="text-xs text-muted-foreground mt-1">{t("changeLanguage")}</p>
+        </button>
+
+        {/* Share App */}
+        <button 
+          onClick={handleShareApp}
+          className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95 col-span-2"
+        >
+          <Share2 className="w-6 h-6 text-primary mb-2" />
+          <p className="text-sm font-medium text-foreground">{t("shareApp") || "Share App"}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("shareAppDescription") || "Invite friends to Prayer & Fire"}</p>
         </button>
       </div>
 
