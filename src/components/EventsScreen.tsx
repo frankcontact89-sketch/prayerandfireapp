@@ -22,7 +22,7 @@ interface Event {
 }
 
 interface EventsScreenProps {
-  t: (en: string, es: string) => string;
+  t: (key: string) => string;
   onNewEvents?: (count: number) => void;
 }
 
@@ -81,8 +81,8 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
       
       if (!user) {
         toast({
-          title: t("Error", "Error"),
-          description: t("You must be signed in to RSVP", "Debes iniciar sesión para confirmar asistencia"),
+          title: t("error"),
+          description: t("mustBeSignedIn"),
           variant: "destructive",
         });
         return;
@@ -103,9 +103,7 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
           next.delete(eventId);
           return next;
         });
-        toast({
-          title: t("RSVP cancelled", "Asistencia cancelada"),
-        });
+        toast({ title: t("rsvpCancelled") });
       } else {
         const { error } = await supabase
           .from("event_rsvps")
@@ -113,12 +111,9 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
 
         if (error) throw error;
         setRsvps((prev) => new Set(prev).add(eventId));
-        toast({
-          title: t("RSVP confirmed!", "¡Asistencia confirmada!"),
-        });
+        toast({ title: t("rsvpConfirmed") });
       }
 
-      // Remove from declines if was declined
       setDeclines((prev) => {
         const next = new Set(prev);
         next.delete(eventId);
@@ -129,8 +124,8 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
     } catch (error) {
       console.error("Error with RSVP:", error);
       toast({
-        title: t("Error", "Error"),
-        description: t("Failed to update RSVP", "No se pudo actualizar la asistencia"),
+        title: t("error"),
+        description: t("failedToUpdateRsvp"),
         variant: "destructive",
       });
     }
@@ -144,8 +139,8 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
       return next;
     });
     toast({
-      title: t("Response saved", "Respuesta guardada"),
-      description: t("You declined the event", "Declinaste el evento"),
+      title: t("responseSaved"),
+      description: t("youDeclinedEvent"),
     });
   };
 
@@ -158,18 +153,12 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
   };
 
   const handleReaction = (eventId: string, emoji: string) => {
-    setReactions((prev) => ({
-      ...prev,
-      [eventId]: emoji
-    }));
-    toast({
-      title: emoji,
-      description: t("Reaction added!", "¡Reacción agregada!"),
-    });
+    setReactions((prev) => ({ ...prev, [eventId]: emoji }));
+    toast({ title: emoji, description: t("reactionAdded") });
   };
 
   if (loading) {
-    return <div className="flex justify-center p-6">{t("Loading...", "Cargando...")}</div>;
+    return <div className="flex justify-center p-6">{t("loading")}</div>;
   }
 
   return (
@@ -177,124 +166,75 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
       <div className="flex items-center gap-3">
         <Calendar className="w-8 h-8 text-primary" />
         <h1 className="text-3xl font-extrabold text-foreground">
-          {t("Upcoming Events", "Próximos Eventos")}
+          {t("upcomingEvents")}
         </h1>
       </div>
 
       <div className="grid gap-4">
         {events.length === 0 ? (
           <Card className="p-6 text-center text-muted-foreground">
-            {t("No events scheduled", "No hay eventos programados")}
+            {t("noEventsScheduled")}
           </Card>
         ) : (
           events.map((event) => (
             <Card key={event.id} className="p-6">
               <div className="flex flex-col md:flex-row gap-4">
                 {event.image_url && (
-                  <img
-                    src={event.image_url}
-                    alt={event.title}
-                    className="w-full md:w-48 h-48 object-cover rounded-lg"
-                  />
+                  <img src={event.image_url} alt={event.title} className="w-full md:w-48 h-48 object-cover rounded-lg" />
                 )}
                 <div className="flex-1 space-y-3">
                   <h3 className="text-2xl font-bold text-foreground">{event.title}</h3>
-                  
-                  {event.description && (
-                    <p className="text-muted-foreground">{event.description}</p>
-                  )}
-
+                  {event.description && <p className="text-muted-foreground">{event.description}</p>}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
                       <Calendar className="w-4 h-4 text-primary" />
                       <span>{new Date(event.event_date).toLocaleString()}</span>
                     </div>
-
                     {event.is_online ? (
                       <div className="flex items-center gap-2 text-sm">
                         <Video className="w-4 h-4 text-primary" />
-                        <span>{t("Online Event", "Evento en Línea")}</span>
+                        <span>{t("onlineEvent")}</span>
                       </div>
-                    ) : event.location ? (
+                    ) : event.location && (
                       <div className="flex items-center gap-2 text-sm">
                         <MapPin className="w-4 h-4 text-primary" />
                         <span>{event.location}</span>
                       </div>
-                    ) : null}
-
+                    )}
                     <div className="flex items-center gap-2 text-sm">
                       <Users className="w-4 h-4 text-primary" />
-                      <span>
-                        {event.rsvp_count} {t("attending", "asistiendo")}
-                      </span>
+                      <span>{event.rsvp_count} {t("attending")}</span>
                     </div>
                   </div>
-
                   <div className="flex flex-wrap items-center gap-2">
                     {!rsvps.has(event.id) && !declines.has(event.id) && (
                       <>
-                        <Button
-                          onClick={() => handleRSVP(event.id)}
-                          variant="default"
-                        >
-                          {t("Confirm", "Confirmar")}
-                        </Button>
-                        <Button
-                          onClick={() => handleDecline(event.id)}
-                          variant="outline"
-                          className="flex items-center gap-1"
-                        >
+                        <Button onClick={() => handleRSVP(event.id)} variant="default">{t("confirm")}</Button>
+                        <Button onClick={() => handleDecline(event.id)} variant="outline" className="flex items-center gap-1">
                           <XCircle className="w-4 h-4" />
-                          {t("Can't Attend", "No podré asistir")}
+                          {t("cantAttend")}
                         </Button>
                       </>
                     )}
-                    
                     {rsvps.has(event.id) && (
-                      <Button
-                        onClick={() => handleRSVP(event.id)}
-                        variant="secondary"
-                      >
-                        {t("Cancel RSVP", "Cancelar Asistencia")}
-                      </Button>
+                      <Button onClick={() => handleRSVP(event.id)} variant="secondary">{t("cancelRsvp")}</Button>
                     )}
-                    
                     {declines.has(event.id) && (
-                      <Button
-                        onClick={() => handleUndecline(event.id)}
-                        variant="outline"
-                      >
-                        {t("Change Mind", "Cambiar de opinión")}
-                      </Button>
+                      <Button onClick={() => handleUndecline(event.id)} variant="outline">{t("changeMind")}</Button>
                     )}
-
-                    {/* Emoji Reaction */}
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-xl px-2">
-                          {reactions[event.id] || "😊"}
-                        </Button>
+                        <Button variant="ghost" size="sm" className="text-xl px-2">{reactions[event.id] || "😊"}</Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-2">
                         <div className="flex gap-1">
                           {EMOJI_OPTIONS.map((emoji) => (
-                            <button
-                              key={emoji}
-                              onClick={() => handleReaction(event.id, emoji)}
-                              className={`text-2xl p-1 hover:bg-muted rounded transition-colors ${
-                                reactions[event.id] === emoji ? "bg-primary/20" : ""
-                              }`}
-                            >
-                              {emoji}
-                            </button>
+                            <button key={emoji} onClick={() => handleReaction(event.id, emoji)} className={`text-2xl p-1 hover:bg-muted rounded transition-colors ${reactions[event.id] === emoji ? "bg-primary/20" : ""}`}>{emoji}</button>
                           ))}
                         </div>
                       </PopoverContent>
                     </Popover>
-                    
-                    {reactions[event.id] && (
-                      <span className="text-lg">{reactions[event.id]}</span>
-                    )}
+                    {reactions[event.id] && <span className="text-lg">{reactions[event.id]}</span>}
                   </div>
                 </div>
               </div>

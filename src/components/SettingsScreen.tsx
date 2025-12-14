@@ -23,162 +23,61 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadAvatar();
-  }, []);
+  useEffect(() => { loadAvatar(); }, []);
 
   const loadAvatar = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("avatar_url")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (profile?.avatar_url) {
-      setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
-    }
+    const { data: profile } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
+    if (profile?.avatar_url) setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
   };
 
   const handleShareApp = async () => {
-    const appUrl = "https://prayerandfire.app"; // Use your actual app URL
-    const shareText = "🔥 Check out Prayer & Fire! An app to strengthen your spiritual life. Join our community.";
-    
-    const shareData = {
-      title: "Prayer & Fire",
-      text: shareText,
-      url: appUrl,
-    };
-
-    // Check if Web Share API is available (works on mobile devices)
+    const appUrl = "https://prayerandfire.app";
+    const shareText = `🔥 ${t("shareApp")}`;
+    const shareData = { title: "Prayer & Fire", text: shareText, url: appUrl };
     if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share(shareData);
-        return; // Success, exit function
-      } catch (error: any) {
-        // If user cancelled, don't show fallback
-        if (error.name === 'AbortError') {
-          return;
-        }
-        // If share failed for other reason, continue to fallback
-      }
+      try { await navigator.share(shareData); return; } catch (error: any) { if (error.name === 'AbortError') return; }
     }
-    
-    // Fallback: Copy to clipboard (for desktop browsers)
     try {
       await navigator.clipboard.writeText(`${shareText}\n${appUrl}`);
-      toast({
-        title: "Link copied!",
-        description: "Share this link with your friends via WhatsApp or Messages",
-      });
-    } catch (err) {
-      toast({
-        title: "Share",
-        description: `Share this link: ${appUrl}`,
-      });
-    }
+      toast({ title: t("linkCopied"), description: t("shareWithFriends") });
+    } catch { toast({ title: t("share"), description: `${t("shareLink")}: ${appUrl}` }); }
   };
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
-      <h2 className="text-2xl font-bold text-foreground mb-6">
-        {t("settings")}
-      </h2>
-
-      {/* Profile Section */}
-      <button
-        onClick={onProfileClick}
-        className="w-full bg-card border border-border rounded-xl p-5 space-y-3 hover:bg-secondary transition-all duration-200 hover:scale-[1.02] active:scale-95 text-left"
-      >
+      <h2 className="text-2xl font-bold text-foreground mb-6">{t("settings")}</h2>
+      <button onClick={onProfileClick} className="w-full bg-card border border-border rounded-xl p-5 space-y-3 hover:bg-secondary transition-all duration-200 hover:scale-[1.02] active:scale-95 text-left">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                  crossOrigin="anonymous"
-                />
-              ) : (
-                <User className="w-5 h-5 text-primary" />
-              )}
+              {avatarUrl ? <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" crossOrigin="anonymous" /> : <User className="w-5 h-5 text-primary" />}
             </div>
-            <h3 className="text-lg font-semibold text-foreground">
-              {t("profile")}
-            </h3>
+            <h3 className="text-lg font-semibold text-foreground">{t("profile")}</h3>
           </div>
           <span className="text-xs text-muted-foreground">{t("edit")}</span>
         </div>
         <div className="space-y-2 text-sm">
-          <p className="text-muted-foreground">
-            <span className="text-foreground font-medium">Name:</span> {userName || "User"}
-          </p>
-          <p className="text-muted-foreground">
-            <span className="text-foreground font-medium">Email:</span> {userEmail}
-          </p>
+          <p className="text-muted-foreground"><span className="text-foreground font-medium">{t("name")}:</span> {userName || "User"}</p>
+          <p className="text-muted-foreground"><span className="text-foreground font-medium">Email:</span> {userEmail}</p>
         </div>
       </button>
-
-      {/* Quick Actions Grid */}
       <div className="grid grid-cols-2 gap-4">
-        {/* Push Notifications */}
-        <button 
-          onClick={onNotificationsClick}
-          className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95"
-        >
-          <Bell className="w-6 h-6 text-primary mb-2" />
-          <p className="text-sm font-medium text-foreground">{t("notifications")}</p>
-          <p className="text-xs text-muted-foreground mt-1">{t("view")}</p>
+        <button onClick={onNotificationsClick} className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
+          <Bell className="w-6 h-6 text-primary mb-2" /><p className="text-sm font-medium text-foreground">{t("notifications")}</p><p className="text-xs text-muted-foreground mt-1">{t("view")}</p>
         </button>
-
-        {/* Language Selection */}
-        <button 
-          onClick={setLanguage}
-          className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95"
-        >
-          <Languages className="w-6 h-6 text-primary mb-2" />
-          <p className="text-sm font-medium text-foreground">{t("language")}</p>
-          <p className="text-xs text-muted-foreground mt-1">{t("changeLanguage")}</p>
+        <button onClick={setLanguage} className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
+          <Languages className="w-6 h-6 text-primary mb-2" /><p className="text-sm font-medium text-foreground">{t("language")}</p><p className="text-xs text-muted-foreground mt-1">{t("changeLanguage")}</p>
         </button>
-
-        {/* Share App */}
-        <button 
-          onClick={handleShareApp}
-          className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95 col-span-2"
-        >
-          <Share2 className="w-6 h-6 text-primary mb-2" />
-          <p className="text-sm font-medium text-foreground">Share Prayer & Fire App</p>
-          <p className="text-xs text-muted-foreground mt-1">Invite your friends</p>
+        <button onClick={handleShareApp} className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95 col-span-2">
+          <Share2 className="w-6 h-6 text-primary mb-2" /><p className="text-sm font-medium text-foreground">{t("shareApp")}</p><p className="text-xs text-muted-foreground mt-1">{t("inviteFriends")}</p>
         </button>
       </div>
-
-
-      {/* Admin Panel Section */}
-      {loading ? (
-        <div className="text-muted-foreground text-center py-4">
-          Loading admin status...
-        </div>
-      ) : (
-        isAdmin && (
-          <button
-            onClick={onAdminClick}
-            className="w-full px-4 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-95 font-semibold shadow-lg shadow-primary/20"
-          >
-            {t("adminPanel")}
-          </button>
-        )
+      {loading ? <div className="text-muted-foreground text-center py-4">{t("loadingAdminStatus")}</div> : isAdmin && (
+        <button onClick={onAdminClick} className="w-full px-4 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-95 font-semibold shadow-lg shadow-primary/20">{t("adminPanel")}</button>
       )}
-
-      {/* Sign Out Button */}
-      <button
-        onClick={onSignOut}
-        className="mt-4 text-muted-foreground hover:text-destructive font-medium text-center w-full transition-colors"
-      >
-        {t("signout")}
-      </button>
+      <button onClick={onSignOut} className="mt-4 text-muted-foreground hover:text-destructive font-medium text-center w-full transition-colors">{t("signout")}</button>
     </div>
   );
 }
