@@ -78,6 +78,11 @@ export default {
             transform: "scale(0.9) translateX(-50%)" 
           },
         },
+        "vibrate": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-2px)" },
+          "20%, 40%, 60%, 80%": { transform: "translateX(2px)" },
+        },
         "accordion-down": {
           from: {
             height: "0",
@@ -97,6 +102,7 @@ export default {
       },
       animation: {
         "fire-pulse": "fire-pulse 1.5s ease-in-out infinite",
+        "vibrate": "vibrate 0.5s ease-in-out infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
