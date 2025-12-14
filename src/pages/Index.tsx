@@ -11,7 +11,7 @@ import { LanguagesScreen } from "@/components/LanguagesScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { Module2Screen } from "@/components/Module2Screen";
-import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap } from "lucide-react";
+import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +29,7 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [newEventsCount, setNewEventsCount] = useState(0);
   const { toast } = useToast();
 
   // Apply dark mode class to html element
@@ -112,6 +113,18 @@ export default function Index() {
     }
   };
 
+  const fetchUpcomingEvents = async () => {
+    const { data, error } = await supabase
+      .from("events")
+      .select("id")
+      .eq("is_active", true)
+      .gte("event_date", new Date().toISOString());
+
+    if (!error && data) {
+      setNewEventsCount(data.length);
+    }
+  };
+
   useEffect(() => {
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -129,12 +142,13 @@ export default function Index() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch unread notifications and subscribe to changes
+  // Fetch unread notifications and events, subscribe to changes
   useEffect(() => {
     if (user) {
       fetchUnreadNotifications();
+      fetchUpcomingEvents();
       
-      const channel = supabase
+      const notificationsChannel = supabase
         .channel('notifications-unread')
         .on(
           'postgres_changes',
@@ -149,8 +163,24 @@ export default function Index() {
         )
         .subscribe();
 
+      const eventsChannel = supabase
+        .channel('events-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'events'
+          },
+          () => {
+            fetchUpcomingEvents();
+          }
+        )
+        .subscribe();
+
       return () => {
-        supabase.removeChannel(channel);
+        supabase.removeChannel(notificationsChannel);
+        supabase.removeChannel(eventsChannel);
       };
     }
   }, [user]);
@@ -212,6 +242,20 @@ export default function Index() {
                 <Flame className="w-6 h-6 text-orange-500" />
                 <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
                   {unreadNotifications}
+                </span>
+              </button>
+            )}
+            {newEventsCount > 0 && page !== "events" && (
+              <button
+                onClick={() => {
+                  setNewEventsCount(0);
+                  setPage("events");
+                }}
+                className="relative animate-vibrate"
+              >
+                <Calendar className="w-6 h-6 text-orange-500" />
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {newEventsCount}
                 </span>
               </button>
             )}
