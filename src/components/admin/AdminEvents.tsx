@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, Edit, Calendar } from "lucide-react";
+import { Plus, Trash2, Edit, Calendar, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Table,
@@ -21,6 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Event {
   id: string;
@@ -30,6 +31,17 @@ interface Event {
   location?: string;
   is_online: boolean;
   is_active: boolean;
+  rsvp_count?: number;
+}
+
+interface Attendee {
+  id: string;
+  user_id: string;
+  created_at: string;
+  profile?: {
+    username: string;
+    email: string;
+  };
 }
 
 export function AdminEvents({ t }: { t: (en: string, es: string) => string }) {
@@ -43,6 +55,9 @@ export function AdminEvents({ t }: { t: (en: string, es: string) => string }) {
     location: "",
     is_online: false
   });
+  const [attendeesDialogOpen, setAttendeesDialogOpen] = useState(false);
+  const [selectedEventAttendees, setSelectedEventAttendees] = useState<Attendee[]>([]);
+  const [selectedEventTitle, setSelectedEventTitle] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -119,6 +134,38 @@ export function AdminEvents({ t }: { t: (en: string, es: string) => string }) {
     }
   };
 
+  const fetchAttendees = async (eventId: string, eventTitle: string) => {
+    setSelectedEventTitle(eventTitle);
+    
+    const { data: rsvps, error } = await supabase
+      .from("event_rsvps")
+      .select("id, user_id, created_at")
+      .eq("event_id", eventId);
+
+    if (error) {
+      toast({ title: "Error loading attendees", variant: "destructive" });
+      return;
+    }
+
+    // Fetch profiles for each RSVP
+    const attendeesWithProfiles: Attendee[] = [];
+    for (const rsvp of rsvps || []) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username, email")
+        .eq("id", rsvp.user_id)
+        .maybeSingle();
+      
+      attendeesWithProfiles.push({
+        ...rsvp,
+        profile: profile || undefined
+      });
+    }
+
+    setSelectedEventAttendees(attendeesWithProfiles);
+    setAttendeesDialogOpen(true);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -182,6 +229,7 @@ export function AdminEvents({ t }: { t: (en: string, es: string) => string }) {
               <TableHead>{t("Date", "Fecha")}</TableHead>
               <TableHead>{t("Location", "Ubicación")}</TableHead>
               <TableHead>{t("Type", "Tipo")}</TableHead>
+              <TableHead>{t("Attendees", "Asistentes")}</TableHead>
               <TableHead>{t("Actions", "Acciones")}</TableHead>
             </TableRow>
           </TableHeader>
@@ -198,6 +246,17 @@ export function AdminEvents({ t }: { t: (en: string, es: string) => string }) {
                 <TableCell>{event.location || "-"}</TableCell>
                 <TableCell>
                   {event.is_online ? t("Online", "En Línea") : t("In-Person", "Presencial")}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => fetchAttendees(event.id, event.title)}
+                    className="flex items-center gap-1"
+                  >
+                    <Users className="w-4 h-4" />
+                    {event.rsvp_count || 0}
+                  </Button>
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
@@ -232,6 +291,46 @@ export function AdminEvents({ t }: { t: (en: string, es: string) => string }) {
           </TableBody>
         </Table>
       </div>
+
+      {/* Attendees Dialog */}
+      <Dialog open={attendeesDialogOpen} onOpenChange={setAttendeesDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              {t("Attendees for", "Asistentes para")} {selectedEventTitle}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[400px]">
+            {selectedEventAttendees.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">
+                {t("No attendees yet", "Sin asistentes aún")}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {selectedEventAttendees.map((attendee, index) => (
+                  <div
+                    key={attendee.id}
+                    className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {attendee.profile?.username || t("Unknown User", "Usuario Desconocido")}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {attendee.profile?.email || "-"}
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      #{index + 1}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
