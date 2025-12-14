@@ -330,8 +330,8 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
               🔔 {t("notifications")}
             </h2>
             {unreadCount > 0 && (
-              <div className="relative">
-                <Flame className="w-6 h-6 text-orange-500 animate-pulse" />
+              <div className="relative animate-vibrate">
+                <Flame className="w-6 h-6 text-orange-500" />
                 <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
                   {unreadCount}
                 </span>
