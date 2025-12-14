@@ -267,7 +267,15 @@ export default function Index() {
             }}
           />
         )}
-        {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
+        {page === "notifications" && (
+          <NotificationsScreen 
+            t={t} 
+            onBack={() => {
+              fetchUnreadNotifications();
+              setPage("settings");
+            }} 
+          />
+        )}
       </div>
 
       {/* Bottom Navigation */}
