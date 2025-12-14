@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell, BellOff, ArrowLeft, Trash2 } from "lucide-react";
+import { Bell, BellOff, ArrowLeft, Trash2, MessageSquarePlus, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface NotificationsScreenProps {
   t: (key: string) => string;
@@ -23,6 +31,9 @@ interface Notification {
 export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [sendingFeedback, setSendingFeedback] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -160,6 +171,46 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     return type === "info" ? <Bell className="w-5 h-5" /> : <Bell className="w-5 h-5" />;
   };
 
+  const sendFeedback = async () => {
+    if (!feedbackMessage.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter your feedback",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingFeedback(true);
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Create a notification for admins with the feedback
+    const { error } = await supabase
+      .from("notifications")
+      .insert({
+        title: "User Feedback",
+        message: feedbackMessage.trim(),
+        type: "feedback",
+        user_id: null, // This makes it a global notification (admins will see it)
+      });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send feedback",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Thank you for your feedback!",
+      });
+      setFeedbackMessage("");
+      setFeedbackOpen(false);
+    }
+    setSendingFeedback(false);
+  };
+
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   if (loading) {
@@ -193,7 +244,44 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
             )}
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MessageSquarePlus className="w-4 h-4 mr-1" />
+                Feedback
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Suggestion or Feedback</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  We value your feedback! Share your suggestions or comments to help us improve.
+                </p>
+                <Textarea
+                  placeholder="Write your suggestion or feedback here..."
+                  value={feedbackMessage}
+                  onChange={(e) => setFeedbackMessage(e.target.value)}
+                  rows={4}
+                  maxLength={500}
+                />
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">
+                    {feedbackMessage.length}/500
+                  </span>
+                  <Button
+                    onClick={sendFeedback}
+                    disabled={sendingFeedback || !feedbackMessage.trim()}
+                  >
+                    <Send className="w-4 h-4 mr-1" />
+                    {sendingFeedback ? "Sending..." : "Send"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           {unreadCount > 0 && (
             <Button
               variant="outline"
