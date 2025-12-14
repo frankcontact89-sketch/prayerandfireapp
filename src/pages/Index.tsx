@@ -264,6 +264,7 @@ export default function Index() {
             t={t}
             language={language}
             setLanguage={setLanguage}
+            onBack={() => setPage("settings")}
             signOut={async () => {
               await supabase.auth.signOut();
               setUser(null);
