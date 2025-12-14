@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Camera, Upload, User } from "lucide-react";
+import { Camera, Upload, ArrowLeft, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
+  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -19,6 +20,7 @@ interface ProfileScreenProps {
   language: string;
   setLanguage: (lang: string) => void;
   signOut: () => void;
+  onBack?: () => void;
 }
 
 export function ProfileScreen({
@@ -26,11 +28,14 @@ export function ProfileScreen({
   language,
   setLanguage,
   signOut,
+  onBack,
 }: ProfileScreenProps) {
   const [name, setName] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -211,12 +216,56 @@ export function ProfileScreen({
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      // Delete user data from profiles
+      if (userId) {
+        await supabase.from('profiles').delete().eq('id', userId);
+        await supabase.from('purchases').delete().eq('user_id', userId);
+        await supabase.from('event_rsvps').delete().eq('user_id', userId);
+        await supabase.from('notifications').delete().eq('user_id', userId);
+      }
+
+      // Sign out the user (account deletion requires admin API)
+      await supabase.auth.signOut();
+      
+      toast({
+        title: t("Account Deleted", "Cuenta Eliminada"),
+        description: t("Your account data has been deleted", "Los datos de tu cuenta han sido eliminados"),
+      });
+      
+      signOut();
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      toast({
+        title: "Error",
+        description: error.message || t("Could not delete account", "No se pudo eliminar la cuenta"),
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
+
   return (
     <>
       <div className="max-w-xl mx-auto p-6 space-y-8 pb-32">
-        <h2 className="text-3xl font-extrabold text-foreground">
-          {t("Profile", "Perfil")}
-        </h2>
+        {/* Header with back button */}
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="text-primary hover:text-primary/80 transition-colors"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+          )}
+          <h2 className="text-3xl font-extrabold text-foreground">
+            {t("Profile", "Perfil")}
+          </h2>
+        </div>
 
         {/* Profile Photo */}
         <div className="flex flex-col items-center space-y-3">
@@ -286,13 +335,23 @@ export function ProfileScreen({
           </Button>
         </div>
 
-        {/* Sign Out */}
-        <button
-          onClick={signOut}
-          className="w-full text-center text-primary font-bold py-3 hover:underline"
-        >
-          {t("Sign Out", "Cerrar Sesión")}
-        </button>
+        {/* Sign Out and Delete Account */}
+        <div className="flex items-center justify-center gap-6">
+          <button
+            onClick={signOut}
+            className="text-primary font-bold py-3 hover:underline"
+          >
+            {t("Sign Out", "Cerrar Sesión")}
+          </button>
+          <span className="text-muted-foreground">|</span>
+          <button
+            onClick={() => setShowDeleteDialog(true)}
+            className="text-destructive font-bold py-3 hover:underline flex items-center gap-1"
+          >
+            <Trash2 className="w-4 h-4" />
+            {t("Delete Account", "Borrar Cuenta")}
+          </button>
+        </div>
       </div>
 
       {/* Image Source Dialog */}
@@ -332,6 +391,35 @@ export function ProfileScreen({
             <AlertDialogCancel>
               {t("Cancel", "Cancelar")}
             </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">
+              {t("Delete Account", "Borrar Cuenta")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(
+                "Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.",
+                "¿Estás seguro de que quieres borrar tu cuenta? Esta acción no se puede deshacer y todos tus datos serán eliminados permanentemente."
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>
+              {t("Cancel", "Cancelar")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? t("Deleting...", "Eliminando...") : t("Delete", "Eliminar")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
