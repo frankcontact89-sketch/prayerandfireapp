@@ -125,6 +125,15 @@ const checklist: ChecklistItem[] = [
     ],
   },
   {
+    category: "User Experience",
+    items: [
+      { name: "Welcome message flow (first-time users)", completed: true },
+      { name: "welcome_seen flag in user profile", completed: true },
+      { name: "Multilingual welcome (EN, ES, PT, FR, DE, IT)", completed: true },
+      { name: "Smooth fade-in animation", completed: true },
+    ],
+  },
+  {
     category: "App Store Preparation",
     items: [
       { name: "App name: Prayer & Fire", completed: true },
