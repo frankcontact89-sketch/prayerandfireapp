@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import prayerFireLogo from "@/assets/prayer-fire-logo.jpg";
 
 interface WelcomeScreenProps {
   t: (key: string) => string;
   onContinue: () => void;
-  onGiving: () => void;
+  onExploreStore: () => void;
 }
 
-export function WelcomeScreen({ t, onContinue, onGiving }: WelcomeScreenProps) {
+export function WelcomeScreen({ t, onContinue, onExploreStore }: WelcomeScreenProps) {
   const [isExiting, setIsExiting] = useState(false);
 
   const handleContinue = () => {
@@ -16,45 +15,58 @@ export function WelcomeScreen({ t, onContinue, onGiving }: WelcomeScreenProps) {
     setTimeout(onContinue, 300);
   };
 
+  const handleExploreStore = () => {
+    setIsExiting(true);
+    setTimeout(onExploreStore, 300);
+  };
+
   return (
     <div 
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-black p-6 text-center transition-opacity duration-300 ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-black p-10 text-center transition-opacity duration-300 ${
         isExiting ? "opacity-0" : "opacity-100 animate-fade-in"
       }`}
     >
       {/* Logo */}
       <div className="mb-6 animate-scale-in">
         <img 
-          src={prayerFireLogo} 
-          alt="Prayer & Fire Logo" 
-          className="w-40 h-40 rounded-full object-cover"
+          src="/logo.png" 
+          alt="Prayer & Fire" 
+          className="w-[140px] h-auto"
         />
       </div>
 
       {/* Title */}
-      <h1 className="text-[32px] font-bold text-white mb-1.5">
+      <h1 className="text-[34px] font-bold text-white mb-2.5">
         Prayer & Fire
       </h1>
 
       {/* Subtitle */}
-      <p className="text-lg font-semibold text-primary mb-3.5">
-        {t("welcome") || "Welcome"}
+      <p className="text-lg font-semibold text-primary mb-4">
+        {t("welcomeSubtitle") || "Welcome to Prayer & Fire."}
       </p>
 
       {/* Message */}
-      <p className="text-[15px] text-[#CCCCCC] max-w-[320px] mb-8 leading-relaxed">
-        {t("welcomeBody1")}
-        <br />
-        {t("welcomeBody2")}
+      <p className="text-[15px] text-white/85 max-w-[420px] mb-9 leading-relaxed">
+        {t("welcomeMessage") || "A global movement dedicated to prayer, faith, spiritual growth, and transformation through Jesus Christ."}
       </p>
 
-      {/* Enter Button */}
-      <Button 
-        onClick={handleContinue}
-        className="bg-primary hover:bg-primary/90 text-white rounded-[10px] px-7 py-3.5 text-base font-semibold"
-      >
-        {t("enterApp") || "Enter App"}
-      </Button>
+      {/* Buttons */}
+      <div className="flex flex-col gap-3.5 w-full max-w-[280px]">
+        <Button 
+          onClick={handleContinue}
+          className="bg-primary hover:bg-primary/90 text-black rounded-[10px] py-3.5 text-base font-semibold w-full"
+        >
+          {t("startJourney") || "Start Your Journey"}
+        </Button>
+        
+        <Button 
+          onClick={handleExploreStore}
+          variant="outline"
+          className="bg-transparent text-primary border-primary hover:bg-primary/10 rounded-[10px] py-3.5 text-base font-semibold w-full"
+        >
+          {t("exploreStore") || "Explore Store & Courses"}
+        </Button>
+      </div>
     </div>
   );
 }
