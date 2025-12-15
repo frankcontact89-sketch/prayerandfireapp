@@ -1,5 +1,5 @@
 import React from "react";
-import { Flame, Heart, BookOpen, Users, CreditCard, Mail, ExternalLink, Smartphone } from "lucide-react";
+import { Flame, Mail, CreditCard } from "lucide-react";
 import prayerFireLogo from "@/assets/prayer-fire-logo.jpg";
 
 interface LandingPageProps {
@@ -9,169 +9,88 @@ interface LandingPageProps {
 }
 
 export function LandingPage({ t, onOpenApp, onOpenLegal }: LandingPageProps) {
-  const features = [
-    { icon: Flame, title: "Prayer Content", description: "Daily prayers and devotionals to strengthen your faith" },
-    { icon: BookOpen, title: "Courses", description: "Spiritual growth courses on prayer, fasting, and more" },
-    { icon: Users, title: "Community", description: "Connect with a faith-based community" },
-    { icon: Heart, title: "Giving", description: "Support the ministry through secure donations" },
-  ];
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Hero Section */}
-      <header className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 to-transparent pointer-events-none" />
-        <div className="max-w-4xl mx-auto px-6 py-16 text-center relative z-10">
-          {/* Logo */}
-          <div className="mb-8 flex justify-center">
-            <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-primary shadow-lg shadow-primary/30">
-              <img src={prayerFireLogo} alt="Prayer & Fire" className="w-full h-full object-cover" />
-            </div>
-          </div>
-
-          {/* Title */}
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-orange-400 bg-clip-text text-transparent">
-            Prayer & Fire App
-          </h1>
-
-          {/* Description */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-            A faith-based mobile application for prayer, community, and spiritual growth. 
-            Equipping and empowering people through prayer, biblical teaching, and spiritual resources.
-          </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button
-              onClick={onOpenApp}
-              className="flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-xl font-semibold text-lg hover:bg-primary/90 transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg shadow-primary/30"
-            >
-              <ExternalLink className="w-5 h-5" />
-              Open Web App
-            </button>
-            <button
-              disabled
-              className="flex items-center gap-2 px-8 py-4 bg-card border border-border text-muted-foreground rounded-xl font-semibold text-lg cursor-not-allowed opacity-70"
-            >
-              <Smartphone className="w-5 h-5" />
-              App Store (Coming Soon)
-            </button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-black via-[hsl(20,40%,6%)] to-black flex flex-col">
+      {/* Hero Section - Centered */}
+      <main className="flex-1 flex flex-col justify-center items-center text-center px-6 py-16">
+        {/* Logo */}
+        <div className="flex justify-center items-center mb-6">
+          <img
+            src={prayerFireLogo}
+            alt="Prayer & Fire Logo"
+            className="w-32 h-32 object-contain rounded-full border-2 border-primary/30"
+          />
         </div>
-      </header>
 
-      {/* Features Section */}
-      <section className="py-16 px-6">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-12">What We Offer</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-all duration-300"
-              >
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground text-sm">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        {/* Title */}
+        <h1 className="text-3xl font-bold text-primary mb-4">
+          Prayer & Fire App
+        </h1>
 
-      {/* Payments Section */}
-      <section className="py-16 px-6 bg-card/50">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
-            <CreditCard className="w-8 h-8 text-primary" />
-          </div>
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Secure Payments</h2>
-          <p className="text-muted-foreground max-w-xl mx-auto mb-6">
-            All payments and donations are processed securely through Stripe. 
-            We do not store any credit card or banking information.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Donations are voluntary and tax-deductible where applicable.
-          </p>
-        </div>
-      </section>
+        {/* Description */}
+        <p className="text-muted-foreground max-w-md mb-8 leading-relaxed">
+          A faith-based mobile application for prayer, community, and spiritual growth.
+          Equipping and empowering people through prayer, biblical teaching, and spiritual resources.
+        </p>
 
-      {/* Contact Section */}
-      <section className="py-16 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-6">
-            <Mail className="w-8 h-8 text-primary" />
-          </div>
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Contact Us</h2>
-          <p className="text-muted-foreground mb-4">
-            Have questions or need support? We're here to help.
-          </p>
-          <a 
-            href="mailto:frankcontact89@gmail.com" 
-            className="text-primary hover:underline text-lg font-medium"
+        {/* Buttons */}
+        <div className="flex flex-col gap-4 w-full max-w-xs">
+          <button
+            onClick={onOpenApp}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
           >
-            frankcontact89@gmail.com
-          </a>
-        </div>
-      </section>
+            Open Web App
+          </button>
 
-      {/* Footer */}
-      <footer className="bg-card border-t border-border py-12 px-6">
-        <div className="max-w-4xl mx-auto">
+          <button
+            disabled
+            className="bg-card text-muted-foreground py-3 rounded-xl cursor-not-allowed border border-border"
+          >
+            App Store (Coming Soon)
+          </button>
+        </div>
+      </main>
+
+      {/* Compact Footer */}
+      <footer className="py-8 px-6 border-t border-border/20">
+        <div className="max-w-md mx-auto">
           {/* Legal Links */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8">
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mb-6 text-xs">
             <button
               onClick={() => onOpenLegal("privacy")}
-              className="text-muted-foreground hover:text-primary text-sm transition-colors text-left"
+              className="text-muted-foreground hover:text-primary transition-colors"
             >
               Privacy Policy
             </button>
             <button
               onClick={() => onOpenLegal("terms")}
-              className="text-muted-foreground hover:text-primary text-sm transition-colors text-left"
+              className="text-muted-foreground hover:text-primary transition-colors"
             >
               Terms of Service
             </button>
             <button
               onClick={() => onOpenLegal("refunds")}
-              className="text-muted-foreground hover:text-primary text-sm transition-colors text-left"
+              className="text-muted-foreground hover:text-primary transition-colors"
             >
               Refund Policy
             </button>
             <button
-              onClick={() => onOpenLegal("payments")}
-              className="text-muted-foreground hover:text-primary text-sm transition-colors text-left"
-            >
-              Payments & Subscriptions
-            </button>
-            <button
               onClick={() => onOpenLegal("support")}
-              className="text-muted-foreground hover:text-primary text-sm transition-colors text-left"
+              className="text-muted-foreground hover:text-primary transition-colors"
             >
-              Support & Contact
+              Support
             </button>
           </div>
 
-          {/* Divider */}
-          <div className="border-t border-border my-8" />
-
           {/* Footer Info */}
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-col items-center gap-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
-              <Flame className="w-5 h-5 text-primary" />
-              <span className="font-semibold text-foreground">Prayer & Fire App</span>
+              <Flame className="w-4 h-4 text-primary" />
+              <span className="font-medium text-foreground">Prayer & Fire</span>
             </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center">
-              <a href="mailto:frankcontact89@gmail.com" className="hover:text-primary transition-colors">
-                frankcontact89@gmail.com
-              </a>
-              <span className="hidden sm:inline">•</span>
-              <a href="https://prayerandfire.app" className="hover:text-primary transition-colors">
-                prayerandfire.app
-              </a>
-            </div>
+            <a href="mailto:frankcontact89@gmail.com" className="hover:text-primary transition-colors">
+              frankcontact89@gmail.com
+            </a>
             <p>© {new Date().getFullYear()} Prayer & Fire App</p>
           </div>
         </div>
