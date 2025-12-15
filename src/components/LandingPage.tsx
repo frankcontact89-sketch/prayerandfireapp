@@ -109,10 +109,10 @@ export function LandingPage({ t, onOpenApp, onOpenLegal }: LandingPageProps) {
             Have questions or need support? We're here to help.
           </p>
           <a 
-            href="mailto:support@prayerandfire.app" 
+            href="mailto:frankcontact89@gmail.com" 
             className="text-primary hover:underline text-lg font-medium"
           >
-            support@prayerandfire.app
+            frankcontact89@gmail.com
           </a>
         </div>
       </section>
@@ -164,12 +164,12 @@ export function LandingPage({ t, onOpenApp, onOpenLegal }: LandingPageProps) {
               <span className="font-semibold text-foreground">Prayer & Fire App</span>
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center">
-              <a href="mailto:support@prayerandfire.app" className="hover:text-primary transition-colors">
-                support@prayerandfire.app
+              <a href="mailto:frankcontact89@gmail.com" className="hover:text-primary transition-colors">
+                frankcontact89@gmail.com
               </a>
               <span className="hidden sm:inline">•</span>
-              <a href="https://prayerandfireapp.com" className="hover:text-primary transition-colors">
-                prayerandfireapp.com
+              <a href="https://prayerandfire.app" className="hover:text-primary transition-colors">
+                prayerandfire.app
               </a>
             </div>
             <p>© {new Date().getFullYear()} Prayer & Fire App</p>
