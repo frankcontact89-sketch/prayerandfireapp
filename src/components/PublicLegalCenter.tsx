@@ -86,7 +86,7 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
                 <li>Donations are non-refundable.</li>
                 <li>Subscriptions can be canceled at any time to stop future charges.</li>
                 <li>Refund requests are reviewed case-by-case if required by law.</li>
-                <li>Support contact: <a href="mailto:support@prayerandfire.app" className="text-primary hover:underline">support@prayerandfire.app</a></li>
+                <li>Support contact: <a href="mailto:frankcontact89@gmail.com" className="text-primary hover:underline">frankcontact89@gmail.com</a></li>
               </ul>
             </AccordionContent>
           </AccordionItem>
@@ -109,8 +109,8 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
                 <li>Data is used only to operate and improve the app.</li>
                 <li>Users may request data deletion.</li>
                 <li>App not intended for children under 13.</li>
-                <li>Contact: <a href="mailto:support@prayerandfire.app" className="text-primary hover:underline">support@prayerandfire.app</a></li>
-                <li>Website: <a href="https://prayerandfireapp.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfireapp.com</a></li>
+                <li>Contact: <a href="mailto:frankcontact89@gmail.com" className="text-primary hover:underline">frankcontact89@gmail.com</a></li>
+                <li>Website: <a href="https://prayerandfire.app" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.app</a></li>
               </ul>
             </AccordionContent>
           </AccordionItem>
@@ -150,8 +150,8 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
             </AccordionTrigger>
             <AccordionContent className="px-5 pb-5">
               <div className="space-y-3 text-muted-foreground text-sm leading-relaxed">
-                <p><strong className="text-foreground">Email:</strong> <a href="mailto:support@prayerandfire.app" className="text-primary hover:underline">support@prayerandfire.app</a></p>
-                <p><strong className="text-foreground">Website:</strong> <a href="https://prayerandfireapp.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfireapp.com</a></p>
+                <p><strong className="text-foreground">Email:</strong> <a href="mailto:frankcontact89@gmail.com" className="text-primary hover:underline">frankcontact89@gmail.com</a></p>
+                <p><strong className="text-foreground">Website:</strong> <a href="https://prayerandfire.app" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.app</a></p>
                 <p><strong className="text-foreground">Response time:</strong> 24–48 business hours</p>
               </div>
             </AccordionContent>
@@ -162,9 +162,9 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
         <div className="text-center text-sm text-muted-foreground pt-8 border-t border-border mt-8">
           <p>© {new Date().getFullYear()} Prayer & Fire App</p>
           <p className="mt-2">
-            <a href="mailto:support@prayerandfire.app" className="text-primary hover:underline">support@prayerandfire.app</a>
+            <a href="mailto:frankcontact89@gmail.com" className="text-primary hover:underline">frankcontact89@gmail.com</a>
             {" • "}
-            <a href="https://prayerandfireapp.com" className="text-primary hover:underline">prayerandfireapp.com</a>
+            <a href="https://prayerandfire.app" className="text-primary hover:underline">prayerandfire.app</a>
           </p>
         </div>
       </div>

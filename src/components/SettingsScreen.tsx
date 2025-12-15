@@ -35,7 +35,7 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
 
   const handleShareApp = async () => {
     const appUrl = "https://prayerandfire.app";
-    const shareText = `🔥 ${t("shareApp")}`;
+    const shareText = `🔥 Check out the Prayer & Fire App - A faith-based app for prayer, community, and spiritual growth!`;
     const shareData = { title: "Prayer & Fire", text: shareText, url: appUrl };
     if (typeof navigator.share === 'function') {
       try { await navigator.share(shareData); return; } catch (error: any) { if (error.name === 'AbortError') return; }

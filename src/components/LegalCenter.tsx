@@ -85,7 +85,7 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
               <li>{t("refundNonRefundable")}</li>
               <li>{t("refundCancelAnytime")}</li>
               <li>{t("refundCaseByCase")}</li>
-              <li>{t("refundContact")}: <a href="mailto:support@prayerandfire.app" className="text-primary hover:underline">support@prayerandfire.app</a></li>
+              <li>{t("refundContact")}: <a href="mailto:frankcontact89@gmail.com" className="text-primary hover:underline">frankcontact89@gmail.com</a></li>
             </ul>
           </AccordionContent>
         </AccordionItem>
@@ -108,7 +108,7 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
               <li>{t("privacyDataUse")}</li>
               <li>{t("privacyDeletion")}</li>
               <li>{t("privacyChildren")}</li>
-              <li>{t("contact")}: <a href="mailto:support@prayerandfire.app" className="text-primary hover:underline">support@prayerandfire.app</a></li>
+              <li>{t("contact")}: <a href="mailto:frankcontact89@gmail.com" className="text-primary hover:underline">frankcontact89@gmail.com</a></li>
               <li>{t("website")}: <a href="https://prayerandfire.app" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.app</a></li>
             </ul>
           </AccordionContent>
@@ -149,7 +149,7 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
           </AccordionTrigger>
           <AccordionContent className="px-5 pb-5">
             <div className="space-y-3 text-muted-foreground text-sm leading-relaxed">
-              <p><strong className="text-foreground">Email:</strong> <a href="mailto:support@prayerandfire.app" className="text-primary hover:underline">support@prayerandfire.app</a></p>
+              <p><strong className="text-foreground">Email:</strong> <a href="mailto:frankcontact89@gmail.com" className="text-primary hover:underline">frankcontact89@gmail.com</a></p>
               <p><strong className="text-foreground">{t("website")}:</strong> <a href="https://prayerandfire.app" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.app</a></p>
               <p><strong className="text-foreground">{t("responseTime")}:</strong> {t("responseTimeValue")}</p>
             </div>
