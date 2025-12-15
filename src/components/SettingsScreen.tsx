@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Bell, User, Languages, Share2 } from "lucide-react";
+import { Bell, User, Languages, Share2, Scale } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,12 +13,13 @@ interface SettingsScreenProps {
   onAdminClick: () => void;
   onProfileClick: () => void;
   onNotificationsClick: () => void;
+  onLegalClick: () => void;
   onSignOut: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
 }
 
-export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onNotificationsClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
+export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onNotificationsClick, onLegalClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
   const { isAdmin, loading } = useUserRole();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { toast } = useToast();
@@ -70,8 +71,11 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
         <button onClick={setLanguage} className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
           <Languages className="w-6 h-6 text-primary mb-2" /><p className="text-sm font-medium text-foreground">{t("language")}</p><p className="text-xs text-muted-foreground mt-1">{t("changeLanguage")}</p>
         </button>
-        <button onClick={handleShareApp} className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95 col-span-2">
+        <button onClick={handleShareApp} className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
           <Share2 className="w-6 h-6 text-primary mb-2" /><p className="text-sm font-medium text-foreground">{t("shareApp")}</p><p className="text-xs text-muted-foreground mt-1">{t("inviteFriends")}</p>
+        </button>
+        <button onClick={onLegalClick} className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
+          <Scale className="w-6 h-6 text-primary mb-2" /><p className="text-sm font-medium text-foreground">{t("legalPolicies")}</p><p className="text-xs text-muted-foreground mt-1">{t("view")}</p>
         </button>
       </div>
       {loading ? <div className="text-muted-foreground text-center py-4">{t("loadingAdminStatus")}</div> : isAdmin && (

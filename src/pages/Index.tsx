@@ -11,6 +11,7 @@ import { LanguagesScreen } from "@/components/LanguagesScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { Module2Screen } from "@/components/Module2Screen";
+import { LegalCenter } from "@/components/LegalCenter";
 import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
@@ -292,6 +293,7 @@ export default function Index() {
             onAdminClick={() => setPage("admin")}
             onProfileClick={() => setPage("profile")}
             onNotificationsClick={() => setPage("notifications")}
+            onLegalClick={() => setPage("legal")}
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
             onSignOut={async () => {
@@ -300,6 +302,7 @@ export default function Index() {
             }}
           />
         )}
+        {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
         {page === "social" && <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />}
         {page === "events" && <EventsScreen t={t} />}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
