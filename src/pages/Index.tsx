@@ -14,6 +14,7 @@ import { Module2Screen } from "@/components/Module2Screen";
 import { LegalCenter } from "@/components/LegalCenter";
 import { LandingPage } from "@/components/LandingPage";
 import { PublicLegalCenter } from "@/components/PublicLegalCenter";
+import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
@@ -24,6 +25,7 @@ export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState("home");
   const [showLanding, setShowLanding] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [publicLegalSection, setPublicLegalSection] = useState<string | undefined>(undefined);
   const [showLanguages, setShowLanguages] = useState(false);
   const [language, setLanguage] = useState("en");
@@ -152,6 +154,7 @@ export default function Index() {
     if (user) {
       fetchUnreadNotifications();
       fetchUpcomingEvents();
+      checkWelcomeSeen();
       
       const notificationsChannel = supabase
         .channel('notifications-unread')
@@ -190,6 +193,45 @@ export default function Index() {
     }
   }, [user]);
 
+  // Check if user has seen welcome screen
+  const checkWelcomeSeen = async () => {
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("welcome_seen")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+
+    if (profile && !profile.welcome_seen) {
+      setShowWelcome(true);
+    }
+  };
+
+  // Mark welcome as seen
+  const markWelcomeSeen = async () => {
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser) return;
+
+    await supabase
+      .from("profiles")
+      .update({ welcome_seen: true })
+      .eq("id", currentUser.id);
+
+    setShowWelcome(false);
+  };
+
+  const handleWelcomeContinue = () => {
+    markWelcomeSeen();
+    setPage("home");
+  };
+
+  const handleWelcomeGiving = () => {
+    markWelcomeSeen();
+    setPage("giving");
+  };
+
   // Show public legal center if accessed from landing
   if (showLanding && publicLegalSection !== undefined) {
     return (
@@ -226,6 +268,17 @@ export default function Index() {
         t={t}
         onShowLanguages={() => {}}
         currentLanguage={language}
+      />
+    );
+  }
+
+  // Show welcome screen for first-time users
+  if (showWelcome) {
+    return (
+      <WelcomeScreen
+        t={t}
+        onContinue={handleWelcomeContinue}
+        onGiving={handleWelcomeGiving}
       />
     );
   }
