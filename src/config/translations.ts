@@ -1,4 +1,4 @@
-export const translations = {
+export const translations: Record<string, Record<string, string>> = {
   en: {
     title: "Prayer & Fire",
     appName: "Prayer & Fire",
@@ -254,6 +254,17 @@ export const translations = {
     supportContact: "Support & Contact",
     responseTime: "Response time",
     responseTimeValue: "24–48 business hours",
+    // Store new keys
+    searchProducts: "Search products...",
+    all: "All",
+    storeComingSoon: "Store is coming soon",
+    preparingProducts: "We're preparing products, books, and courses for Prayer & Fire.",
+    checkBackSoon: "Check back soon — or support the mission in the Giving section.",
+    goToGiving: "Go to Giving",
+    viewCourses: "View Courses",
+    tipProductsAutoShow: "Tip: When you add products, this page will automatically show them here.",
+    noProductsFound: "No products found for your search.",
+    descriptionComingSoon: "Description coming soon.",
   },
   es: {
     title: "Prayer & Fire",
@@ -510,6 +521,17 @@ export const translations = {
     supportContact: "Soporte y Contacto",
     responseTime: "Tiempo de respuesta",
     responseTimeValue: "24–48 horas hábiles",
+    // Store new keys
+    searchProducts: "Buscar productos...",
+    all: "Todos",
+    storeComingSoon: "La tienda está llegando pronto",
+    preparingProducts: "Estamos preparando productos, libros y cursos para Prayer & Fire.",
+    checkBackSoon: "Vuelve pronto — o apoya la misión en la sección de Donaciones.",
+    goToGiving: "Ir a Donaciones",
+    viewCourses: "Ver Cursos",
+    tipProductsAutoShow: "Consejo: Cuando agregues productos, esta página los mostrará automáticamente aquí.",
+    noProductsFound: "No se encontraron productos para tu búsqueda.",
+    descriptionComingSoon: "Descripción próximamente.",
   },
   fr: {
     title: "Prayer & Fire",
@@ -766,6 +788,17 @@ export const translations = {
     supportContact: "Support et Contact",
     responseTime: "Temps de réponse",
     responseTimeValue: "24-48 heures ouvrables",
+    // Store new keys
+    searchProducts: "Rechercher des produits...",
+    all: "Tous",
+    storeComingSoon: "La boutique arrive bientôt",
+    preparingProducts: "Nous préparons des produits, livres et cours pour Prayer & Fire.",
+    checkBackSoon: "Revenez bientôt — ou soutenez la mission dans la section Dons.",
+    goToGiving: "Aller aux Dons",
+    viewCourses: "Voir les Cours",
+    tipProductsAutoShow: "Conseil: Lorsque vous ajoutez des produits, cette page les affichera automatiquement ici.",
+    noProductsFound: "Aucun produit trouvé pour votre recherche.",
+    descriptionComingSoon: "Description à venir.",
   },
   pt: {
     title: "Prayer & Fire",
@@ -1022,6 +1055,17 @@ export const translations = {
     responseTimeValue: "24-48 horas úteis",
     whatsappContacts: "Contatos do WhatsApp",
     couldNotLoadLinks: "Não foi possível carregar os links",
+    // Store new keys
+    searchProducts: "Buscar produtos...",
+    all: "Todos",
+    storeComingSoon: "A loja está chegando em breve",
+    preparingProducts: "Estamos preparando produtos, livros e cursos para Prayer & Fire.",
+    checkBackSoon: "Volte em breve — ou apoie a missão na seção de Doações.",
+    goToGiving: "Ir para Doações",
+    viewCourses: "Ver Cursos",
+    tipProductsAutoShow: "Dica: Quando você adicionar produtos, esta página os mostrará automaticamente aqui.",
+    noProductsFound: "Nenhum produto encontrado para sua busca.",
+    descriptionComingSoon: "Descrição em breve.",
   },
   de: {
     title: "Prayer & Fire",
@@ -1278,6 +1322,17 @@ export const translations = {
     shareLink: "Teilen Sie diesen Link",
     whatsappContacts: "WhatsApp-Kontakte",
     couldNotLoadLinks: "Links konnten nicht geladen werden",
+    // Store new keys
+    searchProducts: "Produkte suchen...",
+    all: "Alle",
+    storeComingSoon: "Der Shop kommt bald",
+    preparingProducts: "Wir bereiten Produkte, Bücher und Kurse für Prayer & Fire vor.",
+    checkBackSoon: "Schau bald wieder vorbei — oder unterstütze die Mission im Spenden-Bereich.",
+    goToGiving: "Zu Spenden gehen",
+    viewCourses: "Kurse ansehen",
+    tipProductsAutoShow: "Tipp: Wenn du Produkte hinzufügst, werden sie automatisch hier angezeigt.",
+    noProductsFound: "Keine Produkte für deine Suche gefunden.",
+    descriptionComingSoon: "Beschreibung folgt.",
   },
   it: {
     title: "Prayer & Fire",
@@ -1534,6 +1589,17 @@ export const translations = {
     supportContact: "Supporto e Contatto",
     responseTime: "Tempo di risposta",
     responseTimeValue: "24-48 ore lavorative",
+    // Store new keys
+    searchProducts: "Cerca prodotti...",
+    all: "Tutti",
+    storeComingSoon: "Il negozio arriva presto",
+    preparingProducts: "Stiamo preparando prodotti, libri e corsi per Prayer & Fire.",
+    checkBackSoon: "Torna presto — o sostieni la missione nella sezione Donazioni.",
+    goToGiving: "Vai alle Donazioni",
+    viewCourses: "Vedi Corsi",
+    tipProductsAutoShow: "Suggerimento: Quando aggiungi prodotti, questa pagina li mostrerà automaticamente qui.",
+    noProductsFound: "Nessun prodotto trovato per la tua ricerca.",
+    descriptionComingSoon: "Descrizione in arrivo.",
   },
 };
 
