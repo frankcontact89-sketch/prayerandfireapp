@@ -12,6 +12,8 @@ import { ProfileScreen } from "@/components/ProfileScreen";
 import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { Module2Screen } from "@/components/Module2Screen";
 import { LegalCenter } from "@/components/LegalCenter";
+import { LandingPage } from "@/components/LandingPage";
+import { PublicLegalCenter } from "@/components/PublicLegalCenter";
 import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
@@ -21,6 +23,8 @@ import { FloatingFireButton } from "@/components/FloatingFireButton";
 export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState("home");
+  const [showLanding, setShowLanding] = useState(true);
+  const [publicLegalSection, setPublicLegalSection] = useState<string | undefined>(undefined);
   const [showLanguages, setShowLanguages] = useState(false);
   const [language, setLanguage] = useState("en");
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -185,6 +189,27 @@ export default function Index() {
       };
     }
   }, [user]);
+
+  // Show public legal center if accessed from landing
+  if (showLanding && publicLegalSection !== undefined) {
+    return (
+      <PublicLegalCenter 
+        onBack={() => setPublicLegalSection(undefined)} 
+        defaultOpen={publicLegalSection || undefined}
+      />
+    );
+  }
+
+  // Show public landing page first (no login required)
+  if (showLanding && !user) {
+    return (
+      <LandingPage
+        t={t}
+        onOpenApp={() => setShowLanding(false)}
+        onOpenLegal={(section) => setPublicLegalSection(section || "")}
+      />
+    );
+  }
 
   if (loading) {
     return (
