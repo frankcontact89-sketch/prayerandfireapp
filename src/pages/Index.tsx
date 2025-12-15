@@ -227,9 +227,9 @@ export default function Index() {
     setPage("home");
   };
 
-  const handleWelcomeGiving = () => {
+  const handleWelcomeExploreStore = () => {
     markWelcomeSeen();
-    setPage("giving");
+    setPage("shopping");
   };
 
   // Show public legal center if accessed from landing
@@ -278,7 +278,7 @@ export default function Index() {
       <WelcomeScreen
         t={t}
         onContinue={handleWelcomeContinue}
-        onGiving={handleWelcomeGiving}
+        onExploreStore={handleWelcomeExploreStore}
       />
     );
   }
