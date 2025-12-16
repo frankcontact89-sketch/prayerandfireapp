@@ -17,12 +17,15 @@ export function LandingPage({ t, onOpenApp, onOpenLegal }: LandingPageProps) {
         <div className="flex justify-center items-center mb-6">
           <div
             className="w-28 h-28 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: "#000000" }}
+            style={{
+              backgroundColor: "#000000",
+              boxShadow: "0 0 40px rgba(0,0,0,0.8)",
+            }}
           >
             <img
               src={logo}
               alt="Prayer & Fire Logo"
-              className="w-24 h-24 object-contain"
+              className="w-24 h-24 object-contain mix-blend-multiply"
             />
           </div>
         </div>
