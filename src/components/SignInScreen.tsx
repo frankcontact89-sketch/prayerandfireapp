@@ -126,20 +126,35 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         if (error) throw error;
 
         if (data.user) {
-          // Create profile
-          await supabase.from("profiles").insert([
+          // Create profile for the new user
+          const { error: profileError } = await supabase.from("profiles").insert([
             {
               id: data.user.id,
               email: data.user.email,
               username: email.split("@")[0],
+              welcome_seen: false,
             },
           ]);
 
-          toast({
-            title: "Account created!",
-            description: "You can now sign in",
-          });
-          setIsSignUp(false);
+          if (profileError) {
+            console.error("Profile creation error:", profileError);
+          }
+
+          // If session exists (auto-confirm enabled), user is logged in automatically
+          if (data.session) {
+            setUser(data.user);
+            toast({
+              title: "Welcome!",
+              description: "Account created successfully",
+            });
+          } else {
+            // If no session, email confirmation is required
+            toast({
+              title: "Account created!",
+              description: "Please check your email to confirm your account",
+            });
+            setIsSignUp(false);
+          }
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
