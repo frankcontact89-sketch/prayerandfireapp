@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { Calendar, MapPin, Users, Video, XCircle } from "lucide-react";
+import { Calendar, MapPin, Users, Video, XCircle, CalendarPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Popover,
@@ -157,6 +157,31 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
     toast({ title: emoji, description: t("reactionAdded") });
   };
 
+  const addToCalendar = (event: Event) => {
+    const startDate = new Date(event.event_date);
+    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // Default 2 hours duration
+    
+    const formatDate = (date: Date) => {
+      return date.toISOString().replace(/-|:|\.\d+/g, '').slice(0, 15) + 'Z';
+    };
+
+    const title = encodeURIComponent(event.title);
+    const details = encodeURIComponent(event.description || '');
+    const location = encodeURIComponent(event.is_online ? 'Online Event' : (event.location || ''));
+    const start = formatDate(startDate);
+    const end = formatDate(endDate);
+
+    // Google Calendar URL
+    const googleCalendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+    
+    window.open(googleCalendarUrl, '_blank');
+    
+    toast({
+      title: t("addedToCalendar"),
+      description: t("calendarOpened"),
+    });
+  };
+
   if (loading) {
     return <div className="flex justify-center p-6">{t("loading")}</div>;
   }
@@ -222,6 +247,10 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
                     {declines.has(event.id) && (
                       <Button onClick={() => handleUndecline(event.id)} variant="outline">{t("changeMind")}</Button>
                     )}
+                    <Button onClick={() => addToCalendar(event)} variant="outline" size="sm" className="flex items-center gap-1">
+                      <CalendarPlus className="w-4 h-4" />
+                      {t("addToCalendar")}
+                    </Button>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="ghost" size="sm" className="text-xl px-2">{reactions[event.id] || "😊"}</Button>
