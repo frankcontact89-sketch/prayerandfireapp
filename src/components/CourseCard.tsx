@@ -54,13 +54,24 @@ export default function CourseCard({ course, onOpenDetails }: Props) {
       </div>
 
       <div className="mt-5">
-        <button
-          type="button"
-          onClick={() => onOpenDetails(course)}
-          className="w-full rounded-xl border border-primary/40 bg-transparent px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/10"
-        >
-          View
-        </button>
+        {course.checkoutUrl ? (
+          <a
+            href={course.checkoutUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full rounded-xl bg-primary px-4 py-3 text-center text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            Buy Now
+          </a>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="w-full rounded-xl bg-muted px-4 py-3 text-sm font-semibold text-muted-foreground cursor-not-allowed"
+          >
+            Coming Soon
+          </button>
+        )}
       </div>
     </div>
   );
