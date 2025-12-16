@@ -268,6 +268,9 @@ export const translations: Record<string, Record<string, string>> = {
     noCoursesTitle: "No Courses Yet",
     noCoursesDescription: "You haven't purchased any courses yet. Visit the Store to explore our available courses.",
     goToStore: "Go to Store",
+    addToCalendar: "Add to Calendar",
+    addedToCalendar: "Opening Calendar",
+    calendarOpened: "Add the event to your calendar",
   },
   es: {
     title: "Prayer & Fire",
@@ -538,6 +541,9 @@ export const translations: Record<string, Record<string, string>> = {
     noCoursesTitle: "Sin Cursos Aún",
     noCoursesDescription: "Aún no has comprado ningún curso. Visita la Tienda para explorar nuestros cursos disponibles.",
     goToStore: "Ir a la Tienda",
+    addToCalendar: "Agregar al Calendario",
+    addedToCalendar: "Abriendo Calendario",
+    calendarOpened: "Agrega el evento a tu calendario",
   },
   fr: {
     title: "Prayer & Fire",
@@ -808,6 +814,9 @@ export const translations: Record<string, Record<string, string>> = {
     noCoursesTitle: "Pas Encore de Cours",
     noCoursesDescription: "Vous n'avez pas encore acheté de cours. Visitez la Boutique pour explorer nos cours disponibles.",
     goToStore: "Aller à la Boutique",
+    addToCalendar: "Ajouter au Calendrier",
+    addedToCalendar: "Ouverture du Calendrier",
+    calendarOpened: "Ajoutez l'événement à votre calendrier",
   },
   pt: {
     title: "Prayer & Fire",
@@ -1078,6 +1087,9 @@ export const translations: Record<string, Record<string, string>> = {
     noCoursesTitle: "Sem Cursos Ainda",
     noCoursesDescription: "Você ainda não comprou nenhum curso. Visite a Loja para explorar nossos cursos disponíveis.",
     goToStore: "Ir para a Loja",
+    addToCalendar: "Adicionar ao Calendário",
+    addedToCalendar: "Abrindo Calendário",
+    calendarOpened: "Adicione o evento ao seu calendário",
   },
   de: {
     title: "Prayer & Fire",
@@ -1348,6 +1360,9 @@ export const translations: Record<string, Record<string, string>> = {
     noCoursesTitle: "Noch Keine Kurse",
     noCoursesDescription: "Du hast noch keine Kurse gekauft. Besuche den Shop, um unsere verfügbaren Kurse zu erkunden.",
     goToStore: "Zum Shop gehen",
+    addToCalendar: "Zum Kalender hinzufügen",
+    addedToCalendar: "Kalender wird geöffnet",
+    calendarOpened: "Füge das Event deinem Kalender hinzu",
   },
   it: {
     title: "Prayer & Fire",
@@ -1618,6 +1633,9 @@ export const translations: Record<string, Record<string, string>> = {
     noCoursesTitle: "Nessun Corso Ancora",
     noCoursesDescription: "Non hai ancora acquistato nessun corso. Visita il Negozio per esplorare i nostri corsi disponibili.",
     goToStore: "Vai al Negozio",
+    addToCalendar: "Aggiungi al Calendario",
+    addedToCalendar: "Apertura Calendario",
+    calendarOpened: "Aggiungi l'evento al tuo calendario",
   },
 };
 
