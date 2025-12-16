@@ -17,8 +17,6 @@ type Props = {
 };
 
 export default function CourseCard({ course, onOpenDetails }: Props) {
-  const hasCheckout = !!course.checkoutUrl;
-
   return (
     <div className="rounded-2xl border border-border/10 bg-card/5 p-4 shadow-xl">
       <div className="flex items-start justify-between gap-3">
@@ -55,34 +53,14 @@ export default function CourseCard({ course, onOpenDetails }: Props) {
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3">
+      <div className="mt-5">
         <button
           type="button"
           onClick={() => onOpenDetails(course)}
-          className="rounded-xl border border-primary/40 bg-transparent px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/10"
+          className="w-full rounded-xl border border-primary/40 bg-transparent px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/10"
         >
           View
         </button>
-
-        {hasCheckout ? (
-          <a
-            href={course.checkoutUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-          >
-            Buy Now
-          </a>
-        ) : (
-          <button
-            type="button"
-            disabled
-            className="rounded-xl bg-muted/10 px-4 py-3 text-sm font-semibold text-muted-foreground/40"
-            title="Add a Stripe checkout link to enable purchases"
-          >
-            Buy Now
-          </button>
-        )}
       </div>
     </div>
   );
