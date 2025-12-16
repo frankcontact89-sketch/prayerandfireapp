@@ -23,9 +23,11 @@ import { FloatingFireButton } from "@/components/FloatingFireButton";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
+  const [session, setSession] = useState<any>(null);
   const [page, setPage] = useState("home");
   const [showLanding, setShowLanding] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeChecked, setWelcomeChecked] = useState(false);
   const [publicLegalSection, setPublicLegalSection] = useState<string | undefined>(undefined);
   const [showLanguages, setShowLanguages] = useState(false);
   const [language, setLanguage] = useState("en");
@@ -133,17 +135,25 @@ export default function Index() {
   };
 
   useEffect(() => {
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
+    // Set up auth state listener FIRST
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      
+      // Reset welcome check when user signs out
+      if (event === 'SIGNED_OUT') {
+        setShowWelcome(false);
+        setWelcomeChecked(false);
+      }
+    });
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      setSession(existingSession);
+      setUser(existingSession?.user ?? null);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -196,7 +206,10 @@ export default function Index() {
   // Check if user has seen welcome screen
   const checkWelcomeSeen = async () => {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
-    if (!currentUser) return;
+    if (!currentUser) {
+      setWelcomeChecked(true);
+      return;
+    }
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -204,9 +217,13 @@ export default function Index() {
       .eq("id", currentUser.id)
       .maybeSingle();
 
-    if (profile && !profile.welcome_seen) {
+    // Only show welcome if profile exists and welcome_seen is false
+    if (profile && profile.welcome_seen === false) {
       setShowWelcome(true);
+    } else {
+      setShowWelcome(false);
     }
+    setWelcomeChecked(true);
   };
 
   // Mark welcome as seen
@@ -272,8 +289,8 @@ export default function Index() {
     );
   }
 
-  // Show welcome screen for first-time users
-  if (showWelcome) {
+  // Show welcome screen ONLY for first-time users after check completes
+  if (welcomeChecked && showWelcome) {
     return (
       <WelcomeScreen
         t={t}
