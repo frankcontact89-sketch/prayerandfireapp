@@ -39,6 +39,7 @@ export default function Index() {
   const [userName, setUserName] = useState("");
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [newEventsCount, setNewEventsCount] = useState(0);
+  const [hasCoursesAccess, setHasCoursesAccess] = useState(false);
   const { toast } = useToast();
 
   // Apply dark mode class to html element
@@ -134,6 +135,27 @@ export default function Index() {
     }
   };
 
+  const checkCoursesAccess = async () => {
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser) {
+      setHasCoursesAccess(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("purchases")
+      .select(`id, products!inner(name)`)
+      .eq("user_id", currentUser.id)
+      .eq("products.name", "Cursos Prayer & Fire")
+      .limit(1);
+
+    if (!error && data && data.length > 0) {
+      setHasCoursesAccess(true);
+    } else {
+      setHasCoursesAccess(false);
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const {
@@ -165,6 +187,7 @@ export default function Index() {
       fetchUnreadNotifications();
       fetchUpcomingEvents();
       checkWelcomeSeen();
+      checkCoursesAccess();
       
       const notificationsChannel = supabase
         .channel('notifications-unread')
@@ -443,14 +466,16 @@ export default function Index() {
           >
             <Heart className="w-6 h-6" />
           </button>
-          <button
-            onClick={() => setPage("module2")}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              page === "module2" ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <GraduationCap className="w-6 h-6" />
-          </button>
+          {hasCoursesAccess && (
+            <button
+              onClick={() => setPage("module2")}
+              className={`flex flex-col items-center gap-1 transition-colors ${
+                page === "module2" ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <GraduationCap className="w-6 h-6" />
+            </button>
+          )}
           <button
             onClick={() => setPage("shopping")}
             className={`flex flex-col items-center gap-1 transition-colors ${
