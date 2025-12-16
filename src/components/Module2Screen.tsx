@@ -5,9 +5,9 @@ import { GraduationCap, BookOpen, Video, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
 
-interface Module2ScreenProps { t: (key: string) => string; onBack: () => void; }
+interface Module2ScreenProps { t: (key: string) => string; onBack: () => void; onGoToStore?: () => void; }
 
-export function Module2Screen({ t, onBack }: Module2ScreenProps) {
+export function Module2Screen({ t, onBack, onGoToStore }: Module2ScreenProps) {
   const [hasPurchased, setHasPurchased] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -36,8 +36,15 @@ export function Module2Screen({ t, onBack }: Module2ScreenProps) {
               <h1 className="text-2xl font-bold text-foreground">{t("myCourses")}</h1>
             </div>
           </div>
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">{t("noCoursesYet")}</p>
+          <div className="text-center py-20 space-y-6">
+            <GraduationCap className="w-16 h-16 text-muted-foreground mx-auto opacity-50" />
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-foreground">{t("noCoursesTitle")}</h2>
+              <p className="text-muted-foreground max-w-sm mx-auto">{t("noCoursesDescription")}</p>
+            </div>
+            <Button onClick={onGoToStore || onBack} className="mt-4">
+              {t("goToStore")}
+            </Button>
           </div>
         </div>
       </div>
