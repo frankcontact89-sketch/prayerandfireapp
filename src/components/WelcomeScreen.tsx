@@ -32,7 +32,7 @@ export function WelcomeScreen({ t, onContinue, onExploreStore }: WelcomeScreenPr
         <img 
           src={entryLogo} 
           alt="Prayer & Fire" 
-          className="w-[140px] h-[140px] object-contain"
+          className="w-[140px] h-[140px] object-contain animate-pulse"
         />
       </div>
 
