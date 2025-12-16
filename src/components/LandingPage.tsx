@@ -1,6 +1,5 @@
 import React from "react";
-import { Flame, Mail, CreditCard } from "lucide-react";
-import prayerFireLogo from "@/assets/prayer-fire-logo.jpg";
+import { Flame } from "lucide-react";
 
 interface LandingPageProps {
   t: (key: string) => string;
@@ -16,9 +15,9 @@ export function LandingPage({ t, onOpenApp, onOpenLegal }: LandingPageProps) {
         {/* Logo */}
         <div className="flex justify-center items-center mb-6">
           <img
-            src={prayerFireLogo}
+            src="/logo-prayer-fire.png"
             alt="Prayer & Fire Logo"
-            className="w-32 h-32 object-contain rounded-full border-2 border-primary/30"
+            className="w-28 h-28 object-contain rounded-full"
           />
         </div>
 
