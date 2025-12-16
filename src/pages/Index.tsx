@@ -10,7 +10,7 @@ import { SocialLinksScreen } from "@/components/SocialLinksScreen";
 import { LanguagesScreen } from "@/components/LanguagesScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { NotificationsScreen } from "@/components/NotificationsScreen";
-import { Module2Screen } from "@/components/Module2Screen";
+import CoursesScreen from "@/components/CoursesScreen";
 import { LegalCenter } from "@/components/LegalCenter";
 import { LandingPage } from "@/components/LandingPage";
 import { PublicLegalCenter } from "@/components/PublicLegalCenter";
@@ -377,7 +377,7 @@ export default function Index() {
         {page === "home" && <HomeScreen t={t} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
-        {page === "module2" && <Module2Screen t={t} onBack={() => setPage("home")} />}
+        {page === "module2" && <CoursesScreen t={t} onBack={() => setPage("home")} />}
         {page === "settings" && (
           <SettingsScreen 
             t={t} 
