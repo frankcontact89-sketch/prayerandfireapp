@@ -265,6 +265,9 @@ export const translations: Record<string, Record<string, string>> = {
     tipProductsAutoShow: "Tip: When you add products, this page will automatically show them here.",
     noProductsFound: "No products found for your search.",
     descriptionComingSoon: "Description coming soon.",
+    noCoursesTitle: "No Courses Yet",
+    noCoursesDescription: "You haven't purchased any courses yet. Visit the Store to explore our available courses.",
+    goToStore: "Go to Store",
   },
   es: {
     title: "Prayer & Fire",
@@ -532,6 +535,9 @@ export const translations: Record<string, Record<string, string>> = {
     tipProductsAutoShow: "Consejo: Cuando agregues productos, esta página los mostrará automáticamente aquí.",
     noProductsFound: "No se encontraron productos para tu búsqueda.",
     descriptionComingSoon: "Descripción próximamente.",
+    noCoursesTitle: "Sin Cursos Aún",
+    noCoursesDescription: "Aún no has comprado ningún curso. Visita la Tienda para explorar nuestros cursos disponibles.",
+    goToStore: "Ir a la Tienda",
   },
   fr: {
     title: "Prayer & Fire",
@@ -799,6 +805,9 @@ export const translations: Record<string, Record<string, string>> = {
     tipProductsAutoShow: "Conseil: Lorsque vous ajoutez des produits, cette page les affichera automatiquement ici.",
     noProductsFound: "Aucun produit trouvé pour votre recherche.",
     descriptionComingSoon: "Description à venir.",
+    noCoursesTitle: "Pas Encore de Cours",
+    noCoursesDescription: "Vous n'avez pas encore acheté de cours. Visitez la Boutique pour explorer nos cours disponibles.",
+    goToStore: "Aller à la Boutique",
   },
   pt: {
     title: "Prayer & Fire",
@@ -1066,6 +1075,9 @@ export const translations: Record<string, Record<string, string>> = {
     tipProductsAutoShow: "Dica: Quando você adicionar produtos, esta página os mostrará automaticamente aqui.",
     noProductsFound: "Nenhum produto encontrado para sua busca.",
     descriptionComingSoon: "Descrição em breve.",
+    noCoursesTitle: "Sem Cursos Ainda",
+    noCoursesDescription: "Você ainda não comprou nenhum curso. Visite a Loja para explorar nossos cursos disponíveis.",
+    goToStore: "Ir para a Loja",
   },
   de: {
     title: "Prayer & Fire",
@@ -1333,6 +1345,9 @@ export const translations: Record<string, Record<string, string>> = {
     tipProductsAutoShow: "Tipp: Wenn du Produkte hinzufügst, werden sie automatisch hier angezeigt.",
     noProductsFound: "Keine Produkte für deine Suche gefunden.",
     descriptionComingSoon: "Beschreibung folgt.",
+    noCoursesTitle: "Noch Keine Kurse",
+    noCoursesDescription: "Du hast noch keine Kurse gekauft. Besuche den Shop, um unsere verfügbaren Kurse zu erkunden.",
+    goToStore: "Zum Shop gehen",
   },
   it: {
     title: "Prayer & Fire",
@@ -1600,6 +1615,9 @@ export const translations: Record<string, Record<string, string>> = {
     tipProductsAutoShow: "Suggerimento: Quando aggiungi prodotti, questa pagina li mostrerà automaticamente qui.",
     noProductsFound: "Nessun prodotto trovato per la tua ricerca.",
     descriptionComingSoon: "Descrizione in arrivo.",
+    noCoursesTitle: "Nessun Corso Ancora",
+    noCoursesDescription: "Non hai ancora acquistato nessun corso. Visita il Negozio per esplorare i nostri corsi disponibili.",
+    goToStore: "Vai al Negozio",
   },
 };
 
