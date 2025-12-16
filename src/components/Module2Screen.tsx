@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { GraduationCap, BookOpen, Video, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
-import CoursesScreen from "@/components/CoursesScreen";
 
 interface Module2ScreenProps { t: (key: string) => string; onBack: () => void; }
 
@@ -23,7 +22,27 @@ export function Module2Screen({ t, onBack }: Module2ScreenProps) {
   };
 
   if (loading) return <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6"><div className="text-muted-foreground">{t("loading")}</div></div>;
-  if (!hasPurchased) return <CoursesScreen t={t} onBack={onBack} />;
+  
+  // If not purchased, this screen should not be accessible (nav is hidden)
+  // But as fallback, show empty state
+  if (!hasPurchased) {
+    return (
+      <div className="min-h-screen bg-background text-foreground p-6">
+        <div className="max-w-xl mx-auto">
+          <div className="flex items-center gap-4 mb-6">
+            <Button variant="ghost" size="icon" onClick={onBack}>←</Button>
+            <div className="flex items-center gap-3">
+              <GraduationCap className="w-8 h-8 text-primary" />
+              <h1 className="text-2xl font-bold text-foreground">{t("myCourses")}</h1>
+            </div>
+          </div>
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">{t("noCoursesYet")}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
