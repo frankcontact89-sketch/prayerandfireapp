@@ -467,7 +467,7 @@ export default function Index() {
             <Heart className="w-6 h-6" />
           </button>
           <button
-            onClick={() => setPage(hasCoursesAccess ? "module2" : "shopping")}
+            onClick={() => setPage("module2")}
             className={`flex flex-col items-center gap-1 transition-colors ${
               page === "module2" ? "text-primary" : "text-muted-foreground"
             }`}
