@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import welcomeLogo from "@/assets/prayer-fire-welcome-logo.png";
+import entryLogo from "@/assets/prayer-fire-entry-logo.png";
 
 interface WelcomeScreenProps {
   t: (key: string) => string;
@@ -30,7 +30,7 @@ export function WelcomeScreen({ t, onContinue, onExploreStore }: WelcomeScreenPr
       {/* Logo */}
       <div className="mb-6 animate-scale-in">
         <img 
-          src={welcomeLogo} 
+          src={entryLogo} 
           alt="Prayer & Fire" 
           className="w-[140px] h-[140px] object-contain"
         />
