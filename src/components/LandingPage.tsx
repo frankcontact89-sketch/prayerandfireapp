@@ -1,6 +1,6 @@
 import React from "react";
 import { Flame } from "lucide-react";
-import logo from "@/assets/prayer-fire-logo.jpg";
+import entryLogo from "@/assets/prayer-fire-entry-logo.png";
 
 interface LandingPageProps {
   t: (key: string) => string;
@@ -14,20 +14,12 @@ export function LandingPage({ t, onOpenApp, onOpenLegal }: LandingPageProps) {
       {/* Hero Section - Centered */}
       <main className="flex-1 flex flex-col justify-center items-center text-center px-6 py-16">
         {/* Logo */}
-        <div className="flex justify-center items-center mb-6">
-          <div
-            className="w-28 h-28 rounded-full flex items-center justify-center"
-            style={{
-              backgroundColor: "#000000",
-              boxShadow: "0 0 40px rgba(0,0,0,0.8)",
-            }}
-          >
-            <img
-              src={logo}
-              alt="Prayer & Fire Logo"
-              className="w-24 h-24 object-contain mix-blend-multiply"
-            />
-          </div>
+        <div className="mb-6">
+          <img
+            src={entryLogo}
+            alt="Prayer & Fire Logo"
+            className="w-32 h-32 object-contain animate-pulse"
+          />
         </div>
 
         {/* Title */}
