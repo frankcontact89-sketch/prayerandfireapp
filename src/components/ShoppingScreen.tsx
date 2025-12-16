@@ -240,7 +240,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                       if (p.purchase_url) window.open(p.purchase_url, "_blank");
                     }}
                   >
-                    {p.id === "book-voz-interior" ? t("buyOnAmazon") : t("view")}
+                    {p.id === "book-voz-interior" ? t("buyOnAmazon") : t("buyNow")}
                   </button>
                 </div>
               ))}
