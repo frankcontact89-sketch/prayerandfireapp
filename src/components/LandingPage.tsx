@@ -17,7 +17,10 @@ export function LandingPage({ t, onOpenApp, onOpenLegal }: LandingPageProps) {
           <img
             src="/logo-prayer-fire.png"
             alt="Prayer & Fire Logo"
-            className="w-28 h-28 object-contain rounded-full"
+            className="w-28 h-28 object-contain"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = 'none';
+            }}
           />
         </div>
 
