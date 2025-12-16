@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { GraduationCap, BookOpen, Video, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Separator } from "@/components/ui/separator";
+import CoursesScreen from "@/components/CoursesScreen";
 
 interface Module2ScreenProps { t: (key: string) => string; onBack: () => void; }
 
@@ -22,7 +23,7 @@ export function Module2Screen({ t, onBack }: Module2ScreenProps) {
   };
 
   if (loading) return <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6"><div className="text-muted-foreground">{t("loading")}</div></div>;
-  if (!hasPurchased) return <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6"><Button onClick={onBack} size="lg">{t("myCourses")}</Button></div>;
+  if (!hasPurchased) return <CoursesScreen t={t} onBack={onBack} />;
 
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
