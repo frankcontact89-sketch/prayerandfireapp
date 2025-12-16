@@ -1,5 +1,6 @@
 import React from "react";
 import { Flame } from "lucide-react";
+import logo from "@/assets/prayer-fire-logo.jpg";
 
 interface LandingPageProps {
   t: (key: string) => string;
@@ -14,11 +15,16 @@ export function LandingPage({ t, onOpenApp, onOpenLegal }: LandingPageProps) {
       <main className="flex-1 flex flex-col justify-center items-center text-center px-6 py-16">
         {/* Logo */}
         <div className="flex justify-center items-center mb-6">
-          <img
-            src="/logo-prayer-fire.png"
-            alt="Prayer & Fire Logo"
-            className="w-28 h-28 object-contain"
-          />
+          <div
+            className="w-28 h-28 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: "#000000" }}
+          >
+            <img
+              src={logo}
+              alt="Prayer & Fire Logo"
+              className="w-24 h-24 object-contain"
+            />
+          </div>
         </div>
 
         {/* Title */}
