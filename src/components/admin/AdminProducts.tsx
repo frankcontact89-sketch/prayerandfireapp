@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2, Edit, Upload, Image as ImageIcon } from "lucide-react";
 
 interface Product {
   id: string;
@@ -22,6 +22,8 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -30,6 +32,62 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
     purchase_url: "",
   });
   const { toast } = useToast();
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Error",
+        description: t("Please select an image file", "Por favor selecciona un archivo de imagen"),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: t("Image must be less than 5MB", "La imagen debe ser menor a 5MB"),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `products/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, image_url: publicUrl });
+      toast({
+        title: t("Success", "Éxito"),
+        description: t("Image uploaded successfully", "Imagen subida exitosamente"),
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || t("Failed to upload image", "Error al subir imagen"),
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -179,11 +237,44 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               />
-              <Input
-                placeholder={t("Image URL", "URL de la imagen")}
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              />
+              <div className="space-y-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {uploading ? (
+                    <>{t("Uploading...", "Subiendo...")}</>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      {t("Upload Image from Phone", "Subir Imagen del Celular")}
+                    </>
+                  )}
+                </Button>
+                {formData.image_url && (
+                  <div className="flex items-center gap-2 p-2 bg-muted rounded">
+                    <ImageIcon className="w-4 h-4 text-primary" />
+                    <span className="text-sm text-muted-foreground truncate flex-1">
+                      {t("Image uploaded", "Imagen subida")}
+                    </span>
+                    <img 
+                      src={formData.image_url} 
+                      alt="Preview" 
+                      className="w-10 h-10 rounded object-cover"
+                    />
+                  </div>
+                )}
+              </div>
               <Textarea
                 placeholder={t("Product description", "Descripción del producto")}
                 value={formData.description}
