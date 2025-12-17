@@ -16,9 +16,9 @@ export const APP_CONFIG = {
   // Social/Share
   SHARE_TEXT: "🔥 Check out the Prayer & Fire App - A faith-based app for prayer, community, and spiritual growth!",
   
-  // Stripe URLs (Test Mode)
+  // Stripe URLs
   STRIPE_SUBSCRIPTION: "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00",
-  STRIPE_ONETIME: "https://buy.stripe.com/test_4gM4gz4Tqc2xgdr365gUM02",
+  STRIPE_ONETIME: "https://buy.stripe.com/28E5kDbjWe2S4mz1rt7bW04",
   
   // External Links
   BOOK_AMAZON_LINK: "https://a.co/d/dfgHEvM",
