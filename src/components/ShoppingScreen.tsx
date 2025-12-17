@@ -23,7 +23,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const { toast } = useToast();
 
-  const categories = ["All", "Courses", "Books", "Merch", "Other"];
+  const categories = ["All", "Courses", "Books", "Merch", "View"];
 
   useEffect(() => { fetchPurchases(); fetchProducts(); }, []);
 
@@ -74,7 +74,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
       is_active: true,
       category: "Books"
     };
-    return [bookItem, ...products.map(p => ({ ...p, category: p.category || "Other" }))];
+    return [bookItem, ...products.map(p => ({ ...p, category: p.category || "View" }))];
   }, [products, t]);
 
   const filteredItems = useMemo(() => {
@@ -206,7 +206,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
               {filteredItems.map((p) => (
                 <div key={p.id} style={styles.card} onClick={() => setSelectedProduct(p)}>
                   <div style={styles.cardTop}>
-                    <div style={styles.badge}>{p.category || "Other"}</div>
+                    <div style={styles.badge}>{p.category || "View"}</div>
                   </div>
 
                   <div style={styles.imageBox}>
