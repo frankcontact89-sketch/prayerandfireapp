@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, Instagram, Calendar, Flame, ArrowLeft } from "lucide-react";
+import { MessageCircle, Instagram, Calendar, Flame, ArrowLeft, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FloatingFireButton } from "@/components/FloatingFireButton";
 
@@ -62,6 +62,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
       <h2 className="text-2xl font-bold text-foreground mb-6">🌐 {t("connect")}</h2>
       {whatsappLinks.length > 0 && <button onClick={() => setShowWhatsAppContacts(true)} className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"><MessageCircle className="w-5 h-5" />WhatsApp</button>}
       {otherLinks.map((link) => <button key={link.id} onClick={() => window.open(link.url, "_blank")} className={`w-full ${getButtonColor(link.icon)} text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors`}>{getIconComponent(link.icon)}{link.title}</button>)}
+      <button onClick={() => window.open("mailto:prayerandfireglobal@gmail.com", "_blank")} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"><Mail className="w-5 h-5" />Email</button>
       <button onClick={onNavigateToEvents} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors"><Calendar className="w-5 h-5" />{t("events")}</button>
       <button onClick={onBack} className="mt-6 flex items-center justify-center gap-2 w-full text-primary hover:text-primary/80 font-semibold transition-all hover:scale-110 active:scale-95"><Flame className="w-5 h-5 animate-pulse" /></button>
       <FloatingFireButton onClick={onBack} />
