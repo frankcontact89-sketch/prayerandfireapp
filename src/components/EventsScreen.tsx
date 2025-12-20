@@ -2,13 +2,8 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { Calendar, MapPin, Users, Video, XCircle, CalendarPlus } from "lucide-react";
+import { Calendar, MapPin, Users, Video, XCircle, Bell, BellOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "./ui/popover";
 
 interface Event {
   id: string;
@@ -26,13 +21,11 @@ interface EventsScreenProps {
   onNewEvents?: (count: number) => void;
 }
 
-const EMOJI_OPTIONS = ["🔥", "🙏", "❤️", "🙌", "✨", "💪"];
-
 export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [rsvps, setRsvps] = useState<Set<string>>(new Set());
   const [declines, setDeclines] = useState<Set<string>>(new Set());
-  const [reactions, setReactions] = useState<Record<string, string>>({});
+  const [reminders, setReminders] = useState<Record<string, NodeJS.Timeout>>({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -152,34 +145,75 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
     });
   };
 
-  const handleReaction = (eventId: string, emoji: string) => {
-    setReactions((prev) => ({ ...prev, [eventId]: emoji }));
-    toast({ title: emoji, description: t("reactionAdded") });
-  };
-
-  const addToCalendar = (event: Event) => {
-    const startDate = new Date(event.event_date);
-    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // Default 2 hours duration
+  const setReminder = (event: Event) => {
+    const eventDate = new Date(event.event_date);
+    const reminderTime = eventDate.getTime() - 10 * 60 * 1000; // 10 minutes before
+    const now = Date.now();
     
-    const formatDate = (date: Date) => {
-      return date.toISOString().replace(/-|:|\.\d+/g, '').slice(0, 15) + 'Z';
-    };
+    if (reminderTime <= now) {
+      toast({
+        title: t("error"),
+        description: t("eventTooSoon"),
+        variant: "destructive",
+      });
+      return;
+    }
 
-    const title = encodeURIComponent(event.title);
-    const details = encodeURIComponent(event.description || '');
-    const location = encodeURIComponent(event.is_online ? 'Online Event' : (event.location || ''));
-    const start = formatDate(startDate);
-    const end = formatDate(endDate);
+    // Request notification permission
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
 
-    // Google Calendar URL
-    const googleCalendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
-    
-    window.open(googleCalendarUrl, '_blank');
+    const delay = reminderTime - now;
+    const timeoutId = setTimeout(() => {
+      // Trigger notification
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(`Prayer & Fire: ${event.title}`, {
+          body: t("eventStartingSoon"),
+          icon: "/logo-prayer-fire.png",
+          requireInteraction: true,
+        });
+      }
+      
+      // Vibrate if supported
+      if ("vibrate" in navigator) {
+        navigator.vibrate([500, 200, 500, 200, 500]);
+      }
+
+      // Show toast as fallback
+      toast({
+        title: `🔔 ${event.title}`,
+        description: t("eventStartingSoon"),
+      });
+
+      // Remove from reminders
+      setReminders((prev) => {
+        const next = { ...prev };
+        delete next[event.id];
+        return next;
+      });
+    }, delay);
+
+    setReminders((prev) => ({ ...prev, [event.id]: timeoutId }));
     
     toast({
-      title: t("addedToCalendar"),
-      description: t("calendarOpened"),
+      title: t("reminderSet"),
+      description: t("reminderSetDescription"),
     });
+  };
+
+  const cancelReminder = (eventId: string) => {
+    if (reminders[eventId]) {
+      clearTimeout(reminders[eventId]);
+      setReminders((prev) => {
+        const next = { ...prev };
+        delete next[eventId];
+        return next;
+      });
+      toast({
+        title: t("reminderCancelled"),
+      });
+    }
   };
 
   if (loading) {
@@ -247,23 +281,17 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
                     {declines.has(event.id) && (
                       <Button onClick={() => handleUndecline(event.id)} variant="outline">{t("changeMind")}</Button>
                     )}
-                    <Button onClick={() => addToCalendar(event)} variant="outline" size="sm" className="flex items-center gap-1">
-                      <CalendarPlus className="w-4 h-4" />
-                      {t("addToCalendar")}
-                    </Button>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-xl px-2">{reactions[event.id] || "😊"}</Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-2">
-                        <div className="flex gap-1">
-                          {EMOJI_OPTIONS.map((emoji) => (
-                            <button key={emoji} onClick={() => handleReaction(event.id, emoji)} className={`text-2xl p-1 hover:bg-muted rounded transition-colors ${reactions[event.id] === emoji ? "bg-primary/20" : ""}`}>{emoji}</button>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                    {reactions[event.id] && <span className="text-lg">{reactions[event.id]}</span>}
+                    {reminders[event.id] ? (
+                      <Button onClick={() => cancelReminder(event.id)} variant="outline" size="sm" className="flex items-center gap-1">
+                        <BellOff className="w-4 h-4" />
+                        {t("cancelReminder")}
+                      </Button>
+                    ) : (
+                      <Button onClick={() => setReminder(event)} variant="outline" size="sm" className="flex items-center gap-1">
+                        <Bell className="w-4 h-4" />
+                        {t("setReminder")}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
