@@ -62,14 +62,14 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
                       <p className="text-foreground font-medium text-sm">Aline Ramiro</p>
                     </div>
 
-                    {/* General President */}
+                    {/* President */}
                     <div className="flex flex-col items-center">
                       <img
                         src={franciscoRivera}
                         alt="Francisco Rivera"
                         className="w-24 h-24 rounded-full object-cover mb-2 border-2 border-primary/30 shadow-lg"
                       />
-                      <strong className="text-primary text-xs">General President</strong>
+                      <strong className="text-primary text-xs">President</strong>
                       <p className="text-foreground font-medium text-sm">Francisco Rivera</p>
                     </div>
                   </div>
