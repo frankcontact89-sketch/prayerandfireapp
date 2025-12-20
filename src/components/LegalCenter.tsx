@@ -1,5 +1,7 @@
 import React from "react";
 import { ArrowLeft, Flame, Info, CreditCard, RefreshCw, Shield, FileText, Mail } from "lucide-react";
+import alineRamiro from "@/assets/aline-ramiro.jpg";
+import franciscoRivera from "@/assets/francisco-rivera.jpg";
 import {
   Accordion,
   AccordionContent,
@@ -44,6 +46,33 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
               <p>{t("aboutDescription1")}</p>
               <p><strong className="text-foreground">{t("mission")}:</strong> {t("aboutMission")}</p>
               <p><strong className="text-foreground">{t("features")}:</strong> {t("aboutFeatures")}</p>
+              
+              {/* Leadership Section */}
+              <div className="pt-4 mt-4 border-t border-border/30">
+                <div className="flex flex-col gap-6 items-center">
+                  {/* Fundadora */}
+                  <div className="flex flex-col items-center">
+                    <img
+                      src={alineRamiro}
+                      alt="Aline Ramiro"
+                      className="w-24 h-24 rounded-full object-cover mb-2 border-2 border-primary/30 shadow-lg"
+                    />
+                    <strong className="text-primary text-xs">Fundadora</strong>
+                    <p className="text-foreground font-medium text-sm">Aline Ramiro</p>
+                  </div>
+
+                  {/* Presidente General */}
+                  <div className="flex flex-col items-center">
+                    <img
+                      src={franciscoRivera}
+                      alt="Francisco Rivera"
+                      className="w-24 h-24 rounded-full object-cover mb-2 border-2 border-primary/30 shadow-lg"
+                    />
+                    <strong className="text-primary text-xs">Presidente General</strong>
+                    <p className="text-foreground font-medium text-sm">Francisco Rivera</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </AccordionContent>
         </AccordionItem>
