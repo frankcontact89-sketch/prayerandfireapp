@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
 import { FloatingFireButton } from "@/components/FloatingFireButton";
+import { getLastSeenNotificationsAtMs, setLastSeenNotificationsAtNow } from "@/lib/notifications-last-seen";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -108,28 +109,23 @@ export default function Index() {
     }
   };
 
-  const LAST_READ_AT_KEY = "pf_notifications_last_read_at";
-
   const fetchUnreadNotifications = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const rawLastRead = localStorage.getItem(LAST_READ_AT_KEY);
-    const lastReadAtMs = rawLastRead ? Date.parse(rawLastRead) : 0;
+    const lastSeenAtMs = getLastSeenNotificationsAtMs();
 
     const { data, error } = await supabase
       .from("notifications")
-      .select("id, created_at, user_id, is_read")
+      .select("id, created_at")
       .or(`user_id.eq.${user.id},user_id.is.null`)
       .order("created_at", { ascending: false });
 
     if (error || !data) return;
 
     const unread = data.filter((n: any) => {
-      if (n.user_id === user.id) return n.is_read === false;
-      // Broadcast notification: treat as unread only if created after lastReadAt.
       const createdMs = Date.parse(n.created_at);
-      return Number.isFinite(createdMs) && createdMs > (Number.isFinite(lastReadAtMs) ? lastReadAtMs : 0);
+      return Number.isFinite(createdMs) && createdMs > lastSeenAtMs;
     }).length;
 
     setUnreadNotifications(unread);
@@ -358,6 +354,13 @@ export default function Index() {
     );
   }
 
+  const openNotifications = () => {
+    // Hard-fix: persist last-seen timestamp so badge never comes back unless a new notification arrives.
+    setLastSeenNotificationsAtNow();
+    setUnreadNotifications(0);
+    setPage("notifications");
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background font-sans">
       {/* Header */}
@@ -373,10 +376,7 @@ export default function Index() {
             </button>
             {unreadNotifications > 0 && (
               <button
-                onClick={() => {
-                  setUnreadNotifications(0);
-                  setPage("notifications");
-                }}
+                onClick={openNotifications}
                 className="relative"
               >
                 <Flame className="w-6 h-6 text-orange-500" />
@@ -431,7 +431,7 @@ export default function Index() {
             userEmail={user?.email || ""}
             onAdminClick={() => setPage("admin")}
             onProfileClick={() => setPage("profile")}
-            onNotificationsClick={() => setPage("notifications")}
+            onNotificationsClick={openNotifications}
             onLegalClick={() => setPage("legal")}
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
