@@ -18,21 +18,30 @@ export function AdminNotifications({ t }: { t: (key: string) => string }) {
     }
 
     setSending(true);
+    console.log("[AdminNotifications] Sending broadcast notification...");
     
-    const { error } = await supabase
+    const notificationData = { 
+      title: "Prayer & Fire", 
+      message: message.trim(), 
+      type: "admin_message",
+      user_id: null,
+      link: null,
+      is_read: false
+    };
+    
+    console.log("[AdminNotifications] Insert data:", notificationData);
+    
+    const { data, error } = await supabase
       .from("notifications")
-      .insert([{ 
-        title: "Prayer & Fire", 
-        message: message.trim(), 
-        type: "admin_message",
-        user_id: null,
-        link: null
-      }]);
+      .insert([notificationData])
+      .select();
 
     if (error) {
+      console.error("[AdminNotifications] Insert error:", error);
       toast({ title: "Error sending notification", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Notification sent successfully" });
+      console.log("[AdminNotifications] Insert success:", data);
+      toast({ title: "✅ Message sent!", description: "All users will receive this notification." });
       setMessage("");
     }
     setSending(false);

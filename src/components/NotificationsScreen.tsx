@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { getLastSeenNotificationsAtMs, setLastSeenNotificationsAtNow } from "@/lib/notifications-last-seen";
+import { setLastSeenNotificationsAtNow } from "@/lib/notifications-last-seen";
 
 interface NotificationsScreenProps { t: (key: string) => string; onBack: () => void; }
 interface Notification { id: string; title: string; message: string; type: string; link: string | null; is_read: boolean; created_at: string; user_id?: string | null; }
@@ -24,39 +24,39 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Hard-fix: opening Notifications sets the persisted last-seen timestamp immediately.
-    setLastSeenNotificationsAtNow();
-    console.debug("[notifications] NotificationsScreen mount -> set lastSeen now");
-
-    const initNotifications = async () => {
-      await fetchNotifications();
-      // Mark all as read when screen opens
-      await markAllAsReadSilent();
-    };
-
-    initNotifications();
+    console.log("[NotificationsScreen] Mounting...");
+    
+    fetchNotifications();
 
     const saved = localStorage.getItem('notifications_enabled');
     if (saved !== null) setNotificationsEnabled(JSON.parse(saved));
 
+    // Subscribe to realtime changes for this screen
     const channel = supabase
-      .channel('notifications-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => fetchNotifications())
-      .subscribe();
+      .channel('notifications-screen-changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
+        console.log("[NotificationsScreen] New notification received via realtime:", payload.new);
+        fetchNotifications();
+      })
+      .subscribe((status) => {
+        console.log("[NotificationsScreen] Realtime subscription status:", status);
+      });
 
     return () => {
-      // Hard-fix: also persist last-seen on unmount (e.g., navigating away, app background).
-      setLastSeenNotificationsAtNow();
-      console.debug("[notifications] NotificationsScreen unmount -> set lastSeen now");
+      console.log("[NotificationsScreen] Unmounting...");
       supabase.removeChannel(channel);
     };
   }, []);
 
   const fetchNotifications = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      console.log("[NotificationsScreen] No user, skipping fetch");
+      setLoading(false);
+      return;
+    }
 
-    const lastSeenAtMs = getLastSeenNotificationsAtMs();
+    console.log("[NotificationsScreen] Fetching notifications for user:", user.id);
 
     const { data, error } = await supabase
       .from("notifications")
@@ -65,46 +65,41 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
       .order("created_at", { ascending: false });
 
     if (error) {
+      console.error("[NotificationsScreen] Fetch error:", error);
       toast({ title: t("error"), description: t("failedToLoadNotifications"), variant: "destructive" });
     } else {
-      const normalized = (data || []).map((n: any) => {
-        // Badge logic is driven by persisted last-seen; reflect that here for UI consistency.
-        if (Date.parse(n.created_at) <= lastSeenAtMs) {
-          return { ...n, is_read: true } as Notification;
-        }
-        return n as Notification;
-      });
-      setNotifications(normalized);
+      console.log("[NotificationsScreen] Fetched notifications:", data?.length || 0, data);
+      setNotifications((data || []) as Notification[]);
     }
 
     setLoading(false);
   };
 
   const markAsRead = async (id: string) => {
-    await supabase.from("notifications").update({ is_read: true }).eq("id", id);
-    fetchNotifications();
+    console.log("[NotificationsScreen] Marking as read:", id);
+    const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+    if (error) {
+      console.error("[NotificationsScreen] markAsRead error:", error);
+    }
+    // Update local state immediately
+    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true } : n));
   };
 
-  const markAllAsReadSilent = async () => {
+  const markAllAsRead = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Persist the last-seen timestamp (this is what drives the badge across navigation).
-    setLastSeenNotificationsAtNow();
+    console.log("[NotificationsScreen] Marking all as read");
 
-    // Best-effort: also mark user-specific notifications as read in the backend.
+    // Mark user-specific notifications as read in the backend
     await supabase
       .from("notifications")
       .update({ is_read: true })
       .eq("user_id", user.id)
       .eq("is_read", false);
 
-    // Immediately reflect read state in UI.
+    // Update local state
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-  };
-
-  const markAllAsRead = async () => {
-    await markAllAsReadSilent();
     toast({ title: t("success"), description: t("allMarkedAsRead") });
   };
   const deleteAllRead = async () => {
