@@ -7,19 +7,10 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { getLastSeenNotificationsAtMs, setLastSeenNotificationsAtNow } from "@/lib/notifications-last-seen";
 
 interface NotificationsScreenProps { t: (key: string) => string; onBack: () => void; }
 interface Notification { id: string; title: string; message: string; type: string; link: string | null; is_read: boolean; created_at: string; user_id?: string | null; }
-
-const LAST_READ_AT_KEY = "pf_notifications_last_read_at";
-const getLastReadAtMs = () => {
-  const raw = localStorage.getItem(LAST_READ_AT_KEY);
-  const ms = raw ? Date.parse(raw) : 0;
-  return Number.isFinite(ms) ? ms : 0;
-};
-const setLastReadAtNow = () => {
-  localStorage.setItem(LAST_READ_AT_KEY, new Date().toISOString());
-};
 
 export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -33,15 +24,25 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Hard-fix: opening Notifications sets the persisted last-seen timestamp immediately.
+    setLastSeenNotificationsAtNow();
+
     const initNotifications = async () => {
       await fetchNotifications();
       // Mark all as read when screen opens
       await markAllAsReadSilent();
     };
+
     initNotifications();
+
     const saved = localStorage.getItem('notifications_enabled');
     if (saved !== null) setNotificationsEnabled(JSON.parse(saved));
-    const channel = supabase.channel('notifications-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => fetchNotifications()).subscribe();
+
+    const channel = supabase
+      .channel('notifications-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => fetchNotifications())
+      .subscribe();
+
     return () => { supabase.removeChannel(channel); };
   }, []);
 
@@ -49,7 +50,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const lastReadAtMs = getLastReadAtMs();
+    const lastSeenAtMs = getLastSeenNotificationsAtMs();
 
     const { data, error } = await supabase
       .from("notifications")
@@ -61,9 +62,8 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
       toast({ title: t("error"), description: t("failedToLoadNotifications"), variant: "destructive" });
     } else {
       const normalized = (data || []).map((n: any) => {
-        // Broadcast notifications (user_id null) can't be updated due to security rules,
-        // so we treat them as read based on persisted lastReadAt.
-        if (n.user_id == null && Date.parse(n.created_at) <= lastReadAtMs) {
+        // Badge logic is driven by persisted last-seen; reflect that here for UI consistency.
+        if (Date.parse(n.created_at) <= lastSeenAtMs) {
           return { ...n, is_read: true } as Notification;
         }
         return n as Notification;
@@ -83,10 +83,10 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Persist a global "last read" timestamp for broadcast notifications.
-    setLastReadAtNow();
+    // Persist the last-seen timestamp (this is what drives the badge across navigation).
+    setLastSeenNotificationsAtNow();
 
-    // Update user-specific notifications in the backend.
+    // Best-effort: also mark user-specific notifications as read in the backend.
     await supabase
       .from("notifications")
       .update({ is_read: true })
