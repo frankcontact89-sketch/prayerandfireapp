@@ -172,10 +172,15 @@ export default function Index() {
     if (!user) return;
 
     const notificationsEnabled = localStorage.getItem('notifications_enabled') !== 'false';
-    if (!notificationsEnabled) return;
+    if (!notificationsEnabled) {
+      console.log("[Index] Notifications disabled, skipping realtime subscription");
+      return;
+    }
+
+    console.log("[Index] Setting up realtime notifications subscription for user:", user.id);
 
     const channel = supabase
-      .channel('realtime-notifications')
+      .channel('notifications-inserts')
       .on(
         'postgres_changes',
         {
@@ -184,25 +189,25 @@ export default function Index() {
           table: 'notifications'
         },
         (payload) => {
+          console.log("[Index] Realtime notification received:", payload.new);
           const notification = payload.new as any;
+          
           // Show toast if it's for this user or a broadcast (user_id = null)
           if (notification.user_id === null || notification.user_id === user.id) {
-            const lastSeenMs = getLastSeenNotificationsAtMs();
-            const notificationCreatedMs = Date.parse(notification.created_at);
-            
-            // Only show toast if notification is newer than last seen
-            if (notificationCreatedMs > lastSeenMs) {
-              toast({
-                title: notification.title || "🔔 New Notification",
-                description: notification.message?.substring(0, 100) || "",
-              });
-            }
+            console.log("[Index] Showing toast for notification:", notification.title);
+            toast({
+              title: notification.title || "🔔 New Notification",
+              description: notification.message?.substring(0, 100) || "",
+            });
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("[Index] Realtime subscription status:", status);
+      });
 
     return () => {
+      console.log("[Index] Cleaning up realtime subscription");
       supabase.removeChannel(channel);
     };
   }, [user, toast]);
