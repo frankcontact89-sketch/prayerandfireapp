@@ -115,7 +115,14 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     fetchNotifications();
   };
   const deleteNotification = async (id: string) => { await supabase.from("notifications").delete().eq("id", id); fetchNotifications(); };
-  const openNotification = async (notification: Notification) => { setSelectedNotification(notification); if (!notification.is_read) await markAsRead(notification.id); };
+  const openNotification = async (notification: Notification) => { 
+    setSelectedNotification(notification); 
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+      // Also update local last seen to prevent this from appearing unread again
+      setLastSeenNotificationsAtNow();
+    }
+  };
   const toggleNotifications = (enabled: boolean) => { setNotificationsEnabled(enabled); localStorage.setItem('notifications_enabled', JSON.stringify(enabled)); toast({ title: enabled ? t("notificationsEnabled") : t("notificationsDisabled"), description: enabled ? t("youWillReceiveNotifications") : t("notificationsDisabledMsg") }); };
   const sendFeedback = async () => {
     if (!feedbackMessage.trim()) { toast({ title: t("error"), description: t("pleaseEnterFeedback"), variant: "destructive" }); return; }
@@ -140,7 +147,23 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
           <div className="max-w-2xl mx-auto space-y-4">
             <div className="flex items-center gap-3"><div className="p-3 rounded-full bg-primary text-primary-foreground"><Flame className="w-6 h-6" /></div><div><h3 className="text-xl font-bold text-foreground">{selectedNotification.title}</h3><p className="text-sm text-muted-foreground">{new Date(selectedNotification.created_at).toLocaleDateString()}</p></div></div>
             <div className="bg-muted/30 rounded-lg p-6"><p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap">{selectedNotification.message}</p></div>
-            {selectedNotification.link && <Button onClick={() => window.open(selectedNotification.link!, "_blank")} className="w-full">{t("viewMore")}</Button>}
+            {selectedNotification.link && (
+              <Button 
+                onClick={() => {
+                  // Handle in-app navigation for store links
+                  if (selectedNotification.link === '/store' || selectedNotification.link?.startsWith('/store')) {
+                    setSelectedNotification(null);
+                    // Trigger navigation via parent - for now open external
+                    window.location.hash = selectedNotification.link;
+                  } else {
+                    window.open(selectedNotification.link!, "_blank");
+                  }
+                }} 
+                className="w-full"
+              >
+                {t("viewMore")}
+              </Button>
+            )}
             <Button variant="destructive" onClick={() => { deleteNotification(selectedNotification.id); setSelectedNotification(null); }} className="w-full"><Trash2 className="w-4 h-4 mr-2" />{t("deleteNotification")}</Button>
           </div>
         </div>
