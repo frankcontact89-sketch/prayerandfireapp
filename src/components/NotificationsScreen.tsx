@@ -23,7 +23,12 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchNotifications();
+    const initNotifications = async () => {
+      await fetchNotifications();
+      // Mark all as read when screen opens
+      await markAllAsReadSilent();
+    };
+    initNotifications();
     const saved = localStorage.getItem('notifications_enabled');
     if (saved !== null) setNotificationsEnabled(JSON.parse(saved));
     const channel = supabase.channel('notifications-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => fetchNotifications()).subscribe();
@@ -40,12 +45,15 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   };
 
   const markAsRead = async (id: string) => { await supabase.from("notifications").update({ is_read: true }).eq("id", id); fetchNotifications(); };
-  const markAllAsRead = async () => {
+  const markAllAsReadSilent = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     await supabase.from("notifications").update({ is_read: true }).or(`user_id.eq.${user.id},user_id.is.null`).eq("is_read", false);
-    toast({ title: t("success"), description: t("allMarkedAsRead") });
     fetchNotifications();
+  };
+  const markAllAsRead = async () => {
+    await markAllAsReadSilent();
+    toast({ title: t("success"), description: t("allMarkedAsRead") });
   };
   const deleteAllRead = async () => {
     const { data: { user } } = await supabase.auth.getUser();
