@@ -15,8 +15,7 @@ import { LegalCenter } from "@/components/LegalCenter";
 import { LandingPage } from "@/components/LandingPage";
 import { PublicLegalCenter } from "@/components/PublicLegalCenter";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
-import { QuienesSomosScreen } from "@/components/QuienesSomosScreen";
-import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap, Calendar, Users } from "lucide-react";
+import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
@@ -398,7 +397,7 @@ export default function Index() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto pb-20">
-        {page === "home" && <HomeScreen t={t} onNavigateToQuienesSomos={() => setPage("quienes-somos")} />}
+        {page === "home" && <HomeScreen t={t} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
         {page === "module2" && <Module2Screen t={t} onBack={() => setPage("home")} onGoToStore={() => setPage("shopping")} />}
@@ -437,7 +436,6 @@ export default function Index() {
             }}
           />
         )}
-        {page === "quienes-somos" && <QuienesSomosScreen t={t} />}
         {page === "notifications" && (
           <NotificationsScreen 
             t={t} 
