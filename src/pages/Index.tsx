@@ -20,7 +20,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
 import { FloatingFireButton } from "@/components/FloatingFireButton";
-import { getLastSeenNotificationsAtMs, setLastSeenNotificationsAtNow } from "@/lib/notifications-last-seen";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -38,7 +37,7 @@ export default function Index() {
   });
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  // Removed: unreadNotifications state (badge removed)
   const [newEventsCount, setNewEventsCount] = useState(0);
   const [hasCoursesAccess, setHasCoursesAccess] = useState(false);
   const { toast } = useToast();
@@ -109,31 +108,7 @@ export default function Index() {
     }
   };
 
-  const fetchUnreadNotifications = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const lastSeenAtMs = getLastSeenNotificationsAtMs();
-
-    const { data, error } = await supabase
-      .from("notifications")
-      .select("id, created_at")
-      .or(`user_id.eq.${user.id},user_id.is.null`)
-      .order("created_at", { ascending: false });
-
-    if (error || !data) {
-      console.debug("[notifications] unread fetch error", error);
-      return;
-    }
-
-    const unread = data.filter((n: any) => {
-      const createdMs = Date.parse(n.created_at);
-      return Number.isFinite(createdMs) && createdMs > lastSeenAtMs;
-    }).length;
-
-    console.debug("[notifications] lastSeenAtMs=", lastSeenAtMs, "rows=", data.length, "unread=", unread);
-    setUnreadNotifications(unread);
-  };
+  // Removed: fetchUnreadNotifications (badge removed)
 
   const fetchUpcomingEvents = async () => {
     const { data, error } = await supabase
@@ -193,28 +168,12 @@ export default function Index() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch unread notifications and events, subscribe to changes
+  // Fetch events, subscribe to changes
   useEffect(() => {
     if (user) {
-      fetchUnreadNotifications();
       fetchUpcomingEvents();
       checkWelcomeSeen();
       checkCoursesAccess();
-
-      const notificationsChannel = supabase
-        .channel('notifications-unread')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'notifications'
-          },
-          () => {
-            fetchUnreadNotifications();
-          }
-        )
-        .subscribe();
 
       const eventsChannel = supabase
         .channel('events-updates')
@@ -231,18 +190,8 @@ export default function Index() {
         )
         .subscribe();
 
-      const handleFocus = () => fetchUnreadNotifications();
-      const handleVisibility = () => {
-        if (document.visibilityState === 'visible') fetchUnreadNotifications();
-      };
-      window.addEventListener('focus', handleFocus);
-      document.addEventListener('visibilitychange', handleVisibility);
-
       return () => {
-        supabase.removeChannel(notificationsChannel);
         supabase.removeChannel(eventsChannel);
-        window.removeEventListener('focus', handleFocus);
-        document.removeEventListener('visibilitychange', handleVisibility);
       };
     }
   }, [user]);
@@ -359,10 +308,6 @@ export default function Index() {
   }
 
   const openNotifications = () => {
-    // Hard-fix: persist last-seen timestamp so badge never comes back unless a new notification arrives.
-    setLastSeenNotificationsAtNow();
-    setUnreadNotifications(0);
-    console.debug("[notifications] openNotifications -> set lastSeen now");
     setPage("notifications");
   };
 
@@ -379,17 +324,6 @@ export default function Index() {
             >
               <Settings className="w-6 h-6" />
             </button>
-            {unreadNotifications > 0 && (
-              <button
-                onClick={openNotifications}
-                className="relative"
-              >
-                <Flame className="w-6 h-6 text-orange-500" />
-                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {unreadNotifications}
-                </span>
-              </button>
-            )}
             {newEventsCount > 0 && page !== "events" && (
               <button
                 onClick={() => {
@@ -466,9 +400,6 @@ export default function Index() {
           <NotificationsScreen 
             t={t} 
             onBack={() => {
-              // Persist last-seen on exit too, so badge cannot reappear on return.
-              setLastSeenNotificationsAtNow();
-              setUnreadNotifications(0);
               setPage("settings");
             }} 
           />
