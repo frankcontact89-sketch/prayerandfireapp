@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { SignInScreen } from "@/components/SignInScreen";
 import { HomeScreen } from "@/components/HomeScreen";
 import { EventsScreen } from "@/components/EventsScreen";
@@ -15,12 +15,12 @@ import { LegalCenter } from "@/components/LegalCenter";
 import { LandingPage } from "@/components/LandingPage";
 import { PublicLegalCenter } from "@/components/PublicLegalCenter";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
-import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap } from "lucide-react";
+import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
 import { FloatingFireButton } from "@/components/FloatingFireButton";
-import { getLastSeenNotificationsAtMs, setLastSeenNotificationsAtNow } from "@/lib/notifications-last-seen";
+import { getLastReadAtMs, setLastReadAtNow } from "@/lib/notifications-last-seen";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -38,8 +38,7 @@ export default function Index() {
   });
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
-  // Removed: unreadNotifications state (badge removed)
-  // Removed: newEventsCount state (badge removed)
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [hasCoursesAccess, setHasCoursesAccess] = useState(false);
   const { toast } = useToast();
 
@@ -159,23 +158,54 @@ export default function Index() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Initialize user-related checks (no header badges)
+  // Fetch unread notifications count
+  const fetchUnreadCount = useCallback(async () => {
+    if (!user) return;
+
+    const lastReadAtMs = getLastReadAtMs();
+    const lastReadAtISO = lastReadAtMs > 0 ? new Date(lastReadAtMs).toISOString() : null;
+
+    // Count user-specific unread (is_read = false)
+    const { count: userUnread } = await supabase
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("is_read", false);
+
+    // Count broadcast unread (created after last read)
+    let broadcastUnread = 0;
+    if (lastReadAtISO) {
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .is("user_id", null)
+        .gt("created_at", lastReadAtISO);
+      broadcastUnread = count || 0;
+    } else {
+      // If never read, count all broadcast notifications
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .is("user_id", null);
+      broadcastUnread = count || 0;
+    }
+
+    const total = (userUnread || 0) + broadcastUnread;
+    setUnreadNotifications(total);
+  }, [user]);
+
+  // Initialize user-related checks
   useEffect(() => {
     if (user) {
       checkWelcomeSeen();
       checkCoursesAccess();
+      fetchUnreadCount();
     }
-  }, [user]);
+  }, [user, fetchUnreadCount]);
 
-  // Realtime notifications - show toast when new notification arrives
+  // Realtime notifications - show toast + increment badge when new notification arrives
   useEffect(() => {
     if (!user) return;
-
-    const notificationsEnabled = localStorage.getItem('notifications_enabled') !== 'false';
-    if (!notificationsEnabled) {
-      console.log("[Index] Notifications disabled, skipping realtime subscription");
-      return;
-    }
 
     console.log("[Index] Setting up realtime notifications subscription for user:", user.id);
 
@@ -192,18 +222,33 @@ export default function Index() {
           console.log("[Index] Realtime notification received:", payload.new);
           const notification = payload.new as any;
           
-          // Show toast if it's for this user or a broadcast (user_id = null)
+          // Show toast + increment badge if it's for this user or a broadcast
           if (notification.user_id === null || notification.user_id === user.id) {
             console.log("[Index] Showing toast for notification:", notification.title);
             toast({
               title: notification.title || "🔔 New Notification",
               description: notification.message?.substring(0, 100) || "",
             });
+            // Increment unread count
+            setUnreadNotifications(prev => prev + 1);
           }
         }
       )
       .subscribe((status) => {
         console.log("[Index] Realtime subscription status:", status);
+        // Show visible toast for realtime status (for iPhone debugging)
+        if (status === 'SUBSCRIBED') {
+          toast({
+            title: "🔔 Connected",
+            description: "Real-time notifications active",
+          });
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          toast({
+            title: "⚠️ Connection Issue",
+            description: `Realtime status: ${status}`,
+            variant: "destructive",
+          });
+        }
       });
 
     return () => {
@@ -324,6 +369,9 @@ export default function Index() {
   }
 
   const openNotifications = () => {
+    // Mark as read by setting last read timestamp + clear badge
+    setLastReadAtNow();
+    setUnreadNotifications(0);
     setPage("notifications");
   };
 
@@ -332,13 +380,25 @@ export default function Index() {
       {/* Header */}
       <div className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
         <div className="flex justify-between items-center px-6 py-4">
-          {/* Settings Left with Notification Flame */}
-          <div className="flex items-center gap-2">
+          {/* Settings Left */}
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setPage("settings")}
               className="text-primary hover:text-primary/80 transition-colors"
             >
               <Settings className="w-6 h-6" />
+            </button>
+            {/* Bell icon with badge */}
+            <button
+              onClick={openNotifications}
+              className="relative text-primary hover:text-primary/80 transition-colors"
+            >
+              <Bell className="w-6 h-6" />
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                </span>
+              )}
             </button>
           </div>
 
