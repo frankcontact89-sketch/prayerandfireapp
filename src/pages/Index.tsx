@@ -108,19 +108,31 @@ export default function Index() {
     }
   };
 
+  const LAST_READ_AT_KEY = "pf_notifications_last_read_at";
+
   const fetchUnreadNotifications = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    const rawLastRead = localStorage.getItem(LAST_READ_AT_KEY);
+    const lastReadAtMs = rawLastRead ? Date.parse(rawLastRead) : 0;
+
     const { data, error } = await supabase
       .from("notifications")
-      .select("id")
+      .select("id, created_at, user_id, is_read")
       .or(`user_id.eq.${user.id},user_id.is.null`)
-      .eq("is_read", false);
+      .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setUnreadNotifications(data.length);
-    }
+    if (error || !data) return;
+
+    const unread = data.filter((n: any) => {
+      if (n.user_id === user.id) return n.is_read === false;
+      // Broadcast notification: treat as unread only if created after lastReadAt.
+      const createdMs = Date.parse(n.created_at);
+      return Number.isFinite(createdMs) && createdMs > (Number.isFinite(lastReadAtMs) ? lastReadAtMs : 0);
+    }).length;
+
+    setUnreadNotifications(unread);
   };
 
   const fetchUpcomingEvents = async () => {
@@ -188,7 +200,7 @@ export default function Index() {
       fetchUpcomingEvents();
       checkWelcomeSeen();
       checkCoursesAccess();
-      
+
       const notificationsChannel = supabase
         .channel('notifications-unread')
         .on(
@@ -219,9 +231,18 @@ export default function Index() {
         )
         .subscribe();
 
+      const handleFocus = () => fetchUnreadNotifications();
+      const handleVisibility = () => {
+        if (document.visibilityState === 'visible') fetchUnreadNotifications();
+      };
+      window.addEventListener('focus', handleFocus);
+      document.addEventListener('visibilitychange', handleVisibility);
+
       return () => {
         supabase.removeChannel(notificationsChannel);
         supabase.removeChannel(eventsChannel);
+        window.removeEventListener('focus', handleFocus);
+        document.removeEventListener('visibilitychange', handleVisibility);
       };
     }
   }, [user]);
@@ -356,7 +377,7 @@ export default function Index() {
                   setUnreadNotifications(0);
                   setPage("notifications");
                 }}
-                className="relative animate-vibrate"
+                className="relative"
               >
                 <Flame className="w-6 h-6 text-orange-500" />
                 <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">

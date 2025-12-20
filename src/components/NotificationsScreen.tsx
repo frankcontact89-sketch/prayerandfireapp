@@ -9,7 +9,17 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface NotificationsScreenProps { t: (key: string) => string; onBack: () => void; }
-interface Notification { id: string; title: string; message: string; type: string; link: string | null; is_read: boolean; created_at: string; }
+interface Notification { id: string; title: string; message: string; type: string; link: string | null; is_read: boolean; created_at: string; user_id?: string | null; }
+
+const LAST_READ_AT_KEY = "pf_notifications_last_read_at";
+const getLastReadAtMs = () => {
+  const raw = localStorage.getItem(LAST_READ_AT_KEY);
+  const ms = raw ? Date.parse(raw) : 0;
+  return Number.isFinite(ms) ? ms : 0;
+};
+const setLastReadAtNow = () => {
+  localStorage.setItem(LAST_READ_AT_KEY, new Date().toISOString());
+};
 
 export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -38,19 +48,55 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const fetchNotifications = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data, error } = await supabase.from("notifications").select("*").or(`user_id.eq.${user.id},user_id.is.null`).order("created_at", { ascending: false });
-    if (error) toast({ title: t("error"), description: t("failedToLoadNotifications"), variant: "destructive" });
-    else setNotifications(data || []);
+
+    const lastReadAtMs = getLastReadAtMs();
+
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("*")
+      .or(`user_id.eq.${user.id},user_id.is.null`)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast({ title: t("error"), description: t("failedToLoadNotifications"), variant: "destructive" });
+    } else {
+      const normalized = (data || []).map((n: any) => {
+        // Broadcast notifications (user_id null) can't be updated due to security rules,
+        // so we treat them as read based on persisted lastReadAt.
+        if (n.user_id == null && Date.parse(n.created_at) <= lastReadAtMs) {
+          return { ...n, is_read: true } as Notification;
+        }
+        return n as Notification;
+      });
+      setNotifications(normalized);
+    }
+
     setLoading(false);
   };
 
-  const markAsRead = async (id: string) => { await supabase.from("notifications").update({ is_read: true }).eq("id", id); fetchNotifications(); };
+  const markAsRead = async (id: string) => {
+    await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+    fetchNotifications();
+  };
+
   const markAllAsReadSilent = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    await supabase.from("notifications").update({ is_read: true }).or(`user_id.eq.${user.id},user_id.is.null`).eq("is_read", false);
-    fetchNotifications();
+
+    // Persist a global "last read" timestamp for broadcast notifications.
+    setLastReadAtNow();
+
+    // Update user-specific notifications in the backend.
+    await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("user_id", user.id)
+      .eq("is_read", false);
+
+    // Immediately reflect read state in UI.
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
   };
+
   const markAllAsRead = async () => {
     await markAllAsReadSilent();
     toast({ title: t("success"), description: t("allMarkedAsRead") });
