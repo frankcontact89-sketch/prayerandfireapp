@@ -147,13 +147,13 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
 
   const setReminder = (event: Event) => {
     const eventDate = new Date(event.event_date);
-    const reminderTime = eventDate.getTime() - 10 * 60 * 1000; // 10 minutes before
     const now = Date.now();
     
-    if (reminderTime <= now) {
+    // Only block if the event has already passed
+    if (eventDate.getTime() <= now) {
       toast({
         title: t("error"),
-        description: t("eventTooSoon"),
+        description: t("eventAlreadyPassed"),
         variant: "destructive",
       });
       return;
@@ -164,7 +164,9 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
       Notification.requestPermission();
     }
 
-    const delay = reminderTime - now;
+    // Calculate reminder time: 10 minutes before, or immediately if less than 10 min
+    const reminderTime = eventDate.getTime() - 10 * 60 * 1000;
+    const delay = Math.max(reminderTime - now, 1000); // At least 1 second delay
     const timeoutId = setTimeout(() => {
       // Trigger notification
       if ("Notification" in window && Notification.permission === "granted") {
