@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
 import { FloatingFireButton } from "@/components/FloatingFireButton";
+import { getLastSeenNotificationsAtMs, setLastSeenNotificationsAtNow } from "@/lib/notifications-last-seen";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -165,6 +166,46 @@ export default function Index() {
       checkCoursesAccess();
     }
   }, [user]);
+
+  // Realtime notifications - show toast when new notification arrives
+  useEffect(() => {
+    if (!user) return;
+
+    const notificationsEnabled = localStorage.getItem('notifications_enabled') !== 'false';
+    if (!notificationsEnabled) return;
+
+    const channel = supabase
+      .channel('realtime-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications'
+        },
+        (payload) => {
+          const notification = payload.new as any;
+          // Show toast if it's for this user or a broadcast (user_id = null)
+          if (notification.user_id === null || notification.user_id === user.id) {
+            const lastSeenMs = getLastSeenNotificationsAtMs();
+            const notificationCreatedMs = Date.parse(notification.created_at);
+            
+            // Only show toast if notification is newer than last seen
+            if (notificationCreatedMs > lastSeenMs) {
+              toast({
+                title: notification.title || "🔔 New Notification",
+                description: notification.message?.substring(0, 100) || "",
+              });
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, toast]);
 
   // Check if user has seen welcome screen
   const checkWelcomeSeen = async () => {
