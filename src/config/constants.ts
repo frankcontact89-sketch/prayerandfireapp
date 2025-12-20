@@ -7,7 +7,7 @@ export const APP_CONFIG = {
   URL: "https://prayerandfire.app",
   
   // Contact & Support
-  SUPPORT_EMAIL: "frankcontact89@gmail.com",
+  SUPPORT_EMAIL: "prayerandfireglobal@gmail.com",
   
   // App Info
   APP_NAME: "Prayer & Fire",

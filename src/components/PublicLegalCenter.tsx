@@ -118,7 +118,7 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
                 <li>Donations are non-refundable.</li>
                 <li>Subscriptions can be canceled at any time to stop future charges.</li>
                 <li>Refund requests are reviewed case-by-case if required by law.</li>
-                <li>Support contact: <a href="mailto:frankcontact89@gmail.com" className="text-primary hover:underline">frankcontact89@gmail.com</a></li>
+                <li>Support contact: <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></li>
               </ul>
             </AccordionContent>
           </AccordionItem>
@@ -141,7 +141,7 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
                 <li>Data is used only to operate and improve the app.</li>
                 <li>Users may request data deletion.</li>
                 <li>App not intended for children under 13.</li>
-                <li>Contact: <a href="mailto:frankcontact89@gmail.com" className="text-primary hover:underline">frankcontact89@gmail.com</a></li>
+                <li>Contact: <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></li>
                 <li>Website: <a href="https://prayerandfire.app" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.app</a></li>
               </ul>
             </AccordionContent>
@@ -195,7 +195,7 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
         <div className="text-center text-sm text-muted-foreground pt-8 border-t border-border mt-8">
           <p>© {new Date().getFullYear()} Prayer & Fire App</p>
           <p className="mt-2">
-            <a href="mailto:frankcontact89@gmail.com" className="text-primary hover:underline">frankcontact89@gmail.com</a>
+            <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a>
             {" • "}
             <a href="https://prayerandfire.app" className="text-primary hover:underline">prayerandfire.app</a>
           </p>

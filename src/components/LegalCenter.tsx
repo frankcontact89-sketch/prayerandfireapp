@@ -117,7 +117,7 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
               <li>{t("refundNonRefundable")}</li>
               <li>{t("refundCancelAnytime")}</li>
               <li>{t("refundCaseByCase")}</li>
-              <li>{t("refundContact")}: <a href="mailto:frankcontact89@gmail.com" className="text-primary hover:underline">frankcontact89@gmail.com</a></li>
+              <li>{t("refundContact")}: <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></li>
             </ul>
           </AccordionContent>
         </AccordionItem>
@@ -140,7 +140,7 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
               <li>{t("privacyDataUse")}</li>
               <li>{t("privacyDeletion")}</li>
               <li>{t("privacyChildren")}</li>
-              <li>{t("contact")}: <a href="mailto:frankcontact89@gmail.com" className="text-primary hover:underline">frankcontact89@gmail.com</a></li>
+              <li>{t("contact")}: <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></li>
               <li>{t("website")}: <a href="https://prayerandfire.app" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.app</a></li>
             </ul>
           </AccordionContent>

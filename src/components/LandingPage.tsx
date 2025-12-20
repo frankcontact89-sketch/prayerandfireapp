@@ -88,8 +88,8 @@ export function LandingPage({ t, onOpenApp, onOpenLegal }: LandingPageProps) {
               <Flame className="w-4 h-4 text-primary" />
               <span className="font-medium text-foreground">Prayer & Fire</span>
             </div>
-            <a href="mailto:frankcontact89@gmail.com" className="hover:text-primary transition-colors">
-              frankcontact89@gmail.com
+            <a href="mailto:prayerandfireglobal@gmail.com" className="hover:text-primary transition-colors">
+              prayerandfireglobal@gmail.com
             </a>
             <p>© {new Date().getFullYear()} Prayer & Fire App</p>
           </div>
