@@ -44,9 +44,10 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
             </AccordionTrigger>
             <AccordionContent className="px-5 pb-5">
               <div className="space-y-4 text-muted-foreground text-sm leading-relaxed">
-                <p>Prayer & Fire is a faith-based app for prayer, community, and spiritual growth.</p>
-                <p><strong className="text-foreground">Mission:</strong> Equip and empower people through prayer, biblical teaching, and spiritual resources.</p>
-                <p><strong className="text-foreground">Features:</strong> Prayer content, devotionals, community resources, courses, and optional donations or memberships.</p>
+                <p>Prayer & Fire is a global movement dedicated to prayer, faith, and spiritual growth through Jesus Christ.</p>
+                <p><strong className="text-foreground">Mission:</strong> To ignite hearts with the fire of the Holy Spirit, strengthen believers through prayer, and build a global community rooted in faith, unity, and love.</p>
+                <p><strong className="text-foreground">Vision:</strong> Prayer & Fire exists to inspire transformation, raise leaders, and encourage people around the world to live a life guided by prayer, purpose, and the power of God.</p>
+                <p><strong className="text-foreground">Contact:</strong> For support or inquiries, please contact us at: <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></p>
                 
                 {/* Leadership Section */}
                 <div className="pt-4 mt-4 border-t border-border/30">
