@@ -1,5 +1,7 @@
 import React from "react";
 import { ArrowLeft, Flame, Info, CreditCard, RefreshCw, Shield, FileText, Mail } from "lucide-react";
+import alineRamiro from "@/assets/aline-ramiro.jpg";
+import franciscoRivera from "@/assets/francisco-rivera.jpg";
 import {
   Accordion,
   AccordionContent,
@@ -45,6 +47,33 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
                 <p>Prayer & Fire is a faith-based app for prayer, community, and spiritual growth.</p>
                 <p><strong className="text-foreground">Mission:</strong> Equip and empower people through prayer, biblical teaching, and spiritual resources.</p>
                 <p><strong className="text-foreground">Features:</strong> Prayer content, devotionals, community resources, courses, and optional donations or memberships.</p>
+                
+                {/* Leadership Section */}
+                <div className="pt-4 mt-4 border-t border-border/30">
+                  <div className="flex flex-col gap-6 items-center">
+                    {/* Fundadora */}
+                    <div className="flex flex-col items-center">
+                      <img
+                        src={alineRamiro}
+                        alt="Aline Ramiro"
+                        className="w-24 h-24 rounded-full object-cover mb-2 border-2 border-primary/30 shadow-lg"
+                      />
+                      <strong className="text-primary text-xs">Fundadora</strong>
+                      <p className="text-foreground font-medium text-sm">Aline Ramiro</p>
+                    </div>
+
+                    {/* Presidente General */}
+                    <div className="flex flex-col items-center">
+                      <img
+                        src={franciscoRivera}
+                        alt="Francisco Rivera"
+                        className="w-24 h-24 rounded-full object-cover mb-2 border-2 border-primary/30 shadow-lg"
+                      />
+                      <strong className="text-primary text-xs">Presidente General</strong>
+                      <p className="text-foreground font-medium text-sm">Francisco Rivera</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </AccordionContent>
           </AccordionItem>
