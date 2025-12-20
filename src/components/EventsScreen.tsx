@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Calendar, MapPin, Users, Video, XCircle, Bell, BellOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { notificationHaptic } from "@/lib/haptics";
 
 interface Event {
   id: string;
@@ -177,12 +178,10 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
         });
       }
       
-      // Vibrate if supported
-      if ("vibrate" in navigator) {
-        navigator.vibrate([500, 200, 500, 200, 500]);
-      }
+      // Vibrate if supported (safe fallback for iPhone)
+      notificationHaptic();
 
-      // Show toast as fallback
+      // Show toast notification
       toast({
         title: `🔔 ${event.title}`,
         description: t("eventStartingSoon"),

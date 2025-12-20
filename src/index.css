@@ -116,6 +116,15 @@ All colors MUST be HSL.
   75% { opacity: 0.3; transform: translateY(-5px) scale(0.6); }
 }
 
+@keyframes pulse-quick {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.animate-pulse-quick {
+  animation: pulse-quick 0.2s ease-in-out;
+}
+
 @layer base {
   * {
     @apply border-border;
