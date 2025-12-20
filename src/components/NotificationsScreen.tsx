@@ -26,6 +26,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   useEffect(() => {
     // Hard-fix: opening Notifications sets the persisted last-seen timestamp immediately.
     setLastSeenNotificationsAtNow();
+    console.debug("[notifications] NotificationsScreen mount -> set lastSeen now");
 
     const initNotifications = async () => {
       await fetchNotifications();
@@ -46,6 +47,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     return () => {
       // Hard-fix: also persist last-seen on unmount (e.g., navigating away, app background).
       setLastSeenNotificationsAtNow();
+      console.debug("[notifications] NotificationsScreen unmount -> set lastSeen now");
       supabase.removeChannel(channel);
     };
   }, []);
