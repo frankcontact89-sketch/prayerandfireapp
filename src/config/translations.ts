@@ -278,6 +278,7 @@ export const translations: Record<string, Record<string, string>> = {
     reminderCancelled: "Reminder Cancelled",
     eventStartingSoon: "Event starting in 10 minutes!",
     eventTooSoon: "The event is too soon to set a reminder",
+    eventAlreadyPassed: "This event has already passed",
   },
   es: {
     title: "Prayer & Fire",
@@ -558,6 +559,7 @@ export const translations: Record<string, Record<string, string>> = {
     reminderCancelled: "Recordatorio Cancelado",
     eventStartingSoon: "¡El evento comienza en 10 minutos!",
     eventTooSoon: "El evento es muy pronto para poner un recordatorio",
+    eventAlreadyPassed: "Este evento ya pasó",
   },
   fr: {
     title: "Prayer & Fire",
