@@ -50,8 +50,10 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
                 
                 {/* Leadership Section */}
                 <div className="pt-4 mt-4 border-t border-border/30">
+                  <h3 className="text-center font-semibold mt-4 mb-4">
+                    Founders
+                  </h3>
                   <div className="flex flex-col gap-6 items-center">
-                    {/* Founder */}
                     <div className="flex flex-col items-center">
                       <img
                         src={alineRamiro}
