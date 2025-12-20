@@ -15,7 +15,7 @@ import { LegalCenter } from "@/components/LegalCenter";
 import { LandingPage } from "@/components/LandingPage";
 import { PublicLegalCenter } from "@/components/PublicLegalCenter";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
-import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap, Calendar } from "lucide-react";
+import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
@@ -293,13 +293,6 @@ export default function Index() {
               className="text-primary hover:text-primary/80 transition-colors"
             >
               <Settings className="w-6 h-6" />
-            </button>
-            <button
-              onClick={() => setPage("events")}
-              className="text-primary hover:text-primary/80 transition-colors"
-              aria-label={t("events")}
-            >
-              <Calendar className="w-6 h-6" />
             </button>
           </div>
 
