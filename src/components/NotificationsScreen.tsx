@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { setLastSeenNotificationsAtNow } from "@/lib/notifications-last-seen";
+import { setLastReadAtNow } from "@/lib/notifications-last-seen";
 
 interface NotificationsScreenProps { t: (key: string) => string; onBack: () => void; }
 interface Notification { id: string; title: string; message: string; type: string; link: string | null; is_read: boolean; created_at: string; user_id?: string | null; }
@@ -112,11 +112,12 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const deleteNotification = async (id: string) => { await supabase.from("notifications").delete().eq("id", id); fetchNotifications(); };
   const openNotification = async (notification: Notification) => { 
     setSelectedNotification(notification); 
-    if (!notification.is_read) {
+    // Only mark user-specific notifications as read in DB
+    if (!notification.is_read && notification.user_id !== null) {
       await markAsRead(notification.id);
-      // Also update local last seen to prevent this from appearing unread again
-      setLastSeenNotificationsAtNow();
     }
+    // Always update local last read timestamp
+    setLastReadAtNow();
   };
   const toggleNotifications = (enabled: boolean) => { setNotificationsEnabled(enabled); localStorage.setItem('notifications_enabled', JSON.stringify(enabled)); toast({ title: enabled ? t("notificationsEnabled") : t("notificationsDisabled"), description: enabled ? t("youWillReceiveNotifications") : t("notificationsDisabledMsg") }); };
   const sendFeedback = async () => {
