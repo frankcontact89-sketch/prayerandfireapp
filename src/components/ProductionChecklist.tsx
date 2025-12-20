@@ -108,7 +108,7 @@ const checklist: ChecklistItem[] = [
       { name: "Privacy Policy", completed: true },
       { name: "Terms of Service", completed: true },
       { name: "Support & Contact", completed: true },
-      { name: "Contact email: frankcontact89@gmail.com", completed: true },
+      { name: "Contact email: prayerandfireglobal@gmail.com", completed: true },
       { name: "Apple App Store compliant", completed: true },
     ],
   },
