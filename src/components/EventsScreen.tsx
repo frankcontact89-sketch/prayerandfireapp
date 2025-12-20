@@ -261,10 +261,6 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
                         <span>{event.location}</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-2 text-sm">
-                      <Users className="w-4 h-4 text-primary" />
-                      <span>{event.rsvp_count} {t("attending")}</span>
-                    </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {!rsvps.has(event.id) && !declines.has(event.id) && (
