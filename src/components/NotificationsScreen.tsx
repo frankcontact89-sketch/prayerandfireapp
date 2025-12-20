@@ -127,7 +127,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
           {notifications.map((notification) => (
             <Card key={notification.id} className={`p-4 transition-all duration-200 hover:shadow-md cursor-pointer ${!notification.is_read ? "bg-primary/5 border-primary/20" : ""}`} onClick={() => openNotification(notification)}>
               <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-full relative ${!notification.is_read ? "bg-orange-500/20 text-orange-500" : "bg-muted text-muted-foreground"}`}><Flame className={`w-5 h-5 ${!notification.is_read ? "animate-pulse" : ""}`} /></div>
+                <div className={`p-2 rounded-full relative ${!notification.is_read ? "bg-orange-500/20 text-orange-500" : "bg-muted text-muted-foreground"}`}><Flame className="w-5 h-5" /></div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2"><h4 className={`font-semibold ${!notification.is_read ? "text-foreground" : "text-muted-foreground"}`}>{notification.title}</h4>{!notification.is_read && <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2" />}</div>
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{notification.message}</p>
