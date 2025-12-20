@@ -461,7 +461,9 @@ export default function Index() {
           <NotificationsScreen 
             t={t} 
             onBack={() => {
-              fetchUnreadNotifications();
+              // Persist last-seen on exit too, so badge cannot reappear on return.
+              setLastSeenNotificationsAtNow();
+              setUnreadNotifications(0);
               setPage("settings");
             }} 
           />

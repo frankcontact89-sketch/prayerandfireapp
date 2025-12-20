@@ -43,7 +43,11 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => fetchNotifications())
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      // Hard-fix: also persist last-seen on unmount (e.g., navigating away, app background).
+      setLastSeenNotificationsAtNow();
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchNotifications = async () => {
