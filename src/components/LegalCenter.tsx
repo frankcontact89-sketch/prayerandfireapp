@@ -46,7 +46,6 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
               <p>Prayer & Fire is a global movement dedicated to prayer, faith, and spiritual growth through Jesus Christ.</p>
               <p><strong className="text-foreground">Mission:</strong> To ignite hearts with the fire of the Holy Spirit, strengthen believers through prayer, and build a global community rooted in faith, unity, and love.</p>
               <p><strong className="text-foreground">Vision:</strong> Prayer & Fire exists to inspire transformation, raise leaders, and encourage people around the world to live a life guided by prayer, purpose, and the power of God.</p>
-              <p><strong className="text-foreground">Contact:</strong> For support or inquiries, please contact us at: <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></p>
               
               {/* Leadership Section */}
               <div className="pt-4 mt-4 border-t border-border/30">
