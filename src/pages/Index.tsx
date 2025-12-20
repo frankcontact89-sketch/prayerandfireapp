@@ -121,13 +121,17 @@ export default function Index() {
       .or(`user_id.eq.${user.id},user_id.is.null`)
       .order("created_at", { ascending: false });
 
-    if (error || !data) return;
+    if (error || !data) {
+      console.debug("[notifications] unread fetch error", error);
+      return;
+    }
 
     const unread = data.filter((n: any) => {
       const createdMs = Date.parse(n.created_at);
       return Number.isFinite(createdMs) && createdMs > lastSeenAtMs;
     }).length;
 
+    console.debug("[notifications] lastSeenAtMs=", lastSeenAtMs, "rows=", data.length, "unread=", unread);
     setUnreadNotifications(unread);
   };
 
@@ -358,6 +362,7 @@ export default function Index() {
     // Hard-fix: persist last-seen timestamp so badge never comes back unless a new notification arrives.
     setLastSeenNotificationsAtNow();
     setUnreadNotifications(0);
+    console.debug("[notifications] openNotifications -> set lastSeen now");
     setPage("notifications");
   };
 
