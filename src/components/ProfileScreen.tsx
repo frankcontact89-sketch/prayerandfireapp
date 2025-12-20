@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Camera, Upload, ArrowLeft, Trash2, CalendarPlus } from "lucide-react";
+import { Camera, Upload, ArrowLeft, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -14,13 +14,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
 
 interface ProfileScreenProps {
   t: (key: string) => string;
@@ -38,38 +31,9 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [reminderDate, setReminderDate] = useState<Date | undefined>(undefined);
-  const [reminderText, setReminderText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-
-  const addReminderToCalendar = () => {
-    if (!reminderDate || !reminderText.trim()) {
-      toast({
-        title: t("error"),
-        description: t("pleaseEnterReminderDetails"),
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const startDate = new Date(reminderDate);
-    startDate.setHours(9, 0, 0, 0);
-    const endDate = new Date(startDate.getTime() + 30 * 60 * 1000); // 30 minutes
-
-    const formatDate = (date: Date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    
-    const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(reminderText)}&dates=${formatDate(startDate)}/${formatDate(endDate)}&details=${encodeURIComponent(`Personal reminder from Prayer Fire App`)}`;
-    
-    window.open(calendarUrl, '_blank');
-    toast({
-      title: t("addedToCalendar"),
-      description: t("calendarOpened"),
-    });
-    setReminderDate(undefined);
-    setReminderText("");
-  };
 
   useEffect(() => { loadProfile(); }, []);
 
@@ -167,41 +131,6 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
           <Input placeholder={t("name")} value={name} onChange={(e) => setName(e.target.value)} disabled={loading} className="h-12" />
           <Button onClick={handleSaveProfile} disabled={loading} className="w-full h-12 font-bold">{loading ? t("saving") : t("saveChanges")}</Button>
         </div>
-        {/* Personal Reminder Section */}
-        <div className="space-y-4 border-t border-border pt-6">
-          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <CalendarPlus className="w-5 h-5 text-primary" />
-            {t("personalReminder")}
-          </h3>
-          <Input
-            placeholder={t("reminderText")}
-            value={reminderText}
-            onChange={(e) => setReminderText(e.target.value)}
-            className="h-12"
-          />
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full h-12 justify-start text-left font-normal">
-                <CalendarPlus className="mr-2 h-4 w-4" />
-                {reminderDate ? format(reminderDate, "PPP") : t("selectDate")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={reminderDate}
-                onSelect={setReminderDate}
-                initialFocus
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-          <Button onClick={addReminderToCalendar} className="w-full h-12 font-bold">
-            <CalendarPlus className="w-5 h-5 mr-2" />
-            {t("addToCalendar")}
-          </Button>
-        </div>
-
         <div className="flex items-center justify-center gap-6">
           <button onClick={signOut} className="text-primary font-bold py-3 hover:underline">{t("signout")}</button>
           <span className="text-muted-foreground">|</span>
