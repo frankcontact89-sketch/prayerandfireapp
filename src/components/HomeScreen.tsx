@@ -30,33 +30,33 @@ export function HomeScreen({ t }: HomeScreenProps) {
           </p>
         </div>
 
-        {/* Founders Section */}
-        <section className="mt-6 pt-6 text-center">
-          <h3 className="text-lg font-semibold text-foreground mb-4">
-            Founders
+        {/* Leadership Section */}
+        <section className="mt-12 pt-6 border-t border-border/30 text-center">
+          <h3 className="text-xl font-semibold text-foreground mb-8">
+            Liderazgo
           </h3>
 
-          <div className="grid gap-5 justify-items-center">
-            {/* Founder */}
+          <div className="flex flex-col gap-8 items-center">
+            {/* Fundadora */}
             <div className="flex flex-col items-center">
               <img
                 src={alineRamiro}
                 alt="Aline Ramiro"
-                className="w-24 h-24 rounded-full object-cover mb-2 border-2 border-primary"
+                className="w-36 h-36 rounded-full object-cover mb-3 border-2 border-primary/30 shadow-lg"
               />
-              <div className="font-semibold text-foreground">Aline Ramiro</div>
-              <div className="text-sm text-foreground/80">Founder</div>
+              <strong className="text-primary text-sm">Fundadora</strong>
+              <p className="text-foreground font-medium">Aline Ramiro</p>
             </div>
 
-            {/* President */}
+            {/* Presidente General */}
             <div className="flex flex-col items-center">
               <img
                 src={franciscoRivera}
                 alt="Francisco Rivera"
-                className="w-24 h-24 rounded-full object-cover mb-2 border-2 border-primary"
+                className="w-36 h-36 rounded-full object-cover mb-3 border-2 border-primary/30 shadow-lg"
               />
-              <div className="font-semibold text-foreground">Francisco Rivera</div>
-              <div className="text-sm text-foreground/80">President</div>
+              <strong className="text-primary text-sm">Presidente General</strong>
+              <p className="text-foreground font-medium">Francisco Rivera</p>
             </div>
           </div>
         </section>
