@@ -38,7 +38,7 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
   // Removed: unreadNotifications state (badge removed)
-  const [newEventsCount, setNewEventsCount] = useState(0);
+  // Removed: newEventsCount state (badge removed)
   const [hasCoursesAccess, setHasCoursesAccess] = useState(false);
   const { toast } = useToast();
 
@@ -110,17 +110,7 @@ export default function Index() {
 
   // Removed: fetchUnreadNotifications (badge removed)
 
-  const fetchUpcomingEvents = async () => {
-    const { data, error } = await supabase
-      .from("events")
-      .select("id")
-      .eq("is_active", true)
-      .gte("event_date", new Date().toISOString());
-
-    if (!error && data) {
-      setNewEventsCount(data.length);
-    }
-  };
+  // Removed: fetchUpcomingEvents (badge removed)
 
   const checkCoursesAccess = async () => {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
@@ -168,31 +158,11 @@ export default function Index() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch events, subscribe to changes
+  // Initialize user-related checks (no header badges)
   useEffect(() => {
     if (user) {
-      fetchUpcomingEvents();
       checkWelcomeSeen();
       checkCoursesAccess();
-
-      const eventsChannel = supabase
-        .channel('events-updates')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'events'
-          },
-          () => {
-            fetchUpcomingEvents();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(eventsChannel);
-      };
     }
   }, [user]);
 
@@ -324,20 +294,13 @@ export default function Index() {
             >
               <Settings className="w-6 h-6" />
             </button>
-            {newEventsCount > 0 && page !== "events" && (
-              <button
-                onClick={() => {
-                  setNewEventsCount(0);
-                  setPage("events");
-                }}
-                className="relative animate-vibrate"
-              >
-                <Calendar className="w-6 h-6 text-orange-500" />
-                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {newEventsCount}
-                </span>
-              </button>
-            )}
+            <button
+              onClick={() => setPage("events")}
+              className="text-primary hover:text-primary/80 transition-colors"
+              aria-label={t("events")}
+            >
+              <Calendar className="w-6 h-6" />
+            </button>
           </div>
 
           {/* Title Center */}
