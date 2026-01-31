@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { VideoCallScreen } from "@/components/VideoCallScreen";
+import { MeetingsScreen } from "@/components/MeetingsScreen";
 
 type View = "hub" | "messages" | "video" | "contacts" | "meetings";
 
@@ -298,75 +299,7 @@ export function ChatScreen({ t, onBack }: ChatScreenProps) {
         )}
 
         {view === "meetings" && (
-          <>
-            <SectionHeader title="Meetings" onBack={() => setView("hub")} />
-
-            <Card className="bg-card/50 border-border">
-              <CardContent className="p-4">
-                <h2 className="font-bold text-lg text-foreground mb-2">Meetings (Zoom-style)</h2>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Sin link permanente. Para otro día, se crea otra reunión.
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <Card className="bg-card/30 border-border p-4">
-                    <div className="w-10 h-10 rounded-xl grid place-items-center bg-primary/10 border border-primary/25 mb-3">
-                      <Video className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="font-black text-foreground mb-1">Start</div>
-                    <div className="text-muted-foreground text-sm mb-3">Start a meeting now</div>
-                    <Button className="w-full" onClick={() => alert("Start meeting now (mock)")}>
-                      Start Meeting
-                    </Button>
-                  </Card>
-
-                  <Card className="bg-card/30 border-border p-4">
-                    <div className="w-10 h-10 rounded-xl grid place-items-center bg-primary/10 border border-primary/25 mb-3">
-                      🔑
-                    </div>
-                    <div className="font-black text-foreground mb-1">Join</div>
-                    <div className="text-muted-foreground text-sm mb-3">Enter meeting code</div>
-                    <Input placeholder="Meeting code" className="mb-3 bg-card/50 border-border" />
-                    <Button variant="outline" className="w-full" onClick={() => alert("Join meeting (mock)")}>
-                      Join
-                    </Button>
-                  </Card>
-
-                  <Card className="bg-card/30 border-border p-4">
-                    <div className="w-10 h-10 rounded-xl grid place-items-center bg-primary/10 border border-primary/25 mb-3">
-                      <Calendar className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="font-black text-foreground mb-1">Schedule</div>
-                    <div className="text-muted-foreground text-sm mb-3">Create for another day</div>
-                    <Button variant="outline" className="w-full" onClick={() => alert("Schedule meeting (mock)")}>
-                      Schedule
-                    </Button>
-                  </Card>
-                </div>
-
-                <Card className="mt-4 bg-card/30 border-border p-3">
-                  <div className="space-y-2">
-                    <div className="flex justify-between py-2 border-b border-border/50 text-muted-foreground">
-                      <span>Free time</span>
-                      <b className="text-foreground">30 minutes</b>
-                    </div>
-                    <div className="flex justify-between py-2 border-b border-border/50 text-muted-foreground">
-                      <span>Re-join same day</span>
-                      <b className="text-foreground">Allowed</b>
-                    </div>
-                    <div className="flex justify-between py-2 border-b border-border/50 text-muted-foreground">
-                      <span>Permanent link</span>
-                      <b className="text-destructive">No</b>
-                    </div>
-                    <div className="flex justify-between py-2 text-muted-foreground">
-                      <span>$6.99 donor</span>
-                      <b className="text-primary">Unlimited</b>
-                    </div>
-                  </div>
-                </Card>
-              </CardContent>
-            </Card>
-          </>
+          <MeetingsScreen t={t} onBack={() => setView("hub")} />
         )}
       </div>
     </div>
