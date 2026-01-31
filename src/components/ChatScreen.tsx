@@ -87,20 +87,35 @@ export function ChatScreen({ t, onBack }: ChatScreenProps) {
     { id: "ch4", title: "Emmanuel Frommelt", last: "I found it in Instagram…", unread: 0, contactId: "c4" },
   ]);
 
-  // Modals state
+  // Messages modals state
   const [newMenuOpen, setNewMenuOpen] = useState(false);
   const [pickContactOpen, setPickContactOpen] = useState(false);
   const [pickIntent, setPickIntent] = useState<"message" | "edit" | "delete" | null>(null);
-  const [contactFormOpen, setContactFormOpen] = useState<"add" | "edit" | "delete" | null>(null);
+  const [messageContactFormOpen, setMessageContactFormOpen] = useState<"add" | "edit" | "delete" | null>(null);
+  const [messageContactName, setMessageContactName] = useState("");
+  const [messageContactPhone, setMessageContactPhone] = useState("");
+  const [messageTargetContactId, setMessageTargetContactId] = useState<string>("");
+
+  // Contacts view state
+  const [contactFormOpen, setContactFormOpen] = useState(false);
+  const [contactFormMode, setContactFormMode] = useState<"add" | "edit">("add");
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
-  const [targetContactId, setTargetContactId] = useState<string>("");
+  const [contactActionsOpen, setContactActionsOpen] = useState(false);
+  const [selectedContactId, setSelectedContactId] = useState<string>("");
+  const [deleteContactOpen, setDeleteContactOpen] = useState(false);
 
-  const selectedContact = useMemo(
-    () => contacts.find((c) => c.id === targetContactId) || null,
-    [contacts, targetContactId]
+  const messageSelectedContact = useMemo(
+    () => contacts.find((c) => c.id === messageTargetContactId) || null,
+    [contacts, messageTargetContactId]
   );
 
+  const selectedContact = useMemo(
+    () => contacts.find((c) => c.id === selectedContactId) || null,
+    [contacts, selectedContactId]
+  );
+
+  // Messages functions
   function openPickContact(intent: "message" | "edit" | "delete") {
     setNewMenuOpen(false);
     setPickIntent(intent);
@@ -118,47 +133,116 @@ export function ChatScreen({ t, onBack }: ChatScreenProps) {
         ]);
       }
     } else if (pickIntent === "edit") {
-      setTargetContactId(contact.id);
-      setContactName(contact.name);
-      setContactPhone(contact.phone || "");
-      setContactFormOpen("edit");
+      setMessageTargetContactId(contact.id);
+      setMessageContactName(contact.name);
+      setMessageContactPhone(contact.phone || "");
+      setMessageContactFormOpen("edit");
     } else if (pickIntent === "delete") {
-      setTargetContactId(contact.id);
-      setContactFormOpen("delete");
+      setMessageTargetContactId(contact.id);
+      setMessageContactFormOpen("delete");
     }
     setPickIntent(null);
   }
 
-  function openAddContact() {
+  function openAddContactFromMessages() {
     setNewMenuOpen(false);
-    setContactFormOpen("add");
+    setMessageContactFormOpen("add");
+    setMessageContactName("");
+    setMessageContactPhone("");
+  }
+
+  function saveNewContactFromMessages() {
+    const name = messageContactName.trim();
+    if (!name) return;
+    const c: Contact = { id: "c" + Date.now(), name, phone: messageContactPhone.trim() || undefined };
+    setContacts((prev) => [c, ...prev]);
+    setMessageContactFormOpen(null);
+  }
+
+  function saveEditContactFromMessages() {
+    if (!messageSelectedContact) return;
+    const name = messageContactName.trim();
+    if (!name) return;
+    setContacts((prev) => prev.map((c) => (c.id === messageSelectedContact.id ? { ...c, name, phone: messageContactPhone.trim() || undefined } : c)));
+    setChats((prev) => prev.map((ch) => (ch.contactId === messageSelectedContact.id ? { ...ch, title: name } : ch)));
+    setMessageContactFormOpen(null);
+  }
+
+  function deleteContactFromMessages() {
+    if (!messageSelectedContact) return;
+    setContacts((prev) => prev.filter((c) => c.id !== messageSelectedContact.id));
+    setChats((prev) => prev.filter((ch) => ch.contactId !== messageSelectedContact.id));
+    setMessageTargetContactId("");
+    setMessageContactFormOpen(null);
+  }
+
+  // Contacts view functions
+  function openAddContact() {
+    setContactFormMode("add");
     setContactName("");
     setContactPhone("");
+    setContactFormOpen(true);
   }
 
-  function saveNewContact() {
-    const name = contactName.trim();
-    if (!name) return;
-    const c: Contact = { id: "c" + Date.now(), name, phone: contactPhone.trim() || undefined };
-    setContacts((prev) => [c, ...prev]);
-    setContactFormOpen(null);
+  function openEditContact(contact: Contact) {
+    setContactFormMode("edit");
+    setSelectedContactId(contact.id);
+    setContactName(contact.name);
+    setContactPhone(contact.phone || "");
+    setContactFormOpen(true);
   }
 
-  function saveEditContact() {
-    if (!selectedContact) return;
-    const name = contactName.trim();
-    if (!name) return;
-    setContacts((prev) => prev.map((c) => (c.id === selectedContact.id ? { ...c, name, phone: contactPhone.trim() || undefined } : c)));
-    setChats((prev) => prev.map((ch) => (ch.contactId === selectedContact.id ? { ...ch, title: name } : ch)));
-    setContactFormOpen(null);
+  function saveContact() {
+    const n = contactName.trim();
+    if (!n) return;
+
+    if (contactFormMode === "add") {
+      const id = "c" + Date.now();
+      setContacts((prev) => [{ id, name: n, phone: contactPhone.trim() || undefined }, ...prev]);
+    } else {
+      if (!selectedContact) return;
+      setContacts((prev) =>
+        prev.map((c) =>
+          c.id === selectedContact.id ? { ...c, name: n, phone: contactPhone.trim() || undefined } : c
+        )
+      );
+      setChats((prev) => prev.map((ch) => (ch.contactId === selectedContact.id ? { ...ch, title: n } : ch)));
+    }
+
+    setContactFormOpen(false);
   }
 
-  function deleteContactNow() {
+  function askDeleteContact(contact: Contact) {
+    setSelectedContactId(contact.id);
+    setContactActionsOpen(false);
+    setDeleteContactOpen(true);
+  }
+
+  function doDeleteContact() {
     if (!selectedContact) return;
     setContacts((prev) => prev.filter((c) => c.id !== selectedContact.id));
     setChats((prev) => prev.filter((ch) => ch.contactId !== selectedContact.id));
-    setTargetContactId("");
-    setContactFormOpen(null);
+    setDeleteContactOpen(false);
+    setSelectedContactId("");
+  }
+
+  function openContactActions(contact: Contact) {
+    setSelectedContactId(contact.id);
+    setContactActionsOpen(true);
+  }
+
+  function startChatFromContact(contactId: string) {
+    const contact = contacts.find((c) => c.id === contactId);
+    if (!contact) return;
+    const existing = chats.find((c) => c.contactId === contactId);
+    if (!existing) {
+      setChats((prev) => [
+        { id: "ch" + Date.now(), title: contact.name, last: "Nuevo chat", unread: 0, contactId: contact.id },
+        ...prev,
+      ]);
+    }
+    setContactActionsOpen(false);
+    setView("messages");
   }
 
   const topTitle =
@@ -192,6 +276,12 @@ export function ChatScreen({ t, onBack }: ChatScreenProps) {
           {view === "messages" && (
             <Button onClick={() => setNewMenuOpen(true)} className="rounded-xl">
               <Plus className="w-4 h-4 mr-1" /> New
+            </Button>
+          )}
+
+          {view === "contacts" && (
+            <Button onClick={openAddContact} className="rounded-xl">
+              <Plus className="w-4 h-4 mr-1" /> Add
             </Button>
           )}
         </div>
@@ -235,10 +325,15 @@ export function ChatScreen({ t, onBack }: ChatScreenProps) {
         {view === "contacts" && (
           <div className="space-y-3">
             {contacts.map((c) => (
-              <Card key={c.id} className="p-4">
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => openContactActions(c)}
+                className="w-full text-left rounded-2xl border border-border bg-card/50 hover:bg-card/80 transition p-4"
+              >
                 <div className="font-semibold text-foreground">{c.name}</div>
                 {c.phone && <div className="text-sm text-muted-foreground">{c.phone}</div>}
-              </Card>
+              </button>
             ))}
           </div>
         )}
@@ -248,7 +343,7 @@ export function ChatScreen({ t, onBack }: ChatScreenProps) {
         )}
       </div>
 
-      {/* +New Menu Modal */}
+      {/* +New Menu Modal (Messages) */}
       <Dialog open={newMenuOpen} onOpenChange={setNewMenuOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -256,14 +351,14 @@ export function ChatScreen({ t, onBack }: ChatScreenProps) {
           </DialogHeader>
           <div className="space-y-2">
             <ActionButton label="Nuevo mensaje" icon={MessageSquare} onClick={() => openPickContact("message")} />
-            <ActionButton label="Nuevo contacto" icon={Users} onClick={openAddContact} />
+            <ActionButton label="Nuevo contacto" icon={Users} onClick={openAddContactFromMessages} />
             <ActionButton label="Editar contacto" icon={Pencil} onClick={() => openPickContact("edit")} />
             <ActionButton label="Borrar contacto" icon={Trash2} danger onClick={() => openPickContact("delete")} />
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Pick Contact Modal */}
+      {/* Pick Contact Modal (Messages) */}
       <Dialog open={pickContactOpen} onOpenChange={setPickContactOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -285,70 +380,151 @@ export function ChatScreen({ t, onBack }: ChatScreenProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Add Contact Modal */}
-      <Dialog open={contactFormOpen === "add"} onOpenChange={() => setContactFormOpen(null)}>
+      {/* Add Contact Modal (Messages) */}
+      <Dialog open={messageContactFormOpen === "add"} onOpenChange={() => setMessageContactFormOpen(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Nuevo contacto</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Input
-              value={contactName}
-              onChange={(e) => setContactName(e.target.value)}
+              value={messageContactName}
+              onChange={(e) => setMessageContactName(e.target.value)}
               placeholder="Nombre"
             />
             <Input
-              value={contactPhone}
-              onChange={(e) => setContactPhone(e.target.value)}
+              value={messageContactPhone}
+              onChange={(e) => setMessageContactPhone(e.target.value)}
               placeholder="Teléfono (opcional)"
             />
-            <Button onClick={saveNewContact} className="w-full">
+            <Button onClick={saveNewContactFromMessages} className="w-full">
               Guardar
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Contact Modal */}
-      <Dialog open={contactFormOpen === "edit"} onOpenChange={() => setContactFormOpen(null)}>
+      {/* Edit Contact Modal (Messages) */}
+      <Dialog open={messageContactFormOpen === "edit"} onOpenChange={() => setMessageContactFormOpen(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Editar contacto</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Input
-              value={contactName}
-              onChange={(e) => setContactName(e.target.value)}
+              value={messageContactName}
+              onChange={(e) => setMessageContactName(e.target.value)}
               placeholder="Nombre"
             />
             <Input
-              value={contactPhone}
-              onChange={(e) => setContactPhone(e.target.value)}
+              value={messageContactPhone}
+              onChange={(e) => setMessageContactPhone(e.target.value)}
               placeholder="Teléfono (opcional)"
             />
-            <Button onClick={saveEditContact} className="w-full">
+            <Button onClick={saveEditContactFromMessages} className="w-full">
               Guardar cambios
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Contact Modal */}
-      <Dialog open={contactFormOpen === "delete"} onOpenChange={() => setContactFormOpen(null)}>
+      {/* Delete Contact Modal (Messages) */}
+      <Dialog open={messageContactFormOpen === "delete"} onOpenChange={() => setMessageContactFormOpen(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Borrar contacto</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div className="rounded-xl border border-border bg-muted/50 p-3 text-muted-foreground">
-              ¿Borrar a <span className="font-bold text-foreground">{selectedContact?.name ?? "este contacto"}</span>?
+              ¿Borrar a <span className="font-bold text-foreground">{messageSelectedContact?.name ?? "este contacto"}</span>?
               <div className="text-xs mt-1">También se eliminarán sus chats.</div>
             </div>
-            <Button onClick={deleteContactNow} variant="destructive" className="w-full">
+            <Button onClick={deleteContactFromMessages} variant="destructive" className="w-full">
               Borrar
             </Button>
-            <Button onClick={() => setContactFormOpen(null)} variant="outline" className="w-full">
+            <Button onClick={() => setMessageContactFormOpen(null)} variant="outline" className="w-full">
               Cancelar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Contact Actions Modal (Contacts view) */}
+      <Dialog open={contactActionsOpen} onOpenChange={setContactActionsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedContact?.name ?? "Contact"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <ActionButton
+              label="Message"
+              icon={MessageSquare}
+              onClick={() => {
+                if (selectedContact) startChatFromContact(selectedContact.id);
+              }}
+            />
+            <ActionButton
+              label="Edit"
+              icon={Pencil}
+              onClick={() => {
+                if (selectedContact) {
+                  setContactActionsOpen(false);
+                  openEditContact(selectedContact);
+                }
+              }}
+            />
+            <ActionButton
+              label="Delete"
+              icon={Trash2}
+              danger
+              onClick={() => {
+                if (selectedContact) askDeleteContact(selectedContact);
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Contact Form (Contacts view) */}
+      <Dialog open={contactFormOpen} onOpenChange={setContactFormOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{contactFormMode === "add" ? "New contact" : "Edit contact"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              value={contactName}
+              onChange={(e) => setContactName(e.target.value)}
+              placeholder="Name"
+            />
+            <Input
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+              placeholder="Phone (optional)"
+            />
+            <Button onClick={saveContact} className="w-full">
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Contact Confirm (Contacts view) */}
+      <Dialog open={deleteContactOpen} onOpenChange={setDeleteContactOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete contact</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="rounded-xl border border-border bg-muted/50 p-3 text-muted-foreground">
+              Delete <span className="font-bold text-foreground">{selectedContact?.name ?? "this contact"}</span>?
+              <div className="text-xs mt-1">Chats with this contact will also be removed.</div>
+            </div>
+            <Button onClick={doDeleteContact} variant="destructive" className="w-full">
+              Delete
+            </Button>
+            <Button onClick={() => setDeleteContactOpen(false)} variant="outline" className="w-full">
+              Cancel
             </Button>
           </div>
         </DialogContent>
