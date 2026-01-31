@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { ArrowLeft, Settings, Share2, MessageSquare, Video, Users, Calendar, Camera, Phone, Plus, Import } from "lucide-react";
+import { ArrowLeft, MessageSquare, Video, Users, Calendar, Camera, Phone, Plus, Import } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { VideoCallScreen } from "@/components/VideoCallScreen";
 
 type View = "hub" | "messages" | "video" | "contacts" | "meetings";
 
@@ -225,51 +226,7 @@ export function ChatScreen({ t, onBack }: ChatScreenProps) {
         )}
 
         {view === "video" && (
-          <>
-            <SectionHeader title="Video Call" onBack={() => setView("hub")} />
-
-            <Card className="bg-card/50 border-border">
-              <CardContent className="p-4">
-                <h2 className="font-bold text-lg text-foreground mb-2">Start a call</h2>
-                <p className="text-muted-foreground text-sm mb-4">
-                  Por ahora esto es un demo visual. La lógica real se conecta después con WebRTC.
-                </p>
-
-                <div className="mb-4">
-                  <label className="block text-muted-foreground text-sm mb-2">Call type</label>
-                  <div className="flex gap-2 flex-wrap">
-                    <Pill text="1:1 Call" />
-                    <Pill text="Group Call" />
-                  </div>
-                </div>
-
-                <div className="mb-4 space-y-2">
-                  <label className="block text-muted-foreground text-sm">Free rule</label>
-                  <div className="flex justify-between py-2 border-b border-border/50 text-muted-foreground">
-                    <span>Limit</span>
-                    <b className="text-foreground">30 minutes</b>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-border/50 text-muted-foreground">
-                    <span>Wi-Fi only</span>
-                    <b className="text-foreground">Yes</b>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 flex-wrap">
-                  <Button onClick={() => alert("Start video call (mock)")}>
-                    Start Video Call
-                  </Button>
-                  <Button variant="outline" onClick={() => alert("Start audio call (mock)")}>
-                    Start Audio Call
-                  </Button>
-                </div>
-
-                <p className="text-muted-foreground text-xs mt-4">
-                  Donadores $6.99: llamadas/reuniones sin límite (se valida con tu suscripción).
-                </p>
-              </CardContent>
-            </Card>
-          </>
+          <VideoCallScreen t={t} onBack={() => setView("hub")} />
         )}
 
         {view === "contacts" && (
