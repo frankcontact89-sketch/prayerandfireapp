@@ -15,7 +15,8 @@ import { LegalCenter } from "@/components/LegalCenter";
 import { LandingPage } from "@/components/LandingPage";
 import { PublicLegalCenter } from "@/components/PublicLegalCenter";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
-import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap, Bell } from "lucide-react";
+import { ChatScreen } from "@/components/ChatScreen";
+import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap, Bell, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
@@ -445,6 +446,7 @@ export default function Index() {
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
         {page === "social" && <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />}
         {page === "events" && <EventsScreen t={t} />}
+        {page === "chat" && <ChatScreen t={t} />}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
         {page === "profile" && (
           <ProfileScreen
@@ -478,6 +480,14 @@ export default function Index() {
             }`}
           >
             <Flame className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => setPage("chat")}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              page === "chat" ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <MessageSquare className="w-6 h-6" />
           </button>
           <button
             onClick={() => setPage("giving")}
