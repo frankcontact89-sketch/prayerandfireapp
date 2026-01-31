@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Mic, MicOff, Video, VideoOff, Phone, Users, MessageSquare, 
-  Link2, Hand, RefreshCw, ArrowLeft, Copy, Wifi
+  Link2, Hand, RefreshCw, ArrowLeft, Copy, Wifi, Crown, Infinity
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDonorStatus } from "@/hooks/useDonorStatus";
 
 type CallType = "oneToOne" | "group";
 
@@ -26,11 +27,13 @@ interface VideoCallScreenProps {
 }
 
 export function VideoCallScreen({ t, onBack }: VideoCallScreenProps) {
+  const { isDonor, loading: donorLoading } = useDonorStatus();
+  
   const [inCall, setInCall] = useState(false);
   const [callType, setCallType] = useState<CallType>("oneToOne");
 
-  // Pre-call settings
-  const [freeLimitMinutes] = useState(30);
+  // Pre-call settings - unlimited for donors
+  const freeLimitMinutes = isDonor ? null : 30; // null = unlimited
   const [wifiOnly] = useState(true);
 
   // Session
@@ -264,11 +267,42 @@ export function VideoCallScreen({ t, onBack }: VideoCallScreenProps) {
                   </div>
                 </div>
 
+                {/* Donor status badge */}
+                {isDonor && (
+                  <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Crown className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-primary flex items-center gap-1">
+                        <Infinity className="w-4 h-4" /> Tiempo ilimitado
+                      </p>
+                      <p className="text-xs text-muted-foreground">Gracias por tu donación $6.99+</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Rules */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-border bg-muted/30 p-3">
-                    <p className="text-xs text-muted-foreground">Límite gratis</p>
-                    <p className="text-lg font-bold">{freeLimitMinutes} min</p>
+                  <div className={cn(
+                    "rounded-xl border p-3",
+                    isDonor 
+                      ? "border-primary/30 bg-primary/10" 
+                      : "border-border bg-muted/30"
+                  )}>
+                    <p className="text-xs text-muted-foreground">
+                      {isDonor ? "Tu plan" : "Límite gratis"}
+                    </p>
+                    <p className="text-lg font-bold flex items-center gap-1">
+                      {isDonor ? (
+                        <>
+                          <Infinity className="w-4 h-4 text-primary" />
+                          <span className="text-primary">Ilimitado</span>
+                        </>
+                      ) : (
+                        `${freeLimitMinutes} min`
+                      )}
+                    </p>
                   </div>
                   <div className="rounded-xl border border-border bg-muted/30 p-3">
                     <p className="text-xs text-muted-foreground">Solo Wi-Fi</p>
@@ -299,10 +333,20 @@ export function VideoCallScreen({ t, onBack }: VideoCallScreenProps) {
                 <div className="rounded-xl border border-border bg-muted/20 p-3">
                   <p className="text-sm font-semibold mb-2">Plan</p>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Gratis: hasta {freeLimitMinutes} min (solo Wi-Fi).</li>
-                    <li>• Si se corta, puedes volver a entrar el mismo día.</li>
-                    <li>• Por seguridad, para otro día se crea una nueva reunión.</li>
-                    <li>• Donación $6.99: sin límite de tiempo.</li>
+                    {isDonor ? (
+                      <>
+                        <li className="text-primary font-medium">✓ Llamadas sin límite de tiempo</li>
+                        <li>• Puedes crear reuniones cuando quieras.</li>
+                        <li>• Acceso prioritario a nuevas funciones.</li>
+                      </>
+                    ) : (
+                      <>
+                        <li>• Gratis: hasta 30 min (solo Wi-Fi).</li>
+                        <li>• Si se corta, puedes volver a entrar el mismo día.</li>
+                        <li>• Por seguridad, para otro día se crea una nueva reunión.</li>
+                        <li className="text-primary">• Donación $6.99: sin límite de tiempo.</li>
+                      </>
+                    )}
                   </ul>
                 </div>
               </CardContent>
@@ -348,9 +392,16 @@ export function VideoCallScreen({ t, onBack }: VideoCallScreenProps) {
             {/* In-call view */}
             <Card className="border-border/50 bg-card/50 backdrop-blur overflow-hidden">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg">Reunión en curso</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Reunión en curso</CardTitle>
+                  {isDonor && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-primary/20 border border-primary/40 text-primary flex items-center gap-1">
+                      <Crown className="w-3 h-3" /> Ilimitado
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  Código: {activeCode} • Límite gratis: {freeLimitMinutes} min
+                  Código: {activeCode} • {isDonor ? "Sin límite de tiempo" : `Límite: ${freeLimitMinutes} min`}
                 </p>
               </CardHeader>
               <CardContent className="p-0">
