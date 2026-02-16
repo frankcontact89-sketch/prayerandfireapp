@@ -446,7 +446,7 @@ export default function Index() {
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
         {page === "social" && <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />}
         {page === "events" && <EventsScreen t={t} />}
-        {page === "chat" && <ChatScreen t={t} />}
+        {/* Chat removed */}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
         {page === "profile" && (
           <ProfileScreen
@@ -480,14 +480,6 @@ export default function Index() {
             }`}
           >
             <Flame className="w-6 h-6" />
-          </button>
-          <button
-            onClick={() => setPage("chat")}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              page === "chat" ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <MessageSquare className="w-6 h-6" />
           </button>
           <button
             onClick={() => setPage("giving")}
