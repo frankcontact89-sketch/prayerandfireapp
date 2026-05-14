@@ -16,6 +16,7 @@ interface Product {
   is_active: boolean;
   category: string | null;
   button_label: string | null;
+  is_featured?: boolean;
 }
 
 const CATEGORIES = ["Books", "Merch", "Apparel", "Accessories", "Other"];
@@ -52,6 +53,7 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
     category: "Books",
     link_type: "amazon",
     button_label: "View on Amazon",
+    is_featured: false,
   };
   const [formData, setFormData] = useState(emptyForm);
   const { toast } = useToast();
@@ -89,7 +91,7 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
   const fetchProducts = async () => {
     const { data, error } = await supabase
       .from("products")
-      .select("id,name,image_url,description,purchase_url,is_active,category,button_label")
+      .select("id,name,image_url,description,purchase_url,is_active,category,button_label,is_featured")
       .order("created_at", { ascending: false });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -113,6 +115,7 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
       purchase_url: formData.purchase_url,
       category: formData.category,
       button_label: formData.button_label,
+      is_featured: formData.is_featured,
       is_active: true,
     };
 
@@ -163,6 +166,7 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
       category: product.category || "Books",
       link_type: linkType,
       button_label: product.button_label || lt.buttonLabel,
+      is_featured: !!product.is_featured,
     });
     setDialogOpen(true);
   };
@@ -256,6 +260,16 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
                   "No se muestran precios en la app. Las compras se realizan externamente en Amazon o Etsy."
                 )}
               </p>
+
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={formData.is_featured}
+                  onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                  className="h-4 w-4 rounded border-input"
+                />
+                {t("Featured product", "Producto destacado")}
+              </label>
 
               <Button type="submit" className="w-full">
                 {editingProduct ? t("Update Product", "Actualizar Producto") : t("Add Product", "Agregar Producto")}
