@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  Flame, BookOpen, HandHeart, Calendar, Sparkles, Users, ArrowRight,
+  Flame, BookOpen, HandHeart, Calendar, Sparkles, Users,
   Quote, Heart, Globe2, GraduationCap
 } from "lucide-react";
 import realisticFlame from "@/assets/realistic-flame.png";
@@ -11,30 +11,53 @@ interface HomeScreenProps {
   t: (key: string) => string;
 }
 
-const VERSES = [
-  { text: "Be still, and know that I am God.", ref: "Psalm 46:10" },
-  { text: "Pray without ceasing.", ref: "1 Thessalonians 5:17" },
-  { text: "The Lord is my shepherd; I shall not want.", ref: "Psalm 23:1" },
-  { text: "I can do all things through Christ who strengthens me.", ref: "Philippians 4:13" },
-  { text: "Your word is a lamp to my feet and a light to my path.", ref: "Psalm 119:105" },
-  { text: "Cast all your anxiety on Him because He cares for you.", ref: "1 Peter 5:7" },
-  { text: "The joy of the Lord is your strength.", ref: "Nehemiah 8:10" },
-  { text: "Trust in the Lord with all your heart.", ref: "Proverbs 3:5" },
-  { text: "Seek first the kingdom of God.", ref: "Matthew 6:33" },
-  { text: "The Lord is my light and my salvation.", ref: "Psalm 27:1" },
-  { text: "Call to Me and I will answer you.", ref: "Jeremiah 33:3" },
-  { text: "Walk by faith, not by sight.", ref: "2 Corinthians 5:7" },
-  { text: "The prayer of a righteous person is powerful and effective.", ref: "James 5:16" },
-  { text: "Come to Me, all who labor and are heavy laden.", ref: "Matthew 11:28" },
-  { text: "Abide in Me, and I in you.", ref: "John 15:4" },
-];
+const VERSES_BY_LANG: Record<string, { text: string; ref: string }[]> = {
+  en: [
+    { text: "Be still, and know that I am God.", ref: "Psalm 46:10" },
+    { text: "Pray without ceasing.", ref: "1 Thessalonians 5:17" },
+    { text: "The Lord is my shepherd; I shall not want.", ref: "Psalm 23:1" },
+    { text: "I can do all things through Christ who strengthens me.", ref: "Philippians 4:13" },
+    { text: "Your word is a lamp to my feet and a light to my path.", ref: "Psalm 119:105" },
+    { text: "Cast all your anxiety on Him because He cares for you.", ref: "1 Peter 5:7" },
+    { text: "The joy of the Lord is your strength.", ref: "Nehemiah 8:10" },
+    { text: "Trust in the Lord with all your heart.", ref: "Proverbs 3:5" },
+    { text: "Seek first the kingdom of God.", ref: "Matthew 6:33" },
+    { text: "The Lord is my light and my salvation.", ref: "Psalm 27:1" },
+  ],
+  es: [
+    { text: "Estad quietos, y conoced que yo soy Dios.", ref: "Salmo 46:10" },
+    { text: "Orad sin cesar.", ref: "1 Tesalonicenses 5:17" },
+    { text: "Jehová es mi pastor; nada me faltará.", ref: "Salmo 23:1" },
+    { text: "Todo lo puedo en Cristo que me fortalece.", ref: "Filipenses 4:13" },
+    { text: "Lámpara es a mis pies tu palabra, y lumbrera a mi camino.", ref: "Salmo 119:105" },
+    { text: "Echad toda vuestra ansiedad sobre Él, porque Él tiene cuidado de vosotros.", ref: "1 Pedro 5:7" },
+    { text: "El gozo del Señor es vuestra fuerza.", ref: "Nehemías 8:10" },
+    { text: "Confía en Jehová con todo tu corazón.", ref: "Proverbios 3:5" },
+    { text: "Buscad primeramente el reino de Dios.", ref: "Mateo 6:33" },
+    { text: "Jehová es mi luz y mi salvación.", ref: "Salmo 27:1" },
+  ],
+  pt: [
+    { text: "Aquietai-vos, e sabei que eu sou Deus.", ref: "Salmo 46:10" },
+    { text: "Orai sem cessar.", ref: "1 Tessalonicenses 5:17" },
+    { text: "O Senhor é o meu pastor; nada me faltará.", ref: "Salmo 23:1" },
+    { text: "Tudo posso naquele que me fortalece.", ref: "Filipenses 4:13" },
+    { text: "Lâmpada para os meus pés é a tua palavra, e luz para o meu caminho.", ref: "Salmo 119:105" },
+    { text: "Lançai sobre Ele toda a vossa ansiedade, porque Ele tem cuidado de vós.", ref: "1 Pedro 5:7" },
+    { text: "A alegria do Senhor é a vossa força.", ref: "Neemias 8:10" },
+    { text: "Confia no Senhor de todo o teu coração.", ref: "Provérbios 3:5" },
+    { text: "Buscai primeiro o reino de Deus.", ref: "Mateus 6:33" },
+    { text: "O Senhor é a minha luz e a minha salvação.", ref: "Salmo 27:1" },
+  ],
+};
 
 function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-xl bg-white/5 ${className}`} />;
 }
 
 export function HomeScreen({ t }: HomeScreenProps) {
-  const [verse] = useState(() => VERSES[Math.floor(Math.random() * VERSES.length)]);
+  const lang = (typeof window !== "undefined" && localStorage.getItem("pf_lang")) || "en";
+  const verses = VERSES_BY_LANG[lang] || VERSES_BY_LANG.en;
+  const [verse] = useState(() => verses[Math.floor(Math.random() * verses.length)]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -76,11 +99,11 @@ export function HomeScreen({ t }: HomeScreenProps) {
             </div>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            A global movement to ignite hearts, deepen prayer, and walk together in faith.
+            {t("home_hero_subtitle")}
           </p>
           <div className="mt-4 flex items-center gap-2 text-xs">
             <Globe2 className="w-3.5 h-3.5 text-primary" />
-            <span className="text-muted-foreground">40+ countries represented in prayer</span>
+            <span className="text-muted-foreground">{t("home_countries")}</span>
           </div>
         </section>
 
@@ -88,7 +111,7 @@ export function HomeScreen({ t }: HomeScreenProps) {
         <section className="rounded-2xl bg-card border border-border p-5 animate-fade-in">
           <div className="flex items-center gap-2 mb-3">
             <Quote className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Verse of the Day</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_verse_title")}</h2>
           </div>
           <p className="text-lg text-foreground italic leading-relaxed">"{verse.text}"</p>
           <p className="text-sm text-primary font-semibold mt-2">— {verse.ref}</p>
@@ -96,13 +119,13 @@ export function HomeScreen({ t }: HomeScreenProps) {
 
         {/* Quick actions */}
         <section className="grid grid-cols-2 gap-3">
-          <ActionTile icon={<HandHeart className="w-6 h-6" />} title="Prayer Request" sub="Submit yours"
+          <ActionTile icon={<HandHeart className="w-6 h-6" />} title={t("home_prayer_request")} sub={t("home_submit_yours")}
             onClick={() => mailto("Prayer Request")} />
-          <ActionTile icon={<Users className="w-6 h-6" />} title="Monthly Global Prayer Gathering" sub="Join us"
+          <ActionTile icon={<Users className="w-6 h-6" />} title={t("home_monthly_gathering")} sub={t("home_join_us")}
             onClick={() => mailto("Join Monthly Global Prayer Gathering")} />
-          <ActionTile icon={<Heart className="w-6 h-6" />} title="Testimony" sub="Share yours"
+          <ActionTile icon={<Heart className="w-6 h-6" />} title={t("home_testimony")} sub={t("home_share_yours")}
             onClick={() => mailto("Share Testimony")} />
-          <ActionTile icon={<Globe2 className="w-6 h-6" />} title="Missions / Support" sub="Get involved"
+          <ActionTile icon={<Globe2 className="w-6 h-6" />} title={t("home_missions_short")} sub={t("home_get_involved")}
             onClick={() => mailto("Support Missions")} />
         </section>
 
@@ -110,10 +133,10 @@ export function HomeScreen({ t }: HomeScreenProps) {
         <section className="rounded-2xl bg-card border border-border p-5 hover:border-primary/40 transition">
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Monthly Global Prayer Gathering</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_monthly_gathering")}</h2>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Join believers from around the world for a monthly time of worship and intercession. See the Events screen for the next gathering.
+            {t("home_monthly_desc")}
           </p>
         </section>
 
@@ -121,16 +144,16 @@ export function HomeScreen({ t }: HomeScreenProps) {
         <section className="rounded-2xl bg-card border border-border p-5">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Featured Devotional</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_featured_devotional")}</h2>
           </div>
           <div className="flex gap-4">
             <div className="w-16 h-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
               <Flame className="w-8 h-8 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-foreground">Walking in Daily Fire</h3>
+              <h3 className="font-bold text-foreground">{t("home_devotional_title")}</h3>
               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                A 7-day journey to renew your prayer life and rekindle the flame of the Spirit.
+                {t("home_devotional_desc")}
               </p>
             </div>
           </div>
@@ -140,11 +163,11 @@ export function HomeScreen({ t }: HomeScreenProps) {
         <section className="rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-border p-5">
           <div className="flex items-center gap-2 mb-3">
             <GraduationCap className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Featured Course</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_featured_course")}</h2>
           </div>
-          <h3 className="font-bold text-foreground text-lg">Prayer Foundations</h3>
+          <h3 className="font-bold text-foreground text-lg">{t("home_course_title")}</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Learn the biblical patterns of prayer that shape a life of intimacy with God.
+            {t("home_course_desc")}
           </p>
         </section>
 
@@ -152,7 +175,7 @@ export function HomeScreen({ t }: HomeScreenProps) {
         <section className="rounded-2xl bg-card border border-border p-5">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Featured Resource</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_featured_resource")}</h2>
           </div>
           <div className="flex gap-4">
             <img src={vozInteriorBook} alt="VOZ INTERIOR"
@@ -160,11 +183,11 @@ export function HomeScreen({ t }: HomeScreenProps) {
             <div className="flex-1">
               <h3 className="font-bold text-foreground">VOZ INTERIOR</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                A book to help you hear the inner voice of God in your daily walk.
+                {t("home_book_desc")}
               </p>
               <button onClick={() => window.open("https://a.co/d/dfgHEvM", "_blank", "noopener,noreferrer")}
                 className="mt-3 text-sm text-primary font-semibold hover:underline">
-                View on Amazon →
+                {t("home_view_amazon")} →
               </button>
             </div>
           </div>
@@ -174,19 +197,18 @@ export function HomeScreen({ t }: HomeScreenProps) {
         <section className="rounded-2xl bg-gradient-to-br from-primary/15 to-card border border-primary/20 p-5">
           <div className="flex items-center gap-2 mb-3">
             <Globe2 className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Missions / Support</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_missions_short")}</h2>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Support prayer, discipleship, and outreach efforts.
+            {t("home_missions_desc")}
           </p>
         </section>
 
         {/* Mission */}
         <section className="rounded-2xl bg-gradient-to-br from-card to-card/50 border border-border p-5">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-primary mb-2">Our Mission</h2>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-primary mb-2">{t("home_our_mission")}</h2>
           <p className="text-sm text-foreground leading-relaxed">
-            To ignite hearts with the fire of the Holy Spirit, strengthen believers through prayer, and build a
-            global community rooted in faith, unity, and love.
+            {t("home_mission_text")}
           </p>
         </section>
       </div>
