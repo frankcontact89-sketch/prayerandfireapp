@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  MessageCircle, Instagram, Calendar, Flame, ArrowLeft, Mail,
+  MessageCircle, Instagram, Calendar, ArrowLeft, Mail,
   HandHeart, BookOpen, Heart, Users, Globe2, Phone
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -112,14 +112,15 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
         </button>
       </section>
 
-      {/* Community stats */}
+      {/* Global Movement */}
       <section className="rounded-2xl bg-gradient-to-br from-primary/15 to-card border border-primary/20 p-5">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-primary mb-3">Our Community</h3>
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <Stat value="35k+" label="Members" />
-          <Stat value="14" label="Countries" />
-          <Stat value="24/7" label="Prayer" />
-        </div>
+        <h3 className="text-sm font-bold uppercase tracking-wider text-primary mb-2">Prayer & Fire Global Movement</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          More than 40 countries represented in prayer, fellowship, and biblical encouragement.
+        </p>
+        <p className="text-xs text-muted-foreground mt-2">
+          Connecting believers through faith, prayer, and spiritual growth.
+        </p>
       </section>
 
       <FloatingFireButton onClick={onBack} />
@@ -138,11 +139,3 @@ function Tile({ icon, label, sub, onClick }: { icon: React.ReactNode; label: str
   );
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="rounded-xl bg-background/40 border border-border p-3">
-      <div className="text-xl font-extrabold text-primary">{value}</div>
-      <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
-    </div>
-  );
-}
