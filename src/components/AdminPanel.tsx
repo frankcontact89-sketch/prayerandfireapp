@@ -4,6 +4,7 @@ import { AdminLinks } from "./admin/AdminLinks";
 import { AdminEvents } from "./admin/AdminEvents";
 import { AdminNotifications } from "./admin/AdminNotifications";
 import { AdminProducts } from "./admin/AdminProducts";
+import { AdminCourses } from "./admin/AdminCourses";
 import { ProductionChecklist } from "./ProductionChecklist";
 import { Shield, ArrowLeft, Lock, ClipboardCheck } from "lucide-react";
 import { Button } from "./ui/button";
@@ -109,10 +110,11 @@ export function AdminPanel({ t, onBack }: AdminPanelProps) {
       </div>
 
       <Tabs defaultValue="links" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-muted">
+        <TabsList className="grid w-full grid-cols-5 bg-muted">
           <TabsTrigger value="links">Links</TabsTrigger>
           <TabsTrigger value="events">Events</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="courses">Courses</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
 
@@ -126,6 +128,10 @@ export function AdminPanel({ t, onBack }: AdminPanelProps) {
 
         <TabsContent value="products" className="mt-6">
           <AdminProducts t={t} />
+        </TabsContent>
+
+        <TabsContent value="courses" className="mt-6">
+          <AdminCourses t={(en, es) => en} />
         </TabsContent>
 
         <TabsContent value="notifications" className="mt-6">
