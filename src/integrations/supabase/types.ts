@@ -92,6 +92,51 @@ export type Database = {
         }
         Relationships: []
       }
+      courses: {
+        Row: {
+          button_label: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          link_type: string
+          link_url: string | null
+          order_index: number | null
+          price: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          button_label?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link_type?: string
+          link_url?: string | null
+          order_index?: number | null
+          price?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          button_label?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          link_type?: string
+          link_url?: string | null
+          order_index?: number | null
+          price?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       event_rsvps: {
         Row: {
           created_at: string
