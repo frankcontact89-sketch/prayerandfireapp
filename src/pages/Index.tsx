@@ -33,7 +33,13 @@ export default function Index() {
   const [welcomeChecked, setWelcomeChecked] = useState(false);
   const [publicLegalSection, setPublicLegalSection] = useState<string | undefined>(undefined);
   const [showLanguages, setShowLanguages] = useState(false);
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem("pf_lang");
+      if (saved && ["en", "es", "pt"].includes(saved)) return saved;
+    } catch {}
+    return "en";
+  });
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem("pf_dark_mode");
     return saved === "true" || saved === null;

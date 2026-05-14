@@ -64,33 +64,33 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
     <div className="max-w-2xl mx-auto p-6 space-y-6 pb-12 animate-fade-in">
       <header>
         <h2 className="text-2xl font-bold text-foreground">🌐 {t("connect")}</h2>
-        <p className="text-sm text-muted-foreground mt-1">Engage with the Prayer & Fire community.</p>
+        <p className="text-sm text-muted-foreground mt-1">{t("connect_subtitle")}</p>
       </header>
 
       {/* Engagement grid */}
       <section className="grid grid-cols-2 gap-3">
-        <Tile icon={<HandHeart />} label="Prayer Request" sub="Submit a request"
+        <Tile icon={<HandHeart />} label={t("connect_prayer_request")} sub={t("connect_submit_request")}
           onClick={() => mailto("Prayer Request")} />
-        <Tile icon={<BookOpen />} label="Bible Study" sub="Join a group"
+        <Tile icon={<BookOpen />} label={t("connect_bible_study")} sub={t("connect_join_group")}
           onClick={() => mailto("Join Bible Study")} />
-        <Tile icon={<Heart />} label="Testimonies" sub="Share or read"
+        <Tile icon={<Heart />} label={t("connect_testimonies")} sub={t("connect_share_or_read")}
           onClick={() => mailto("Share Testimony")} />
-        <Tile icon={<Users />} label="Volunteer" sub="Serve with us"
+        <Tile icon={<Users />} label={t("connect_volunteer")} sub={t("connect_serve_with_us")}
           onClick={() => mailto("Volunteer with Prayer & Fire")} />
-        <Tile icon={<Globe2 />} label="Missions" sub="Support outreach"
+        <Tile icon={<Globe2 />} label={t("connect_missions")} sub={t("connect_support_outreach")}
           onClick={() => mailto("Support Missions")} />
-        <Tile icon={<Phone />} label="Contact Ministry" sub="Reach our team"
+        <Tile icon={<Phone />} label={t("connect_contact_ministry")} sub={t("connect_reach_team")}
           onClick={() => mailto("Contact Ministry")} />
       </section>
 
       {/* Channels */}
       <section className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Channels</h3>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("connect_channels")}</h3>
 
         {whatsappLinks.length > 0 && (
           <button onClick={() => setShowWhatsAppContacts(true)}
             className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
-            <MessageCircle className="w-5 h-5" />WhatsApp Community
+            <MessageCircle className="w-5 h-5" />{t("connect_whatsapp_community")}
           </button>
         )}
 
@@ -103,7 +103,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
         <button onClick={() => mailto("Hello Prayer & Fire")}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
-          <Mail className="w-5 h-5" />Email Ministry
+          <Mail className="w-5 h-5" />{t("connect_email_ministry")}
         </button>
 
         <button onClick={onNavigateToEvents}
@@ -114,12 +114,12 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
       {/* Global Movement */}
       <section className="rounded-2xl bg-gradient-to-br from-primary/15 to-card border border-primary/20 p-5">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-primary mb-2">Prayer & Fire Global Movement</h3>
+        <h3 className="text-sm font-bold uppercase tracking-wider text-primary mb-2">{t("connect_global_title")}</h3>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          More than 40 countries represented in prayer, fellowship, and biblical encouragement.
+          {t("connect_global_desc")}
         </p>
         <p className="text-xs text-muted-foreground mt-2">
-          Connecting believers through faith, prayer, and spiritual growth.
+          {t("connect_global_sub")}
         </p>
       </section>
 
