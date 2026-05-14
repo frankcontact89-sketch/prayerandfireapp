@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Flame, Sparkles, BookOpen } from "lucide-react";
 
 interface CoursesScreenProps {
   t: (key: string) => string;
@@ -35,8 +35,14 @@ export default function CoursesScreen({ t, onBack }: CoursesScreenProps) {
   }, []);
 
   const handleAction = (c: DbCourse) => {
-    if (c.link_type === "info" || !c.link_url) return;
+    if (!c.link_url) return;
     window.open(c.link_url, "_blank", "noopener,noreferrer");
+  };
+
+  const iconFor = (idx: number) => {
+    const icons = [Flame, Sparkles, BookOpen];
+    const Icon = icons[idx % icons.length];
+    return <Icon className="w-8 h-8 text-primary" />;
   };
 
   return (
@@ -57,18 +63,18 @@ export default function CoursesScreen({ t, onBack }: CoursesScreenProps) {
         ) : courses.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">No courses available yet.</div>
         ) : (
-          courses.map((c) => {
-            const disabled = c.link_type === "info" || !c.link_url;
+          courses.map((c, idx) => {
+            const disabled = !c.link_url;
             return (
-              <div key={c.id} className="rounded-2xl border border-border bg-card p-4">
+              <div
+                key={c.id}
+                className="rounded-2xl border border-border bg-card p-4 shadow-[0_0_30px_-12px_hsl(var(--primary)/0.4)]"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <h3 className="text-xl font-semibold text-foreground">{c.title}</h3>
                     {c.description && (
                       <p className="mt-2 text-sm text-muted-foreground">{c.description}</p>
-                    )}
-                    {c.price != null && (
-                      <div className="mt-3 text-2xl font-bold text-primary">${Number(c.price).toFixed(0)}</div>
                     )}
                   </div>
                   <div className="shrink-0">
@@ -76,23 +82,20 @@ export default function CoursesScreen({ t, onBack }: CoursesScreenProps) {
                       <img src={c.image_url} alt={c.title} className="h-20 w-20 rounded-xl object-cover" loading="lazy" />
                     ) : (
                       <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-primary/10">
-                        <GraduationCap className="w-8 h-8 text-primary" />
+                        {iconFor(idx)}
                       </div>
                     )}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => handleAction(c)}
-                  className={`mt-4 w-full rounded-xl px-4 py-3 text-sm font-semibold ${
-                    disabled
-                      ? "bg-muted text-muted-foreground cursor-not-allowed"
-                      : "bg-primary text-primary-foreground hover:bg-primary/90"
-                  }`}
-                >
-                  {c.button_label || (disabled ? "Coming Soon" : "Learn More")}
-                </button>
+                {!disabled && (
+                  <button
+                    type="button"
+                    onClick={() => handleAction(c)}
+                    className="mt-4 w-full rounded-xl px-4 py-3 text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    {c.button_label || "Learn More"}
+                  </button>
+                )}
               </div>
             );
           })

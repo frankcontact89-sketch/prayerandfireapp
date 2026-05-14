@@ -21,10 +21,9 @@ interface Course {
 }
 
 const LINK_TYPES = [
+  { value: "external", label: "External Link", defaultBtn: "Learn More" },
   { value: "internal", label: "Internal Course", defaultBtn: "Open Course" },
   { value: "stripe", label: "Stripe Payment", defaultBtn: "Buy Now" },
-  { value: "external", label: "External Link", defaultBtn: "Learn More" },
-  { value: "info", label: "Coming Later / Info Only", defaultBtn: "Coming Soon" },
 ];
 
 export function AdminCourses({ t }: { t: (en: string, es: string) => string }) {
@@ -38,9 +37,9 @@ export function AdminCourses({ t }: { t: (en: string, es: string) => string }) {
     title: "",
     description: "",
     image_url: "",
-    button_label: "Coming Soon",
+    button_label: "Learn More",
     link_url: "",
-    link_type: "info",
+    link_type: "external",
     price: "",
     order_index: 0,
   };
@@ -166,7 +165,14 @@ export function AdminCourses({ t }: { t: (en: string, es: string) => string }) {
                   <Upload className="w-4 h-4 mr-2" />
                   {uploading ? t("Uploading...", "Subiendo...") : t("Upload Image", "Subir Imagen")}
                 </Button>
-                {form.image_url && <img src={form.image_url} alt="" className="w-20 h-20 rounded object-cover" />}
+                {form.image_url && (
+                  <div className="flex items-center gap-2">
+                    <img src={form.image_url} alt="" className="w-20 h-20 rounded object-cover" />
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, image_url: "" })}>
+                      <Trash2 className="w-4 h-4 mr-1" /> Remove
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1">
@@ -181,10 +187,8 @@ export function AdminCourses({ t }: { t: (en: string, es: string) => string }) {
                 </select>
               </div>
 
-              {form.link_type !== "info" && (
-                <Input placeholder={t("Link URL", "URL del enlace")} value={form.link_url}
-                  onChange={(e) => setForm({ ...form, link_url: e.target.value })} />
-              )}
+              <Input placeholder={t("Link URL", "URL del enlace")} value={form.link_url}
+                onChange={(e) => setForm({ ...form, link_url: e.target.value })} />
 
               <Input placeholder={t("Button label", "Etiqueta del botón")} value={form.button_label}
                 onChange={(e) => setForm({ ...form, button_label: e.target.value })} />
