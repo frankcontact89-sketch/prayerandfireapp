@@ -3,6 +3,7 @@ import {
   Flame, BookOpen, HandHeart, Calendar, Sparkles, Users,
   Quote, Heart, Globe2, GraduationCap
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import realisticFlame from "@/assets/realistic-flame.png";
 import vozInteriorBook from "@/assets/voz-interior-book.jpg";
 import entryLogo from "@/assets/prayer-fire-entry-logo.png";
@@ -11,59 +12,39 @@ interface HomeScreenProps {
   t: (key: string) => string;
 }
 
-const VERSES_BY_LANG: Record<string, { text: string; ref: string }[]> = {
-  en: [
-    { text: "Be still, and know that I am God.", ref: "Psalm 46:10" },
-    { text: "Pray without ceasing.", ref: "1 Thessalonians 5:17" },
-    { text: "The Lord is my shepherd; I shall not want.", ref: "Psalm 23:1" },
-    { text: "I can do all things through Christ who strengthens me.", ref: "Philippians 4:13" },
-    { text: "Your word is a lamp to my feet and a light to my path.", ref: "Psalm 119:105" },
-    { text: "Cast all your anxiety on Him because He cares for you.", ref: "1 Peter 5:7" },
-    { text: "The joy of the Lord is your strength.", ref: "Nehemiah 8:10" },
-    { text: "Trust in the Lord with all your heart.", ref: "Proverbs 3:5" },
-    { text: "Seek first the kingdom of God.", ref: "Matthew 6:33" },
-    { text: "The Lord is my light and my salvation.", ref: "Psalm 27:1" },
-  ],
-  es: [
-    { text: "Estad quietos, y conoced que yo soy Dios.", ref: "Salmo 46:10" },
-    { text: "Orad sin cesar.", ref: "1 Tesalonicenses 5:17" },
-    { text: "Jehová es mi pastor; nada me faltará.", ref: "Salmo 23:1" },
-    { text: "Todo lo puedo en Cristo que me fortalece.", ref: "Filipenses 4:13" },
-    { text: "Lámpara es a mis pies tu palabra, y lumbrera a mi camino.", ref: "Salmo 119:105" },
-    { text: "Echad toda vuestra ansiedad sobre Él, porque Él tiene cuidado de vosotros.", ref: "1 Pedro 5:7" },
-    { text: "El gozo del Señor es vuestra fuerza.", ref: "Nehemías 8:10" },
-    { text: "Confía en Jehová con todo tu corazón.", ref: "Proverbios 3:5" },
-    { text: "Buscad primeramente el reino de Dios.", ref: "Mateo 6:33" },
-    { text: "Jehová es mi luz y mi salvación.", ref: "Salmo 27:1" },
-  ],
-  pt: [
-    { text: "Aquietai-vos, e sabei que eu sou Deus.", ref: "Salmo 46:10" },
-    { text: "Orai sem cessar.", ref: "1 Tessalonicenses 5:17" },
-    { text: "O Senhor é o meu pastor; nada me faltará.", ref: "Salmo 23:1" },
-    { text: "Tudo posso naquele que me fortalece.", ref: "Filipenses 4:13" },
-    { text: "Lâmpada para os meus pés é a tua palavra, e luz para o meu caminho.", ref: "Salmo 119:105" },
-    { text: "Lançai sobre Ele toda a vossa ansiedade, porque Ele tem cuidado de vós.", ref: "1 Pedro 5:7" },
-    { text: "A alegria do Senhor é a vossa força.", ref: "Neemias 8:10" },
-    { text: "Confia no Senhor de todo o teu coração.", ref: "Provérbios 3:5" },
-    { text: "Buscai primeiro o reino de Deus.", ref: "Mateus 6:33" },
-    { text: "O Senhor é a minha luz e a minha salvação.", ref: "Salmo 27:1" },
-  ],
-};
-
 function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-xl bg-white/5 ${className}`} />;
 }
 
 export function HomeScreen({ t }: HomeScreenProps) {
   const lang = (typeof window !== "undefined" && localStorage.getItem("pf_lang")) || "en";
-  const verses = VERSES_BY_LANG[lang] || VERSES_BY_LANG.en;
-  const [verse] = useState(() => verses[Math.floor(Math.random() * verses.length)]);
+  const [verse, setVerse] = useState<{ text: string; ref: string } | null>(null);
+  const [content, setContent] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const tm = setTimeout(() => setLoading(false), 350);
-    return () => clearTimeout(tm);
-  }, []);
+    (async () => {
+      const [versesRes, contentRes] = await Promise.all([
+        supabase.from("verses").select("text_en,ref_en,text_es,ref_es,text_pt,ref_pt").eq("is_active", true),
+        supabase.from("app_content").select("key,value_en,value_es,value_pt"),
+      ]);
+      const vs = (versesRes.data || []).map((v: any) => ({
+        text: v[`text_${lang}`] || v.text_en || "",
+        ref: v[`ref_${lang}`] || v.ref_en || "",
+      })).filter((v) => v.text);
+      if (vs.length) setVerse(vs[Math.floor(Math.random() * vs.length)]);
+      const map: Record<string, string> = {};
+      (contentRes.data || []).forEach((r: any) => {
+        const v = r[`value_${lang}`] || r.value_en;
+        if (v) map[r.key] = v;
+      });
+      setContent(map);
+      setLoading(false);
+    })();
+  }, [lang]);
+
+  // Use admin-managed content with translation fallback
+  const c = (key: string) => content[key] || t(key);
 
   if (loading) {
     return (
@@ -113,8 +94,14 @@ export function HomeScreen({ t }: HomeScreenProps) {
             <Quote className="w-4 h-4 text-primary" />
             <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_verse_title")}</h2>
           </div>
-          <p className="text-lg text-foreground italic leading-relaxed">"{verse.text}"</p>
-          <p className="text-sm text-primary font-semibold mt-2">— {verse.ref}</p>
+          {verse ? (
+            <>
+              <p className="text-lg text-foreground italic leading-relaxed">"{verse.text}"</p>
+              <p className="text-sm text-primary font-semibold mt-2">— {verse.ref}</p>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">{t("loading")}</p>
+          )}
         </section>
 
         {/* Quick actions */}
@@ -151,9 +138,9 @@ export function HomeScreen({ t }: HomeScreenProps) {
               <Flame className="w-8 h-8 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-foreground">{t("home_devotional_title")}</h3>
+              <h3 className="font-bold text-foreground">{c("home_devotional_title")}</h3>
               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                {t("home_devotional_desc")}
+                {c("home_devotional_desc")}
               </p>
             </div>
           </div>
@@ -165,9 +152,9 @@ export function HomeScreen({ t }: HomeScreenProps) {
             <GraduationCap className="w-4 h-4 text-primary" />
             <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_featured_course")}</h2>
           </div>
-          <h3 className="font-bold text-foreground text-lg">{t("home_course_title")}</h3>
+          <h3 className="font-bold text-foreground text-lg">{c("home_course_title")}</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            {t("home_course_desc")}
+            {c("home_course_desc")}
           </p>
         </section>
 
@@ -183,7 +170,7 @@ export function HomeScreen({ t }: HomeScreenProps) {
             <div className="flex-1">
               <h3 className="font-bold text-foreground">VOZ INTERIOR</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                {t("home_book_desc")}
+                {c("home_book_desc")}
               </p>
               <button onClick={() => window.open("https://a.co/d/dfgHEvM", "_blank", "noopener,noreferrer")}
                 className="mt-3 text-sm text-primary font-semibold hover:underline">
@@ -200,7 +187,7 @@ export function HomeScreen({ t }: HomeScreenProps) {
             <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_missions_short")}</h2>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            {t("home_missions_desc")}
+            {c("home_missions_desc")}
           </p>
         </section>
 
@@ -208,7 +195,7 @@ export function HomeScreen({ t }: HomeScreenProps) {
         <section className="rounded-2xl bg-gradient-to-br from-card to-card/50 border border-border p-5">
           <h2 className="text-sm font-bold uppercase tracking-wider text-primary mb-2">{t("home_our_mission")}</h2>
           <p className="text-sm text-foreground leading-relaxed">
-            {t("home_mission_text")}
+            {c("home_mission_text")}
           </p>
         </section>
       </div>
