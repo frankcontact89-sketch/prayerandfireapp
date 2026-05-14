@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { GraduationCap, Flame, Sparkles, BookOpen } from "lucide-react";
+import bannerPrayer from "@/assets/course-prayer-foundations.jpg";
+import bannerDiscipline from "@/assets/course-spiritual-discipline.jpg";
+import bannerBible from "@/assets/course-bible-study.jpg";
 
 interface CoursesScreenProps {
   t: (key: string) => string;
@@ -15,8 +17,23 @@ interface DbCourse {
   button_label: string | null;
   link_url: string | null;
   link_type: string;
-  price: number | null;
 }
+
+const fallbackBanner = (title: string): string => {
+  const k = title.toLowerCase();
+  if (k.includes("prayer foundation")) return bannerPrayer;
+  if (k.includes("spiritual") || k.includes("discipline")) return bannerDiscipline;
+  if (k.includes("bible")) return bannerBible;
+  return bannerPrayer;
+};
+
+const fallbackButton = (title: string): string => {
+  const k = title.toLowerCase();
+  if (k.includes("prayer foundation")) return "Open Course";
+  if (k.includes("spiritual") || k.includes("discipline")) return "Start Journey";
+  if (k.includes("bible")) return "Begin Study";
+  return "Learn More";
+};
 
 export default function CoursesScreen({ t, onBack }: CoursesScreenProps) {
   const [courses, setCourses] = useState<DbCourse[]>([]);
@@ -26,7 +43,7 @@ export default function CoursesScreen({ t, onBack }: CoursesScreenProps) {
     (async () => {
       const { data } = await supabase
         .from("courses")
-        .select("id,title,description,image_url,button_label,link_url,link_type,price")
+        .select("id,title,description,image_url,button_label,link_url,link_type")
         .eq("is_active", true)
         .order("order_index", { ascending: true });
       setCourses((data as DbCourse[]) || []);
@@ -39,22 +56,11 @@ export default function CoursesScreen({ t, onBack }: CoursesScreenProps) {
     window.open(c.link_url, "_blank", "noopener,noreferrer");
   };
 
-  const iconFor = (idx: number) => {
-    const icons = [Flame, Sparkles, BookOpen];
-    const Icon = icons[idx % icons.length];
-    return <Icon className="w-8 h-8 text-primary" />;
-  };
-
   return (
     <div className="min-h-screen bg-background text-foreground p-6">
-      <div className="max-w-xl mx-auto space-y-4">
+      <div className="max-w-xl mx-auto space-y-5">
         <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={onBack}
-            className="p-2 rounded-lg hover:bg-muted/20 text-foreground"
-          >
-            ←
-          </button>
+          <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted/20 text-foreground">←</button>
           <h1 className="text-2xl font-bold">{t("myCourses")}</h1>
         </div>
 
@@ -63,39 +69,37 @@ export default function CoursesScreen({ t, onBack }: CoursesScreenProps) {
         ) : courses.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">No courses available yet.</div>
         ) : (
-          courses.map((c, idx) => {
-            const disabled = !c.link_url;
+          courses.map((c) => {
+            const banner = c.image_url || fallbackBanner(c.title);
+            const label = c.button_label || fallbackButton(c.title);
             return (
               <div
                 key={c.id}
-                className="rounded-2xl border border-border bg-card p-4 shadow-[0_0_30px_-12px_hsl(var(--primary)/0.4)]"
+                className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_0_30px_-12px_hsl(var(--primary)/0.4)]"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-xl font-semibold text-foreground">{c.title}</h3>
-                    {c.description && (
-                      <p className="mt-2 text-sm text-muted-foreground">{c.description}</p>
-                    )}
-                  </div>
-                  <div className="shrink-0">
-                    {c.image_url ? (
-                      <img src={c.image_url} alt={c.title} className="h-20 w-20 rounded-xl object-cover" loading="lazy" />
-                    ) : (
-                      <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-primary/10">
-                        {iconFor(idx)}
-                      </div>
-                    )}
-                  </div>
+                <div className="relative w-full aspect-[16/9] bg-background">
+                  <img
+                    src={banner}
+                    alt={c.title}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
                 </div>
-                {!disabled && (
-                  <button
-                    type="button"
-                    onClick={() => handleAction(c)}
-                    className="mt-4 w-full rounded-xl px-4 py-3 text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    {c.button_label || "Learn More"}
-                  </button>
-                )}
+                <div className="p-4">
+                  <h3 className="text-xl font-semibold text-foreground">{c.title}</h3>
+                  {c.description && (
+                    <p className="mt-2 text-sm text-muted-foreground">{c.description}</p>
+                  )}
+                  {c.link_url && (
+                    <button
+                      type="button"
+                      onClick={() => handleAction(c)}
+                      className="mt-4 w-full rounded-xl px-4 py-3 text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      {label}
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })
