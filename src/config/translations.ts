@@ -321,8 +321,10 @@ export const translations: Record<string, Record<string, string>> = {
     connect_whatsapp_community: "WhatsApp Community",
     connect_email_ministry: "Email Ministry",
     connect_global_title: "Prayer & Fire Global Movement",
-    connect_global_desc: "More than 40 countries represented in prayer, fellowship, and biblical encouragement.",
+    connect_global_desc: "A community united in prayer, fellowship, and biblical encouragement.",
     connect_global_sub: "Connecting believers through faith, prayer, and spiritual growth.",
+    connect_official_links: "Official Links",
+    connect_official_website: "Official Website",
   },
   es: {
     title: "Prayer & Fire",
