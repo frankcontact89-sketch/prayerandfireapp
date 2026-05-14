@@ -19,7 +19,23 @@ interface Product {
 }
 
 const CATEGORIES = ["Books", "Merch", "Apparel", "Accessories", "Other"];
-const BUTTON_LABELS = ["View on Amazon", "View on Etsy"];
+const LINK_TYPES = [
+  { value: "amazon", label: "Amazon", buttonLabel: "View on Amazon" },
+  { value: "etsy", label: "Etsy", buttonLabel: "View on Etsy" },
+  { value: "stripe", label: "Stripe", buttonLabel: "Register / Pay with Stripe" },
+  { value: "external", label: "External Link", buttonLabel: "Open Link" },
+];
+
+function inferLinkType(url: string, currentLabel?: string | null): string {
+  const u = (url || "").toLowerCase();
+  if (u.includes("amazon.")) return "amazon";
+  if (u.includes("etsy.")) return "etsy";
+  if (u.includes("stripe.")) return "stripe";
+  if (currentLabel?.toLowerCase().includes("amazon")) return "amazon";
+  if (currentLabel?.toLowerCase().includes("etsy")) return "etsy";
+  if (currentLabel?.toLowerCase().includes("stripe")) return "stripe";
+  return "external";
+}
 
 export function AdminProducts({ t }: { t: (en: string, es: string) => string }) {
   const [products, setProducts] = useState<Product[]>([]);
@@ -34,6 +50,7 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
     description: "",
     purchase_url: "",
     category: "Books",
+    link_type: "amazon",
     button_label: "View on Amazon",
   };
   const [formData, setFormData] = useState(emptyForm);
