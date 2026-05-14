@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import vozInteriorBook from "@/assets/voz-interior-book.jpg";
+import prayerFireMug from "@/assets/prayer-fire-mug.png";
+import prayerJournal from "@/assets/prayer-journal.jpg";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ShoppingCart, Trash2, ShoppingBag } from "lucide-react";
 
@@ -64,17 +66,41 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
 
   // Combine products with VOZ INTERIOR book
   const allItems = useMemo(() => {
-    const bookItem: Product = {
-      id: "book-voz-interior",
-      name: "VOZ INTERIOR",
-      description: t("byAuthor"),
-      price: null,
-      image_url: vozInteriorBook,
-      purchase_url: BOOK_LINK,
-      is_active: true,
-      category: "Books"
-    };
-    return [bookItem, ...products.map(p => ({ ...p, category: p.category || "View" }))];
+    const featured: Product[] = [
+      {
+        id: "book-voz-interior",
+        name: "VOZ INTERIOR",
+        description: "A faith-based book to help you hear the inner voice of God.",
+        price: null,
+        image_url: vozInteriorBook,
+        purchase_url: BOOK_LINK,
+        is_active: true,
+        category: "Books",
+      },
+      {
+        id: "merch-prayer-fire-mug",
+        name: "Prayer & Fire Mug",
+        description: "Premium ceramic mug with the Prayer & Fire flame logo.",
+        price: 18,
+        image_url: prayerFireMug,
+        purchase_url: "mailto:prayerandfireglobal@gmail.com?subject=Prayer%20%26%20Fire%20Mug%20Order",
+        is_active: true,
+        category: "Merch",
+      },
+      {
+        id: "merch-prayer-journal",
+        name: "Prayer Journal",
+        description: "Leather-bound journal to record prayers, reflections, and answers.",
+        price: 24,
+        image_url: prayerJournal,
+        purchase_url: "mailto:prayerandfireglobal@gmail.com?subject=Prayer%20Journal%20Order",
+        is_active: true,
+        category: "Books",
+      },
+    ];
+    const existingIds = new Set(products.map((p) => p.id));
+    const featuredFiltered = featured.filter((f) => !existingIds.has(f.id));
+    return [...featuredFiltered, ...products.map((p) => ({ ...p, category: p.category || "View" }))];
   }, [products, t]);
 
   const filteredItems = useMemo(() => {
