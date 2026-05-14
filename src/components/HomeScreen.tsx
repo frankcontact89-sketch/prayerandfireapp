@@ -179,10 +179,6 @@ export function HomeScreen({ t }: HomeScreenProps) {
           <p className="text-sm text-muted-foreground mt-1">
             Support prayer, discipleship, and outreach efforts.
           </p>
-          <button onClick={() => mailto("Support Missions")}
-            className="mt-4 w-full bg-primary/10 hover:bg-primary/20 text-primary font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-2">
-            Get involved <ArrowRight className="w-4 h-4" />
-          </button>
         </section>
 
         {/* Mission */}
