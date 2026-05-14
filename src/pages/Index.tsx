@@ -28,6 +28,7 @@ export default function Index() {
   const [session, setSession] = useState<any>(null);
   const [page, setPage] = useState("home");
   const [showLanding, setShowLanding] = useState(true);
+  const [requireSignIn, setRequireSignIn] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeChecked, setWelcomeChecked] = useState(false);
   const [publicLegalSection, setPublicLegalSection] = useState<string | undefined>(undefined);
@@ -306,7 +307,8 @@ export default function Index() {
     return (
       <LandingPage
         t={t}
-        onOpenApp={() => setShowLanding(false)}
+        onOpenApp={() => { setRequireSignIn(false); setShowLanding(false); }}
+        onSignIn={() => { setRequireSignIn(true); setShowLanding(false); }}
         onOpenLegal={(section) => setPublicLegalSection(section || "")}
       />
     );
@@ -320,13 +322,14 @@ export default function Index() {
     );
   }
 
-  if (!user) {
+  if (!user && requireSignIn) {
     return (
       <SignInScreen
         setUser={setUser}
         t={t}
         onShowLanguages={() => {}}
         currentLanguage={language}
+        onContinueAsGuest={() => setRequireSignIn(false)}
       />
     );
   }
