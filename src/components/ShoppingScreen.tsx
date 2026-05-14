@@ -117,7 +117,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
         </div>
 
         <div style={styles.notice}>
-          Products are fulfilled by external platforms such as Amazon or Etsy. Tap to view product details and purchase securely on the external site.
+          Products are fulfilled securely through Etsy, Amazon, or Stripe. Tap to view product details and complete your purchase or registration on the external site.
         </div>
 
         <div style={styles.searchRow}>
@@ -211,7 +211,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                 </div>
               )}
               <p className="text-xs text-white/50 text-center">
-                Products are fulfilled by external platforms such as Amazon or Etsy. Tap to view product details and purchase securely on the external site.
+                Products are fulfilled securely through Etsy, Amazon, or Stripe. Tap to view product details and complete your purchase or registration on the external site.
               </p>
               <div className="pt-2">
                 <button
