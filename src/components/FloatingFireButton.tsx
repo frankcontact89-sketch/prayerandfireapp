@@ -9,7 +9,7 @@ export function FloatingFireButton({ onClick }: FloatingFireButtonProps) {
     <>
       <div
         onClick={onClick}
-        className="fixed bottom-5 left-1/2 -translate-x-1/2 text-5xl cursor-pointer z-50 animate-fire-pulse"
+        className="fixed bottom-5 left-1/2 -translate-x-1/2 text-5xl cursor-pointer z-50 animate-fire-pulse pointer-events-none"
         role="button"
         aria-label="Fire button"
       >
