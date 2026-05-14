@@ -28,6 +28,7 @@ export default function Index() {
   const [session, setSession] = useState<any>(null);
   const [page, setPage] = useState("home");
   const [showLanding, setShowLanding] = useState(true);
+  const [requireSignIn, setRequireSignIn] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeChecked, setWelcomeChecked] = useState(false);
   const [publicLegalSection, setPublicLegalSection] = useState<string | undefined>(undefined);
@@ -306,7 +307,8 @@ export default function Index() {
     return (
       <LandingPage
         t={t}
-        onOpenApp={() => setShowLanding(false)}
+        onOpenApp={() => { setRequireSignIn(false); setShowLanding(false); }}
+        onSignIn={() => { setRequireSignIn(true); setShowLanding(false); }}
         onOpenLegal={(section) => setPublicLegalSection(section || "")}
       />
     );
@@ -320,13 +322,14 @@ export default function Index() {
     );
   }
 
-  if (!user) {
+  if (!user && requireSignIn) {
     return (
       <SignInScreen
         setUser={setUser}
         t={t}
         onShowLanguages={() => {}}
         currentLanguage={language}
+        onContinueAsGuest={() => setRequireSignIn(false)}
       />
     );
   }
@@ -357,6 +360,7 @@ export default function Index() {
   }
 
   const openNotifications = () => {
+    if (!user) { setRequireSignIn(true); return; }
     // Mark as read by setting last read timestamp + clear badge
     setLastReadAtNow();
     setUnreadNotifications(0);
@@ -419,15 +423,19 @@ export default function Index() {
             userName={userName}
             userEmail={user?.email || ""}
             onAdminClick={() => setPage("admin")}
-            onProfileClick={() => setPage("profile")}
+            onProfileClick={() => { if (!user) { setRequireSignIn(true); } else { setPage("profile"); } }}
             onNotificationsClick={openNotifications}
             onLegalClick={() => setPage("legal")}
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
             onSignOut={async () => {
-              await supabase.auth.signOut();
-              setUser(null);
+              if (user) {
+                await supabase.auth.signOut();
+                setUser(null);
+              }
+              setRequireSignIn(true);
             }}
+            isGuest={!user}
           />
         )}
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}

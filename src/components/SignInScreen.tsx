@@ -10,9 +10,10 @@ interface SignInScreenProps {
   t: (key: string) => string;
   onShowLanguages?: () => void;
   currentLanguage?: string;
+  onContinueAsGuest?: () => void;
 }
 
-export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "en" }: SignInScreenProps) {
+export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "en", onContinueAsGuest }: SignInScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
@@ -231,6 +232,17 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
             >
               {isSignUp ? "Already have account?" : "Register"}
             </Button>
+          )}
+
+          {!isForgotPassword && !isForgotUsername && onContinueAsGuest && (
+            <button
+              type="button"
+              onClick={onContinueAsGuest}
+              className="w-full text-sm text-muted-foreground hover:text-primary transition-colors text-center mt-2"
+              disabled={loading}
+            >
+              Continue as Guest
+            </button>
           )}
 
           {(isForgotPassword || isForgotUsername) && (

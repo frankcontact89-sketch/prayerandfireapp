@@ -17,9 +17,10 @@ interface SettingsScreenProps {
   onSignOut: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
+  isGuest?: boolean;
 }
 
-export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onNotificationsClick, onLegalClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode }: SettingsScreenProps) {
+export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onNotificationsClick, onLegalClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode, isGuest }: SettingsScreenProps) {
   const { isAdmin, loading } = useUserRole();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { toast } = useToast();
@@ -81,7 +82,9 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
       {loading ? <div className="text-muted-foreground text-center py-4">{t("loadingAdminStatus")}</div> : isAdmin && (
         <button onClick={onAdminClick} className="w-full px-4 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-95 font-semibold shadow-lg shadow-primary/20">{t("adminPanel")}</button>
       )}
-      <button onClick={onSignOut} className="mt-4 text-muted-foreground hover:text-destructive font-medium text-center w-full transition-colors">{t("signout")}</button>
+      <button onClick={onSignOut} className="mt-4 text-muted-foreground hover:text-primary font-medium text-center w-full transition-colors">
+        {isGuest ? "Sign In / Register" : t("signout")}
+      </button>
     </div>
   );
 }

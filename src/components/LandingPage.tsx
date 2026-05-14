@@ -5,10 +5,11 @@ import entryLogo from "@/assets/prayer-fire-entry-logo.png";
 interface LandingPageProps {
   t: (key: string) => string;
   onOpenApp: () => void;
+  onSignIn?: () => void;
   onOpenLegal: (section?: string) => void;
 }
 
-export function LandingPage({ t, onOpenApp, onOpenLegal }: LandingPageProps) {
+export function LandingPage({ t, onOpenApp, onSignIn, onOpenLegal }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-[hsl(20,40%,6%)] to-black flex flex-col">
       {/* Hero Section - Centered */}
@@ -34,19 +35,19 @@ export function LandingPage({ t, onOpenApp, onOpenLegal }: LandingPageProps) {
         </p>
 
         {/* Buttons */}
-        <div className="flex flex-col gap-4 w-full max-w-xs">
+        <div className="flex flex-col gap-3 w-full max-w-xs">
           <button
             onClick={onOpenApp}
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
           >
-            Open Web App
+            Enter App
           </button>
 
           <button
-            disabled
-            className="bg-card text-muted-foreground py-3 rounded-xl cursor-not-allowed border border-border"
+            onClick={onSignIn ?? onOpenApp}
+            className="bg-transparent border border-primary/50 text-primary hover:bg-primary/10 font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2"
           >
-            App Store (Coming Soon)
+            Sign In / Register
           </button>
         </div>
       </main>

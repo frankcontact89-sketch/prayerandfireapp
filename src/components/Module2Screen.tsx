@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { GraduationCap, Trash2, BookmarkPlus, Package } from "lucide-react";
+import { GraduationCap, Trash2, BookmarkPlus, Package, Flame, BookOpen, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -82,15 +82,26 @@ export function Module2Screen({ t, onBack, onGoToStore }: Module2ScreenProps) {
 
         {/* Empty State */}
         {purchases.length === 0 && (
-          <div className="text-center py-20 space-y-6">
-            <Package className="w-16 h-16 text-muted-foreground mx-auto opacity-50" />
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold text-foreground">{t("noCoursesTitle")}</h2>
-              <p className="text-muted-foreground max-w-sm mx-auto">{t("noCoursesDescription")}</p>
+          <div className="space-y-4">
+            <p className="text-muted-foreground text-sm">Featured courses to grow your faith and prayer life.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { icon: <Flame className="w-10 h-10 text-primary" />, title: "Prayer Foundations", desc: "Build a daily, fire-filled prayer life from the ground up." },
+                { icon: <Sparkles className="w-10 h-10 text-primary" />, title: "Spiritual Discipline", desc: "Cultivate fasting, worship, and the Word as lifelong habits." },
+                { icon: <BookOpen className="w-10 h-10 text-primary" />, title: "Bible Study Basics", desc: "Learn how to read, understand, and live the Scriptures." },
+              ].map((c) => (
+                <Card key={c.title} className="p-4 space-y-3 bg-card border-border/20 hover:border-primary/40 transition-colors">
+                  <div className="w-full h-32 rounded-lg bg-gradient-to-br from-primary/15 to-transparent border border-primary/20 flex items-center justify-center">
+                    {c.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground">{c.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-3 mt-1">{c.desc}</p>
+                  </div>
+                  <Button onClick={onGoToStore || onBack} className="w-full">View Course</Button>
+                </Card>
+              ))}
             </div>
-            <Button onClick={onGoToStore || onBack} className="mt-4">
-              {t("goToStore")}
-            </Button>
           </div>
         )}
 
