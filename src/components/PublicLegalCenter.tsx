@@ -28,7 +28,7 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
 
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-foreground mb-2">Legal & Policies</h1>
-          <p className="text-sm text-muted-foreground">Last updated: December 2025</p>
+          <p className="text-sm text-muted-foreground">Last updated: 2026</p>
         </div>
 
         <Accordion type="single" collapsible defaultValue={defaultOpen} className="space-y-4">

@@ -27,7 +27,7 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
 
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold text-foreground mb-2">{t("legalPolicies")}</h1>
-        <p className="text-sm text-muted-foreground">{t("lastUpdated")}: December 2025</p>
+        <p className="text-sm text-muted-foreground">{t("lastUpdated")}: 2026</p>
       </div>
 
       <Accordion type="single" collapsible className="space-y-4">
