@@ -269,6 +269,7 @@ export const translations: Record<string, Record<string, string>> = {
     noCoursesTitle: "No Courses Yet",
     noCoursesDescription: "You haven't purchased any courses yet. Visit the Store to explore our available courses.",
     goToStore: "Go to Store",
+    courseContentSoon: "Course content will be available soon.",
     addToCalendar: "Add to Calendar",
     addedToCalendar: "Opening Calendar",
     calendarOpened: "Add the event to your calendar",
