@@ -648,8 +648,10 @@ export const translations: Record<string, Record<string, string>> = {
     connect_whatsapp_community: "Comunidad de WhatsApp",
     connect_email_ministry: "Correo del Ministerio",
     connect_global_title: "Movimiento Global Prayer & Fire",
-    connect_global_desc: "Más de 40 países representados en oración, comunión y aliento bíblico.",
+    connect_global_desc: "Una comunidad unida en oración, comunión y aliento bíblico.",
     connect_global_sub: "Conectando creyentes a través de la fe, la oración y el crecimiento espiritual.",
+    connect_official_links: "Enlaces Oficiales",
+    connect_official_website: "Sitio Web Oficial",
   },
   fr: {
     title: "Prayer & Fire",
