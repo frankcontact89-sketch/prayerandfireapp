@@ -210,6 +210,7 @@ export const translations: Record<string, Record<string, string>> = {
     shareWithFriends: "Share this link with your friends via WhatsApp or Messages",
     share: "Share",
     shareLink: "Share this link",
+    shareAppText: "Join me on Prayer & Fire — a global movement of prayer, biblical encouragement, and spiritual growth.",
     whatsappContacts: "WhatsApp Contacts",
     couldNotLoadLinks: "Could not load links",
     // Legal Center

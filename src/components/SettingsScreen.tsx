@@ -35,16 +35,17 @@ export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfile
   };
 
   const handleShareApp = async () => {
-    const appUrl = "https://prayerandfire.app";
-    const shareText = `🔥 Check out the Prayer & Fire App - A faith-based app for prayer, community, and spiritual growth!`;
-    const shareData = { title: "Prayer & Fire", text: shareText, url: appUrl };
-    if (typeof navigator.share === 'function') {
-      try { await navigator.share(shareData); return; } catch (error: any) { if (error.name === 'AbortError') return; }
+    const appUrl = "https://prayerandfire.org";
+    const shareData = { title: "Prayer & Fire", text: t("shareAppText"), url: appUrl };
+    if (typeof navigator.share === "function") {
+      try { await navigator.share(shareData); return; } catch (error: any) { if (error.name === "AbortError") return; }
     }
     try {
-      await navigator.clipboard.writeText(`${shareText}\n${appUrl}`);
-      toast({ title: t("linkCopied"), description: t("shareWithFriends") });
-    } catch { toast({ title: t("share"), description: `${t("shareLink")}: ${appUrl}` }); }
+      await navigator.clipboard.writeText(`${shareData.text}\n${appUrl}`);
+      toast({ title: t("linkCopied") });
+    } catch {
+      toast({ title: t("share"), description: `${t("shareLink")}: ${appUrl}` });
+    }
   };
 
   return (
