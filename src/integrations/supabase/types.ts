@@ -234,6 +234,8 @@ export type Database = {
       }
       products: {
         Row: {
+          button_label: string | null
+          category: string | null
           created_at: string | null
           description: string | null
           id: string
@@ -245,6 +247,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          button_label?: string | null
+          category?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -256,6 +260,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          button_label?: string | null
+          category?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
