@@ -176,7 +176,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                   }}
                 >
                   <ExternalLink size={16} style={{ marginRight: 6, verticalAlign: "middle" }} />
-                  {p.button_label || "View on Amazon"}
+                  {inferButtonLabel(p)}
                 </button>
               </div>
             ))}
@@ -218,7 +218,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                   onClick={() => window.open(selectedProduct.purchase_url, "_blank", "noopener,noreferrer")}
                   style={{ ...styles.primaryBtn, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                 >
-                  <ExternalLink size={18} /> {selectedProduct.button_label || "View on Amazon"}
+                  <ExternalLink size={18} /> {inferButtonLabel(selectedProduct)}
                 </button>
               </div>
             </div>
