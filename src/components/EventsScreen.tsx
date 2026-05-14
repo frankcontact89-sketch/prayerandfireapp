@@ -26,7 +26,7 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [rsvps, setRsvps] = useState<Set<string>>(new Set());
   const [declines, setDeclines] = useState<Set<string>>(new Set());
-  const [reminders, setReminders] = useState<Record<string, NodeJS.Timeout>>({});
+  const [reminders, setReminders] = useState<Record<string, ReturnType<typeof setTimeout>>>({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 

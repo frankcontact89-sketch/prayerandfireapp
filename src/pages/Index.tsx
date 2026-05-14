@@ -237,19 +237,6 @@ export default function Index() {
       )
       .subscribe((status) => {
         console.log("[Index] Realtime subscription status:", status);
-        // Show visible toast for realtime status (for iPhone debugging)
-        if (status === 'SUBSCRIBED') {
-          toast({
-            title: "🔔 Connected",
-            description: "Real-time notifications active",
-          });
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          toast({
-            title: "⚠️ Connection Issue",
-            description: `Realtime status: ${status}`,
-            variant: "destructive",
-          });
-        }
       });
 
     return () => {
