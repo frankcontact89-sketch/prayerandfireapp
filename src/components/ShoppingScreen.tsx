@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import vozInteriorBook from "@/assets/voz-interior-book.jpg";
-import prayerFireMug from "@/assets/prayer-fire-mug.png";
-import prayerJournal from "@/assets/prayer-journal.jpg";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ExternalLink } from "lucide-react";
 
@@ -62,26 +60,6 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
         is_active: true,
         category: "Books",
         button_label: "View on Amazon",
-      },
-      {
-        id: "merch-prayer-fire-mug",
-        name: "Prayer & Fire Mug",
-        description: "Premium ceramic mug with the Prayer & Fire flame logo.",
-        image_url: prayerFireMug,
-        purchase_url: "https://www.etsy.com/",
-        is_active: true,
-        category: "Merch",
-        button_label: "View on Etsy",
-      },
-      {
-        id: "merch-prayer-journal",
-        name: "Prayer Journal",
-        description: "Leather-bound journal to record prayers, reflections, and answers.",
-        image_url: prayerJournal,
-        purchase_url: "https://www.etsy.com/",
-        is_active: true,
-        category: "Books",
-        button_label: "View on Etsy",
       },
     ];
     const existingIds = new Set(products.map((p) => p.id));
