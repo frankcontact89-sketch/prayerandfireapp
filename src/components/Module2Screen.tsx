@@ -135,7 +135,7 @@ export function Module2Screen({ t, onBack, onGoToStore }: Module2ScreenProps) {
   };
 
   const handleCourseAction = (course: DbCourse) => {
-    toast(t("courseContentSoon"));
+    toast({ title: t("courseContentSoon") });
   };
 
   const getButtonLabel = (course: DbCourse) => {
