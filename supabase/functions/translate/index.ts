@@ -20,37 +20,44 @@ serve(async (req) => {
       );
     }
 
-    const GOOGLE_TRANSLATE_API_KEY = Deno.env.get('GOOGLE_TRANSLATE_API_KEY');
-    
-    if (!GOOGLE_TRANSLATE_API_KEY) {
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
       return new Response(
-        JSON.stringify({ error: 'Translation API key not configured' }),
+        JSON.stringify({ error: 'Translation service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const response = await fetch(
-      `https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_TRANSLATE_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          q: text,
-          target: targetLang,
-        }),
-      }
-    );
+    const langNames: Record<string, string> = {
+      en: 'English', es: 'Spanish', pt: 'Portuguese', fr: 'French',
+      de: 'German', it: 'Italian', ru: 'Russian', zh: 'Chinese',
+      ja: 'Japanese', ko: 'Korean', ar: 'Arabic', hi: 'Hindi',
+    };
+    const targetName = langNames[targetLang] || targetLang;
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-lite',
+        messages: [
+          { role: 'system', content: `You are a translator. Translate the user's text to ${targetName}. Return ONLY the translated text with no explanations, quotes, or extra words.` },
+          { role: 'user', content: String(text) },
+        ],
+      }),
+    });
 
     const data = await response.json();
-    
     if (!response.ok) {
-      throw new Error(data.error?.message || 'Translation failed');
+      throw new Error(data.error?.message || `Translation failed (${response.status})`);
     }
+    const translatedText = data.choices?.[0]?.message?.content?.trim() ?? text;
 
     return new Response(
-      JSON.stringify({ 
-        translatedText: data.data.translations[0].translatedText 
-      }),
+      JSON.stringify({ translatedText }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
