@@ -20,6 +20,17 @@ interface Product {
 
 const ORANGE = "#FF6A00";
 
+function inferButtonLabel(p: Product): string {
+  // Special override: "Imersão" must use Stripe label
+  if (/imers[aã]o/i.test(p.name)) return "Register / Pay with Stripe";
+  if (p.button_label) return p.button_label;
+  const url = (p.purchase_url || "").toLowerCase();
+  if (url.includes("amazon.")) return "View on Amazon";
+  if (url.includes("etsy.")) return "View on Etsy";
+  if (url.includes("stripe.") || url.includes("buy.stripe") || url.includes("checkout.stripe")) return "Register / Pay with Stripe";
+  return "Open Link";
+}
+
 export function ShoppingScreen({ t }: ShoppingScreenProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -165,7 +176,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                   }}
                 >
                   <ExternalLink size={16} style={{ marginRight: 6, verticalAlign: "middle" }} />
-                  {p.button_label || "View on Amazon"}
+                  {inferButtonLabel(p)}
                 </button>
               </div>
             ))}
@@ -207,7 +218,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                   onClick={() => window.open(selectedProduct.purchase_url, "_blank", "noopener,noreferrer")}
                   style={{ ...styles.primaryBtn, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                 >
-                  <ExternalLink size={18} /> {selectedProduct.button_label || "View on Amazon"}
+                  <ExternalLink size={18} /> {inferButtonLabel(selectedProduct)}
                 </button>
               </div>
             </div>

@@ -19,7 +19,23 @@ interface Product {
 }
 
 const CATEGORIES = ["Books", "Merch", "Apparel", "Accessories", "Other"];
-const BUTTON_LABELS = ["View on Amazon", "View on Etsy"];
+const LINK_TYPES = [
+  { value: "amazon", label: "Amazon", buttonLabel: "View on Amazon" },
+  { value: "etsy", label: "Etsy", buttonLabel: "View on Etsy" },
+  { value: "stripe", label: "Stripe", buttonLabel: "Register / Pay with Stripe" },
+  { value: "external", label: "External Link", buttonLabel: "Open Link" },
+];
+
+function inferLinkType(url: string, currentLabel?: string | null): string {
+  const u = (url || "").toLowerCase();
+  if (u.includes("amazon.")) return "amazon";
+  if (u.includes("etsy.")) return "etsy";
+  if (u.includes("stripe.")) return "stripe";
+  if (currentLabel?.toLowerCase().includes("amazon")) return "amazon";
+  if (currentLabel?.toLowerCase().includes("etsy")) return "etsy";
+  if (currentLabel?.toLowerCase().includes("stripe")) return "stripe";
+  return "external";
+}
 
 export function AdminProducts({ t }: { t: (en: string, es: string) => string }) {
   const [products, setProducts] = useState<Product[]>([]);
@@ -34,6 +50,7 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
     description: "",
     purchase_url: "",
     category: "Books",
+    link_type: "amazon",
     button_label: "View on Amazon",
   };
   const [formData, setFormData] = useState(emptyForm);
@@ -136,13 +153,16 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
 
   const openEditDialog = (product: Product) => {
     setEditingProduct(product);
+    const linkType = inferLinkType(product.purchase_url, product.button_label);
+    const lt = LINK_TYPES.find((l) => l.value === linkType)!;
     setFormData({
       name: product.name,
       image_url: product.image_url || "",
       description: product.description || "",
       purchase_url: product.purchase_url,
       category: product.category || "Books",
-      button_label: product.button_label || "View on Amazon",
+      link_type: linkType,
+      button_label: product.button_label || lt.buttonLabel,
     });
     setDialogOpen(true);
   };
@@ -214,14 +234,20 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
               />
 
               <div className="space-y-1">
-                <label className="text-sm text-muted-foreground">{t("Button label", "Etiqueta del botón")}</label>
+                <label className="text-sm text-muted-foreground">{t("Link type", "Tipo de enlace")}</label>
                 <select
                   className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-                  value={formData.button_label}
-                  onChange={(e) => setFormData({ ...formData, button_label: e.target.value })}
+                  value={formData.link_type}
+                  onChange={(e) => {
+                    const lt = LINK_TYPES.find((l) => l.value === e.target.value)!;
+                    setFormData({ ...formData, link_type: lt.value, button_label: lt.buttonLabel });
+                  }}
                 >
-                  {BUTTON_LABELS.map((b) => <option key={b} value={b}>{b}</option>)}
+                  {LINK_TYPES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
                 </select>
+                <p className="text-xs text-muted-foreground">
+                  {t("Button label:", "Etiqueta del botón:")} <strong>{formData.button_label}</strong>
+                </p>
               </div>
 
               <p className="text-xs text-muted-foreground">
