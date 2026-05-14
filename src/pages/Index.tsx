@@ -360,6 +360,7 @@ export default function Index() {
   }
 
   const openNotifications = () => {
+    if (!user) { setRequireSignIn(true); return; }
     // Mark as read by setting last read timestamp + clear badge
     setLastReadAtNow();
     setUnreadNotifications(0);
@@ -422,15 +423,19 @@ export default function Index() {
             userName={userName}
             userEmail={user?.email || ""}
             onAdminClick={() => setPage("admin")}
-            onProfileClick={() => setPage("profile")}
+            onProfileClick={() => { if (!user) { setRequireSignIn(true); } else { setPage("profile"); } }}
             onNotificationsClick={openNotifications}
             onLegalClick={() => setPage("legal")}
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
             onSignOut={async () => {
-              await supabase.auth.signOut();
-              setUser(null);
+              if (user) {
+                await supabase.auth.signOut();
+                setUser(null);
+              }
+              setRequireSignIn(true);
             }}
+            isGuest={!user}
           />
         )}
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
