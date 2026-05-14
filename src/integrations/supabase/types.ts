@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_content: {
+        Row: {
+          created_at: string | null
+          id: string
+          key: string
+          label: string | null
+          updated_at: string | null
+          value_en: string | null
+          value_es: string | null
+          value_pt: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          key: string
+          label?: string | null
+          updated_at?: string | null
+          value_en?: string | null
+          value_es?: string | null
+          value_pt?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          key?: string
+          label?: string | null
+          updated_at?: string | null
+          value_en?: string | null
+          value_es?: string | null
+          value_pt?: string | null
+        }
+        Relationships: []
+      }
       app_links: {
         Row: {
           created_at: string | null
@@ -286,6 +319,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_featured: boolean | null
           name: string
           price: number | null
           purchase_url: string
@@ -299,6 +333,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_featured?: boolean | null
           name: string
           price?: number | null
           purchase_url: string
@@ -312,6 +347,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_featured?: boolean | null
           name?: string
           price?: number | null
           purchase_url?: string
@@ -402,6 +438,48 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      verses: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          order_index: number | null
+          ref_en: string | null
+          ref_es: string | null
+          ref_pt: string | null
+          text_en: string | null
+          text_es: string | null
+          text_pt: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_index?: number | null
+          ref_en?: string | null
+          ref_es?: string | null
+          ref_pt?: string | null
+          text_en?: string | null
+          text_es?: string | null
+          text_pt?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_index?: number | null
+          ref_en?: string | null
+          ref_es?: string | null
+          ref_pt?: string | null
+          text_en?: string | null
+          text_es?: string | null
+          text_pt?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
