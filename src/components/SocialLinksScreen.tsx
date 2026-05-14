@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  MessageCircle, Instagram, Calendar, Flame, ArrowLeft, Mail,
+  MessageCircle, Instagram, Calendar, ArrowLeft, Mail,
   HandHeart, BookOpen, Heart, Users, Globe2, Phone
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
