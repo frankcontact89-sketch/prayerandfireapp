@@ -82,10 +82,6 @@ export function HomeScreen({ t }: HomeScreenProps) {
           <p className="text-sm text-muted-foreground leading-relaxed">
             {t("home_hero_subtitle")}
           </p>
-          <div className="mt-4 flex items-center gap-2 text-xs">
-            <Globe2 className="w-3.5 h-3.5 text-primary" />
-            <span className="text-muted-foreground">{t("home_countries")}</span>
-          </div>
         </section>
 
         {/* Verse of the Day */}
@@ -112,8 +108,6 @@ export function HomeScreen({ t }: HomeScreenProps) {
             onClick={() => mailto("Join Monthly Global Prayer Gathering")} />
           <ActionTile icon={<Heart className="w-6 h-6" />} title={t("home_testimony")} sub={t("home_share_yours")}
             onClick={() => mailto("Share Testimony")} />
-          <ActionTile icon={<Globe2 className="w-6 h-6" />} title={t("home_missions_short")} sub={t("home_get_involved")}
-            onClick={() => mailto("Support Missions")} />
         </section>
 
         {/* Monthly Global Prayer */}

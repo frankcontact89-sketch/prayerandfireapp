@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   MessageCircle, Instagram, Calendar, ArrowLeft, Mail,
-  HandHeart, BookOpen, Heart, Users, Globe2, Phone
+  HandHeart, BookOpen, Heart, Users, Globe2, Phone, ExternalLink, ShoppingBag
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { FloatingFireButton } from "@/components/FloatingFireButton";
@@ -66,6 +66,16 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
         <h2 className="text-2xl font-bold text-foreground">🌐 {t("connect")}</h2>
         <p className="text-sm text-muted-foreground mt-1">{t("connect_subtitle")}</p>
       </header>
+
+      {/* Official Links */}
+      <section className="space-y-3">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("connect_official_links")}</h3>
+        <button onClick={() => window.open("https://prayerandfire.org", "_blank", "noopener,noreferrer")}
+          className="w-full bg-card border border-primary/30 hover:border-primary text-foreground font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
+          <Globe2 className="w-5 h-5 text-primary" />{t("connect_official_website")}
+          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
+      </section>
 
       {/* Engagement grid */}
       <section className="grid grid-cols-2 gap-3">
