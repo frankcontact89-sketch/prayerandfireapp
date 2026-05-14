@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import vozInteriorBook from "@/assets/voz-interior-book.jpg";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ExternalLink } from "lucide-react";
 
@@ -50,21 +49,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
   };
 
   const allItems = useMemo<Product[]>(() => {
-    const featured: Product[] = [
-      {
-        id: "book-voz-interior",
-        name: "VOZ INTERIOR",
-        description: "A faith-based book to help you hear the inner voice of God.",
-        image_url: vozInteriorBook,
-        purchase_url: "https://a.co/d/dfgHEvM",
-        is_active: true,
-        category: "Books",
-        button_label: "View on Amazon",
-      },
-    ];
-    const existingIds = new Set(products.map((p) => p.id));
-    const featuredFiltered = featured.filter((f) => !existingIds.has(f.id));
-    return [...featuredFiltered, ...products.map((p) => ({ ...p, category: p.category || "Books" }))];
+    return products.map((p) => ({ ...p, category: p.category || "Books" }));
   }, [products]);
 
   const filteredItems = useMemo(() => {
