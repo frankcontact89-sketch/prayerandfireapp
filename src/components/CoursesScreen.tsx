@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import bannerPrayer from "@/assets/course-prayer-foundations.jpg";
 import bannerDiscipline from "@/assets/course-spiritual-discipline.jpg";
 import bannerBible from "@/assets/course-bible-study.jpg";
@@ -38,6 +39,7 @@ const fallbackButton = (title: string): string => {
 export default function CoursesScreen({ t, onBack }: CoursesScreenProps) {
   const [courses, setCourses] = useState<DbCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     (async () => {
@@ -52,8 +54,7 @@ export default function CoursesScreen({ t, onBack }: CoursesScreenProps) {
   }, []);
 
   const handleAction = (c: DbCourse) => {
-    if (!c.link_url) return;
-    window.open(c.link_url, "_blank", "noopener,noreferrer");
+    toast({ title: t("courseContentSoon") });
   };
 
   return (
