@@ -535,6 +535,7 @@ export const translations: Record<string, Record<string, string>> = {
     shareWithFriends: "Comparte este enlace con tus amigos por WhatsApp o Mensajes",
     share: "Compartir",
     shareLink: "Comparte este enlace",
+    shareAppText: "Únete a mí en Prayer & Fire — un movimiento global de oración, aliento bíblico y crecimiento espiritual.",
     whatsappContacts: "Contactos de WhatsApp",
     couldNotLoadLinks: "No se pudieron cargar los enlaces",
     // Legal Center
@@ -1132,6 +1133,7 @@ export const translations: Record<string, Record<string, string>> = {
     shareWithFriends: "Compartilhe este link com seus amigos",
     share: "Compartilhar",
     shareLink: "Compartilhe este link",
+    shareAppText: "Junte-se a mim no Prayer & Fire — um movimento global de oração, encorajamento bíblico e crescimento espiritual.",
     // Legal Center
     legalPolicies: "Legal e Políticas",
     lastUpdated: "Última atualização",
