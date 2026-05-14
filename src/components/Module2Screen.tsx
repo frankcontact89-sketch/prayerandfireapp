@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { GraduationCap, Trash2, BookmarkPlus, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { useToast } from "@/hooks/use-toast";
 import bannerPrayer from "@/assets/course-prayer-foundations.jpg";
 import bannerDiscipline from "@/assets/course-spiritual-discipline.jpg";
