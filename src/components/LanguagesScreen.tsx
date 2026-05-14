@@ -14,10 +14,7 @@ interface LanguagesScreenProps {
 const LANGUAGES = [
   ["English", "en"],
   ["Español", "es"],
-  ["Français", "fr"],
   ["Português", "pt"],
-  ["Deutsch", "de"],
-  ["Italiano", "it"],
 ];
 
 export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }: LanguagesScreenProps) {
