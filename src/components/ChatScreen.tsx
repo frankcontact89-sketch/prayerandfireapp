@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
-  ArrowLeft,
   Search,
+  Bell,
   Plus,
   MessageSquarePlus,
   Users,
@@ -9,8 +9,8 @@ import {
   Mic,
   Video,
   Image as ImageIcon,
-  Megaphone,
   X,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoCallScreen } from "@/components/VideoCallScreen";
@@ -44,124 +44,134 @@ export function ChatScreen({ t, onBack }: ChatScreenProps) {
     { id: "voice", icon: Mic, label: "Voice Room", description: "Open a live audio room", onSelect: closeMenu },
     { id: "meeting", icon: Video, label: "Start Meeting", description: "Begin a video meeting", onSelect: () => { closeMenu(); setView("meetings"); } },
     { id: "media", icon: ImageIcon, label: "Share Media", description: "Send photos or files", onSelect: closeMenu },
-    { id: "announce", icon: Megaphone, label: "Announcements", description: "Broadcast to your community", onSelect: closeMenu },
   ];
 
   if (view === "video") return <VideoCallScreen t={t} onBack={() => setView("home")} />;
   if (view === "meetings") return <MeetingsScreen t={t} onBack={() => setView("home")} />;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
-      {/* Ambient gradient */}
-      <div className="pointer-events-none absolute inset-0 opacity-60">
-        <div className="absolute -top-32 -left-20 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute top-1/3 -right-24 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
+    <div className="min-h-screen flex flex-col bg-background text-foreground relative overflow-hidden">
+      {/* Ambient glow */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-40 -left-32 w-[28rem] h-[28rem] rounded-full bg-primary/15 blur-[120px]" />
+        <div className="absolute top-1/2 -right-32 w-[26rem] h-[26rem] rounded-full bg-primary/10 blur-[120px]" />
       </div>
 
-      {/* Header */}
-      <header className="relative z-10 px-5 pt-6 pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-20 backdrop-blur-2xl bg-background/70 border-b border-border/40">
+        <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 min-w-0">
             {onBack && (
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
                 onClick={onBack}
-                className="w-10 h-10 rounded-full hover:bg-card/60"
+                className="w-9 h-9 -ml-1 rounded-full flex items-center justify-center hover:bg-card/50 transition"
+                aria-label="Back"
               >
                 <ArrowLeft className="w-5 h-5" />
-              </Button>
+              </button>
             )}
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">Messages</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">Prayer & Fire Network</p>
-            </div>
+            <h1 className="text-[22px] font-semibold tracking-tight truncate">Prayer &amp; Fire</h1>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-10 h-10 rounded-full hover:bg-card/60"
-            aria-label="Search"
-          >
-            <Search className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <button
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-card/40 hover:bg-card/70 border border-border/40 transition"
+              aria-label="Search"
+            >
+              <Search className="w-[18px] h-[18px]" />
+            </button>
+            <button
+              className="relative w-10 h-10 rounded-full flex items-center justify-center bg-card/40 hover:bg-card/70 border border-border/40 transition"
+              aria-label="Notifications"
+            >
+              <Bell className="w-[18px] h-[18px]" />
+            </button>
+          </div>
         </div>
 
-        {/* Search bar */}
-        <div className="mt-5 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search"
-            className="w-full h-11 pl-11 pr-4 rounded-full bg-card/60 border border-border/60 backdrop-blur text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
-          />
+        {/* Search field */}
+        <div className="px-5 pb-4">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search messages, people, rooms"
+              className="w-full h-11 pl-11 pr-4 rounded-full bg-card/50 border border-border/50 backdrop-blur text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition"
+            />
+          </div>
         </div>
       </header>
 
-      {/* Empty / clean message list state */}
-      <main className="relative z-10 flex-1 px-5 pb-32">
-        <div className="h-full flex flex-col items-center justify-center text-center pt-16">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center mb-5 shadow-[0_8px_40px_-12px_hsl(var(--primary)/0.4)]">
-            <MessageSquarePlus className="w-9 h-9 text-primary" />
+      {/* Message list area (empty premium state) */}
+      <main className="relative z-10 flex-1 px-5 pb-32 pt-8">
+        <div className="flex flex-col items-center justify-center text-center pt-16 animate-fade-in">
+          <div className="relative mb-6">
+            <div className="absolute inset-0 rounded-3xl bg-primary/30 blur-2xl" />
+            <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/30 to-primary/5 border border-primary/30 backdrop-blur-xl flex items-center justify-center shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.55)]">
+              <MessageSquarePlus className="w-9 h-9 text-primary" />
+            </div>
           </div>
-          <h2 className="text-lg font-medium text-foreground">No conversations yet</h2>
-          <p className="text-sm text-muted-foreground mt-2 max-w-xs">
-            Tap the button below to start a chat, open a prayer room, or begin a meeting.
+          <h2 className="text-lg font-semibold tracking-tight">Your inbox is quiet</h2>
+          <p className="text-sm text-muted-foreground mt-2 max-w-[18rem] leading-relaxed">
+            Start a conversation, open a prayer room, or host a meeting with your community.
           </p>
         </div>
       </main>
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button — orange glass */}
       <button
         type="button"
         onClick={() => setMenuOpen(true)}
-        className="fixed bottom-8 right-6 z-30 w-14 h-14 rounded-2xl bg-primary text-primary-foreground shadow-[0_12px_40px_-8px_hsl(var(--primary)/0.6)] flex items-center justify-center transition-transform active:scale-95 hover:scale-105"
+        className="fixed bottom-24 right-5 z-30 w-15 h-15 w-[60px] h-[60px] rounded-2xl flex items-center justify-center text-primary-foreground bg-gradient-to-br from-primary to-primary/80 border border-primary/40 backdrop-blur-xl shadow-[0_18px_50px_-10px_hsl(var(--primary)/0.7)] transition-all active:scale-95 hover:scale-[1.04]"
         aria-label="New action"
       >
-        <Plus className="w-6 h-6" />
+        <Plus className="w-6 h-6" strokeWidth={2.4} />
       </button>
 
-      {/* Quick Action Sheet */}
+      {/* Premium Glass Action Menu */}
       {menuOpen && (
         <div
           className="fixed inset-0 z-40 flex items-end justify-center animate-fade-in"
           onClick={closeMenu}
         >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
           <div
-            className="relative w-full max-w-xl mx-2 mb-2 rounded-3xl border border-border/60 bg-card/80 backdrop-blur-2xl shadow-2xl animate-scale-in overflow-hidden"
+            className="relative w-full max-w-xl mx-2 mb-3 rounded-3xl border border-white/10 bg-card/70 backdrop-blur-2xl shadow-[0_-20px_80px_-10px_rgba(0,0,0,0.7)] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
-            style={{ animation: "fade-in 0.25s ease-out, scale-in 0.2s ease-out" }}
+            style={{ animation: "scale-in 0.22s ease-out, fade-in 0.22s ease-out" }}
           >
-            <div className="flex items-center justify-between px-5 pt-5 pb-3">
-              <div>
-                <h3 className="text-base font-semibold text-foreground">Quick Actions</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Choose how you want to connect</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={closeMenu}
-                className="w-9 h-9 rounded-full hover:bg-background/60"
-              >
-                <X className="w-4 h-4" />
-              </Button>
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3">
+              <div className="w-10 h-1 rounded-full bg-foreground/20" />
             </div>
 
-            <div className="px-3 pb-4 max-h-[70vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-5 pt-3 pb-2">
+              <div>
+                <h3 className="text-base font-semibold">Quick Actions</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Choose how you want to connect</p>
+              </div>
+              <button
+                onClick={closeMenu}
+                className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-background/40 transition"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="px-3 pb-5 max-h-[65vh] overflow-y-auto">
               {actions.map((action, idx) => (
                 <button
                   key={action.id}
                   type="button"
                   onClick={action.onSelect}
-                  className="w-full flex items-center gap-4 px-3 py-3 rounded-2xl hover:bg-background/60 active:bg-background/80 transition-colors text-left group"
-                  style={{ animationDelay: `${idx * 30}ms` }}
+                  className="w-full flex items-center gap-4 px-3 py-3 rounded-2xl hover:bg-background/50 active:bg-background/70 transition-colors text-left animate-fade-in"
+                  style={{ animationDelay: `${idx * 35}ms`, animationFillMode: "backwards" }}
                 >
-                  <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/25 flex items-center justify-center">
                     <action.icon className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-foreground">{action.label}</div>
+                    <div className="text-sm font-medium">{action.label}</div>
                     <div className="text-xs text-muted-foreground truncate">{action.description}</div>
                   </div>
                 </button>
