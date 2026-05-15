@@ -1,52 +1,79 @@
-Most of what you listed is already admin-managed — only Home content and Verses are still hardcoded. Plan focuses on closing those two gaps without rebuilding what works.
+## Prayer & Fire — Global Ministry Community Platform
 
-## Already admin-managed (no work needed)
-- **Store products** — `products` table + Admin → Products tab (title, description, image, category, external link, link type Amazon/Etsy/Stripe/External, button label).
-- **Courses** — `courses` table + Admin → Courses tab (just shipped).
-- **Events / Global Prayer** — `events` table + Admin → Events tab.
-- **Connect section** — `app_links` table + Admin → Links tab (Instagram, email, WhatsApp, etc.).
-- **Admin gating** — Admin Panel is PIN-locked AND role-checked; normal users never see controls.
+This is a major repositioning of the app. To do it right (and not break what's already shipped to Apple/Stripe review), I'm proposing a **phased foundation** rather than building all 8 sections at once. Each phase ships working, polished features — no "coming soon" placeholders, no broken buttons.
 
-The only missing field on Store is "Featured product" — added in step 2.
+### Phase 1 — Foundation & Navigation Shell (this round)
 
-## What I'll build
+Rebrand the app's IA around the new vision without removing existing working screens.
 
-### 1. `app_content` table (multilingual key/value)
-One row per editable Home text block, with `value_en`, `value_es`, `value_pt`. Seeded with current Home strings:
-- `welcome_message`
-- `mission_text`
-- `missions_support_text`
-- `featured_devotional_title` + `_desc`
-- `featured_course_title` + `_desc`
-- `featured_resource_title` + `_desc`
+- New bottom nav: **Community · Prayer Rooms · Missions · Media · Profile**
+- Keep existing Home/Giving/Store/Courses accessible via Profile → "More" (so nothing breaks)
+- New design tokens: deepen dark background, refine Prayer & Fire orange as a single accent, premium card system (rounded-2xl, subtle borders, soft glow on active)
+- New landing-to-app transition copy: "Global prayer & missions community"
+- Hide (not "coming soon") any section that isn't wired yet
 
-RLS: public can read; only admins can write.
+### Phase 2 — Community + Messaging (core chat)
 
-### 2. `verses` table (multilingual)
-Columns: `text_en`, `ref_en`, `text_es`, `ref_es`, `text_pt`, `ref_pt`, `is_active`, `order_index`. Seeded with the 10 existing verses in all 3 languages. Same RLS as above.
+- Tables: `chat_groups`, `chat_group_members` (role: owner/admin/leader/member), `chat_messages` (text/image/voice/video), `message_reactions`, `message_reads`
+- Group types: `ministry`, `mission`, `country`, `language`, `men`, `women`, `youth`, `announcement`, `private`
+- Realtime via Supabase channels (messages, typing indicators, presence for online/offline)
+- Storage buckets: `chat-media` (images/video/voice), with per-group RLS
+- UI: group list, group chat view, create group, add/remove members, admin controls, search, reply, reactions, read receipts
 
-### 3. Admin UI
-Two new tabs in `AdminPanel.tsx`:
-- **Content** (`AdminContent.tsx`) — list of content keys; each row expands to 3 textareas (EN/ES/PT) + Save.
-- **Verses** (`AdminVerses.tsx`) — table with add/edit/delete; modal with EN/ES/PT text+reference fields, active toggle, order.
+### Phase 3 — Prayer Rooms
 
-### 4. Wire HomeScreen to DB
-- Replace `VERSES_BY_LANG` constant with a Supabase fetch from `verses` (filtered to active, picks one at random).
-- Replace hardcoded `t("home_devotional_title")`, `t("home_mission_text")`, etc. with values from `app_content` (lang-aware), falling back to existing translations if a row is missing.
+- Reuse chat infrastructure with a `room_type` flag: `prayer_request`, `live_prayer`, `private_prayer`, `testimony`, `urgent`
+- Urgent prayer alerts → push via existing notifications system
+- "Praying 🔥" tap counter per request
 
-### 5. Featured product flag
-Add `is_featured boolean default false` to `products`. Add a checkbox in the Add/Edit Product dialog. (No UI consumer change unless you later want a "Featured" carousel — flag is stored either way.)
+### Phase 4 — Missions
 
-## Out of scope (let me know if you want them)
-- Translating admin-entered content automatically (admins fill EN/ES/PT manually, which is the safest for App Store review).
-- "Welcome screen onboarding" copy — currently lives in `translations.ts`; making it DB-driven would force admins to maintain that too. Keep in translations unless you want it editable.
+- Tables: `missions` (region, country, description, image, support_url), `mission_updates`
+- Mozambique / Africa / Asia featured regions
+- Volunteer signup (simple form → admin inbox)
+- Donation links per mission (opens external in new tab, per existing rule)
 
-## Files touched
-- New migration (creates `app_content`, `verses`, adds `is_featured` to `products`, seeds rows)
-- New: `src/components/admin/AdminContent.tsx`
-- New: `src/components/admin/AdminVerses.tsx`
-- Edit: `src/components/AdminPanel.tsx` (2 new tabs, grid-cols-7)
-- Edit: `src/components/HomeScreen.tsx` (load verses + content from DB with translation fallback)
-- Edit: `src/components/admin/AdminProducts.tsx` (featured checkbox)
+### Phase 5 — Media Library
 
-Approve and I'll implement.
+- Shared photos / videos / sermon clips / documents
+- Tables: `media_items` (type, url, title, group_id nullable for global vs group)
+- Reuse storage buckets
+
+### Phase 6 — Calls (architecture only, no UI yet)
+
+- Schema + signaling table prepared (`call_sessions`, `call_participants`)
+- Integration recommendation: **LiveKit** or **Daily.co** (WebRTC providers that work in Lovable Cloud edge functions). I'll surface this as a question when we get here — needs an API key from you.
+
+### Phase 7 — Admin / Moderation
+
+- Extend `user_roles` enum: `admin`, `pastor`, `group_leader`, `moderator`, `user`
+- Per-group leader permissions
+- Message delete/pin, group access control, announcement pinning
+
+### Brand separation
+
+- Prayer & Fire keeps `prayerandfire.app` and current orange/dark identity, refocused on **global prayer + missions community**
+- Movement Church stays a separate app (no changes here)
+- No cross-contamination of branding
+
+### Technical guardrails
+
+- All new tables: RLS enabled from day one, member-scoped policies
+- Guest mode preserved: guests see public announcement channels read-only, prompted to sign in to participate
+- Safe fallbacks: empty states with helpful copy, never "Load failed"
+- Features not yet built are hidden, not stubbed
+- Existing screens (Home, Giving, Store, Courses, Events, Legal) remain functional throughout
+
+---
+
+### What I need from you to start
+
+**Phase 1 is safe to start immediately** (pure UI/IA refactor, no schema risk).
+
+Before I begin, confirm:
+
+1. **Do I keep the current Home/Giving/Store/Courses screens accessible** (moved into Profile → More), or fully remove them from this app?
+2. **Should I start with Phase 1 only**, or proceed straight through Phase 2 (chat) after Phase 1 lands?
+3. **Bottom nav labels** — OK with: Community / Prayer / Missions / Media / Profile? Or different order/names?
+
+Once you answer, I'll ship Phase 1 immediately.

@@ -16,6 +16,7 @@ import { LandingPage } from "@/components/LandingPage";
 import { PublicLegalCenter } from "@/components/PublicLegalCenter";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { ChatScreen } from "@/components/ChatScreen";
+import { CommunityHubScreen } from "@/components/CommunityHubScreen";
 import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap, Bell, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
@@ -418,6 +419,7 @@ export default function Index() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto pb-20">
         {page === "home" && <HomeScreen t={t} />}
+        {page === "community" && <CommunityHubScreen t={t} onNavigate={(p) => setPage(p)} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
         {page === "module2" && <Module2Screen t={t} onBack={() => setPage("home")} onGoToStore={() => setPage("shopping")} />}
@@ -481,6 +483,15 @@ export default function Index() {
             }`}
           >
             <Flame className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => setPage("community")}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              page === "community" ? "text-primary" : "text-muted-foreground"
+            }`}
+            aria-label="Community"
+          >
+            <MessageSquare className="w-6 h-6" />
           </button>
           <button
             onClick={() => setPage("giving")}
