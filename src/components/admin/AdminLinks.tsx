@@ -72,7 +72,11 @@ export function AdminLinks({ t }: { t: (key: string) => string }) {
       });
       return;
     }
-    const cleanData = parsed.data;
+    const cleanData = {
+      title: parsed.data.title,
+      url: parsed.data.url,
+      icon: parsed.data.icon || null,
+    };
 
     if (editingLink) {
       const { error } = await supabase
