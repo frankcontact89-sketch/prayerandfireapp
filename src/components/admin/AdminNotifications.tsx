@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,8 +13,10 @@ export function AdminNotifications({ t }: { t: (key: string) => string }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) {
-      toast({ title: "Error", description: "Please enter a message", variant: "destructive" });
+    const schema = z.string().trim().min(1, "Please enter a message").max(500, "Message too long");
+    const parsed = schema.safeParse(message);
+    if (!parsed.success) {
+      toast({ title: "Error", description: parsed.error.issues[0].message, variant: "destructive" });
       return;
     }
 
@@ -22,7 +25,7 @@ export function AdminNotifications({ t }: { t: (key: string) => string }) {
     
     const notificationData = { 
       title: "Prayer & Fire", 
-      message: message.trim(), 
+      message: parsed.data,
       type: "admin_message",
       user_id: null,
       link: null,

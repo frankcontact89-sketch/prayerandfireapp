@@ -36,10 +36,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
       setLoading(true);
       try {
         const { data, error } = await supabase
-          .from("profiles")
-          .select("username")
-          .eq("email", email)
-          .maybeSingle();
+          .rpc("get_username_by_email", { _email: email });
 
         if (error) throw error;
 
@@ -54,7 +51,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
 
         toast({
           title: "Username Found!",
-          description: `Your username is: ${data.username}`,
+          description: `Your username is: ${data}`,
         });
         setIsForgotUsername(false);
       } catch (error: any) {

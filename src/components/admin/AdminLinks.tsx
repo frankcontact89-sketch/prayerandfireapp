@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,12 @@ export function AdminLinks({ t }: { t: (key: string) => string }) {
   const [formData, setFormData] = useState({ title: "", url: "", icon: "" });
   const { toast } = useToast();
 
+  const linkSchema = z.object({
+    title: z.string().trim().min(1, "Title is required").max(100, "Title too long"),
+    url: z.string().trim().url("Must be a valid URL").max(500, "URL too long"),
+    icon: z.string().trim().max(50, "Icon name too long").optional().or(z.literal("")),
+  });
+
   useEffect(() => {
     fetchLinks();
   }, []);
@@ -55,11 +62,26 @@ export function AdminLinks({ t }: { t: (key: string) => string }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    const parsed = linkSchema.safeParse(formData);
+    if (!parsed.success) {
+      toast({
+        title: "Invalid input",
+        description: parsed.error.issues[0]?.message ?? "Please check the form",
+        variant: "destructive",
+      });
+      return;
+    }
+    const cleanData = {
+      title: parsed.data.title,
+      url: parsed.data.url,
+      icon: parsed.data.icon || null,
+    };
+
     if (editingLink) {
       const { error } = await supabase
         .from("app_links")
-        .update(formData)
+        .update(cleanData)
         .eq("id", editingLink.id);
 
       if (error) {
@@ -74,7 +96,7 @@ export function AdminLinks({ t }: { t: (key: string) => string }) {
     } else {
       const { error } = await supabase
         .from("app_links")
-        .insert([{ ...formData, order_index: links.length }]);
+        .insert([{ ...cleanData, order_index: links.length }]);
 
       if (error) {
         toast({ title: "Error creating link", variant: "destructive" });
