@@ -5,17 +5,38 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Simple in-memory rate limiter: 20 requests per minute per IP
+const RATE_LIMIT = 20;
+const WINDOW_MS = 60_000;
+const ipHits = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const hits = (ipHits.get(ip) || []).filter((t) => now - t < WINDOW_MS);
+  hits.push(now);
+  ipHits.set(ip, hits);
+  return hits.length > RATE_LIMIT;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { text, targetLang } = await req.json();
-    
-    if (!text || !targetLang) {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown';
+    if (isRateLimited(ip)) {
       return new Response(
-        JSON.stringify({ error: 'Missing text or targetLang' }),
+        JSON.stringify({ error: 'Rate limit exceeded. Please slow down.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { text, targetLang } = await req.json();
+
+    if (!text || !targetLang || typeof text !== 'string' || text.length > 5000) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid input' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
