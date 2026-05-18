@@ -16,9 +16,7 @@ import { LandingPage } from "@/components/LandingPage";
 import { PublicLegalCenter } from "@/components/PublicLegalCenter";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { ChatScreen } from "@/components/ChatScreen";
-import { PrayerScreen } from "@/components/PrayerScreen";
-import { BibleScreen } from "@/components/BibleScreen";
-import { Heart, Settings, Share2, ShoppingBag, Flame, GraduationCap, Bell, MessageSquare, HandHeart, BookOpen } from "lucide-react";
+import { Heart, Settings, Share2, ShoppingBag, Flame, Bell, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
@@ -420,11 +418,8 @@ export default function Index() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto pb-20">
         {page === "home" && <HomeScreen t={t} />}
-        {page === "prayer" && <PrayerScreen t={t} />}
-        {page === "bible" && <BibleScreen t={t} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
-        {page === "module2" && <Module2Screen t={t} onBack={() => setPage("home")} onGoToStore={() => setPage("shopping")} />}
         {page === "settings" && (
           <SettingsScreen 
             t={t} 
@@ -487,38 +482,12 @@ export default function Index() {
             <Flame className="w-6 h-6" />
           </button>
           <button
-            onClick={() => setPage("prayer")}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              page === "prayer" ? "text-primary" : "text-muted-foreground"
-            }`}
-            aria-label="Prayer"
-          >
-            <HandHeart className="w-6 h-6" />
-          </button>
-          <button
-            onClick={() => setPage("bible")}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              page === "bible" ? "text-primary" : "text-muted-foreground"
-            }`}
-            aria-label="Bible"
-          >
-            <BookOpen className="w-6 h-6" />
-          </button>
-          <button
             onClick={() => setPage("giving")}
             className={`flex flex-col items-center gap-1 transition-colors ${
               page === "giving" ? "text-primary" : "text-muted-foreground"
             }`}
           >
             <Heart className="w-6 h-6" />
-          </button>
-          <button
-            onClick={() => setPage("module2")}
-            className={`flex flex-col items-center gap-1 transition-colors ${
-              page === "module2" ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <GraduationCap className="w-6 h-6" />
           </button>
           <button
             onClick={() => setPage("shopping")}
