@@ -376,7 +376,7 @@ export default function Index() {
   return (
     <div className="flex flex-col min-h-screen bg-background font-sans">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
+      <div className="sticky top-0 z-30 bg-card border-b border-border shadow-sm pt-[env(safe-area-inset-top)]">
         <div className="flex justify-between items-center px-6 py-4">
           {/* Settings Left */}
           <div className="flex items-center gap-3">
