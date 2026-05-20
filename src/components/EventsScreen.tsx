@@ -223,20 +223,12 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Calendar className="w-8 h-8 text-primary" />
-        <h1 className="text-3xl font-extrabold text-foreground">
-          {t("upcomingEvents")}
-        </h1>
-      </div>
+      <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
+        Events
+      </h1>
 
       <div className="grid gap-4">
-        {events.length === 0 ? (
-          <Card className="p-6 text-center text-muted-foreground">
-            {t("noEventsScheduled")}
-          </Card>
-        ) : (
-          events.map((event) => (
+        {events.map((event) => (
             <Card key={event.id} className="p-6">
               <div className="flex flex-col md:flex-row gap-4">
                 {event.image_url && (
@@ -293,8 +285,7 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
                 </div>
               </div>
             </Card>
-          ))
-        )}
+        ))}
       </div>
     </div>
   );
