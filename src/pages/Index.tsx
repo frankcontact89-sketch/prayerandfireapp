@@ -16,6 +16,8 @@ import { LandingPage } from "@/components/LandingPage";
 import { PublicLegalCenter } from "@/components/PublicLegalCenter";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { ChatScreen } from "@/components/ChatScreen";
+import { SubmissionForm } from "@/components/SubmissionForm";
+import { BibleStudyScreen } from "@/components/BibleStudyScreen";
 import { Heart, Settings, Share2, ShoppingBag, Flame, Bell, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
@@ -422,7 +424,7 @@ export default function Index() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto pb-20">
-        {page === "home" && <HomeScreen t={t} />}
+        {page === "home" && <HomeScreen t={t} onNavigate={setPage} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
         {page === "settings" && (
@@ -451,6 +453,48 @@ export default function Index() {
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
         {page === "social" && <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />}
         {page === "events" && <EventsScreen t={t} />}
+        {page === "prayer_request" && (
+          <SubmissionForm
+            type="prayer_request"
+            title="Prayer Request"
+            description="Share your prayer request with the Prayer & Fire ministry. Our team will lift it up in prayer."
+            messageLabel="Your prayer request"
+            messagePlaceholder="Share what you'd like us to pray for..."
+            submitLabel="Send Prayer Request"
+            successMessage="Prayer request sent. We are praying with you."
+            onBack={() => setPage("home")}
+          />
+        )}
+        {page === "testimony" && (
+          <SubmissionForm
+            type="testimony"
+            title="Share a Testimony"
+            description="Tell us what God has done. Your testimony encourages others in their walk of faith."
+            messageLabel="Your testimony"
+            messagePlaceholder="Share your story..."
+            submitLabel="Send Testimony"
+            successMessage="Thank you for sharing your testimony."
+            onBack={() => setPage("home")}
+          />
+        )}
+        {page === "contact" && (
+          <SubmissionForm
+            type="contact"
+            title="Contact Ministry"
+            description="Send a message to the Prayer & Fire ministry team. We read every message and will respond when possible."
+            messageLabel="Message"
+            messagePlaceholder="How can we help you?"
+            submitLabel="Send Message"
+            successMessage="Message sent. Thank you for reaching out."
+            onBack={() => setPage("home")}
+          />
+        )}
+        {page === "bible_study" && (
+          <BibleStudyScreen
+            onBack={() => setPage("home")}
+            onContact={() => setPage("contact")}
+          />
+        )}
         {/* Chat removed */}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
         {page === "profile" && (
