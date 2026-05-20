@@ -10,13 +10,14 @@ import entryLogo from "@/assets/prayer-fire-entry-logo.png";
 
 interface HomeScreenProps {
   t: (key: string) => string;
+  onNavigate?: (page: string) => void;
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-xl bg-white/5 ${className}`} />;
 }
 
-export function HomeScreen({ t }: HomeScreenProps) {
+export function HomeScreen({ t, onNavigate }: HomeScreenProps) {
   const lang = (typeof window !== "undefined" && localStorage.getItem("pf_lang")) || "en";
   const [verse, setVerse] = useState<{ text: string; ref: string } | null>(null);
   const [content, setContent] = useState<Record<string, string>>({});
@@ -59,8 +60,9 @@ export function HomeScreen({ t }: HomeScreenProps) {
     );
   }
 
-  const mailto = (subject: string) =>
-    window.location.assign(`mailto:prayerandfireglobal@gmail.com?subject=${encodeURIComponent(subject)}`);
+  const go = (page: string) => {
+    if (onNavigate) onNavigate(page);
+  };
 
   return (
     <div className="relative min-h-screen pb-12">
@@ -103,11 +105,13 @@ export function HomeScreen({ t }: HomeScreenProps) {
         {/* Quick actions */}
         <section className="grid grid-cols-2 gap-3">
           <ActionTile icon={<HandHeart className="w-6 h-6" />} title={t("home_prayer_request")} sub={t("home_submit_yours")}
-            onClick={() => mailto("Prayer Request")} />
-          <ActionTile icon={<Users className="w-6 h-6" />} title={t("home_monthly_gathering")} sub={t("home_join_us")}
-            onClick={() => mailto("Join Monthly Global Prayer Gathering")} />
+            onClick={() => go("prayer_request")} />
           <ActionTile icon={<Heart className="w-6 h-6" />} title={t("home_testimony")} sub={t("home_share_yours")}
-            onClick={() => mailto("Share Testimony")} />
+            onClick={() => go("testimony")} />
+          <ActionTile icon={<BookOpen className="w-6 h-6" />} title="Bible Study" sub="Learn more"
+            onClick={() => go("bible_study")} />
+          <ActionTile icon={<Users className="w-6 h-6" />} title="Contact Ministry" sub="Send us a message"
+            onClick={() => go("contact")} />
         </section>
 
         {/* Monthly Global Prayer */}
