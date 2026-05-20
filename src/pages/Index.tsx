@@ -22,6 +22,7 @@ import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
 import { FloatingFireButton } from "@/components/FloatingFireButton";
 import { getLastReadAtMs, setLastReadAtNow } from "@/lib/notifications-last-seen";
+import logoFlame from "@/assets/realistic-flame.png";
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
@@ -376,41 +377,45 @@ export default function Index() {
   return (
     <div className="flex flex-col min-h-screen bg-background font-sans">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-card border-b border-border shadow-sm pt-[env(safe-area-inset-top)]">
-        <div className="flex justify-between items-center px-6 py-4">
+      <div className="sticky top-0 z-30 bg-card/80 backdrop-blur-md border-b border-border/50 pt-[env(safe-area-inset-top)]">
+        <div className="flex justify-between items-center px-5 py-3">
           {/* Settings Left */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setPage("settings")}
               className="text-primary hover:text-primary/80 transition-colors"
             >
-              <Settings className="w-6 h-6" />
+              <Settings className="w-5 h-5" />
             </button>
             {/* Bell icon with badge */}
             <button
               onClick={openNotifications}
               className="relative text-primary hover:text-primary/80 transition-colors"
             >
-              <Bell className="w-6 h-6" />
+              <Bell className="w-5 h-5" />
               {unreadNotifications > 0 && (
-                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
                   {unreadNotifications > 99 ? "99+" : unreadNotifications}
                 </span>
               )}
             </button>
           </div>
 
-          {/* Title Center */}
-          <h1 className="text-xl font-bold text-foreground">
-            Prayer & Fire
-          </h1>
+          {/* Logo Center */}
+          <div className="flex items-center justify-center">
+            <img
+              src={logoFlame}
+              alt="Prayer & Fire"
+              className="h-7 w-auto object-contain"
+            />
+          </div>
 
           {/* Social Right */}
           <button
             onClick={() => setPage("social")}
             className="text-primary hover:text-primary/80 transition-colors"
           >
-            <Share2 className="w-6 h-6" />
+            <Share2 className="w-5 h-5" />
           </button>
         </div>
       </div>
