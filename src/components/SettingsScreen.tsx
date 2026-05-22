@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Bell, User, Languages, Share2, Scale } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,72 +20,160 @@ interface SettingsScreenProps {
   isGuest?: boolean;
 }
 
-export function SettingsScreen({ t, userName, userEmail, onAdminClick, onProfileClick, onNotificationsClick, onLegalClick, onSignOut, setLanguage, isDarkMode, onToggleDarkMode, isGuest }: SettingsScreenProps) {
-  const { isAdmin, loading } = useUserRole();
+export function SettingsScreen({
+  t,
+  userName,
+  userEmail,
+  onAdminClick,
+  onProfileClick,
+  onNotificationsClick,
+  onLegalClick,
+  onSignOut,
+  setLanguage,
+  isGuest,
+}: SettingsScreenProps) {
+  const { isAdmin } = useUserRole();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => { loadAvatar(); }, []);
+  useEffect(() => {
+    loadAvatar();
+  }, []);
 
   const loadAvatar = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     if (!user) return;
+
     const { data: profile } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
-    if (profile?.avatar_url) setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
+
+    if (profile?.avatar_url) {
+      setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
+    }
   };
 
   const handleShareApp = async () => {
     const appUrl = "https://prayerandfire.org";
-    const shareData = { title: "Prayer & Fire", text: t("shareAppText"), url: appUrl };
-    if (typeof navigator.share === "function") {
-      try { await navigator.share(shareData); return; } catch (error: any) { if (error.name === "AbortError") return; }
-    }
+
+    const shareData = {
+      title: "Prayer & Fire",
+      text: "Join Prayer & Fire global movement.",
+      url: appUrl,
+    };
+
     try {
-      await navigator.clipboard.writeText(`${shareData.text}\n${appUrl}`);
-      toast({ title: t("linkCopied") });
-    } catch {
-      toast({ title: t("share"), description: `${t("shareLink")}: ${appUrl}` });
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      await navigator.clipboard.writeText(appUrl);
+
+      toast({
+        title: "Link copied",
+        description: "Prayer & Fire link copied to clipboard.",
+      });
+    } catch (error: any) {
+      if (error?.name === "AbortError") return;
+
+      await navigator.clipboard.writeText(appUrl);
+
+      toast({
+        title: "Link copied",
+        description: "Prayer & Fire link copied to clipboard.",
+      });
     }
   };
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
-      <h2 className="text-2xl font-bold text-foreground mb-6">{t("settings")}</h2>
-      <button onClick={onProfileClick} className="w-full bg-card border border-border rounded-xl p-5 space-y-3 hover:bg-secondary transition-all duration-200 hover:scale-[1.02] active:scale-95 text-left">
+      <h2 className="text-4xl font-bold text-white mb-8">Settings</h2>
+
+      {/* Profile Card */}
+      <button onClick={onProfileClick} className="w-full bg-card border border-border rounded-3xl p-5 text-left">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-              {avatarUrl ? <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" crossOrigin="anonymous" /> : <User className="w-5 h-5 text-primary" />}
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-7 h-7 text-orange-500" />
+              )}
             </div>
-            <h3 className="text-lg font-semibold text-foreground">{t("profile")}</h3>
+
+            <div>
+              <h3 className="text-2xl font-semibold text-white">Profile</h3>
+
+              <p className="text-zinc-400 mt-2">Name: {userName || "User"}</p>
+
+              <p className="text-zinc-400">Email: {userEmail}</p>
+            </div>
           </div>
-          <span className="text-xs text-muted-foreground">{t("edit")}</span>
-        </div>
-        <div className="space-y-2 text-sm">
-          <p className="text-muted-foreground"><span className="text-foreground font-medium">{t("name")}:</span> {userName || "User"}</p>
-          <p className="text-muted-foreground"><span className="text-foreground font-medium">Email:</span> {userEmail}</p>
+
+          <span className="text-zinc-500 text-lg">Edit</span>
         </div>
       </button>
-      <div className="grid grid-cols-2 gap-4">
-        <button onClick={onNotificationsClick} className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
-          <Bell className="w-6 h-6 text-primary mb-2" /><p className="text-sm font-medium text-foreground">{t("notifications")}</p><p className="text-xs text-muted-foreground mt-1">{t("view")}</p>
+
+      {/* Settings Grid */}
+      <div className="grid grid-cols-2 gap-5">
+        {/* Notifications */}
+        <button onClick={onNotificationsClick} className="bg-card border border-border rounded-3xl p-6 text-left">
+          <Bell className="w-8 h-8 text-orange-500 mb-5" />
+
+          <h3 className="text-2xl text-white font-medium">Notifications</h3>
+
+          <p className="text-zinc-500 mt-2">View</p>
         </button>
-        <button onClick={setLanguage} className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
-          <Languages className="w-6 h-6 text-primary mb-2" /><p className="text-sm font-medium text-foreground">{t("language")}</p><p className="text-xs text-muted-foreground mt-1">{t("changeLanguage")}</p>
+
+        {/* Language */}
+        <button onClick={setLanguage} className="bg-card border border-border rounded-3xl p-6 text-left">
+          <Languages className="w-8 h-8 text-orange-500 mb-5" />
+
+          <h3 className="text-2xl text-white font-medium">Language</h3>
+
+          <p className="text-zinc-500 mt-2">Change Language</p>
         </button>
-        <button onClick={handleShareApp} className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
-          <Share2 className="w-6 h-6 text-primary mb-2" /><p className="text-sm font-medium text-foreground">{t("shareApp")}</p><p className="text-xs text-muted-foreground mt-1">{t("inviteFriends")}</p>
+
+        {/* Share */}
+        <button onClick={handleShareApp} className="bg-card border border-border rounded-3xl p-6 text-left">
+          <Share2 className="w-8 h-8 text-orange-500 mb-5" />
+
+          <h3 className="text-2xl text-white font-medium">Share Prayer & Fire App</h3>
+
+          <p className="text-zinc-500 mt-2">Invite your friends</p>
         </button>
-        <button onClick={onLegalClick} className="bg-card border border-border rounded-xl p-4 hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95">
-          <Scale className="w-6 h-6 text-primary mb-2" /><p className="text-sm font-medium text-foreground">{t("legalPolicies")}</p><p className="text-xs text-muted-foreground mt-1">{t("view")}</p>
+
+        {/* Legal */}
+        <button onClick={onLegalClick} className="bg-card border border-border rounded-3xl p-6 text-left">
+          <Scale className="w-8 h-8 text-orange-500 mb-5" />
+
+          <h3 className="text-2xl text-white font-medium">Legal & Policies</h3>
+
+          <p className="text-zinc-500 mt-2">View</p>
         </button>
       </div>
-      {loading ? <div className="text-muted-foreground text-center py-4">{t("loadingAdminStatus")}</div> : isAdmin && (
-        <button onClick={onAdminClick} className="w-full px-4 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-95 font-semibold shadow-lg shadow-primary/20">{t("adminPanel")}</button>
+
+      {/* Admin */}
+      {isAdmin && !isGuest && (
+        <button
+          onClick={onAdminClick}
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 rounded-2xl text-2xl transition-all"
+        >
+          Admin Panel
+        </button>
       )}
-      <button onClick={onSignOut} className="mt-4 text-muted-foreground hover:text-primary font-medium text-center w-full transition-colors">
-        {isGuest ? "Sign In / Register" : t("signout")}
-      </button>
+
+      {/* Sign Out */}
+      {!isGuest && (
+        <button
+          onClick={onSignOut}
+          className="w-full border border-border bg-card text-white py-5 rounded-2xl text-2xl"
+        >
+          Sign Out
+        </button>
+      )}
     </div>
   );
 }
