@@ -50,7 +50,6 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
   };
 
   const whatsappLinks = links.filter((link) => link.icon?.toLowerCase() === "whatsapp");
-
   const instagramLinks = links.filter((link) => link.icon?.toLowerCase() === "instagram");
 
   if (loading) {
@@ -68,9 +67,8 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
       <div className="min-h-screen bg-black text-white px-5 pt-6 pb-24">
         <div className="flex items-center gap-4 mb-8">
           <button onClick={() => setShowWhatsAppContacts(false)}>
-            <ArrowLeft className="w-6 h-6 text-orange-500" />
+            <ArrowLeft className="w-6 h-6 text-blue-400" />
           </button>
-
           <h1 className="text-2xl font-bold">WhatsApp Community</h1>
         </div>
 
@@ -85,12 +83,6 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
               {link.title}
             </button>
           ))}
-
-          {whatsappLinks.length === 0 && (
-            <div className="rounded-2xl bg-zinc-950 border border-zinc-800 p-6 text-center">
-              <p className="text-zinc-400">No WhatsApp links are available right now.</p>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -99,15 +91,15 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
   return (
     <div className="min-h-screen bg-black text-white px-5 pt-6 pb-24">
       <header className="mb-8">
-        <button onClick={onBack} className="mb-6 inline-flex items-center gap-2 text-orange-500 font-semibold">
+        <button onClick={onBack} className="mb-6 inline-flex items-center gap-2 text-blue-400 font-semibold">
           <ArrowLeft className="w-5 h-5" />
           Back
         </button>
 
-        <div className="rounded-3xl border border-orange-500/20 bg-gradient-to-br from-orange-500/20 via-zinc-950 to-black p-6 shadow-2xl">
-          <div className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 border border-orange-500/20 px-4 py-2 mb-5">
-            <Sparkles className="w-4 h-4 text-orange-400" />
-            <span className="text-orange-400 text-sm font-bold tracking-wide">CONNECT</span>
+        <div className="rounded-3xl border border-orange-500/20 bg-gradient-to-br from-[#1a0d0d] via-[#09090f] to-[#10182b] p-6 shadow-[0_0_40px_rgba(59,130,246,0.15)]">
+          <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-400/30 px-4 py-2 mb-5">
+            <Sparkles className="w-4 h-4 text-blue-400" />
+            <span className="text-blue-400 text-sm font-bold tracking-wide">CONNECT</span>
           </div>
 
           <h1 className="text-4xl font-extrabold mb-3">Prayer & Fire</h1>
@@ -122,9 +114,9 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
       <section className="space-y-4 mb-8">
         <button
           onClick={() => window.open("https://prayerandfire.org", "_blank")}
-          className="w-full rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-orange-500 text-white font-bold py-5 px-6 flex items-center justify-center gap-3 active:scale-95 transition"
+          className="w-full rounded-2xl bg-zinc-950 border border-blue-400/30 hover:border-blue-400 text-white font-bold py-5 px-6 flex items-center justify-center gap-3 active:scale-95 transition shadow-[0_0_24px_rgba(59,130,246,0.08)]"
         >
-          <Globe2 className="w-6 h-6 text-orange-500" />
+          <Globe2 className="w-6 h-6 text-blue-400" />
           Official Website
           <ExternalLink className="w-4 h-4 text-zinc-500" />
         </button>
@@ -152,7 +144,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
         <button
           onClick={() => openEmail("Contact Prayer & Fire")}
-          className="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 px-6 flex items-center justify-center gap-3 active:scale-95 transition"
+          className="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 px-6 flex items-center justify-center gap-3 active:scale-95 transition shadow-[0_0_30px_rgba(37,99,235,0.25)]"
         >
           <Mail className="w-6 h-6" />
           Email Ministry
@@ -160,7 +152,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
         <button
           onClick={onNavigateToEvents}
-          className="w-full rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 px-6 flex items-center justify-center gap-3 active:scale-95 transition"
+          className="w-full rounded-2xl bg-gradient-to-r from-orange-500 to-blue-600 hover:opacity-90 text-white font-bold py-5 px-6 flex items-center justify-center gap-3 active:scale-95 transition"
         >
           <Calendar className="w-6 h-6" />
           Events
