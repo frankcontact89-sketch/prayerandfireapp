@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { SignInScreen } from "@/components/SignInScreen";
+import { HomeScreen } from "@/components/HomeScreen";
 import { EventsScreen } from "@/components/EventsScreen";
 import { GivingScreen } from "@/components/GivingScreen";
 import { ShoppingScreen } from "@/components/ShoppingScreen";
@@ -19,63 +20,6 @@ import { translations, SupportedLanguage } from "@/config/translations";
 import { useToast } from "@/hooks/use-toast";
 import { getLastReadAtMs, setLastReadAtNow } from "@/lib/notifications-last-seen";
 
-const dailyPrayers = [
-  { text: "Lord, strengthen my faith and guide my steps today.", ref: "Psalm 37:23" },
-  { text: "Create in me a clean heart, O God, and renew a right spirit within me.", ref: "Psalm 51:10" },
-  { text: "The Lord is my shepherd; I shall not want.", ref: "Psalm 23:1" },
-  { text: "Teach me Your way, O Lord, and lead me in a plain path.", ref: "Psalm 27:11" },
-  { text: "I can do all things through Christ who strengthens me.", ref: "Philippians 4:13" },
-  { text: "Lord, give me wisdom, peace, and strength for today.", ref: "James 1:5" },
-  { text: "Your word is a lamp to my feet and a light to my path.", ref: "Psalm 119:105" },
-  { text: "Be still, and know that I am God.", ref: "Psalm 46:10" },
-  { text: "The joy of the Lord is my strength.", ref: "Nehemiah 8:10" },
-  { text: "Lord, help me walk by faith and not by sight.", ref: "2 Corinthians 5:7" },
-  { text: "God is our refuge and strength, a very present help in trouble.", ref: "Psalm 46:1" },
-  { text: "Lord, lead me, protect me, and keep my heart close to You.", ref: "Proverbs 3:5-6" },
-  { text: "Let everything that has breath praise the Lord.", ref: "Psalm 150:6" },
-  { text: "The Lord will fight for you; you need only to be still.", ref: "Exodus 14:14" },
-  { text: "Lord, let Your peace rule in my heart today.", ref: "Colossians 3:15" },
-  { text: "Give thanks to the Lord, for He is good.", ref: "Psalm 107:1" },
-  { text: "Lord, order my steps according to Your Word.", ref: "Psalm 119:133" },
-  { text: "When I am afraid, I put my trust in You.", ref: "Psalm 56:3" },
-  { text: "Lord, help me seek first Your kingdom and Your righteousness.", ref: "Matthew 6:33" },
-  { text: "The Lord is my light and my salvation; whom shall I fear?", ref: "Psalm 27:1" },
-  { text: "Lord, renew my strength like the eagle.", ref: "Isaiah 40:31" },
-  { text: "Cast all your anxiety on Him because He cares for you.", ref: "1 Peter 5:7" },
-  { text: "Lord, give me a humble heart and a willing spirit.", ref: "Psalm 51:12" },
-  { text: "My help comes from the Lord, maker of heaven and earth.", ref: "Psalm 121:2" },
-  { text: "Lord, fill me with Your Spirit and guide my words.", ref: "Ephesians 5:18" },
-  { text: "The Lord is good, a stronghold in the day of trouble.", ref: "Nahum 1:7" },
-  { text: "Lord, help me forgive, love, and walk in obedience.", ref: "Ephesians 4:32" },
-  { text: "Commit your way to the Lord; trust in Him.", ref: "Psalm 37:5" },
-  { text: "Lord, give me courage to do Your will today.", ref: "Joshua 1:9" },
-  { text: "Let the words of my mouth and the meditation of my heart be acceptable to You.", ref: "Psalm 19:14" },
-];
-
-function CleanHome() {
-  const [prayer] = useState(() => {
-    return dailyPrayers[Math.floor(Math.random() * dailyPrayers.length)];
-  });
-
-  return (
-    <div className="min-h-screen px-5 pt-6 pb-24 bg-background text-foreground">
-      <div className="rounded-2xl border border-primary/30 bg-card/80 p-6 mb-6">
-        <p className="text-primary text-sm font-bold tracking-widest mb-2">WELCOME</p>
-        <h1 className="text-3xl font-bold mb-3">Prayer & Fire</h1>
-        <p className="text-muted-foreground leading-relaxed">
-          A global movement to ignite hearts, deepen prayer, and walk together in faith.
-        </p>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card p-6">
-        <p className="text-primary text-sm font-bold tracking-widest mb-4">PRAYER / VERSE OF THE DAY</p>
-        <p className="text-2xl italic leading-relaxed mb-4">"{prayer.text}"</p>
-        <p className="text-primary font-bold">— {prayer.ref}</p>
-      </div>
-    </div>
-  );
-}
-
 export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState("home");
@@ -83,11 +27,8 @@ export default function Index() {
   const [welcomeChecked, setWelcomeChecked] = useState(false);
   const [showLanguages, setShowLanguages] = useState(false);
   const [language, setLanguage] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem("pf_lang");
-      if (saved && ["en", "es", "pt"].includes(saved)) return saved;
-    } catch {}
-    return "en";
+    const saved = localStorage.getItem("pf_lang");
+    return saved && ["en", "es", "pt"].includes(saved) ? saved : "en";
   });
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem("pf_dark_mode");
@@ -98,7 +39,7 @@ export default function Index() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const { toast } = useToast();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isDarkMode) document.documentElement.classList.add("dark");
     else document.documentElement.classList.remove("dark");
   }, [isDarkMode]);
@@ -179,6 +120,7 @@ export default function Index() {
       .channel("notifications-inserts")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => {
         const notification = payload.new as any;
+
         if (notification.user_id === null || notification.user_id === user.id) {
           toast({
             title: notification.title || "🔔 New Notification",
@@ -198,6 +140,7 @@ export default function Index() {
     const {
       data: { user: currentUser },
     } = await supabase.auth.getUser();
+
     if (!currentUser) {
       setWelcomeChecked(true);
       return;
@@ -217,10 +160,10 @@ export default function Index() {
     const {
       data: { user: currentUser },
     } = await supabase.auth.getUser();
+
     if (!currentUser) return;
 
     await supabase.from("profiles").update({ welcome_seen: true }).eq("id", currentUser.id);
-
     setShowWelcome(false);
   };
 
@@ -287,14 +230,20 @@ export default function Index() {
       <div className="sticky top-0 z-30 bg-card/80 backdrop-blur-md border-b border-border/50 pt-[env(safe-area-inset-top)]">
         <div className="flex justify-between items-center px-5 py-3">
           <div className="flex items-center gap-3">
-            <button onClick={() => setPage("settings")} className="text-primary">
+            <button onClick={() => setPage("settings")} className="text-orange-500">
               <Settings className="w-5 h-5" />
             </button>
 
-            <button onClick={openNotifications} className="relative text-primary">
+            <button
+              onClick={openNotifications}
+              className={`relative transition-colors duration-300 ${
+                unreadNotifications > 0 ? "text-blue-500" : "text-orange-500"
+              }`}
+            >
               <Bell className="w-5 h-5" />
+
               {unreadNotifications > 0 && (
-                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
+                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1 shadow-[0_0_10px_rgba(59,130,246,0.7)]">
                   {unreadNotifications > 99 ? "99+" : unreadNotifications}
                 </span>
               )}
@@ -303,14 +252,14 @@ export default function Index() {
 
           <div />
 
-          <button onClick={() => setPage("social")} className="text-primary">
+          <button onClick={() => setPage("social")} className="text-orange-500">
             <Share2 className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto pb-20">
-        {page === "home" && <CleanHome />}
+        {page === "home" && <HomeScreen t={t} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
         {page === "settings" && (
@@ -333,11 +282,15 @@ export default function Index() {
             isGuest={false}
           />
         )}
+
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
+
         {page === "social" && (
           <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />
         )}
+
         {page === "events" && <EventsScreen t={t} />}
+
         {page === "prayer_request" && (
           <SubmissionForm
             type="prayer_request"
@@ -350,6 +303,7 @@ export default function Index() {
             onBack={() => setPage("home")}
           />
         )}
+
         {page === "testimony" && (
           <SubmissionForm
             type="testimony"
@@ -362,6 +316,7 @@ export default function Index() {
             onBack={() => setPage("home")}
           />
         )}
+
         {page === "contact" && (
           <SubmissionForm
             type="contact"
@@ -374,10 +329,13 @@ export default function Index() {
             onBack={() => setPage("home")}
           />
         )}
+
         {page === "bible_study" && (
           <BibleStudyScreen onBack={() => setPage("home")} onContact={() => setPage("contact")} />
         )}
+
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
+
         {page === "profile" && (
           <ProfileScreen
             t={t}
@@ -390,6 +348,7 @@ export default function Index() {
             }}
           />
         )}
+
         {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
       </div>
 
@@ -397,19 +356,21 @@ export default function Index() {
         <nav className="flex justify-around items-center py-3 px-4 max-w-2xl mx-auto">
           <button
             onClick={() => setPage("home")}
-            className={page === "home" ? "text-primary" : "text-muted-foreground"}
+            className={page === "home" ? "text-orange-500" : "text-muted-foreground"}
           >
             <Flame className="w-6 h-6" />
           </button>
+
           <button
             onClick={() => setPage("giving")}
-            className={page === "giving" ? "text-primary" : "text-muted-foreground"}
+            className={page === "giving" ? "text-orange-500" : "text-muted-foreground"}
           >
             <Heart className="w-6 h-6" />
           </button>
+
           <button
             onClick={() => setPage("shopping")}
-            className={page === "shopping" ? "text-primary" : "text-muted-foreground"}
+            className={page === "shopping" ? "text-orange-500" : "text-muted-foreground"}
           >
             <ShoppingBag className="w-6 h-6" />
           </button>
