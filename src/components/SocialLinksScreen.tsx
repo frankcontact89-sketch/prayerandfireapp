@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  MessageCircle, Instagram, Calendar, ArrowLeft, Mail,
-  HandHeart, BookOpen, Heart, Users, Globe2, Phone, ExternalLink, ShoppingBag
-} from "lucide-react";
+import { MessageCircle, Instagram, Calendar, ArrowLeft, Mail, Globe2, ExternalLink, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { FloatingFireButton } from "@/components/FloatingFireButton";
 
-interface SocialLink { id: string; title: string; url: string; icon?: string; is_active: boolean; }
-interface SocialLinksScreenProps { t: (key: string) => string; onBack: () => void; onNavigateToEvents: () => void; }
+interface SocialLink {
+  id: string;
+  title: string;
+  url: string;
+  icon?: string;
+  is_active: boolean;
+}
+
+interface SocialLinksScreenProps {
+  t: (key: string) => string;
+  onBack: () => void;
+  onNavigateToEvents: () => void;
+}
 
 const CONTACT = "prayerandfireglobal@gmail.com";
-const mailto = (subject: string) =>
+
+const openEmail = (subject: string) => {
   window.open(`mailto:${CONTACT}?subject=${encodeURIComponent(subject)}`, "_blank");
+};
 
 export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinksScreenProps) {
   const [links, setLinks] = useState<SocialLink[]>([]);
@@ -20,132 +29,143 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
   const [showWhatsAppContacts, setShowWhatsAppContacts] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => { fetchLinks(); }, []);
+  useEffect(() => {
+    fetchLinks();
+  }, []);
 
   const fetchLinks = async () => {
     const { data, error } = await supabase.from("app_links").select("*").eq("is_active", true).order("order_index");
-    if (error) toast({ title: t("error"), description: t("couldNotLoadLinks"), variant: "destructive" });
-    else setLinks(data || []);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Could not load links.",
+        variant: "destructive",
+      });
+    } else {
+      setLinks(data || []);
+    }
+
     setLoading(false);
   };
 
+  const whatsappLinks = links.filter((link) => link.icon?.toLowerCase() === "whatsapp");
+
+  const instagramLinks = links.filter((link) => link.icon?.toLowerCase() === "instagram");
+
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto p-6 space-y-3">
-        {[...Array(6)].map((_, i) => <div key={i} className="h-14 rounded-xl animate-pulse bg-white/5" />)}
+      <div className="min-h-screen bg-black px-5 py-8 space-y-4">
+        {[...Array(5)].map((_, index) => (
+          <div key={index} className="h-16 rounded-2xl bg-zinc-900 animate-pulse" />
+        ))}
       </div>
     );
   }
 
-  const whatsappLinks = links.filter(l => l.icon?.toLowerCase() === "whatsapp");
-  const instagramLinks = links.filter(l => l.icon?.toLowerCase() === "instagram");
-
   if (showWhatsAppContacts) {
     return (
-      <div className="max-w-2xl mx-auto p-6 space-y-4 animate-fade-in">
-        <div className="flex items-center gap-4 mb-6">
-          <button onClick={() => setShowWhatsAppContacts(false)} className="text-primary hover:text-primary/80 transition-colors">
-            <ArrowLeft className="w-6 h-6" />
+      <div className="min-h-screen bg-black text-white px-5 pt-6 pb-24">
+        <div className="flex items-center gap-4 mb-8">
+          <button onClick={() => setShowWhatsAppContacts(false)}>
+            <ArrowLeft className="w-6 h-6 text-orange-500" />
           </button>
-          <h2 className="text-2xl font-bold text-foreground">💬 {t("whatsappContacts")}</h2>
+
+          <h1 className="text-2xl font-bold">WhatsApp Community</h1>
         </div>
-        {whatsappLinks.map((link) => (
-          <button key={link.id} onClick={() => window.open(link.url, "_blank")}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
-            <MessageCircle className="w-5 h-5" />{link.title}
-          </button>
-        ))}
-        <FloatingFireButton onClick={() => setShowWhatsAppContacts(false)} />
+
+        <div className="space-y-4">
+          {whatsappLinks.map((link) => (
+            <button
+              key={link.id}
+              onClick={() => window.open(link.url, "_blank")}
+              className="w-full rounded-2xl bg-green-600 hover:bg-green-700 text-white font-bold py-5 px-6 flex items-center justify-center gap-3 active:scale-95 transition"
+            >
+              <MessageCircle className="w-6 h-6" />
+              {link.title}
+            </button>
+          ))}
+
+          {whatsappLinks.length === 0 && (
+            <div className="rounded-2xl bg-zinc-950 border border-zinc-800 p-6 text-center">
+              <p className="text-zinc-400">No WhatsApp links are available right now.</p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6 pb-12 animate-fade-in">
-      <header>
-        <h2 className="text-2xl font-bold text-foreground">🌐 {t("connect")}</h2>
-        <p className="text-sm text-muted-foreground mt-1">{t("connect_subtitle")}</p>
+    <div className="min-h-screen bg-black text-white px-5 pt-6 pb-24">
+      <header className="mb-8">
+        <button onClick={onBack} className="mb-6 inline-flex items-center gap-2 text-orange-500 font-semibold">
+          <ArrowLeft className="w-5 h-5" />
+          Back
+        </button>
+
+        <div className="rounded-3xl border border-orange-500/20 bg-gradient-to-br from-orange-500/20 via-zinc-950 to-black p-6 shadow-2xl">
+          <div className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 border border-orange-500/20 px-4 py-2 mb-5">
+            <Sparkles className="w-4 h-4 text-orange-400" />
+            <span className="text-orange-400 text-sm font-bold tracking-wide">CONNECT</span>
+          </div>
+
+          <h1 className="text-4xl font-extrabold mb-3">Prayer & Fire</h1>
+
+          <p className="text-zinc-400 leading-relaxed">
+            Connect with the ministry, send a message, join updates, and stay close to what God is doing through Prayer
+            & Fire.
+          </p>
+        </div>
       </header>
 
-      {/* Official Links */}
-      <section className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("connect_official_links")}</h3>
-        <button onClick={() => window.open("https://prayerandfire.org", "_blank", "noopener,noreferrer")}
-          className="w-full bg-card border border-primary/30 hover:border-primary text-foreground font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
-          <Globe2 className="w-5 h-5 text-primary" />{t("connect_official_website")}
-          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+      <section className="space-y-4 mb-8">
+        <button
+          onClick={() => window.open("https://prayerandfire.org", "_blank")}
+          className="w-full rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-orange-500 text-white font-bold py-5 px-6 flex items-center justify-center gap-3 active:scale-95 transition"
+        >
+          <Globe2 className="w-6 h-6 text-orange-500" />
+          Official Website
+          <ExternalLink className="w-4 h-4 text-zinc-500" />
         </button>
-      </section>
-
-      {/* Engagement grid */}
-      <section className="grid grid-cols-2 gap-3">
-        <Tile icon={<HandHeart />} label={t("connect_prayer_request")} sub={t("connect_submit_request")}
-          onClick={() => mailto("Prayer Request")} />
-        <Tile icon={<BookOpen />} label={t("connect_bible_study")} sub={t("connect_join_group")}
-          onClick={() => mailto("Join Bible Study")} />
-        <Tile icon={<Heart />} label={t("connect_testimonies")} sub={t("connect_share_or_read")}
-          onClick={() => mailto("Share Testimony")} />
-        <Tile icon={<Users />} label={t("connect_volunteer")} sub={t("connect_serve_with_us")}
-          onClick={() => mailto("Volunteer with Prayer & Fire")} />
-        <Tile icon={<Globe2 />} label={t("connect_missions")} sub={t("connect_support_outreach")}
-          onClick={() => mailto("Support Missions")} />
-        <Tile icon={<Phone />} label={t("connect_contact_ministry")} sub={t("connect_reach_team")}
-          onClick={() => mailto("Contact Ministry")} />
-      </section>
-
-      {/* Channels */}
-      <section className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("connect_channels")}</h3>
 
         {whatsappLinks.length > 0 && (
-          <button onClick={() => setShowWhatsAppContacts(true)}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
-            <MessageCircle className="w-5 h-5" />{t("connect_whatsapp_community")}
+          <button
+            onClick={() => setShowWhatsAppContacts(true)}
+            className="w-full rounded-2xl bg-green-600 hover:bg-green-700 text-white font-bold py-5 px-6 flex items-center justify-center gap-3 active:scale-95 transition"
+          >
+            <MessageCircle className="w-6 h-6" />
+            WhatsApp Community
           </button>
         )}
 
         {instagramLinks.map((link) => (
-          <button key={link.id} onClick={() => window.open(link.url, "_blank")}
-            className="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
-            <Instagram className="w-5 h-5" />{link.title}
+          <button
+            key={link.id}
+            onClick={() => window.open(link.url, "_blank")}
+            className="w-full rounded-2xl bg-pink-600 hover:bg-pink-700 text-white font-bold py-5 px-6 flex items-center justify-center gap-3 active:scale-95 transition"
+          >
+            <Instagram className="w-6 h-6" />
+            {link.title}
           </button>
         ))}
 
-        <button onClick={() => mailto("Hello Prayer & Fire")}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
-          <Mail className="w-5 h-5" />{t("connect_email_ministry")}
+        <button
+          onClick={() => openEmail("Contact Prayer & Fire")}
+          className="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 px-6 flex items-center justify-center gap-3 active:scale-95 transition"
+        >
+          <Mail className="w-6 h-6" />
+          Email Ministry
         </button>
 
-        <button onClick={onNavigateToEvents}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
-          <Calendar className="w-5 h-5" />{t("events")}
+        <button
+          onClick={onNavigateToEvents}
+          className="w-full rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 px-6 flex items-center justify-center gap-3 active:scale-95 transition"
+        >
+          <Calendar className="w-6 h-6" />
+          Events
         </button>
       </section>
-
-      {/* Global Movement */}
-      <section className="rounded-2xl bg-gradient-to-br from-primary/15 to-card border border-primary/20 p-5">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-primary mb-2">{t("connect_global_title")}</h3>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          {t("connect_global_desc")}
-        </p>
-        <p className="text-xs text-muted-foreground mt-2">
-          {t("connect_global_sub")}
-        </p>
-      </section>
-
-      <FloatingFireButton onClick={onBack} />
     </div>
   );
 }
-
-function Tile({ icon, label, sub, onClick }: { icon: React.ReactNode; label: string; sub: string; onClick: () => void; }) {
-  return (
-    <button onClick={onClick}
-      className="rounded-2xl bg-card border border-border p-4 text-left hover:border-primary/40 hover:bg-card/80 transition-all active:scale-95">
-      <div className="text-primary mb-2 [&_svg]:w-6 [&_svg]:h-6">{icon}</div>
-      <div className="font-bold text-foreground text-sm">{label}</div>
-      <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>
-    </button>
-  );
-}
-
