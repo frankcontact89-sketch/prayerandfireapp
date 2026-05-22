@@ -1,213 +1,137 @@
 import React, { useEffect, useState } from "react";
-import {
-  Flame, BookOpen, HandHeart, Calendar, Sparkles, Users,
-  Quote, Heart, Globe2, GraduationCap
-} from "lucide-react";
+import { Quote, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import realisticFlame from "@/assets/realistic-flame.png";
-import vozInteriorBook from "@/assets/voz-interior-book.jpg";
-import entryLogo from "@/assets/prayer-fire-entry-logo.png";
 
 interface HomeScreenProps {
   t: (key: string) => string;
-  onNavigate?: (page: string) => void;
 }
 
-function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-xl bg-white/5 ${className}`} />;
-}
-
-export function HomeScreen({ t, onNavigate }: HomeScreenProps) {
+export function HomeScreen({ t }: HomeScreenProps) {
   const lang = (typeof window !== "undefined" && localStorage.getItem("pf_lang")) || "en";
-  const [verse, setVerse] = useState<{ text: string; ref: string } | null>(null);
-  const [content, setContent] = useState<Record<string, string>>({});
+
+  const [verse, setVerse] = useState<{
+    text: string;
+    ref: string;
+  } | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
-      const [versesRes, contentRes] = await Promise.all([
-        supabase.from("verses").select("text_en,ref_en,text_es,ref_es,text_pt,ref_pt").eq("is_active", true),
-        supabase.from("app_content").select("key,value_en,value_es,value_pt"),
-      ]);
-      const vs = (versesRes.data || []).map((v: any) => ({
-        text: v[`text_${lang}`] || v.text_en || "",
-        ref: v[`ref_${lang}`] || v.ref_en || "",
-      })).filter((v) => v.text);
-      if (vs.length) setVerse(vs[Math.floor(Math.random() * vs.length)]);
-      const map: Record<string, string> = {};
-      (contentRes.data || []).forEach((r: any) => {
-        const v = r[`value_${lang}`] || r.value_en;
-        if (v) map[r.key] = v;
-      });
-      setContent(map);
-      setLoading(false);
-    })();
-  }, [lang]);
+    loadVerse();
+  }, []);
 
-  // Use admin-managed content with translation fallback
-  const c = (key: string) => content[key] || t(key);
+  const loadVerse = async () => {
+    const { data } = await supabase
+      .from("verses")
+      .select("text_en,ref_en,text_es,ref_es,text_pt,ref_pt")
+      .eq("is_active", true);
+
+    if (!data || data.length === 0) {
+      setLoading(false);
+      return;
+    }
+
+    const verses = data.map((v: any) => ({
+      text: v[`text_${lang}`] || v.text_en,
+      ref: v[`ref_${lang}`] || v.ref_en,
+    }));
+
+    const random = verses[Math.floor(Math.random() * verses.length)];
+
+    setVerse(random);
+    setLoading(false);
+  };
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-5 pt-6 space-y-4">
-        <Skeleton className="h-32" />
-        <Skeleton className="h-28" />
-        <div className="grid grid-cols-2 gap-3">
-          <Skeleton className="h-24" /><Skeleton className="h-24" />
-        </div>
-        <Skeleton className="h-40" />
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-pulse text-zinc-500">Loading...</div>
       </div>
     );
   }
 
-  const go = (page: string) => {
-    if (onNavigate) onNavigate(page);
-  };
-
   return (
-    <div className="relative min-h-screen pb-12">
+    <div className="relative min-h-screen overflow-hidden bg-black text-white">
+      {/* Background */}
       <div
-        className="fixed inset-0 z-0 opacity-20 dark:opacity-10 pointer-events-none"
-        style={{ backgroundImage: `url(${realisticFlame})`, backgroundSize: "cover", backgroundPosition: "center" }}
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage: `url(${realisticFlame})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       />
 
-      <div className="relative z-10 max-w-2xl mx-auto px-5 pt-6 space-y-5 animate-fade-in">
+      {/* Blue glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-blue-500/10 blur-[140px]" />
+
+      {/* Orange glow */}
+      <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-orange-500/10 blur-[120px]" />
+
+      {/* Content */}
+      <div className="relative z-10 px-6 pt-10 pb-24">
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <img src={realisticFlame} alt="Prayer & Fire" className="w-20 h-20 object-contain" />
+        </div>
+
         {/* Hero */}
-        <section className="rounded-2xl bg-gradient-to-br from-primary/25 via-primary/10 to-transparent border border-primary/30 p-6 overflow-hidden relative">
-          <div className="flex items-center gap-3 mb-3">
-            <img src={entryLogo} alt="Prayer & Fire" className="w-14 h-14 object-contain animate-pulse-quick" />
-            <div>
-              <p className="text-xs uppercase tracking-widest text-primary font-bold">{t("welcome")}</p>
-              <h1 className="text-2xl font-extrabold text-foreground leading-tight">Prayer & Fire</h1>
+        <div className="text-center mb-12">
+          <p className="uppercase tracking-[0.4em] text-orange-400 text-xs font-bold mb-4">PRAYER & FIRE</p>
+
+          <h1 className="text-5xl font-extrabold leading-tight tracking-tight">
+            Prayer that
+            <span className="block text-orange-500">connects nations.</span>
+          </h1>
+
+          <p className="text-zinc-400 mt-6 text-lg leading-relaxed max-w-md mx-auto">
+            A global movement to ignite hearts, deepen prayer, and walk together in faith.
+          </p>
+        </div>
+
+        {/* Verse Card */}
+        <section className="relative rounded-[32px] border border-blue-500/20 bg-zinc-950/80 backdrop-blur-xl p-8 overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.08)] mb-6">
+          <div className="absolute inset-0 bg-blue-500/5" />
+
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-blue-400 uppercase tracking-[0.3em] text-xs font-bold">VERSE OF THE DAY</p>
+
+              <Quote className="w-6 h-6 text-blue-400" />
             </div>
+
+            {verse ? (
+              <>
+                <p className="text-3xl leading-tight font-light text-white">"{verse.text}"</p>
+
+                <p className="text-blue-400 text-xl font-bold mt-8">— {verse.ref}</p>
+              </>
+            ) : (
+              <p className="text-zinc-500">No verse available.</p>
+            )}
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {t("home_hero_subtitle")}
+        </section>
+
+        {/* Daily Reflection */}
+        <section className="rounded-[32px] border border-orange-500/20 bg-gradient-to-br from-zinc-950 to-black p-7 shadow-[0_0_40px_rgba(249,115,22,0.12)]">
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-orange-400 uppercase tracking-[0.3em] text-xs font-bold">DAILY REFLECTION</p>
+
+            <Sparkles className="w-5 h-5 text-orange-400" />
+          </div>
+
+          <p className="text-2xl leading-relaxed text-white font-light">
+            God is still working even in the quiet seasons of your life.
           </p>
-        </section>
 
-        {/* Verse of the Day */}
-        <section className="rounded-2xl bg-card border border-border p-5 animate-fade-in">
-          <div className="flex items-center gap-2 mb-3">
-            <Quote className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_verse_title")}</h2>
+          <div className="flex justify-center gap-3 mt-8">
+            <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+            <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
+            <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
           </div>
-          {verse ? (
-            <>
-              <p className="text-lg text-foreground italic leading-relaxed">"{verse.text}"</p>
-              <p className="text-sm text-primary font-semibold mt-2">— {verse.ref}</p>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground italic">{t("loading")}</p>
-          )}
-        </section>
-
-        {/* Quick actions */}
-        <section className="grid grid-cols-2 gap-3">
-          <ActionTile icon={<HandHeart className="w-6 h-6" />} title={t("home_prayer_request")} sub={t("home_submit_yours")}
-            onClick={() => go("prayer_request")} />
-          <ActionTile icon={<Heart className="w-6 h-6" />} title={t("home_testimony")} sub={t("home_share_yours")}
-            onClick={() => go("testimony")} />
-          <ActionTile icon={<BookOpen className="w-6 h-6" />} title="Bible Study" sub="Learn more"
-            onClick={() => go("bible_study")} />
-          <ActionTile icon={<Users className="w-6 h-6" />} title="Contact Ministry" sub="Send us a message"
-            onClick={() => go("contact")} />
-        </section>
-
-        {/* Monthly Global Prayer */}
-        <section className="rounded-2xl bg-card border border-border p-5 hover:border-primary/40 transition">
-          <div className="flex items-center gap-2 mb-2">
-            <Calendar className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_monthly_gathering")}</h2>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {t("home_monthly_desc")}
-          </p>
-        </section>
-
-        {/* Featured devotional */}
-        <section className="rounded-2xl bg-card border border-border p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_featured_devotional")}</h2>
-          </div>
-          <div className="flex gap-4">
-            <div className="w-16 h-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-              <Flame className="w-8 h-8 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-foreground">{c("home_devotional_title")}</h3>
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                {c("home_devotional_desc")}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Featured course */}
-        <section className="rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-border p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <GraduationCap className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_featured_course")}</h2>
-          </div>
-          <h3 className="font-bold text-foreground text-lg">{c("home_course_title")}</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            {c("home_course_desc")}
-          </p>
-        </section>
-
-        {/* Featured book */}
-        <section className="rounded-2xl bg-card border border-border p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <BookOpen className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_featured_resource")}</h2>
-          </div>
-          <div className="flex gap-4">
-            <img src={vozInteriorBook} alt="VOZ INTERIOR"
-              className="w-20 h-28 object-cover rounded-lg border border-border" loading="lazy" />
-            <div className="flex-1">
-              <h3 className="font-bold text-foreground">VOZ INTERIOR</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {c("home_book_desc")}
-              </p>
-              <button onClick={() => window.open("https://a.co/d/dfgHEvM", "_blank", "noopener,noreferrer")}
-                className="mt-3 text-sm text-primary font-semibold hover:underline">
-                {t("home_view_amazon")} →
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* Missions */}
-        <section className="rounded-2xl bg-gradient-to-br from-primary/15 to-card border border-primary/20 p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Globe2 className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{t("home_missions_short")}</h2>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            {c("home_missions_desc")}
-          </p>
-        </section>
-
-        {/* Mission */}
-        <section className="rounded-2xl bg-gradient-to-br from-card to-card/50 border border-border p-5">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-primary mb-2">{t("home_our_mission")}</h2>
-          <p className="text-sm text-foreground leading-relaxed">
-            {c("home_mission_text")}
-          </p>
         </section>
       </div>
     </div>
-  );
-}
-
-function ActionTile({ icon, title, sub, onClick }: { icon: React.ReactNode; title: string; sub: string; onClick: () => void; }) {
-  return (
-    <button onClick={onClick}
-      className="rounded-2xl bg-card border border-border p-4 text-left hover:border-primary/40 hover:bg-card/80 transition-all active:scale-95">
-      <div className="text-primary mb-2">{icon}</div>
-      <div className="font-bold text-foreground text-sm">{title}</div>
-      <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>
-    </button>
   );
 }
