@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Bell, User, Languages, Share2, Scale } from "lucide-react";
+import { Bell, User, Languages, Scale } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 interface SettingsScreenProps {
   t: (key: string) => string;
@@ -34,7 +33,6 @@ export function SettingsScreen({
 }: SettingsScreenProps) {
   const { isAdmin } = useUserRole();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     loadAvatar();
@@ -44,7 +42,6 @@ export function SettingsScreen({
     const {
       data: { user },
     } = await supabase.auth.getUser();
-
     if (!user) return;
 
     const { data: profile } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
@@ -54,44 +51,10 @@ export function SettingsScreen({
     }
   };
 
-  const handleShareApp = async () => {
-    const appUrl = "https://prayerandfire.org";
-
-    const shareData = {
-      title: "Prayer & Fire",
-      text: "Join Prayer & Fire global movement.",
-      url: appUrl,
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-        return;
-      }
-
-      await navigator.clipboard.writeText(appUrl);
-
-      toast({
-        title: "Link copied",
-        description: "Prayer & Fire link copied to clipboard.",
-      });
-    } catch (error: any) {
-      if (error?.name === "AbortError") return;
-
-      await navigator.clipboard.writeText(appUrl);
-
-      toast({
-        title: "Link copied",
-        description: "Prayer & Fire link copied to clipboard.",
-      });
-    }
-  };
-
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
+    <div className="max-w-2xl mx-auto p-6 space-y-6 pb-32">
       <h2 className="text-4xl font-bold text-white mb-8">Settings</h2>
 
-      {/* Profile Card */}
       <button onClick={onProfileClick} className="w-full bg-card border border-border rounded-3xl p-5 text-left">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -105,9 +68,7 @@ export function SettingsScreen({
 
             <div>
               <h3 className="text-2xl font-semibold text-white">Profile</h3>
-
               <p className="text-zinc-400 mt-2">Name: {userName || "User"}</p>
-
               <p className="text-zinc-400">Email: {userEmail}</p>
             </div>
           </div>
@@ -116,56 +77,23 @@ export function SettingsScreen({
         </div>
       </button>
 
-      {/* Settings Grid */}
       <div className="grid grid-cols-2 gap-5">
-        {/* Notifications */}
-        <button onClick={onNotificationsClick} className="bg-card border border-border rounded-3xl p-6 text-left">
-          <Bell className="w-8 h-8 text-orange-500 mb-5" />
+        <SettingsTile icon={<Bell />} title="Notifications" sub="View" onClick={onNotificationsClick} />
 
-          <h3 className="text-2xl text-white font-medium">Notifications</h3>
+        <SettingsTile icon={<Languages />} title="Language" sub="Change Language" onClick={setLanguage} />
 
-          <p className="text-zinc-500 mt-2">View</p>
-        </button>
-
-        {/* Language */}
-        <button onClick={setLanguage} className="bg-card border border-border rounded-3xl p-6 text-left">
-          <Languages className="w-8 h-8 text-orange-500 mb-5" />
-
-          <h3 className="text-2xl text-white font-medium">Language</h3>
-
-          <p className="text-zinc-500 mt-2">Change Language</p>
-        </button>
-
-        {/* Share */}
-        <button onClick={handleShareApp} className="bg-card border border-border rounded-3xl p-6 text-left">
-          <Share2 className="w-8 h-8 text-orange-500 mb-5" />
-
-          <h3 className="text-2xl text-white font-medium">Share Prayer & Fire App</h3>
-
-          <p className="text-zinc-500 mt-2">Invite your friends</p>
-        </button>
-
-        {/* Legal */}
-        <button onClick={onLegalClick} className="bg-card border border-border rounded-3xl p-6 text-left">
-          <Scale className="w-8 h-8 text-orange-500 mb-5" />
-
-          <h3 className="text-2xl text-white font-medium">Legal & Policies</h3>
-
-          <p className="text-zinc-500 mt-2">View</p>
-        </button>
+        <SettingsTile icon={<Scale />} title="Legal & Policies" sub="View" onClick={onLegalClick} />
       </div>
 
-      {/* Admin */}
       {isAdmin && !isGuest && (
         <button
           onClick={onAdminClick}
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 rounded-2xl text-2xl transition-all"
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 rounded-2xl text-2xl"
         >
           Admin Panel
         </button>
       )}
 
-      {/* Sign Out */}
       {!isGuest && (
         <button
           onClick={onSignOut}
@@ -175,5 +103,25 @@ export function SettingsScreen({
         </button>
       )}
     </div>
+  );
+}
+
+function SettingsTile({
+  icon,
+  title,
+  sub,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  sub: string;
+  onClick: () => void;
+}) {
+  return (
+    <button onClick={onClick} className="bg-card border border-border rounded-3xl p-6 text-left min-h-[170px]">
+      <div className="text-orange-500 mb-5 [&_svg]:w-8 [&_svg]:h-8">{icon}</div>
+      <h3 className="text-2xl text-white font-medium">{title}</h3>
+      <p className="text-zinc-500 mt-2">{sub}</p>
+    </button>
   );
 }
