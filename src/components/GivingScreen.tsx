@@ -1,247 +1,154 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Separator } from "@/components/ui/separator";
-import { CreditCard, DollarSign, Heart, BookOpen, ExternalLink } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { Heart, DollarSign, CreditCard, Sparkles } from "lucide-react";
 
 interface GivingScreenProps {
   t: (key: string) => string;
 }
 
 export function GivingScreen({ t }: GivingScreenProps) {
-  const STRIPE_SUBSCRIPTION = "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00";
-  const STRIPE_ONETIME = "https://buy.stripe.com/test_4gM4gz4Tqc2xgdr365gUM02";
-  const BOOK_LINK = "https://a.co/d/dfgHEvM";
-  
-  const [givingType, setGivingType] = useState<"subscription" | "onetime" | "project">("subscription");
-  const [selectedProject, setSelectedProject] = useState("");
-  const [cancelLoading, setCancelLoading] = useState(false);
-  const { toast } = useToast();
+  const STRIPE_SUBSCRIPTION = "https://buy.stripe.com/9B6cN5fAc0c29GTfij7bW03";
 
-  const projects = [
-    { value: "missions", label: t("missions") },
-    { value: "youth", label: t("youthMinistry") },
-    { value: "building", label: t("buildingFund") },
-    { value: "outreach", label: t("communityOutreach") },
-  ];
+  const STRIPE_ONETIME = "https://buy.stripe.com/9B66oHco06AqdX9dab7bW01";
+
+  const [givingType, setGivingType] = useState<"subscription" | "onetime" | "project">("subscription");
 
   const handleGive = () => {
     if (givingType === "subscription") {
       window.open(STRIPE_SUBSCRIPTION, "_blank");
-    } else if (givingType === "onetime") {
-      // All payment methods now redirect to Stripe
+    } else {
       window.open(STRIPE_ONETIME, "_blank");
-    } else if (givingType === "project") {
-      // Project support also goes through Stripe
-      window.open(STRIPE_ONETIME, "_blank");
-    }
-  };
-
-  const handleCancelSubscription = async () => {
-    setCancelLoading(true);
-
-    try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData.user) {
-        toast({
-          title: "Error",
-          description: "⚠️ Debes iniciar sesión para cancelar tu suscripción.",
-          variant: "destructive",
-        });
-        setCancelLoading(false);
-        return;
-      }
-
-      // Placeholder for Supabase Function "cancel-subscription"
-      // TODO: Connect with actual Stripe cancellation logic
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast({
-        title: "Éxito",
-        description: "✅ Tu suscripción ha sido cancelada exitosamente.",
-      });
-    } catch (err) {
-      console.error("Error cancelando suscripción:", err);
-      toast({
-        title: "Error",
-        description: "❌ Ocurrió un error al cancelar la suscripción. Intenta de nuevo.",
-        variant: "destructive",
-      });
-    } finally {
-      setCancelLoading(false);
     }
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 space-y-8">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-extrabold text-foreground">
-          {t("giving")}
-        </h2>
-        <p className="text-muted-foreground">
-          {t("supportPrayerFire")}
+    <div className="min-h-screen px-5 pt-6 pb-24 bg-black text-white">
+      {/* Header */}
+      <div className="mb-8 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 mb-4">
+          <Sparkles className="w-4 h-4 text-orange-500" />
+          <span className="text-sm text-orange-400 font-semibold">SUPPORT PRAYER & FIRE</span>
+        </div>
+
+        <h1 className="text-4xl font-extrabold tracking-tight mb-3">Giving</h1>
+
+        <p className="text-zinc-400 leading-relaxed max-w-md mx-auto">
+          Support prayer, missions, biblical teaching, and global outreach.
         </p>
       </div>
 
-      {/* Giving Type Selection */}
-      <div className="grid grid-cols-3 gap-3">
-        <Button
-          variant={givingType === "subscription" ? "default" : "outline"}
+      {/* Buttons */}
+      <div className="grid grid-cols-3 gap-3 mb-8">
+        <button
           onClick={() => setGivingType("subscription")}
-          className="h-20 flex flex-col gap-1"
+          className={`rounded-2xl border p-5 transition-all duration-300 ${
+            givingType === "subscription"
+              ? "bg-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/20"
+              : "bg-zinc-950 border-zinc-800 text-zinc-400"
+          }`}
         >
-          <Heart className="w-5 h-5" />
-          <span className="text-xs">{t("monthly")}</span>
-        </Button>
-        <Button
-          variant={givingType === "onetime" ? "default" : "outline"}
+          <div className="flex flex-col items-center gap-2">
+            <Heart className="w-6 h-6" />
+            <span className="text-sm font-semibold">Monthly</span>
+          </div>
+        </button>
+
+        <button
           onClick={() => setGivingType("onetime")}
-          className="h-20 flex flex-col gap-1"
+          className={`rounded-2xl border p-5 transition-all duration-300 ${
+            givingType === "onetime"
+              ? "bg-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/20"
+              : "bg-zinc-950 border-zinc-800 text-zinc-400"
+          }`}
         >
-          <DollarSign className="w-5 h-5" />
-          <span className="text-xs">{t("oneTime")}</span>
-        </Button>
-        <Button
-          variant={givingType === "project" ? "default" : "outline"}
+          <div className="flex flex-col items-center gap-2">
+            <DollarSign className="w-6 h-6" />
+            <span className="text-sm font-semibold">One-Time</span>
+          </div>
+        </button>
+
+        <button
           onClick={() => setGivingType("project")}
-          className="h-20 flex flex-col gap-1"
+          className={`rounded-2xl border p-5 transition-all duration-300 ${
+            givingType === "project"
+              ? "bg-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/20"
+              : "bg-zinc-950 border-zinc-800 text-zinc-400"
+          }`}
         >
-          <CreditCard className="w-5 h-5" />
-          <span className="text-xs">{t("project")}</span>
-        </Button>
+          <div className="flex flex-col items-center gap-2">
+            <CreditCard className="w-6 h-6" />
+            <span className="text-sm font-semibold">Mission</span>
+          </div>
+        </button>
       </div>
 
-      {/* Subscription Option */}
-      {givingType === "subscription" && (
-        <Card className="p-6 space-y-4">
-          <h3 className="text-xl font-bold text-foreground">
-            {t("monthlySubscription")}
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {t("supportMinistryMonthly")}
-          </p>
-          <Button onClick={handleGive} className="w-full h-12 text-lg font-bold">
-            {t("setUpMonthlyGiving")}
-          </Button>
-          
-          <Separator className="my-4" />
-          
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground text-center">
-              {t("alreadyHaveSubscription")}
-            </p>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  disabled={cancelLoading}
-                >
-                  {cancelLoading ? t("canceling") : t("cancelSubscription")}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {t("areYouSure")}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t("cancelSubscriptionWarning")}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>
-                    {t("noKeepSubscription")}
-                  </AlertDialogCancel>
-                  <AlertDialogAction onClick={handleCancelSubscription}>
-                    {t("yesCancel")}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+      {/* Main Card */}
+      <Card className="bg-zinc-950 border border-zinc-800 rounded-3xl p-7 shadow-2xl">
+        {givingType === "subscription" && (
+          <div className="space-y-6">
+            <div>
+              <p className="text-orange-400 uppercase tracking-widest text-sm font-bold mb-2">Monthly Support</p>
+
+              <h2 className="text-3xl font-bold mb-3">Help Sustain the Mission</h2>
+
+              <p className="text-zinc-400 leading-relaxed">
+                Support ongoing prayer initiatives, ministry outreach, and spiritual resources reaching people around
+                the world.
+              </p>
+            </div>
+
+            <Button
+              onClick={handleGive}
+              className="w-full h-14 rounded-2xl text-lg font-bold bg-orange-500 hover:bg-orange-600"
+            >
+              Set Up Monthly Giving
+            </Button>
           </div>
-        </Card>
-      )}
+        )}
 
-      {/* One-Time Giving Option */}
-      {givingType === "onetime" && (
-        <Card className="p-6 space-y-4">
-          <h3 className="text-xl font-bold text-foreground">
-            {t("oneTimeGift")}
-          </h3>
+        {givingType === "onetime" && (
+          <div className="space-y-6">
+            <div>
+              <p className="text-orange-400 uppercase tracking-widest text-sm font-bold mb-2">One-Time Gift</p>
 
-          <Button 
-            onClick={handleGive} 
-            className="w-full h-12 text-lg font-bold"
-          >
-            {t("giveNow")}
-          </Button>
-        </Card>
-      )}
+              <h2 className="text-3xl font-bold mb-3">Support the Work</h2>
 
-      {/* Project Support Option */}
-      {givingType === "project" && (
-        <Card className="p-6 space-y-4">
-          <h3 className="text-xl font-bold text-foreground">
-            {t("supportProject")}
-          </h3>
-          
-          <div className="space-y-2">
-            <Label>{t("selectProject")}</Label>
-            <Select value={selectedProject} onValueChange={setSelectedProject}>
-              <SelectTrigger className="h-12">
-                <SelectValue placeholder={t("chooseProject")} />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project.value} value={project.value}>
-                    {project.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <p className="text-zinc-400 leading-relaxed">
+                Your support helps expand biblical teaching, prayer outreach, and missions around the world.
+              </p>
+            </div>
+
+            <Button
+              onClick={handleGive}
+              className="w-full h-14 rounded-2xl text-lg font-bold bg-orange-500 hover:bg-orange-600"
+            >
+              Give Now
+            </Button>
           </div>
+        )}
 
-          <Button 
-            onClick={handleGive} 
-            className="w-full h-12 text-lg font-bold"
-            disabled={!selectedProject}
-          >
-            {t("supportProjectBtn")}
-          </Button>
-        </Card>
-      )}
+        {givingType === "project" && (
+          <div className="space-y-6">
+            <div>
+              <p className="text-orange-400 uppercase tracking-widest text-sm font-bold mb-2">Mission Support</p>
 
-      <div className="bg-card border border-border rounded-xl p-6 text-center space-y-2">
-        <p className="text-sm text-muted-foreground">
-          {t("thankYouSupporting")}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {t("taxDeductible")}
-        </p>
-      </div>
+              <h2 className="text-3xl font-bold mb-3">Expand Global Outreach</h2>
+
+              <p className="text-zinc-400 leading-relaxed">
+                Help support missions, discipleship, online ministry, and spiritual resources reaching multiple nations.
+              </p>
+            </div>
+
+            <Button
+              onClick={handleGive}
+              className="w-full h-14 rounded-2xl text-lg font-bold bg-orange-500 hover:bg-orange-600"
+            >
+              Support Mission
+            </Button>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
