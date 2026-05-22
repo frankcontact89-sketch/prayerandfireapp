@@ -33,9 +33,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
 
         <h1 className="text-4xl font-extrabold tracking-tight mb-3">Giving</h1>
 
-        <p className="text-zinc-400 leading-relaxed max-w-md mx-auto">
-          Support prayer, missions, biblical teaching, and global outreach.
-        </p>
+        <p className="text-zinc-400 leading-relaxed max-w-md mx-auto">Support Prayer & Fire global mission.</p>
       </div>
 
       {/* Buttons */}
@@ -92,10 +90,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
 
               <h2 className="text-3xl font-bold mb-3">Help Sustain the Mission</h2>
 
-              <p className="text-zinc-400 leading-relaxed">
-                Support ongoing prayer initiatives, ministry outreach, and spiritual resources reaching people around
-                the world.
-              </p>
+              <p className="text-zinc-400 leading-relaxed">Support the Prayer & Fire mission around the world.</p>
             </div>
 
             <Button
@@ -114,9 +109,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
 
               <h2 className="text-3xl font-bold mb-3">Support the Work</h2>
 
-              <p className="text-zinc-400 leading-relaxed">
-                Your support helps expand biblical teaching, prayer outreach, and missions around the world.
-              </p>
+              <p className="text-zinc-400 leading-relaxed">Your support helps expand Prayer & Fire global mission.</p>
             </div>
 
             <Button
@@ -136,7 +129,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
               <h2 className="text-3xl font-bold mb-3">Expand Global Outreach</h2>
 
               <p className="text-zinc-400 leading-relaxed">
-                Help support missions, discipleship, online ministry, and spiritual resources reaching multiple nations.
+                Help support Prayer & Fire global mission around the world.
               </p>
             </div>
 
