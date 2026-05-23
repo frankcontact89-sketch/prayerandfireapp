@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ExternalLink, ShoppingBag } from "lucide-react";
@@ -14,81 +14,31 @@ interface Product {
   description: string | null;
   purchase_url: string;
   is_active: boolean;
-  category?: string | null;
-  button_label?: string | null;
 }
 
 const ORANGE = "#FF6A00";
 
-function inferButtonLabel(p: Product): string {
-  if (/imers[aã]o/i.test(p.name)) return "Register with Stripe";
-
-  if (p.button_label) return p.button_label;
-
-  const url = (p.purchase_url || "").toLowerCase();
-
-  if (url.includes("amazon.")) return "View on Amazon";
-
-  if (url.includes("etsy.")) return "View on Etsy";
-
-  if (url.includes("stripe.") || url.includes("buy.stripe") || url.includes("checkout.stripe")) {
-    return "Register with Stripe";
-  }
-
-  return "Open Link";
-}
-
-function normalizeCategory(category?: string | null) {
-  const c = (category || "").toLowerCase();
-
-  if (c.includes("imers") || c.includes("course") || c.includes("curso")) {
-    return "Courses";
-  }
-
-  if (
-    c.includes("merch") ||
-    c.includes("shirt") ||
-    c.includes("mug") ||
-    c.includes("hoodie") ||
-    c.includes("apparel")
-  ) {
-    return "Merch";
-  }
-
-  return "Books";
-}
-
 export function ShoppingScreen({ t }: ShoppingScreenProps) {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
-    fetchProducts();
+    fetchProduct();
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchProduct = async () => {
     const { data } = await supabase
       .from("products")
-      .select("id,name,image_url,description,purchase_url,is_active,category,button_label")
-      .eq("is_active", true);
+      .select("*")
+      .ilike("name", "%voz%")
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
 
-    setProducts((data as Product[]) || []);
+    setProduct(data as Product);
     setLoading(false);
   };
-
-  const grouped = useMemo(() => {
-    const items = products.map((p) => ({
-      ...p,
-      category: normalizeCategory(p.category),
-    }));
-
-    return {
-      Courses: items.filter((p) => p.category === "Courses"),
-      Books: items.filter((p) => p.category === "Books"),
-      Merch: items.filter((p) => p.category === "Merch"),
-    };
-  }, [products]);
 
   if (loading) {
     return (
@@ -109,25 +59,51 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
           <div>
             <div style={styles.brandTitle}>Store</div>
 
-            <div style={styles.brandSub}>Books and courses</div>
+            <div style={styles.brandSub}>Featured book</div>
           </div>
         </div>
-
-        <div style={styles.notice}>Tap a product to open Amazon or Stripe.</div>
       </div>
 
       <div style={styles.content}>
-        <ProductSection title="Courses" items={grouped.Courses} onSelect={setSelectedProduct} />
+        {product && (
+          <div style={styles.card} onClick={() => setSelectedProduct(product)}>
+            <div style={styles.imageBox}>
+              {product.image_url ? (
+                <img src={product.image_url} alt={product.name} style={styles.image} />
+              ) : (
+                <div style={styles.imagePlaceholder}>🔥</div>
+              )}
+            </div>
 
-        <ProductSection title="Books" items={grouped.Books} onSelect={setSelectedProduct} />
+            <div style={styles.cardBody}>
+              <div style={styles.cardTitle}>{product.name}</div>
 
-        <ProductSection title="Merch" items={grouped.Merch} onSelect={setSelectedProduct} />
+              <div style={styles.cardDesc}>Christian book by Aline Ramiro.</div>
+
+              <button
+                style={styles.primaryBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+
+                  if (product.purchase_url) {
+                    window.open(product.purchase_url, "_blank", "noopener,noreferrer");
+                  }
+                }}
+              >
+                <ExternalLink size={16} />
+                View on Amazon
+              </button>
+
+              <div style={styles.externalText}>Opens externally</div>
+            </div>
+          </div>
+        )}
       </div>
 
       <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-black border-white/10">
+        <DialogContent className="max-w-2xl bg-black border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-white">{selectedProduct?.name}</DialogTitle>
+            <DialogTitle className="text-2xl font-bold text-white text-center">{selectedProduct?.name}</DialogTitle>
           </DialogHeader>
 
           {selectedProduct && (
@@ -137,97 +113,27 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                   <img
                     src={selectedProduct.image_url}
                     alt={selectedProduct.name}
-                    className="w-full max-h-80 object-contain"
+                    className="w-full max-h-96 object-contain"
                   />
                 </div>
               )}
 
-              <div className="text-center">
-                <span
-                  className="inline-block px-3 py-1 rounded-full text-xs font-bold"
-                  style={{
-                    background: "rgba(255,106,0,0.15)",
-                    color: ORANGE,
-                  }}
-                >
-                  {selectedProduct.category || "Books"}
-                </span>
-              </div>
+              <p className="text-white/70 text-center leading-relaxed">Christian book by Aline Ramiro.</p>
 
-              {selectedProduct.description && (
-                <p className="text-white/70 leading-relaxed text-center">{selectedProduct.description}</p>
-              )}
-
-              <p className="text-xs text-white/50 text-center">Opens externally.</p>
+              <p className="text-xs text-white/40 text-center">Opens externally</p>
 
               <button
                 onClick={() => window.open(selectedProduct.purchase_url, "_blank", "noopener,noreferrer")}
                 style={styles.primaryBtnFull}
               >
                 <ExternalLink size={18} />
-                {inferButtonLabel(selectedProduct)}
+                View on Amazon
               </button>
             </div>
           )}
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function ProductSection({
-  title,
-  items,
-  onSelect,
-}: {
-  title: string;
-  items: Product[];
-  onSelect: (p: Product) => void;
-}) {
-  if (!items.length) return null;
-
-  return (
-    <section style={styles.section}>
-      <h2 style={styles.sectionTitle}>{title}</h2>
-
-      <div style={styles.grid}>
-        {items.map((p) => (
-          <div key={p.id} style={styles.card} onClick={() => onSelect(p)}>
-            <div style={styles.imageBox}>
-              {p.image_url ? (
-                <img src={p.image_url} alt={p.name} style={styles.image} />
-              ) : (
-                <div style={styles.imagePlaceholder}>🔥</div>
-              )}
-            </div>
-
-            <div style={styles.cardBody}>
-              <div style={styles.badge}>{p.category || title}</div>
-
-              <div style={styles.cardTitle}>{p.name}</div>
-
-              {p.description && <div style={styles.cardDesc}>{p.description}</div>}
-
-              <button
-                style={styles.primaryBtn}
-                onClick={(e) => {
-                  e.stopPropagation();
-
-                  if (p.purchase_url) {
-                    window.open(p.purchase_url, "_blank", "noopener,noreferrer");
-                  }
-                }}
-              >
-                <ExternalLink size={15} />
-                {inferButtonLabel(p)}
-              </button>
-
-              <div style={styles.externalNote}>Opens externally</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -246,32 +152,32 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   header: {
-    maxWidth: 900,
+    maxWidth: 700,
     margin: "0 auto",
-    padding: "10px 0 18px",
+    paddingBottom: 20,
     borderBottom: "1px solid rgba(255,255,255,0.08)",
   },
 
   brandLeft: {
     display: "flex",
-    gap: 12,
     alignItems: "center",
+    gap: 12,
   },
 
   brandIcon: {
-    width: 46,
-    height: 46,
+    width: 48,
+    height: 48,
     borderRadius: 14,
     background: "rgba(255,106,0,0.12)",
+    border: "1px solid rgba(255,106,0,0.25)",
+    color: ORANGE,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: ORANGE,
-    border: "1px solid rgba(255,106,0,0.25)",
   },
 
   brandTitle: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: 900,
   },
 
@@ -280,56 +186,24 @@ const styles: Record<string, React.CSSProperties> = {
     opacity: 0.72,
   },
 
-  notice: {
-    marginTop: 14,
-    padding: "10px 12px",
-    borderRadius: 12,
-    background: "rgba(255,106,0,0.08)",
-    border: "1px solid rgba(255,106,0,0.20)",
-    fontSize: 12,
-    opacity: 0.9,
-  },
-
   content: {
-    maxWidth: 900,
+    maxWidth: 700,
     margin: "24px auto 0",
-    display: "flex",
-    flexDirection: "column",
-    gap: 28,
-  },
-
-  section: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 14,
-  },
-
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 900,
-    margin: 0,
-  },
-
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-    gap: 16,
   },
 
   card: {
-    background: "rgba(255,255,255,0.035)",
-    border: "1px solid rgba(255,255,255,0.09)",
-    borderRadius: 18,
+    background: "rgba(255,255,255,0.03)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 20,
     overflow: "hidden",
     cursor: "pointer",
-    transition: "0.2s",
   },
 
   imageBox: {
     width: "100%",
-    height: 240,
-    background: "rgba(255,255,255,0.04)",
+    height: 420,
     overflow: "hidden",
+    background: "rgba(255,255,255,0.04)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -342,49 +216,38 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   imagePlaceholder: {
-    fontSize: 40,
+    fontSize: 50,
     opacity: 0.5,
   },
 
   cardBody: {
-    padding: 16,
+    padding: 20,
     display: "flex",
     flexDirection: "column",
-    gap: 10,
-  },
-
-  badge: {
-    alignSelf: "flex-start",
-    fontSize: 11,
-    fontWeight: 800,
-    color: ORANGE,
-    background: "rgba(255,106,0,0.12)",
-    border: "1px solid rgba(255,106,0,0.25)",
-    padding: "3px 8px",
-    borderRadius: 999,
+    gap: 14,
   },
 
   cardTitle: {
-    fontSize: 22,
+    fontSize: 34,
     fontWeight: 900,
+    textTransform: "uppercase",
   },
 
   cardDesc: {
-    fontSize: 14,
+    fontSize: 16,
     opacity: 0.8,
     lineHeight: 1.5,
   },
 
   primaryBtn: {
-    marginTop: 4,
     background: ORANGE,
     color: "#000",
     border: "none",
-    padding: "12px 14px",
-    borderRadius: 12,
+    borderRadius: 14,
+    padding: "14px",
     fontWeight: 900,
+    fontSize: 16,
     cursor: "pointer",
-    fontSize: 14,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -396,20 +259,20 @@ const styles: Record<string, React.CSSProperties> = {
     background: ORANGE,
     color: "#000",
     border: "none",
+    borderRadius: 14,
     padding: "14px",
-    borderRadius: 12,
     fontWeight: 900,
+    fontSize: 16,
     cursor: "pointer",
-    fontSize: 15,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
   },
 
-  externalNote: {
+  externalText: {
     textAlign: "center",
-    fontSize: 11,
-    color: "rgba(255,255,255,0.45)",
+    fontSize: 12,
+    opacity: 0.45,
   },
 };
