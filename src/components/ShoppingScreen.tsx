@@ -22,21 +22,39 @@ const ORANGE = "#FF6A00";
 
 function inferButtonLabel(p: Product): string {
   if (/imers[aã]o/i.test(p.name)) return "Register with Stripe";
+
   if (p.button_label) return p.button_label;
 
   const url = (p.purchase_url || "").toLowerCase();
+
   if (url.includes("amazon.")) return "View on Amazon";
+
   if (url.includes("etsy.")) return "View on Etsy";
+
   if (url.includes("stripe.") || url.includes("buy.stripe") || url.includes("checkout.stripe")) {
     return "Register with Stripe";
   }
+
   return "Open Link";
 }
 
 function normalizeCategory(category?: string | null) {
   const c = (category || "").toLowerCase();
-  if (c.includes("course") || c.includes("curso")) return "Courses";
-  if (c.includes("merch") || c.includes("apparel") || c.includes("shirt") || c.includes("mug")) return "Merch";
+
+  if (c.includes("imers") || c.includes("course") || c.includes("curso")) {
+    return "Courses";
+  }
+
+  if (
+    c.includes("merch") ||
+    c.includes("shirt") ||
+    c.includes("mug") ||
+    c.includes("hoodie") ||
+    c.includes("apparel")
+  ) {
+    return "Merch";
+  }
+
   return "Books";
 }
 
@@ -87,18 +105,22 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
           <div style={styles.brandIcon}>
             <ShoppingBag size={22} />
           </div>
+
           <div>
             <div style={styles.brandTitle}>Store</div>
-            <div style={styles.brandSub}>Books, courses, and ministry resources</div>
+
+            <div style={styles.brandSub}>Books and courses</div>
           </div>
         </div>
 
-        <div style={styles.notice}>External checkout through trusted partners.</div>
+        <div style={styles.notice}>Tap a product to open Amazon or Stripe.</div>
       </div>
 
       <div style={styles.content}>
         <ProductSection title="Courses" items={grouped.Courses} onSelect={setSelectedProduct} />
+
         <ProductSection title="Books" items={grouped.Books} onSelect={setSelectedProduct} />
+
         <ProductSection title="Merch" items={grouped.Merch} onSelect={setSelectedProduct} />
       </div>
 
@@ -133,10 +155,10 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
               </div>
 
               {selectedProduct.description && (
-                <p className="text-white/70 leading-relaxed">{selectedProduct.description}</p>
+                <p className="text-white/70 leading-relaxed text-center">{selectedProduct.description}</p>
               )}
 
-              <p className="text-xs text-white/50 text-center">External checkout through trusted partners.</p>
+              <p className="text-xs text-white/50 text-center">Opens externally.</p>
 
               <button
                 onClick={() => window.open(selectedProduct.purchase_url, "_blank", "noopener,noreferrer")}
@@ -181,6 +203,7 @@ function ProductSection({
 
             <div style={styles.cardBody}>
               <div style={styles.badge}>{p.category || title}</div>
+
               <div style={styles.cardTitle}>{p.name}</div>
 
               {p.description && <div style={styles.cardDesc}>{p.description}</div>}
@@ -189,6 +212,7 @@ function ProductSection({
                 style={styles.primaryBtn}
                 onClick={(e) => {
                   e.stopPropagation();
+
                   if (p.purchase_url) {
                     window.open(p.purchase_url, "_blank", "noopener,noreferrer");
                   }
@@ -198,7 +222,7 @@ function ProductSection({
                 {inferButtonLabel(p)}
               </button>
 
-              <div style={styles.externalNote}>External checkout</div>
+              <div style={styles.externalNote}>Opens externally</div>
             </div>
           </div>
         ))}
@@ -214,22 +238,26 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#fff",
     padding: "18px 14px 90px",
   },
+
   loading: {
     textAlign: "center",
     padding: 40,
     opacity: 0.7,
   },
+
   header: {
     maxWidth: 900,
     margin: "0 auto",
     padding: "10px 0 18px",
     borderBottom: "1px solid rgba(255,255,255,0.08)",
   },
+
   brandLeft: {
     display: "flex",
     gap: 12,
     alignItems: "center",
   },
+
   brandIcon: {
     width: 46,
     height: 46,
@@ -241,14 +269,17 @@ const styles: Record<string, React.CSSProperties> = {
     color: ORANGE,
     border: "1px solid rgba(255,106,0,0.25)",
   },
+
   brandTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 900,
   },
+
   brandSub: {
     fontSize: 14,
     opacity: 0.72,
   },
+
   notice: {
     marginTop: 14,
     padding: "10px 12px",
@@ -258,59 +289,70 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 12,
     opacity: 0.9,
   },
+
   content: {
     maxWidth: 900,
-    margin: "20px auto 0",
+    margin: "24px auto 0",
     display: "flex",
     flexDirection: "column",
     gap: 28,
   },
+
   section: {
     display: "flex",
     flexDirection: "column",
     gap: 14,
   },
+
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 900,
     margin: 0,
   },
+
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
     gap: 16,
   },
+
   card: {
     background: "rgba(255,255,255,0.035)",
     border: "1px solid rgba(255,255,255,0.09)",
     borderRadius: 18,
     overflow: "hidden",
     cursor: "pointer",
+    transition: "0.2s",
   },
+
   imageBox: {
     width: "100%",
-    height: 190,
+    height: 240,
     background: "rgba(255,255,255,0.04)",
     overflow: "hidden",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
   },
+
   image: {
     width: "100%",
     height: "100%",
     objectFit: "cover",
   },
+
   imagePlaceholder: {
     fontSize: 40,
     opacity: 0.5,
   },
+
   cardBody: {
     padding: 16,
     display: "flex",
     flexDirection: "column",
     gap: 10,
   },
+
   badge: {
     alignSelf: "flex-start",
     fontSize: 11,
@@ -321,19 +363,18 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "3px 8px",
     borderRadius: 999,
   },
+
   cardTitle: {
-    fontSize: 19,
+    fontSize: 22,
     fontWeight: 900,
   },
+
   cardDesc: {
     fontSize: 14,
-    opacity: 0.76,
-    lineHeight: 1.45,
-    display: "-webkit-box",
-    WebkitLineClamp: 3,
-    WebkitBoxOrient: "vertical",
-    overflow: "hidden",
+    opacity: 0.8,
+    lineHeight: 1.5,
   },
+
   primaryBtn: {
     marginTop: 4,
     background: ORANGE,
@@ -349,6 +390,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "center",
     gap: 8,
   },
+
   primaryBtnFull: {
     width: "100%",
     background: ORANGE,
@@ -364,6 +406,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "center",
     gap: 8,
   },
+
   externalNote: {
     textAlign: "center",
     fontSize: 11,
