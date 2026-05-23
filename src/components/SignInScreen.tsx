@@ -10,10 +10,9 @@ interface SignInScreenProps {
   t: (key: string) => string;
   onShowLanguages?: () => void;
   currentLanguage?: string;
-  onContinueAsGuest?: () => void;
 }
 
-export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "en", onContinueAsGuest }: SignInScreenProps) {
+export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "en" }: SignInScreenProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
@@ -35,8 +34,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
 
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .rpc("get_username_by_email", { _email: email });
+        const { data, error } = await supabase.rpc("get_username_by_email", { _email: email });
 
         if (error) throw error;
 
@@ -124,7 +122,6 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         if (error) throw error;
 
         if (data.user) {
-          // Create profile for the new user
           const { error: profileError } = await supabase.from("profiles").insert([
             {
               id: data.user.id,
@@ -138,7 +135,6 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
             console.error("Profile creation error:", profileError);
           }
 
-          // If session exists (auto-confirm enabled), user is logged in automatically
           if (data.session) {
             setUser(data.user);
             toast({
@@ -146,7 +142,6 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
               description: "Account created successfully",
             });
           } else {
-            // If no session, email confirmation is required
             toast({
               title: "Account created!",
               description: "Please check your email to confirm your account",
@@ -161,6 +156,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         });
 
         if (error) throw error;
+
         if (data.user) {
           setUser(data.user);
         }
@@ -180,14 +176,9 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
     <div className="flex items-center justify-center min-h-screen bg-background p-6">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <img 
-            src={entryLogo} 
-            alt="Prayer & Fire Logo" 
-            className="w-32 h-32 object-contain animate-pulse"
-          />
-          <h1 className="text-[32px] font-bold text-foreground text-center mt-6 tracking-tight">
-            {t("appName")}
-          </h1>
+          <img src={entryLogo} alt="Prayer & Fire Logo" className="w-32 h-32 object-contain animate-pulse" />
+
+          <h1 className="text-[32px] font-bold text-foreground text-center mt-6 tracking-tight">{t("appName")}</h1>
         </div>
 
         <div className="mt-6 space-y-[15px]">
@@ -198,7 +189,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
             onChange={(e) => setEmail(e.target.value)}
             className="w-full bg-card border border-border rounded-xl text-foreground h-12 px-4 focus:border-primary transition-colors"
           />
-          
+
           {!isForgotPassword && !isForgotUsername && (
             <Input
               type="password"
@@ -209,37 +200,31 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
             />
           )}
 
-          <Button 
-            onClick={handleAuth} 
+          <Button
+            onClick={handleAuth}
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 text-base font-semibold mt-[25px] transition-all duration-200 hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/20"
             disabled={loading}
           >
-            {loading ? t("loading") : 
-              isForgotUsername ? "Find Username" :
-              isForgotPassword ? t("send") :
-              (isSignUp ? t("signup") : "Sign In")}
+            {loading
+              ? t("loading")
+              : isForgotUsername
+                ? "Find Username"
+                : isForgotPassword
+                  ? t("send")
+                  : isSignUp
+                    ? t("signup")
+                    : "Sign In"}
           </Button>
 
           {!isForgotPassword && !isForgotUsername && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsSignUp(!isSignUp)}
               className="w-full bg-transparent border-2 border-border text-foreground hover:bg-secondary hover:border-primary rounded-xl h-12 text-base font-medium transition-all duration-200"
               disabled={loading}
             >
               {isSignUp ? "Already have account?" : "Register"}
             </Button>
-          )}
-
-          {!isForgotPassword && !isForgotUsername && onContinueAsGuest && (
-            <button
-              type="button"
-              onClick={onContinueAsGuest}
-              className="w-full text-sm text-muted-foreground hover:text-primary transition-colors text-center mt-2"
-              disabled={loading}
-            >
-              Continue as Guest
-            </button>
           )}
 
           {(isForgotPassword || isForgotUsername) && (
@@ -269,7 +254,9 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
               >
                 Forgot Password?
               </button>
+
               <span className="text-muted-foreground">|</span>
+
               <button
                 onClick={() => {
                   setIsForgotUsername(true);
