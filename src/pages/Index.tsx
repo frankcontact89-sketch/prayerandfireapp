@@ -8,17 +8,13 @@ import { ShoppingScreen } from "@/components/ShoppingScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
 import { SocialLinksScreen } from "@/components/SocialLinksScreen";
-import { LanguagesScreen } from "@/components/LanguagesScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { LegalCenter } from "@/components/LegalCenter";
-import { WelcomeScreen } from "@/components/WelcomeScreen";
-import { SubmissionForm } from "@/components/SubmissionForm";
 import { BibleStudyScreen } from "@/components/BibleStudyScreen";
 
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
-import { useToast } from "@/hooks/use-toast";
 import { getLastReadAtMs, setLastReadAtNow } from "@/lib/notifications-last-seen";
 
 import realisticFlame from "@/assets/realistic-flame.png";
@@ -53,8 +49,7 @@ const dailyContent = [
 
 function HomeScreen() {
   const today = useMemo(() => {
-    const day = new Date().getDate();
-    return dailyContent[day % dailyContent.length];
+    return dailyContent[Math.floor(Math.random() * dailyContent.length)];
   }, []);
 
   return (
@@ -94,31 +89,25 @@ function HomeScreen() {
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-6">
               <p className="text-orange-400 uppercase tracking-[0.22em] text-xs font-bold">VERSE OF THE DAY</p>
-
               <Quote className="w-5 h-5 text-orange-400" />
             </div>
 
             <p className="text-[28px] leading-[1.2] font-light text-white">"{today.verse}"</p>
-
             <p className="text-orange-400 text-xl font-bold mt-6">— {today.ref}</p>
 
             <div className="mt-8 pt-6 border-t border-orange-500/10">
               <div className="flex items-center gap-2 mb-3">
                 <HandHeart className="w-4 h-4 text-orange-400" />
-
                 <p className="text-orange-400 uppercase tracking-[0.22em] text-xs font-bold">DAILY PRAYER</p>
               </div>
-
               <p className="text-zinc-300 text-base leading-relaxed">{today.prayer}</p>
             </div>
 
             <div className="mt-7 pt-6 border-t border-orange-500/10">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-4 h-4 text-orange-400" />
-
                 <p className="text-orange-400 uppercase tracking-[0.22em] text-xs font-bold">DAILY REFLECTION</p>
               </div>
-
               <p className="text-zinc-300 text-base leading-relaxed">{today.reflection}</p>
             </div>
           </div>
@@ -131,8 +120,6 @@ function HomeScreen() {
 export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPage] = useState("home");
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [welcomeChecked, setWelcomeChecked] = useState(false);
   const [showLanguages, setShowLanguages] = useState(false);
 
   const [language, setLanguage] = useState<string>(() => {
@@ -151,8 +138,6 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [userName] = useState("");
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-
-  const { toast } = useToast();
 
   useEffect(() => {
     if (isDarkMode) {
@@ -179,14 +164,19 @@ export default function Index() {
     } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setUser(currentSession?.user ?? null);
 
+      if (event === "SIGNED_IN") {
+        setPage("home");
+      }
+
       if (event === "SIGNED_OUT") {
-        setShowWelcome(false);
-        setWelcomeChecked(false);
+        setPage("home");
+        setUnreadNotifications(0);
       }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setPage("home");
       setLoading(false);
     });
 
@@ -197,7 +187,6 @@ export default function Index() {
     if (!user) return;
 
     const lastReadAtMs = getLastReadAtMs();
-
     const lastReadAtISO = lastReadAtMs > 0 ? new Date(lastReadAtMs).toISOString() : null;
 
     const { count: userUnread } = await supabase
@@ -244,11 +233,13 @@ export default function Index() {
   if (!user) {
     return (
       <SignInScreen
-        setUser={setUser}
+        setUser={(newUser: any) => {
+          setUser(newUser);
+          setPage("home");
+        }}
         t={t}
         onShowLanguages={() => setShowLanguages(true)}
         currentLanguage={language}
-        onContinueAsGuest={() => {}}
       />
     );
   }
@@ -305,6 +296,7 @@ export default function Index() {
             onSignOut={async () => {
               await supabase.auth.signOut();
               setUser(null);
+              setPage("home");
             }}
             isGuest={false}
           />
@@ -327,6 +319,7 @@ export default function Index() {
             signOut={async () => {
               await supabase.auth.signOut();
               setUser(null);
+              setPage("home");
             }}
           />
         )}
@@ -336,7 +329,7 @@ export default function Index() {
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
 
         {page === "bible_study" && (
-          <BibleStudyScreen onBack={() => setPage("home")} onContact={() => setPage("contact")} />
+          <BibleStudyScreen onBack={() => setPage("home")} onContact={() => setPage("home")} />
         )}
       </div>
 
