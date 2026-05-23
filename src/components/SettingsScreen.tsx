@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Bell, User, Languages, Scale } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 
 interface SettingsScreenProps {
@@ -21,17 +22,14 @@ interface SettingsScreenProps {
 
 export function SettingsScreen({
   t,
-  userName,
   userEmail,
   onAdminClick,
   onProfileClick,
   onNotificationsClick,
   onLegalClick,
-  onSignOut,
-  setLanguage,
-  isGuest,
 }: SettingsScreenProps) {
   const { isAdmin } = useUserRole();
+
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,86 +40,90 @@ export function SettingsScreen({
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
     if (!user) return;
 
     const { data: profile } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
 
     if (profile?.avatar_url) {
-      setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
+      setAvatarUrl(profile.avatar_url);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6 pb-32">
-      <h2 className="text-4xl font-bold text-white mb-8">Settings</h2>
+    <div className="max-w-2xl mx-auto px-5 py-6 space-y-5">
+      <h1 className="text-4xl font-bold text-white">Settings</h1>
 
-      <button onClick={onProfileClick} className="w-full bg-card border border-border rounded-3xl p-5 text-left">
+      {/* PROFILE */}
+      <button onClick={onProfileClick} className="w-full bg-[#050505] border border-white/10 rounded-3xl p-5 text-left">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-black border border-orange-500/30 flex items-center justify-center">
               {avatarUrl ? (
-                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
               ) : (
-                <User className="w-7 h-7 text-orange-500" />
+                <User className="w-8 h-8 text-orange-500" />
               )}
             </div>
 
-            <div>
-              <h3 className="text-2xl font-semibold text-white">Profile</h3>
-              <p className="text-zinc-400 mt-2">Name: {userName || "User"}</p>
-              <p className="text-zinc-400">Email: {userEmail}</p>
+            <div className="min-w-0">
+              <div className="text-3xl font-bold text-white">Profile</div>
+
+              <div className="text-lg text-white/70 mt-2">Name: User</div>
+
+              <div className="text-base text-white/50 truncate max-w-[180px]">{userEmail}</div>
             </div>
           </div>
 
-          <span className="text-zinc-500 text-lg">Edit</span>
+          <div className="text-white/40 text-lg">Edit</div>
         </div>
       </button>
 
-      <div className="grid grid-cols-2 gap-5">
-        <SettingsTile icon={<Bell />} title="Notifications" sub="View" onClick={onNotificationsClick} />
+      {/* GRID */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* NOTIFICATIONS */}
+        <button
+          onClick={onNotificationsClick}
+          className="bg-[#050505] border border-white/10 rounded-3xl p-5 h-[170px] text-left"
+        >
+          <Bell className="w-10 h-10 text-orange-500 mb-6" />
 
-        <SettingsTile icon={<Languages />} title="Language" sub="Change Language" onClick={setLanguage} />
+          <div className="text-2xl font-semibold text-white">Notifications</div>
 
-        <SettingsTile icon={<Scale />} title="Legal & Policies" sub="View" onClick={onLegalClick} />
+          <div className="text-white/45 text-lg mt-2">View</div>
+        </button>
+
+        {/* LANGUAGE */}
+        <button
+          onClick={setLanguage}
+          className="bg-[#050505] border border-white/10 rounded-3xl p-5 h-[170px] text-left"
+        >
+          <Languages className="w-10 h-10 text-orange-500 mb-6" />
+
+          <div className="text-2xl font-semibold text-white">Language</div>
+
+          <div className="text-white/45 text-lg mt-2">Change Language</div>
+        </button>
+
+        {/* LEGAL */}
+        <button
+          onClick={onLegalClick}
+          className="bg-[#050505] border border-white/10 rounded-3xl p-5 h-[170px] text-left"
+        >
+          <Scale className="w-10 h-10 text-orange-500 mb-6" />
+
+          <div className="text-2xl font-semibold text-white">Legal & Policies</div>
+
+          <div className="text-white/45 text-lg mt-2">View</div>
+        </button>
       </div>
 
-      {isAdmin && !isGuest && (
-        <button
-          onClick={onAdminClick}
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-5 rounded-2xl text-2xl"
-        >
+      {/* ADMIN */}
+      {isAdmin && (
+        <button onClick={onAdminClick} className="w-full bg-orange-500 text-white text-3xl font-bold rounded-3xl py-6">
           Admin Panel
         </button>
       )}
-
-      {!isGuest && (
-        <button
-          onClick={onSignOut}
-          className="w-full border border-border bg-card text-white py-5 rounded-2xl text-2xl"
-        >
-          Sign Out
-        </button>
-      )}
     </div>
-  );
-}
-
-function SettingsTile({
-  icon,
-  title,
-  sub,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  sub: string;
-  onClick: () => void;
-}) {
-  return (
-    <button onClick={onClick} className="bg-card border border-border rounded-3xl p-6 text-left min-h-[170px]">
-      <div className="text-orange-500 mb-5 [&_svg]:w-8 [&_svg]:h-8">{icon}</div>
-      <h3 className="text-2xl text-white font-medium">{title}</h3>
-      <p className="text-zinc-500 mt-2">{sub}</p>
-    </button>
   );
 }
