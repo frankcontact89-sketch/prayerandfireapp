@@ -65,50 +65,50 @@ function HomeScreen() {
 
       <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-orange-500/10 blur-[140px] pointer-events-none" />
 
-      <div className="relative z-10 px-6 pt-8 pb-28">
-        <div className="flex flex-col items-center text-center mb-8">
+      <div className="relative z-10 px-5 pt-4 pb-24">
+        <div className="flex flex-col items-center text-center mb-5">
           <img
             src={entryLogo}
             alt="Prayer & Fire"
-            className="w-20 h-20 object-contain drop-shadow-[0_0_25px_rgba(249,115,22,0.45)] mb-4"
+            className="w-14 h-14 object-contain drop-shadow-[0_0_25px_rgba(249,115,22,0.45)] mb-2"
           />
 
-          <p className="uppercase tracking-[0.35em] text-white/80 text-xs font-semibold mb-3">PRAYER & FIRE</p>
+          <p className="uppercase tracking-[0.3em] text-white/80 text-[10px] font-semibold mb-2">PRAYER & FIRE</p>
 
-          <h1 className="text-[42px] leading-[0.95] font-extrabold tracking-tight max-w-[330px]">
+          <h1 className="text-[28px] leading-[0.95] font-extrabold tracking-tight max-w-[300px]">
             Prayer that
             <span className="block text-orange-500">connects nations.</span>
           </h1>
 
-          <p className="text-zinc-400 mt-5 text-base leading-relaxed max-w-sm">
+          <p className="text-zinc-400 mt-3 text-sm leading-snug max-w-sm">
             A global movement to ignite hearts, deepen prayer, and walk together in faith.
           </p>
         </div>
 
-        <section className="relative rounded-[30px] border border-orange-500/20 bg-zinc-950/90 backdrop-blur-xl p-6 overflow-hidden shadow-[0_0_40px_rgba(249,115,22,0.10)]">
+        <section className="relative rounded-2xl border border-orange-500/20 bg-zinc-950/90 backdrop-blur-xl p-4 overflow-hidden shadow-[0_0_40px_rgba(249,115,22,0.10)]">
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-orange-400 uppercase tracking-[0.22em] text-xs font-bold">VERSE OF THE DAY</p>
-              <Quote className="w-5 h-5 text-orange-400" />
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">VERSE OF THE DAY</p>
+              <Quote className="w-4 h-4 text-orange-400" />
             </div>
 
-            <p className="text-[28px] leading-[1.2] font-light text-white">"{today.verse}"</p>
-            <p className="text-orange-400 text-xl font-bold mt-6">— {today.ref}</p>
+            <p className="text-[18px] leading-snug font-light text-white">"{today.verse}"</p>
+            <p className="text-orange-400 text-sm font-bold mt-2">— {today.ref}</p>
 
-            <div className="mt-8 pt-6 border-t border-orange-500/10">
-              <div className="flex items-center gap-2 mb-3">
-                <HandHeart className="w-4 h-4 text-orange-400" />
-                <p className="text-orange-400 uppercase tracking-[0.22em] text-xs font-bold">DAILY PRAYER</p>
+            <div className="mt-4 pt-3 border-t border-orange-500/10">
+              <div className="flex items-center gap-2 mb-1.5">
+                <HandHeart className="w-3.5 h-3.5 text-orange-400" />
+                <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">DAILY PRAYER</p>
               </div>
-              <p className="text-zinc-300 text-base leading-relaxed">{today.prayer}</p>
+              <p className="text-zinc-300 text-sm leading-snug">{today.prayer}</p>
             </div>
 
-            <div className="mt-7 pt-6 border-t border-orange-500/10">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-orange-400" />
-                <p className="text-orange-400 uppercase tracking-[0.22em] text-xs font-bold">DAILY REFLECTION</p>
+            <div className="mt-3 pt-3 border-t border-orange-500/10">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+                <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">DAILY REFLECTION</p>
               </div>
-              <p className="text-zinc-300 text-base leading-relaxed">{today.reflection}</p>
+              <p className="text-zinc-300 text-sm leading-snug">{today.reflection}</p>
             </div>
           </div>
         </section>
@@ -275,7 +275,7 @@ export default function Index() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-20">
+      <div className="flex-1 overflow-y-auto pb-16">
         {page === "home" && <HomeScreen />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
@@ -333,21 +333,21 @@ export default function Index() {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-zinc-800">
-        <nav className="flex justify-around items-center py-3 px-4 max-w-2xl mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-zinc-800 pb-[env(safe-area-inset-bottom)]">
+        <nav className="flex justify-around items-center py-2.5 px-6 max-w-2xl mx-auto">
           <button onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
-            <Flame className="w-6 h-6" />
+            <Flame className="w-7 h-7" />
           </button>
 
           <button onClick={() => setPage("giving")} className={page === "giving" ? "text-orange-500" : "text-zinc-500"}>
-            <Heart className="w-6 h-6" />
+            <Heart className="w-7 h-7" />
           </button>
 
           <button
             onClick={() => setPage("shopping")}
             className={page === "shopping" ? "text-orange-500" : "text-zinc-500"}
           >
-            <ShoppingBag className="w-6 h-6" />
+            <ShoppingBag className="w-7 h-7" />
           </button>
         </nav>
       </div>
