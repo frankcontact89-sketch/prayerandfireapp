@@ -12,6 +12,7 @@ import { ProfileScreen } from "@/components/ProfileScreen";
 import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { LegalCenter } from "@/components/LegalCenter";
 import { BibleStudyScreen } from "@/components/BibleStudyScreen";
+import { SubmissionForm } from "@/components/SubmissionForm";
 
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
@@ -76,7 +77,7 @@ const dailyContent = [
   { verse: "Now faith is confidence in what we hope for and assurance about what we do not see.", ref: "Hebrews 11:1", prayer: "Lord, grow my faith today.", reflection: "Faith stands firm even when sight has nothing to show." },
 ];
 
-function HomeScreen() {
+function HomeScreen({ onNavigate }: { onNavigate: (page: string) => void }) {
   const today = useMemo(() => {
     const now = new Date();
     const start = new Date(now.getFullYear(), 0, 0);
@@ -86,7 +87,7 @@ function HomeScreen() {
   }, []);
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-black text-white">
+    <div className="relative min-h-[100dvh] overflow-hidden bg-black text-white">
       <div
         className="absolute inset-0 opacity-[0.09] pointer-events-none"
         style={{
@@ -98,53 +99,79 @@ function HomeScreen() {
 
       <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-orange-500/10 blur-[140px] pointer-events-none" />
 
-      <div className="relative z-10 px-5 pt-2 pb-4">
+      <div className="relative z-10 px-5 pt-3 pb-4">
         <div className="flex flex-col items-center text-center mb-3">
           <img
             src={entryLogo}
             alt="Prayer & Fire"
-            className="w-12 h-12 object-contain drop-shadow-[0_0_25px_rgba(249,115,22,0.45)] mb-1.5"
+            className="w-10 h-10 object-contain drop-shadow-[0_0_20px_rgba(249,115,22,0.45)] mb-1"
           />
 
-          <p className="uppercase tracking-[0.3em] text-white/80 text-[10px] font-semibold mb-1.5">PRAYER & FIRE</p>
+          <p className="uppercase tracking-[0.3em] text-white/80 text-[10px] font-semibold mb-1">PRAYER & FIRE</p>
 
-          <h1 className="text-[24px] leading-[0.95] font-extrabold tracking-tight max-w-[300px]">
+          <h1 className="text-[22px] leading-[1] font-extrabold tracking-tight max-w-[300px]">
             Prayer that
             <span className="block text-orange-500">connects nations.</span>
           </h1>
 
-          <p className="text-zinc-400 mt-2 text-xs leading-snug max-w-sm">
+          <p className="text-zinc-400 mt-1.5 text-[11px] leading-snug max-w-[280px]">
             A global movement to ignite hearts, deepen prayer, and walk together in faith.
           </p>
         </div>
 
-        <section className="relative rounded-2xl border border-orange-500/20 bg-zinc-950/90 backdrop-blur-xl p-3.5 overflow-hidden shadow-[0_0_40px_rgba(249,115,22,0.10)]">
+        <section className="relative rounded-2xl border border-orange-500/20 bg-zinc-950/90 backdrop-blur-xl p-3 overflow-hidden shadow-[0_0_40px_rgba(249,115,22,0.10)] mb-3">
           <div className="relative z-10">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-1.5">
               <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">VERSE OF THE DAY</p>
-              <Quote className="w-4 h-4 text-orange-400" />
+              <Quote className="w-3.5 h-3.5 text-orange-400" />
             </div>
 
-            <p className="text-[15px] leading-snug font-light text-white">"{today.verse}"</p>
-            <p className="text-orange-400 text-xs font-bold mt-1.5">— {today.ref}</p>
+            <p className="text-[13px] leading-snug font-light text-white">&ldquo;{today.verse}&rdquo;</p>
+            <p className="text-orange-400 text-[11px] font-bold mt-1">&mdash; {today.ref}</p>
 
-            <div className="mt-3 pt-2.5 border-t border-orange-500/10">
-              <div className="flex items-center gap-2 mb-1">
-                <HandHeart className="w-3.5 h-3.5 text-orange-400" />
-                <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">DAILY PRAYER</p>
+            <div className="mt-2 pt-2 border-t border-orange-500/10">
+              <div className="flex items-center gap-1.5 mb-1">
+                <HandHeart className="w-3 h-3 text-orange-400" />
+                <p className="text-orange-400 uppercase tracking-[0.2em] text-[9px] font-bold">DAILY PRAYER</p>
               </div>
-              <p className="text-zinc-300 text-xs leading-snug">{today.prayer}</p>
+              <p className="text-zinc-300 text-[11px] leading-snug">{today.prayer}</p>
             </div>
 
-            <div className="mt-2.5 pt-2.5 border-t border-orange-500/10">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-3.5 h-3.5 text-orange-400" />
-                <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">DAILY REFLECTION</p>
+            <div className="mt-2 pt-2 border-t border-orange-500/10">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Sparkles className="w-3 h-3 text-orange-400" />
+                <p className="text-orange-400 uppercase tracking-[0.2em] text-[9px] font-bold">DAILY REFLECTION</p>
               </div>
-              <p className="text-zinc-300 text-xs leading-snug">{today.reflection}</p>
+              <p className="text-zinc-300 text-[11px] leading-snug">{today.reflection}</p>
             </div>
           </div>
         </section>
+
+        <div className="grid grid-cols-3 gap-2.5">
+          <button
+            onClick={() => onNavigate("prayer_request")}
+            className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-orange-500/20 bg-zinc-950/80 backdrop-blur-sm p-3 active:scale-[0.97] transition-transform"
+          >
+            <HandHeart className="w-5 h-5 text-orange-500" />
+            <span className="text-[10px] font-semibold text-white/90 tracking-wide">PRAY TODAY</span>
+          </button>
+
+          <button
+            onClick={() => onNavigate("giving")}
+            className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-orange-500/20 bg-zinc-950/80 backdrop-blur-sm p-3 active:scale-[0.97] transition-transform"
+          >
+            <Heart className="w-5 h-5 text-orange-500" />
+            <span className="text-[10px] font-semibold text-white/90 tracking-wide">GIVE</span>
+          </button>
+
+          <button
+            onClick={() => onNavigate("shopping")}
+            className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-orange-500/20 bg-zinc-950/80 backdrop-blur-sm p-3 active:scale-[0.97] transition-transform"
+          >
+            <ShoppingBag className="w-5 h-5 text-orange-500" />
+            <span className="text-[10px] font-semibold text-white/90 tracking-wide">STORE</span>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -309,7 +336,7 @@ export default function Index() {
       </div>
 
       <div className="flex-1 overflow-y-auto pb-16">
-        {page === "home" && <HomeScreen />}
+        {page === "home" && <HomeScreen onNavigate={setPage} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
 
@@ -363,6 +390,45 @@ export default function Index() {
 
         {page === "bible_study" && (
           <BibleStudyScreen onBack={() => setPage("home")} onContact={() => setPage("home")} />
+        )}
+
+        {page === "prayer_request" && (
+          <SubmissionForm
+            type="prayer_request"
+            title="Prayer Request"
+            description="Share your prayer request with the ministry."
+            messageLabel="Prayer Request"
+            messagePlaceholder="How can we pray for you?"
+            submitLabel="Send Prayer Request"
+            successMessage="Your prayer request has been submitted."
+            onBack={() => setPage("home")}
+          />
+        )}
+
+        {page === "testimony" && (
+          <SubmissionForm
+            type="testimony"
+            title="Share Your Testimony"
+            description="Tell us how God is moving in your life."
+            messageLabel="Your Testimony"
+            messagePlaceholder="Share your story..."
+            submitLabel="Send Testimony"
+            successMessage="Your testimony has been submitted."
+            onBack={() => setPage("home")}
+          />
+        )}
+
+        {page === "contact" && (
+          <SubmissionForm
+            type="contact"
+            title="Contact Ministry"
+            description="Reach out to the Prayer & Fire team."
+            messageLabel="Message"
+            messagePlaceholder="What would you like to share?"
+            submitLabel="Send Message"
+            successMessage="Your message has been sent."
+            onBack={() => setPage("home")}
+          />
         )}
       </div>
 
