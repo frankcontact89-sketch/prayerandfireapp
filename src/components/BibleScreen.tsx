@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Search, Star, Share2, ChevronRight, BookOpen, Globe, Sun, Moon } from "lucide-react";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
+type Translation = { code: string; label: string; loader: () => Promise<Book[]> };
 
-const TRANSLATIONS = [
+const TRANSLATIONS: Translation[] = [
   {
     code: "kjv",
     label: "English — KJV",
@@ -16,54 +17,20 @@ const TRANSLATIONS = [
   },
 ];
 
-const UI = {
-  en: {
-    bible: "Holy Bible",
-    search: "Search the Bible",
-    fav: "Favorites",
-    translation: "Bible Translation",
-    language: "Screen Language",
-    copied: "Verse copied",
-    noResults: "No results",
-  },
-  es: {
-    bible: "Santa Biblia",
-    search: "Buscar en la Biblia",
-    fav: "Favoritos",
-    translation: "Traducción Bíblica",
-    language: "Idioma de Pantalla",
-    copied: "Versículo copiado",
-    noResults: "Sin resultados",
-  },
-  pt: {
-    bible: "Bíblia Sagrada",
-    search: "Pesquisar na Bíblia",
-    fav: "Favoritos",
-    translation: "Tradução Bíblica",
-    language: "Idioma da Tela",
-    copied: "Versículo copiado",
-    noResults: "Sem resultados",
-  },
-  hi: {
-    bible: "पवित्र बाइबल",
-    search: "बाइबल खोजें",
-    fav: "पसंदीदा",
-    translation: "बाइबल अनुवाद",
-    language: "स्क्रीन भाषा",
-    copied: "पद कॉपी हुआ",
-    noResults: "कोई परिणाम नहीं",
-  },
-};
-
 const FAV_KEY = "pf_bible_favorites";
 const LANG_KEY = "pf_bible_lang";
-const UI_LANG_KEY = "pf_bible_ui_lang";
 const MODE_KEY = "pf_bible_mode";
 const BOOK_KEY = "pf_bible_book";
 const CHAPTER_KEY = "pf_bible_chapter";
 const VIEW_KEY = "pf_bible_view";
 
-type Favorite = { translation: string; book: string; chapter: number; verse: number; text: string };
+type Favorite = {
+  translation: string;
+  book: string;
+  chapter: number;
+  verse: number;
+  text: string;
+};
 
 function loadFavorites(): Favorite[] {
   try {
@@ -73,37 +40,35 @@ function loadFavorites(): Favorite[] {
   }
 }
 
-function saveFavorites(f: Favorite[]) {
-  localStorage.setItem(FAV_KEY, JSON.stringify(f));
+function saveFavorites(favorites: Favorite[]) {
+  localStorage.setItem(FAV_KEY, JSON.stringify(favorites));
 }
 
 export function BibleScreen() {
   const [translation, setTranslation] = useState(() => localStorage.getItem(LANG_KEY) || "kjv");
-  const [uiLang, setUiLang] = useState<keyof typeof UI>(
-    () => (localStorage.getItem(UI_LANG_KEY) as keyof typeof UI) || "en",
-  );
   const [mode, setMode] = useState<"day" | "night">(
     () => (localStorage.getItem(MODE_KEY) as "day" | "night") || "night",
   );
+
   const [books, setBooks] = useState<Book[] | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [view, setView] = useState<"books" | "chapters" | "verses" | "search" | "favorites">(
     () => (localStorage.getItem(VIEW_KEY) as any) || "books",
   );
+
   const [bookIdx, setBookIdx] = useState(() => Number(localStorage.getItem(BOOK_KEY) || 0));
   const [chapterIdx, setChapterIdx] = useState(() => Number(localStorage.getItem(CHAPTER_KEY) || 0));
   const [query, setQuery] = useState("");
   const [favorites, setFavorites] = useState<Favorite[]>(loadFavorites);
-  const [showPicker, setShowPicker] = useState(false);
+  const [showLangPicker, setShowLangPicker] = useState(false);
 
-  const txt = UI[uiLang] || UI.en;
   const isDay = mode === "day";
-  const pageBg = isDay ? "bg-[#f8f5ef] text-zinc-950" : "bg-black text-white";
-  const card = isDay ? "bg-white border-zinc-200 text-zinc-950" : "bg-zinc-950 border-zinc-900 text-white";
 
   useEffect(() => {
     setLoading(true);
-    const selected = TRANSLATIONS.find((x) => x.code === translation) || TRANSLATIONS[0];
+
+    const selected = TRANSLATIONS.find((item) => item.code === translation) || TRANSLATIONS[0];
 
     selected.loader().then((data) => {
       setBooks(data);
@@ -115,28 +80,38 @@ export function BibleScreen() {
   }, [translation]);
 
   useEffect(() => {
-    localStorage.setItem(UI_LANG_KEY, uiLang);
     localStorage.setItem(MODE_KEY, mode);
     localStorage.setItem(BOOK_KEY, String(bookIdx));
     localStorage.setItem(CHAPTER_KEY, String(chapterIdx));
     localStorage.setItem(VIEW_KEY, view);
-  }, [uiLang, mode, bookIdx, chapterIdx, view]);
+  }, [mode, bookIdx, chapterIdx, view]);
 
   const currentBook = books?.[bookIdx];
   const currentVerses = currentBook?.chapters?.[chapterIdx] || [];
 
   const searchResults = useMemo(() => {
     if (!query.trim() || !books) return [];
+
     const q = query.toLowerCase();
-    const results: any[] = [];
+    const results: { book: Book; bIdx: number; cIdx: number; vIdx: number; text: string }[] = [];
 
     for (let b = 0; b < books.length && results.length < 80; b++) {
-      const bk = books[b];
-      for (let c = 0; c < bk.chapters.length && results.length < 80; c++) {
-        for (let v = 0; v < bk.chapters[c].length && results.length < 80; v++) {
-          const verse = bk.chapters[c][v];
-          if (verse.toLowerCase().includes(q)) {
-            results.push({ book: bk, bIdx: b, cIdx: c, vIdx: v, text: verse });
+      const book = books[b];
+
+      for (let c = 0; c < book.chapters.length && results.length < 80; c++) {
+        const chapter = book.chapters[c];
+
+        for (let v = 0; v < chapter.length && results.length < 80; v++) {
+          const verseText = chapter[v];
+
+          if (verseText.toLowerCase().includes(q)) {
+            results.push({
+              book,
+              bIdx: b,
+              cIdx: c,
+              vIdx: v,
+              text: verseText,
+            });
           }
         }
       }
@@ -145,18 +120,25 @@ export function BibleScreen() {
     return results;
   }, [query, books]);
 
-  const toggleFavorite = (v: Favorite) => {
+  const toggleFavorite = (verse: Favorite) => {
     const exists = favorites.find(
-      (f) => f.translation === v.translation && f.book === v.book && f.chapter === v.chapter && f.verse === v.verse,
+      (item) =>
+        item.translation === verse.translation &&
+        item.book === verse.book &&
+        item.chapter === verse.chapter &&
+        item.verse === verse.verse,
     );
-    const next = exists ? favorites.filter((f) => f !== exists) : [v, ...favorites];
+
+    const next = exists ? favorites.filter((item) => item !== exists) : [verse, ...favorites];
+
     setFavorites(next);
     saveFavorites(next);
   };
 
   const isFav = (book: string, chapter: number, verse: number) =>
     favorites.some(
-      (f) => f.translation === translation && f.book === book && f.chapter === chapter && f.verse === verse,
+      (item) =>
+        item.translation === translation && item.book === book && item.chapter === chapter && item.verse === verse,
     );
 
   const shareVerse = async (text: string, ref: string) => {
@@ -164,30 +146,39 @@ export function BibleScreen() {
 
     try {
       if (navigator.share) {
-        await navigator.share({ title: ref, text: payload });
+        await navigator.share({
+          title: ref,
+          text: payload,
+        });
         return;
       }
     } catch {}
 
     try {
       await navigator.clipboard.writeText(payload);
-      alert(txt.copied);
+      alert("Verse copied");
     } catch {
       alert(payload);
     }
   };
 
+  const pageBg = isDay ? "bg-[#f8f5ef] text-zinc-950" : "bg-black text-white";
+  const card = isDay ? "bg-white border-zinc-200 text-zinc-950" : "bg-zinc-950 border-zinc-900 text-white";
+
   const Header = ({ title, onBack }: { title: string; onBack?: () => void }) => (
     <div
-      className={`sticky top-0 z-10 backdrop-blur-md border-b ${isDay ? "bg-white/95 border-zinc-200" : "bg-black/90 border-zinc-800"}`}
+      className={`sticky top-0 z-10 backdrop-blur-md border-b ${
+        isDay ? "bg-white/95 border-zinc-200" : "bg-black/90 border-zinc-800"
+      }`}
     >
       <div className="flex items-center justify-between px-5 py-3">
         <div className="flex items-center gap-3 min-w-0">
           {onBack && (
-            <button onClick={onBack} className="text-orange-500">
+            <button onClick={onBack} className="text-orange-500 shrink-0">
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
+
           <h2 className="text-[20px] font-semibold truncate">{title}</h2>
         </div>
 
@@ -195,9 +186,13 @@ export function BibleScreen() {
           <button onClick={() => setMode(isDay ? "night" : "day")} className="text-orange-500">
             {isDay ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
           </button>
-          <button onClick={() => setShowPicker(true)} className="text-orange-500 flex items-center gap-1">
+
+          <button
+            onClick={() => setShowLangPicker(true)}
+            className="text-orange-500 shrink-0 flex items-center gap-1.5 text-sm"
+          >
             <Globe className="w-4 h-4" />
-            <span className="uppercase text-xs font-bold">{translation}</span>
+            <span className="uppercase tracking-wider text-xs font-semibold">{translation}</span>
           </button>
         </div>
       </div>
@@ -206,7 +201,9 @@ export function BibleScreen() {
 
   if (loading || !books) {
     return (
-      <div className={`${pageBg} min-h-screen flex items-center justify-center text-orange-500`}>Loading Bible…</div>
+      <div className={`${pageBg} min-h-screen flex items-center justify-center`}>
+        <div className="text-orange-500">Loading Bible…</div>
+      </div>
     );
   }
 
@@ -214,15 +211,18 @@ export function BibleScreen() {
     <div className={`${pageBg} min-h-screen`}>
       {view === "books" && (
         <>
-          <Header title={txt.bible} />
+          <Header title="Holy Bible" />
+
           <div className="px-5 pt-4 pb-6 max-w-[430px] mx-auto">
             <div className="flex gap-2 mb-4">
               <button
                 onClick={() => setView("search")}
                 className={`flex-1 flex items-center gap-2 border rounded-xl px-4 py-3 text-sm ${card}`}
               >
-                <Search className="w-4 h-4" /> {txt.search}
+                <Search className="w-4 h-4" />
+                Search the Bible
               </button>
+
               <button
                 onClick={() => setView("favorites")}
                 className={`border rounded-xl px-4 py-3 text-orange-500 ${card}`}
@@ -232,17 +232,17 @@ export function BibleScreen() {
             </div>
 
             <div className="space-y-2">
-              {books.map((b, i) => (
+              {books.map((book, index) => (
                 <button
-                  key={b.abbrev}
+                  key={book.abbrev}
                   onClick={() => {
-                    setBookIdx(i);
+                    setBookIdx(index);
                     setChapterIdx(0);
                     setView("chapters");
                   }}
                   className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl border ${card}`}
                 >
-                  <span className="text-base font-medium">{b.name}</span>
+                  <span className="text-base font-medium">{book.name}</span>
                   <ChevronRight className="w-4 h-4 text-zinc-500" />
                 </button>
               ))}
@@ -254,18 +254,19 @@ export function BibleScreen() {
       {view === "chapters" && currentBook && (
         <>
           <Header title={currentBook.name} onBack={() => setView("books")} />
+
           <div className="px-5 pt-4 pb-6 max-w-[430px] mx-auto">
             <div className="grid grid-cols-5 gap-2">
-              {currentBook.chapters.map((_, i) => (
+              {currentBook.chapters.map((_, index) => (
                 <button
-                  key={i}
+                  key={index}
                   onClick={() => {
-                    setChapterIdx(i);
+                    setChapterIdx(index);
                     setView("verses");
                   }}
                   className={`aspect-square rounded-xl border font-semibold ${card}`}
                 >
-                  {i + 1}
+                  {index + 1}
                 </button>
               ))}
             </div>
@@ -276,15 +277,18 @@ export function BibleScreen() {
       {view === "verses" && currentBook && (
         <>
           <Header title={`${currentBook.name} ${chapterIdx + 1}`} onBack={() => setView("chapters")} />
+
           <div className="px-5 pt-4 pb-8 max-w-[430px] mx-auto space-y-3">
-            {currentVerses.map((text, i) => {
-              const ref = `${currentBook.name} ${chapterIdx + 1}:${i + 1}`;
-              const fav = isFav(currentBook.name, chapterIdx + 1, i + 1);
+            {currentVerses.map((text, index) => {
+              const verseNumber = index + 1;
+              const chapterNumber = chapterIdx + 1;
+              const ref = `${currentBook.name} ${chapterNumber}:${verseNumber}`;
+              const fav = isFav(currentBook.name, chapterNumber, verseNumber);
 
               return (
-                <div key={i} className={`rounded-xl border p-4 ${card}`}>
+                <div key={index} className={`rounded-xl border p-4 ${card}`}>
                   <p className="text-[17px] leading-relaxed">
-                    <span className="text-orange-500 font-bold mr-2">{i + 1}</span>
+                    <span className="text-orange-500 font-bold mr-2">{verseNumber}</span>
                     {text}
                   </p>
 
@@ -294,8 +298,8 @@ export function BibleScreen() {
                         toggleFavorite({
                           translation,
                           book: currentBook.name,
-                          chapter: chapterIdx + 1,
-                          verse: i + 1,
+                          chapter: chapterNumber,
+                          verse: verseNumber,
                           text,
                         })
                       }
@@ -303,6 +307,7 @@ export function BibleScreen() {
                     >
                       <Star className="w-5 h-5" fill={fav ? "currentColor" : "none"} />
                     </button>
+
                     <button onClick={() => shareVerse(text, ref)} className="text-zinc-500">
                       <Share2 className="w-5 h-5" />
                     </button>
@@ -314,15 +319,16 @@ export function BibleScreen() {
             <div className="flex justify-between pt-2">
               <button
                 disabled={chapterIdx === 0}
-                onClick={() => setChapterIdx((c) => Math.max(0, c - 1))}
-                className={`px-4 py-2.5 rounded-xl border ${card} disabled:opacity-30`}
+                onClick={() => setChapterIdx((current) => Math.max(0, current - 1))}
+                className={`px-4 py-2.5 rounded-xl border text-sm disabled:opacity-30 ${card}`}
               >
                 ← Previous
               </button>
+
               <button
                 disabled={chapterIdx >= currentBook.chapters.length - 1}
-                onClick={() => setChapterIdx((c) => Math.min(currentBook.chapters.length - 1, c + 1))}
-                className={`px-4 py-2.5 rounded-xl border ${card} disabled:opacity-30`}
+                onClick={() => setChapterIdx((current) => Math.min(currentBook.chapters.length - 1, current + 1))}
+                className={`px-4 py-2.5 rounded-xl border text-sm disabled:opacity-30 ${card}`}
               >
                 Next →
               </button>
@@ -333,36 +339,43 @@ export function BibleScreen() {
 
       {view === "search" && (
         <>
-          <Header title={txt.search} onBack={() => setView("books")} />
+          <Header title="Search" onBack={() => setView("books")} />
+
           <div className="px-5 pt-4 pb-6 max-w-[430px] mx-auto">
             <div className={`flex items-center gap-2 border rounded-xl px-4 py-3 mb-4 ${card}`}>
               <Search className="w-4 h-4 text-zinc-500" />
+
               <input
+                autoFocus
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={txt.search}
-                className="bg-transparent outline-none flex-1"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search verses…"
+                className="bg-transparent outline-none flex-1 text-base"
               />
             </div>
 
             <div className="space-y-2">
-              {searchResults.map((r: any, idx) => (
+              {searchResults.map((result, index) => (
                 <button
-                  key={idx}
+                  key={index}
                   onClick={() => {
-                    setBookIdx(r.bIdx);
-                    setChapterIdx(r.cIdx);
+                    setBookIdx(result.bIdx);
+                    setChapterIdx(result.cIdx);
                     setView("verses");
                   }}
                   className={`w-full text-left rounded-xl border p-3.5 ${card}`}
                 >
                   <p className="text-orange-500 text-xs font-bold mb-1">
-                    {r.book.name} {r.cIdx + 1}:{r.vIdx + 1}
+                    {result.book.name} {result.cIdx + 1}:{result.vIdx + 1}
                   </p>
-                  <p className="text-sm leading-relaxed">{r.text}</p>
+
+                  <p className="text-sm leading-relaxed">{result.text}</p>
                 </button>
               ))}
-              {query && searchResults.length === 0 && <p className="text-zinc-500 text-center pt-6">{txt.noResults}</p>}
+
+              {query && searchResults.length === 0 && (
+                <p className="text-zinc-500 text-center text-sm pt-6">No results</p>
+              )}
             </div>
           </div>
         </>
@@ -370,21 +383,31 @@ export function BibleScreen() {
 
       {view === "favorites" && (
         <>
-          <Header title={txt.fav} onBack={() => setView("books")} />
+          <Header title="Favorites" onBack={() => setView("books")} />
+
           <div className="px-5 pt-4 pb-6 max-w-[430px] mx-auto space-y-2">
-            {favorites.length === 0 && <p className="text-zinc-500 text-center pt-10">No favorites yet.</p>}
-            {favorites.map((f, idx) => (
-              <div key={idx} className={`rounded-xl border p-4 ${card}`}>
-                <p className="text-orange-500 text-xs font-bold mb-1">
-                  {f.book} {f.chapter}:{f.verse} · {f.translation.toUpperCase()}
+            {favorites.length === 0 && (
+              <div className="text-center pt-12">
+                <Star className="w-10 h-10 text-zinc-500 mx-auto mb-3" />
+                <p className="text-zinc-500 text-sm">Tap the star on any verse to save it here.</p>
+              </div>
+            )}
+
+            {favorites.map((favorite, index) => (
+              <div key={index} className={`rounded-xl border p-4 ${card}`}>
+                <p className="text-orange-500 text-xs font-bold mb-1.5">
+                  {favorite.book} {favorite.chapter}:{favorite.verse} · {favorite.translation.toUpperCase()}
                 </p>
-                <p className="text-[15px] leading-relaxed">{f.text}</p>
-                <div className="flex justify-end gap-4 mt-3">
-                  <button onClick={() => toggleFavorite(f)} className="text-orange-500">
+
+                <p className="text-[15px] leading-relaxed">{favorite.text}</p>
+
+                <div className="flex items-center justify-end gap-4 mt-3">
+                  <button onClick={() => toggleFavorite(favorite)} className="text-orange-500">
                     <Star className="w-5 h-5" fill="currentColor" />
                   </button>
+
                   <button
-                    onClick={() => shareVerse(f.text, `${f.book} ${f.chapter}:${f.verse}`)}
+                    onClick={() => shareVerse(favorite.text, `${favorite.book} ${favorite.chapter}:${favorite.verse}`)}
                     className="text-zinc-500"
                   >
                     <Share2 className="w-5 h-5" />
@@ -396,46 +419,42 @@ export function BibleScreen() {
         </>
       )}
 
-      {showPicker && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setShowPicker(false)}>
+      {showLangPicker && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setShowLangPicker(false)}>
           <div
-            onClick={(e) => e.stopPropagation()}
-            className={`${isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"} w-full rounded-t-2xl p-5 pb-[calc(env(safe-area-inset-bottom)+20px)]`}
+            onClick={(event) => event.stopPropagation()}
+            className={`w-full rounded-t-2xl p-5 pb-[calc(env(safe-area-inset-bottom)+20px)] ${
+              isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
+            }`}
           >
-            <h3 className="text-lg font-bold mb-3">{txt.translation}</h3>
-            <div className="space-y-2 mb-5">
-              {TRANSLATIONS.map((t) => (
+            <div className="flex items-center gap-2 mb-4">
+              <BookOpen className="w-5 h-5 text-orange-500" />
+              <h3 className="text-[18px] font-semibold">Bible Translation</h3>
+            </div>
+
+            <div className="space-y-2">
+              {TRANSLATIONS.map((item) => (
                 <button
-                  key={t.code}
+                  key={item.code}
                   onClick={() => {
-                    setTranslation(t.code);
-                    setShowPicker(false);
+                    setTranslation(item.code);
+                    setShowLangPicker(false);
                   }}
-                  className={`w-full text-left px-4 py-3 rounded-xl border ${translation === t.code ? "border-orange-500 bg-orange-500/10" : "border-zinc-700"}`}
+                  className={`w-full text-left px-4 py-3.5 rounded-xl border ${
+                    translation === item.code
+                      ? "border-orange-500 bg-orange-500/10"
+                      : isDay
+                        ? "border-zinc-200 bg-zinc-50"
+                        : "border-zinc-800 bg-zinc-900"
+                  }`}
                 >
-                  {t.label}
+                  <span className="text-base font-medium">{item.label}</span>
                 </button>
               ))}
             </div>
 
-            <h3 className="text-lg font-bold mb-3">{txt.language}</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => setUiLang("en")} className="border border-zinc-700 rounded-xl py-3">
-                English
-              </button>
-              <button onClick={() => setUiLang("es")} className="border border-zinc-700 rounded-xl py-3">
-                Español
-              </button>
-              <button onClick={() => setUiLang("pt")} className="border border-zinc-700 rounded-xl py-3">
-                Português
-              </button>
-              <button onClick={() => setUiLang("hi")} className="border border-zinc-700 rounded-xl py-3">
-                Hindi
-              </button>
-            </div>
-
             <p className="text-zinc-500 text-xs mt-4">
-              Available Bible translations: KJV and Reina-Valera. Screen language can change separately.
+              Available Bible translations: English KJV and Español Reina-Valera.
             </p>
           </div>
         </div>
