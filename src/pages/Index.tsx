@@ -46,44 +46,186 @@ const dailyContent = [
     prayer: "Lord, teach me to see Your goodness today.",
     reflection: "Gratitude opens your eyes to what God is already doing around you.",
   },
-  { verse: "Be still, and know that I am God.", ref: "Psalm 46:10", prayer: "Lord, quiet my heart so I can hear You today.", reflection: "Stillness is not weakness. It is where God reveals Himself most clearly." },
-  { verse: "For we walk by faith, not by sight.", ref: "2 Corinthians 5:7", prayer: "Lord, help me trust You beyond what I can see.", reflection: "Faith sees what eyes cannot. Trust God's hand even in the unknown." },
-  { verse: "The Lord is my light and my salvation; whom shall I fear?", ref: "Psalm 27:1", prayer: "Lord, be my light in every dark place.", reflection: "When God is your light, fear loses its grip on your heart." },
-  { verse: "Cast all your anxiety on Him because He cares for you.", ref: "1 Peter 5:7", prayer: "Lord, I release my worries into Your hands.", reflection: "God is not too busy for your burdens. He invites you to bring them all." },
-  { verse: "Trust in the Lord with all your heart.", ref: "Proverbs 3:5", prayer: "Lord, teach me to trust You more than my own understanding.", reflection: "Real trust begins where self-reliance ends." },
-  { verse: "My grace is sufficient for you.", ref: "2 Corinthians 12:9", prayer: "Lord, let Your grace carry me where my strength runs out.", reflection: "God's grace meets you exactly where you feel most weak." },
-  { verse: "Weeping may stay for the night, but rejoicing comes in the morning.", ref: "Psalm 30:5", prayer: "Lord, hold me through the night until joy returns.", reflection: "Seasons of sorrow are real, but they are never the final word." },
-  { verse: "The Lord will fight for you; you need only to be still.", ref: "Exodus 14:14", prayer: "Lord, fight my battles as I rest in You.", reflection: "Sometimes obedience looks like stillness and trust." },
-  { verse: "Come to Me, all you who are weary, and I will give you rest.", ref: "Matthew 11:28", prayer: "Jesus, I come to You today. Give me Your rest.", reflection: "Rest is not a reward for finishing. It is a gift from Jesus right now." },
-  { verse: "He restores my soul.", ref: "Psalm 23:3", prayer: "Lord, restore every weary place in me.", reflection: "God does not just patch you up. He restores you completely." },
-  { verse: "Delight yourself in the Lord, and He will give you the desires of your heart.", ref: "Psalm 37:4", prayer: "Lord, shape my desires to match Your heart.", reflection: "Delighting in God reshapes what you want until His will becomes your joy." },
-  { verse: "If God is for us, who can be against us?", ref: "Romans 8:31", prayer: "Lord, remind me today that You are with me.", reflection: "When God stands with you, no opposition is final." },
-  { verse: "Seek first the kingdom of God and His righteousness.", ref: "Matthew 6:33", prayer: "Lord, take first place in my heart today.", reflection: "When God is first, everything else finds its right order." },
-  { verse: "The name of the Lord is a fortified tower; the righteous run to it and are safe.", ref: "Proverbs 18:10", prayer: "Lord, be my refuge today.", reflection: "There is real safety in the name of Jesus." },
-  { verse: "I have loved you with an everlasting love.", ref: "Jeremiah 31:3", prayer: "Lord, let Your love anchor me today.", reflection: "God's love for you has no end and no condition." },
-  { verse: "Greater is He who is in you than he who is in the world.", ref: "1 John 4:4", prayer: "Holy Spirit, rise up in me today.", reflection: "The power inside you is greater than the pressure around you." },
-  { verse: "Be strong and courageous. Do not be afraid; the Lord your God will be with you.", ref: "Joshua 1:9", prayer: "Lord, give me courage to follow You today.", reflection: "Courage is not the absence of fear; it is trusting God in the middle of it." },
-  { verse: "The steadfast love of the Lord never ceases; His mercies are new every morning.", ref: "Lamentations 3:22-23", prayer: "Lord, thank You for Your fresh mercy today.", reflection: "Today carries new mercy, not yesterday's failures." },
-  { verse: "In all things God works for the good of those who love Him.", ref: "Romans 8:28", prayer: "Lord, work even this for good.", reflection: "God is writing a story bigger than this moment." },
-  { verse: "He gives strength to the weary and increases the power of the weak.", ref: "Isaiah 40:29", prayer: "Lord, refill me with Your strength.", reflection: "Weakness in your hands becomes strength in God's hands." },
-  { verse: "The Lord is close to the brokenhearted.", ref: "Psalm 34:18", prayer: "Lord, draw near to every hurting place in me.", reflection: "God is nearest when your heart feels most broken." },
-  { verse: "Do not be anxious about anything, but in every situation, by prayer, present your requests to God.", ref: "Philippians 4:6", prayer: "Lord, I trade my anxiety for trust today.", reflection: "Prayer turns worry into worship." },
-  { verse: "The peace of God, which transcends all understanding, will guard your hearts.", ref: "Philippians 4:7", prayer: "Lord, guard my heart with Your peace.", reflection: "God's peace does not depend on circumstances." },
-  { verse: "Wait for the Lord; be strong and take heart and wait for the Lord.", ref: "Psalm 27:14", prayer: "Lord, teach me to wait well.", reflection: "Waiting on God is not wasted time. It is sacred time." },
-  { verse: "Your word is a lamp for my feet, a light on my path.", ref: "Psalm 119:105", prayer: "Lord, let Your Word lead my steps today.", reflection: "God gives enough light for the next step, not always the whole road." },
-  { verse: "Ask and it will be given to you; seek and you will find.", ref: "Matthew 7:7", prayer: "Lord, I seek You today with all my heart.", reflection: "God responds to a heart that truly seeks Him." },
-  { verse: "He must become greater; I must become less.", ref: "John 3:30", prayer: "Lord, let Your name be lifted in my life.", reflection: "True freedom begins when Christ takes center stage." },
-  { verse: "Let everything that has breath praise the Lord.", ref: "Psalm 150:6", prayer: "Lord, let my life be praise to You today.", reflection: "Praise is the natural overflow of a heart that knows God." },
-  { verse: "Now faith is confidence in what we hope for and assurance about what we do not see.", ref: "Hebrews 11:1", prayer: "Lord, grow my faith today.", reflection: "Faith stands firm even when sight has nothing to show." },
+  {
+    verse: "Be still, and know that I am God.",
+    ref: "Psalm 46:10",
+    prayer: "Lord, quiet my heart so I can hear You today.",
+    reflection: "Stillness is not weakness. It is where God reveals Himself most clearly.",
+  },
+  {
+    verse: "For we walk by faith, not by sight.",
+    ref: "2 Corinthians 5:7",
+    prayer: "Lord, help me trust You beyond what I can see.",
+    reflection: "Faith sees what eyes cannot. Trust God's hand even in the unknown.",
+  },
+  {
+    verse: "The Lord is my light and my salvation; whom shall I fear?",
+    ref: "Psalm 27:1",
+    prayer: "Lord, be my light in every dark place.",
+    reflection: "When God is your light, fear loses its grip on your heart.",
+  },
+  {
+    verse: "Cast all your anxiety on Him because He cares for you.",
+    ref: "1 Peter 5:7",
+    prayer: "Lord, I release my worries into Your hands.",
+    reflection: "God is not too busy for your burdens. He invites you to bring them all.",
+  },
+  {
+    verse: "Trust in the Lord with all your heart.",
+    ref: "Proverbs 3:5",
+    prayer: "Lord, teach me to trust You more than my own understanding.",
+    reflection: "Real trust begins where self-reliance ends.",
+  },
+  {
+    verse: "My grace is sufficient for you.",
+    ref: "2 Corinthians 12:9",
+    prayer: "Lord, let Your grace carry me where my strength runs out.",
+    reflection: "God's grace meets you exactly where you feel most weak.",
+  },
+  {
+    verse: "Weeping may stay for the night, but rejoicing comes in the morning.",
+    ref: "Psalm 30:5",
+    prayer: "Lord, hold me through the night until joy returns.",
+    reflection: "Seasons of sorrow are real, but they are never the final word.",
+  },
+  {
+    verse: "The Lord will fight for you; you need only to be still.",
+    ref: "Exodus 14:14",
+    prayer: "Lord, fight my battles as I rest in You.",
+    reflection: "Sometimes obedience looks like stillness and trust.",
+  },
+  {
+    verse: "Come to Me, all you who are weary, and I will give you rest.",
+    ref: "Matthew 11:28",
+    prayer: "Jesus, I come to You today. Give me Your rest.",
+    reflection: "Rest is not a reward for finishing. It is a gift from Jesus right now.",
+  },
+  {
+    verse: "He restores my soul.",
+    ref: "Psalm 23:3",
+    prayer: "Lord, restore every weary place in me.",
+    reflection: "God does not just patch you up. He restores you completely.",
+  },
+  {
+    verse: "Delight yourself in the Lord, and He will give you the desires of your heart.",
+    ref: "Psalm 37:4",
+    prayer: "Lord, shape my desires to match Your heart.",
+    reflection: "Delighting in God reshapes what you want until His will becomes your joy.",
+  },
+  {
+    verse: "If God is for us, who can be against us?",
+    ref: "Romans 8:31",
+    prayer: "Lord, remind me today that You are with me.",
+    reflection: "When God stands with you, no opposition is final.",
+  },
+  {
+    verse: "Seek first the kingdom of God and His righteousness.",
+    ref: "Matthew 6:33",
+    prayer: "Lord, take first place in my heart today.",
+    reflection: "When God is first, everything else finds its right order.",
+  },
+  {
+    verse: "The name of the Lord is a fortified tower; the righteous run to it and are safe.",
+    ref: "Proverbs 18:10",
+    prayer: "Lord, be my refuge today.",
+    reflection: "There is real safety in the name of Jesus.",
+  },
+  {
+    verse: "I have loved you with an everlasting love.",
+    ref: "Jeremiah 31:3",
+    prayer: "Lord, let Your love anchor me today.",
+    reflection: "God's love for you has no end and no condition.",
+  },
+  {
+    verse: "Greater is He who is in you than he who is in the world.",
+    ref: "1 John 4:4",
+    prayer: "Holy Spirit, rise up in me today.",
+    reflection: "The power inside you is greater than the pressure around you.",
+  },
+  {
+    verse: "Be strong and courageous. Do not be afraid; the Lord your God will be with you.",
+    ref: "Joshua 1:9",
+    prayer: "Lord, give me courage to follow You today.",
+    reflection: "Courage is not the absence of fear; it is trusting God in the middle of it.",
+  },
+  {
+    verse: "The steadfast love of the Lord never ceases; His mercies are new every morning.",
+    ref: "Lamentations 3:22-23",
+    prayer: "Lord, thank You for Your fresh mercy today.",
+    reflection: "Today carries new mercy, not yesterday's failures.",
+  },
+  {
+    verse: "In all things God works for the good of those who love Him.",
+    ref: "Romans 8:28",
+    prayer: "Lord, work even this for good.",
+    reflection: "God is writing a story bigger than this moment.",
+  },
+  {
+    verse: "He gives strength to the weary and increases the power of the weak.",
+    ref: "Isaiah 40:29",
+    prayer: "Lord, refill me with Your strength.",
+    reflection: "Weakness in your hands becomes strength in God's hands.",
+  },
+  {
+    verse: "The Lord is close to the brokenhearted.",
+    ref: "Psalm 34:18",
+    prayer: "Lord, draw near to every hurting place in me.",
+    reflection: "God is nearest when your heart feels most broken.",
+  },
+  {
+    verse: "Do not be anxious about anything, but in every situation, by prayer, present your requests to God.",
+    ref: "Philippians 4:6",
+    prayer: "Lord, I trade my anxiety for trust today.",
+    reflection: "Prayer turns worry into worship.",
+  },
+  {
+    verse: "The peace of God, which transcends all understanding, will guard your hearts.",
+    ref: "Philippians 4:7",
+    prayer: "Lord, guard my heart with Your peace.",
+    reflection: "God's peace does not depend on circumstances.",
+  },
+  {
+    verse: "Wait for the Lord; be strong and take heart and wait for the Lord.",
+    ref: "Psalm 27:14",
+    prayer: "Lord, teach me to wait well.",
+    reflection: "Waiting on God is not wasted time. It is sacred time.",
+  },
+  {
+    verse: "Your word is a lamp for my feet, a light on my path.",
+    ref: "Psalm 119:105",
+    prayer: "Lord, let Your Word lead my steps today.",
+    reflection: "God gives enough light for the next step, not always the whole road.",
+  },
+  {
+    verse: "Ask and it will be given to you; seek and you will find.",
+    ref: "Matthew 7:7",
+    prayer: "Lord, I seek You today with all my heart.",
+    reflection: "God responds to a heart that truly seeks Him.",
+  },
+  {
+    verse: "He must become greater; I must become less.",
+    ref: "John 3:30",
+    prayer: "Lord, let Your name be lifted in my life.",
+    reflection: "True freedom begins when Christ takes center stage.",
+  },
+  {
+    verse: "Let everything that has breath praise the Lord.",
+    ref: "Psalm 150:6",
+    prayer: "Lord, let my life be praise to You today.",
+    reflection: "Praise is the natural overflow of a heart that knows God.",
+  },
+  {
+    verse: "Now faith is confidence in what we hope for and assurance about what we do not see.",
+    ref: "Hebrews 11:1",
+    prayer: "Lord, grow my faith today.",
+    reflection: "Faith stands firm even when sight has nothing to show.",
+  },
 ];
 
 function HomeScreen() {
   const today = useMemo(() => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 0);
-    const diff = now.getTime() - start.getTime();
-    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
-    return dailyContent[dayOfYear % dailyContent.length];
+    const randomIndex = Math.floor(Math.random() * dailyContent.length);
+    return dailyContent[randomIndex];
   }, []);
 
   return (
