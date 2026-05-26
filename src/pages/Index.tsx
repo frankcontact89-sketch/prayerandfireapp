@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Heart, Settings, Share2, ShoppingBag, Flame, Bell, Quote, Sparkles, HandHeart } from "lucide-react";
+import { Heart, Settings, Share2, ShoppingBag, Flame, Bell, Quote, Sparkles, HandHeart, BookOpen } from "lucide-react";
 
 import { SignInScreen } from "@/components/SignInScreen";
 import { EventsScreen } from "@/components/EventsScreen";
@@ -12,6 +12,7 @@ import { ProfileScreen } from "@/components/ProfileScreen";
 import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { LegalCenter } from "@/components/LegalCenter";
 import { BibleStudyScreen } from "@/components/BibleStudyScreen";
+import { BibleScreen } from "@/components/BibleScreen";
 
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
@@ -98,42 +99,42 @@ function HomeScreen() {
 
       <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-orange-500/10 blur-[140px] pointer-events-none" />
 
-      <div className="relative z-10 px-5 pt-2 pb-4">
-        <div className="flex flex-col items-center text-center mb-3">
+      <div className="relative z-10 px-5 pt-3 pb-5 max-w-[430px] mx-auto">
+        <div className="flex flex-col items-center text-center mb-5">
           <img
             src={entryLogo}
             alt="Prayer & Fire"
-            className="w-12 h-12 object-contain drop-shadow-[0_0_25px_rgba(249,115,22,0.45)] mb-1.5"
+            className="w-[72px] h-[72px] object-contain drop-shadow-[0_0_25px_rgba(249,115,22,0.45)] mb-3"
           />
 
-          <p className="uppercase tracking-[0.3em] text-white/80 text-[10px] font-semibold mb-1.5">PRAYER & FIRE</p>
+          <p className="uppercase tracking-[0.3em] text-white/80 text-xs font-semibold mb-2">PRAYER & FIRE</p>
 
-          <h1 className="text-[24px] leading-[0.95] font-extrabold tracking-tight max-w-[300px]">
+          <h1 className="text-[28px] leading-[1.05] font-extrabold tracking-tight max-w-[320px]">
             Prayer that
             <span className="block text-orange-500">connects nations.</span>
           </h1>
 
-          <p className="text-zinc-400 mt-2 text-xs leading-snug max-w-sm">
+          <p className="text-zinc-300 mt-3 text-base leading-snug max-w-sm">
             A global movement to ignite hearts, deepen prayer, and walk together in faith.
           </p>
         </div>
 
-        <section className="relative rounded-2xl border border-orange-500/20 bg-zinc-950/90 backdrop-blur-xl p-3.5 overflow-hidden shadow-[0_0_40px_rgba(249,115,22,0.10)]">
+        <section className="relative w-full rounded-2xl border border-orange-500/20 bg-zinc-950/90 backdrop-blur-xl p-5 overflow-hidden shadow-[0_0_40px_rgba(249,115,22,0.10)]">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
               <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">VERSE OF THE DAY</p>
               <Quote className="w-4 h-4 text-orange-400" />
             </div>
 
-            <p className="text-[15px] leading-snug font-light text-white">"{today.verse}"</p>
-            <p className="text-orange-400 text-xs font-bold mt-1.5">— {today.ref}</p>
+            <p className="text-[16px] leading-relaxed font-light text-white">"{today.verse}"</p>
+            <p className="text-orange-400 text-sm font-bold mt-2">— {today.ref}</p>
 
             <div className="mt-3 pt-2.5 border-t border-orange-500/10">
               <div className="flex items-center gap-2 mb-1">
                 <HandHeart className="w-3.5 h-3.5 text-orange-400" />
                 <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">DAILY PRAYER</p>
               </div>
-              <p className="text-zinc-300 text-xs leading-snug">{today.prayer}</p>
+              <p className="text-zinc-200 text-[14px] leading-snug">{today.prayer}</p>
             </div>
 
             <div className="mt-2.5 pt-2.5 border-t border-orange-500/10">
@@ -141,7 +142,7 @@ function HomeScreen() {
                 <Sparkles className="w-3.5 h-3.5 text-orange-400" />
                 <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">DAILY REFLECTION</p>
               </div>
-              <p className="text-zinc-300 text-xs leading-snug">{today.reflection}</p>
+              <p className="text-zinc-200 text-[14px] leading-snug">{today.reflection}</p>
             </div>
           </div>
         </section>
@@ -308,10 +309,11 @@ export default function Index() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-16">
+      <div className="flex-1 overflow-y-auto pb-[90px]">
         {page === "home" && <HomeScreen />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
+        {page === "bible" && <BibleScreen />}
 
         {page === "settings" && (
           <SettingsScreen
@@ -367,9 +369,13 @@ export default function Index() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-zinc-800 pb-[env(safe-area-inset-bottom)]">
-        <nav className="flex justify-around items-center py-2.5 px-6 max-w-2xl mx-auto">
+        <nav className="flex justify-around items-center h-[64px] px-6 max-w-[430px] mx-auto">
           <button onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
             <Flame className="w-7 h-7" />
+          </button>
+
+          <button onClick={() => setPage("bible")} className={page === "bible" ? "text-orange-500" : "text-zinc-500"}>
+            <BookOpen className="w-7 h-7" />
           </button>
 
           <button onClick={() => setPage("giving")} className={page === "giving" ? "text-orange-500" : "text-zinc-500"}>
