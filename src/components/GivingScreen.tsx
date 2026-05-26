@@ -23,7 +23,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
   };
 
   return (
-    <div className="min-h-screen px-5 pt-6 pb-24 bg-black text-white">
+    <div className="min-h-screen px-5 pt-6 pb-24 bg-black text-white max-w-[430px] mx-auto">
       {/* Header */}
       <div className="mb-8 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 mb-4">
@@ -31,9 +31,9 @@ export function GivingScreen({ t }: GivingScreenProps) {
           <span className="text-sm text-orange-400 font-semibold">SUPPORT PRAYER & FIRE</span>
         </div>
 
-        <h1 className="text-4xl font-extrabold tracking-tight mb-3">Giving</h1>
+        <h1 className="text-[36px] font-extrabold tracking-tight mb-3">Giving</h1>
 
-        <p className="text-zinc-400 leading-relaxed max-w-md mx-auto">Support Prayer & Fire global mission.</p>
+        <p className="text-zinc-300 text-base leading-relaxed max-w-md mx-auto">Support Prayer & Fire global mission.</p>
       </div>
 
       {/* Buttons */}
@@ -88,14 +88,14 @@ export function GivingScreen({ t }: GivingScreenProps) {
             <div>
               <p className="text-orange-400 uppercase tracking-widest text-sm font-bold mb-2">Monthly Support</p>
 
-              <h2 className="text-3xl font-bold mb-3">Help Sustain the Mission</h2>
+              <h2 className="text-[24px] font-semibold mb-3">Help Sustain the Mission</h2>
 
-              <p className="text-zinc-400 leading-relaxed">Support the Prayer & Fire mission around the world.</p>
+              <p className="text-zinc-200 text-base leading-relaxed">Support the Prayer & Fire mission around the world.</p>
             </div>
 
             <Button
               onClick={handleGive}
-              className="w-full h-14 rounded-2xl text-lg font-bold bg-orange-500 hover:bg-orange-600"
+              className="w-full h-[56px] rounded-2xl text-base font-bold bg-orange-500 hover:bg-orange-600"
             >
               Set Up Monthly Giving
             </Button>
@@ -107,14 +107,14 @@ export function GivingScreen({ t }: GivingScreenProps) {
             <div>
               <p className="text-orange-400 uppercase tracking-widest text-sm font-bold mb-2">One-Time Gift</p>
 
-              <h2 className="text-3xl font-bold mb-3">Support the Work</h2>
+              <h2 className="text-[24px] font-semibold mb-3">Support the Work</h2>
 
-              <p className="text-zinc-400 leading-relaxed">Your support helps expand Prayer & Fire global mission.</p>
+              <p className="text-zinc-200 text-base leading-relaxed">Your support helps expand Prayer & Fire global mission.</p>
             </div>
 
             <Button
               onClick={handleGive}
-              className="w-full h-14 rounded-2xl text-lg font-bold bg-orange-500 hover:bg-orange-600"
+              className="w-full h-[56px] rounded-2xl text-base font-bold bg-orange-500 hover:bg-orange-600"
             >
               Give Now
             </Button>
@@ -126,16 +126,16 @@ export function GivingScreen({ t }: GivingScreenProps) {
             <div>
               <p className="text-orange-400 uppercase tracking-widest text-sm font-bold mb-2">Mission Support</p>
 
-              <h2 className="text-3xl font-bold mb-3">Expand Global Outreach</h2>
+              <h2 className="text-[24px] font-semibold mb-3">Expand Global Outreach</h2>
 
-              <p className="text-zinc-400 leading-relaxed">
+              <p className="text-zinc-200 text-base leading-relaxed">
                 Help support Prayer & Fire global mission around the world.
               </p>
             </div>
 
             <Button
               onClick={handleGive}
-              className="w-full h-14 rounded-2xl text-lg font-bold bg-orange-500 hover:bg-orange-600"
+              className="w-full h-[56px] rounded-2xl text-base font-bold bg-orange-500 hover:bg-orange-600"
             >
               Support Mission
             </Button>
