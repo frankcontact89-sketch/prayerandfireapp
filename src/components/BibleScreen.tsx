@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Search, Star, Share2, ChevronRight, BookOpen, Globe, Sun, Moon } from "lucide-react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon } from "lucide-react";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
 type Translation = { code: string; label: string; loader: () => Promise<Book[]> };
@@ -141,27 +141,6 @@ export function BibleScreen() {
         item.translation === translation && item.book === book && item.chapter === chapter && item.verse === verse,
     );
 
-  const shareVerse = async (text: string, ref: string) => {
-    const payload = `"${text}" — ${ref}\n\nPrayer & Fire App`;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: ref,
-          text: payload,
-        });
-        return;
-      }
-    } catch {}
-
-    try {
-      await navigator.clipboard.writeText(payload);
-      alert("Verse copied");
-    } catch {
-      alert(payload);
-    }
-  };
-
   const pageBg = isDay ? "bg-[#f8f5ef] text-zinc-950" : "bg-black text-white";
   const card = isDay ? "bg-white border-zinc-200 text-zinc-950" : "bg-zinc-950 border-zinc-900 text-white";
 
@@ -282,7 +261,6 @@ export function BibleScreen() {
             {currentVerses.map((text, index) => {
               const verseNumber = index + 1;
               const chapterNumber = chapterIdx + 1;
-              const ref = `${currentBook.name} ${chapterNumber}:${verseNumber}`;
               const fav = isFav(currentBook.name, chapterNumber, verseNumber);
 
               return (
@@ -306,10 +284,6 @@ export function BibleScreen() {
                       className={fav ? "text-orange-500" : "text-zinc-500"}
                     >
                       <Star className="w-5 h-5" fill={fav ? "currentColor" : "none"} />
-                    </button>
-
-                    <button onClick={() => shareVerse(text, ref)} className="text-zinc-500">
-                      <Share2 className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
@@ -405,13 +379,6 @@ export function BibleScreen() {
                   <button onClick={() => toggleFavorite(favorite)} className="text-orange-500">
                     <Star className="w-5 h-5" fill="currentColor" />
                   </button>
-
-                  <button
-                    onClick={() => shareVerse(favorite.text, `${favorite.book} ${favorite.chapter}:${favorite.verse}`)}
-                    className="text-zinc-500"
-                  >
-                    <Share2 className="w-5 h-5" />
-                  </button>
                 </div>
               </div>
             ))}
@@ -452,10 +419,6 @@ export function BibleScreen() {
                 </button>
               ))}
             </div>
-
-            <p className="text-zinc-500 text-xs mt-4">
-              Available Bible translations: English KJV and Español Reina-Valera.
-            </p>
           </div>
         </div>
       )}
