@@ -23,79 +23,83 @@ export function GivingScreen({ t }: GivingScreenProps) {
   };
 
   return (
-    <div className="min-h-screen px-5 pt-6 pb-24 bg-black text-white max-w-[430px] mx-auto">
+    <div className="min-h-screen px-4 pt-4 pb-24 bg-black text-white max-w-[430px] mx-auto">
       {/* Header */}
-      <div className="mb-8 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 mb-4">
+      <div className="mb-6 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 mb-3">
           <Sparkles className="w-4 h-4 text-orange-500" />
-          <span className="text-sm text-orange-400 font-semibold">SUPPORT PRAYER & FIRE</span>
+          <span className="text-[13px] text-orange-400 font-semibold tracking-wide">SUPPORT PRAYER & FIRE</span>
         </div>
 
-        <h1 className="text-[36px] font-extrabold tracking-tight mb-3">Giving</h1>
+        <h1 className="text-[30px] font-extrabold tracking-tight mb-2">Giving</h1>
 
-        <p className="text-zinc-300 text-base leading-relaxed max-w-md mx-auto">Support Prayer & Fire global mission.</p>
+        <p className="text-zinc-300 text-[15px] leading-relaxed max-w-sm mx-auto">
+          Support Prayer & Fire global mission.
+        </p>
       </div>
 
       {/* Buttons */}
-      <div className="grid grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         <button
           onClick={() => setGivingType("subscription")}
-          className={`rounded-2xl border p-5 transition-all duration-300 ${
+          className={`rounded-2xl border p-4 transition-all duration-300 ${
             givingType === "subscription"
               ? "bg-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/20"
               : "bg-zinc-950 border-zinc-800 text-zinc-400"
           }`}
         >
-          <div className="flex flex-col items-center gap-2">
-            <Heart className="w-6 h-6" />
-            <span className="text-sm font-semibold">Monthly</span>
+          <div className="flex flex-col items-center gap-1.5">
+            <Heart className="w-5 h-5" />
+            <span className="text-[13px] font-semibold">Monthly</span>
           </div>
         </button>
 
         <button
           onClick={() => setGivingType("onetime")}
-          className={`rounded-2xl border p-5 transition-all duration-300 ${
+          className={`rounded-2xl border p-4 transition-all duration-300 ${
             givingType === "onetime"
               ? "bg-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/20"
               : "bg-zinc-950 border-zinc-800 text-zinc-400"
           }`}
         >
-          <div className="flex flex-col items-center gap-2">
-            <DollarSign className="w-6 h-6" />
-            <span className="text-sm font-semibold">One-Time</span>
+          <div className="flex flex-col items-center gap-1.5">
+            <DollarSign className="w-5 h-5" />
+            <span className="text-[13px] font-semibold">One-Time</span>
           </div>
         </button>
 
         <button
           onClick={() => setGivingType("project")}
-          className={`rounded-2xl border p-5 transition-all duration-300 ${
+          className={`rounded-2xl border p-4 transition-all duration-300 ${
             givingType === "project"
               ? "bg-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/20"
               : "bg-zinc-950 border-zinc-800 text-zinc-400"
           }`}
         >
-          <div className="flex flex-col items-center gap-2">
-            <CreditCard className="w-6 h-6" />
-            <span className="text-sm font-semibold">Mission</span>
+          <div className="flex flex-col items-center gap-1.5">
+            <CreditCard className="w-5 h-5" />
+            <span className="text-[13px] font-semibold">Mission</span>
           </div>
         </button>
       </div>
 
       {/* Main Card */}
-      <Card className="bg-zinc-950 border border-zinc-800 rounded-3xl p-7 shadow-2xl">
+      <Card className="bg-zinc-950 border border-zinc-800 rounded-3xl p-5 shadow-2xl">
         {givingType === "subscription" && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <div>
-              <p className="text-orange-400 uppercase tracking-widest text-sm font-bold mb-2">Monthly Support</p>
+              <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">Monthly Support</p>
 
-              <h2 className="text-[24px] font-semibold mb-3">Help Sustain the Mission</h2>
+              <h2 className="text-[22px] font-semibold mb-2">Help Sustain the Mission</h2>
 
-              <p className="text-zinc-200 text-base leading-relaxed">Support the Prayer & Fire mission around the world.</p>
+              <p className="text-zinc-200 text-[15px] leading-relaxed">
+                Support the Prayer & Fire mission around the world.
+              </p>
             </div>
 
             <Button
               onClick={handleGive}
-              className="w-full h-[56px] rounded-2xl text-base font-bold bg-orange-500 hover:bg-orange-600"
+              className="w-full h-[50px] rounded-2xl text-[15px] font-bold bg-orange-500 hover:bg-orange-600"
             >
               Set Up Monthly Giving
             </Button>
@@ -103,18 +107,20 @@ export function GivingScreen({ t }: GivingScreenProps) {
         )}
 
         {givingType === "onetime" && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <div>
-              <p className="text-orange-400 uppercase tracking-widest text-sm font-bold mb-2">One-Time Gift</p>
+              <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">One-Time Gift</p>
 
-              <h2 className="text-[24px] font-semibold mb-3">Support the Work</h2>
+              <h2 className="text-[22px] font-semibold mb-2">Support the Work</h2>
 
-              <p className="text-zinc-200 text-base leading-relaxed">Your support helps expand Prayer & Fire global mission.</p>
+              <p className="text-zinc-200 text-[15px] leading-relaxed">
+                Your support helps expand Prayer & Fire global mission.
+              </p>
             </div>
 
             <Button
               onClick={handleGive}
-              className="w-full h-[56px] rounded-2xl text-base font-bold bg-orange-500 hover:bg-orange-600"
+              className="w-full h-[50px] rounded-2xl text-[15px] font-bold bg-orange-500 hover:bg-orange-600"
             >
               Give Now
             </Button>
@@ -122,20 +128,20 @@ export function GivingScreen({ t }: GivingScreenProps) {
         )}
 
         {givingType === "project" && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             <div>
-              <p className="text-orange-400 uppercase tracking-widest text-sm font-bold mb-2">Mission Support</p>
+              <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">Mission Support</p>
 
-              <h2 className="text-[24px] font-semibold mb-3">Expand Global Outreach</h2>
+              <h2 className="text-[22px] font-semibold mb-2">Expand Global Outreach</h2>
 
-              <p className="text-zinc-200 text-base leading-relaxed">
+              <p className="text-zinc-200 text-[15px] leading-relaxed">
                 Help support Prayer & Fire global mission around the world.
               </p>
             </div>
 
             <Button
               onClick={handleGive}
-              className="w-full h-[56px] rounded-2xl text-base font-bold bg-orange-500 hover:bg-orange-600"
+              className="w-full h-[50px] rounded-2xl text-[15px] font-bold bg-orange-500 hover:bg-orange-600"
             >
               Support Mission
             </Button>
