@@ -53,13 +53,12 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
       <div style={styles.header}>
         <div style={styles.brandLeft}>
           <div style={styles.brandIcon}>
-            <ShoppingBag size={22} />
+            <ShoppingBag size={20} />
           </div>
 
           <div>
             <div style={styles.brandTitle}>Store</div>
-
-            <div style={styles.brandSub}>Featured book</div>
+            <div style={styles.brandSub}>Featured resources</div>
           </div>
         </div>
       </div>
@@ -67,60 +66,56 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
       <div style={styles.content}>
         {product && (
           <div style={styles.card} onClick={() => setSelectedProduct(product)}>
-            <div style={styles.imageBox}>
-              {product.image_url ? (
-                <img src={product.image_url} alt={product.name} style={styles.image} />
-              ) : (
-                <div style={styles.imagePlaceholder}>🔥</div>
-              )}
-            </div>
+            <div style={styles.compactRow}>
+              <div style={styles.imageBox}>
+                {product.image_url ? (
+                  <img src={product.image_url} alt={product.name} style={styles.image} />
+                ) : (
+                  <div style={styles.imagePlaceholder}>🔥</div>
+                )}
+              </div>
 
-            <div style={styles.cardBody}>
-              <div style={styles.cardTitle}>{product.name}</div>
+              <div style={styles.cardBody}>
+                <div style={styles.cardTitle}>{product.name}</div>
+                <div style={styles.cardDesc}>Christian book by Aline Ramiro.</div>
 
-              <div style={styles.cardDesc}>Christian book by Aline Ramiro.</div>
-
-              <button
-                style={styles.primaryBtn}
-                onClick={(e) => {
-                  e.stopPropagation();
-
-                  if (product.purchase_url) {
-                    window.open(product.purchase_url, "_blank", "noopener,noreferrer");
-                  }
-                }}
-              >
-                <ExternalLink size={16} />
-                View on Amazon
-              </button>
-
-              <div style={styles.externalText}>Opens externally</div>
+                <button
+                  style={styles.primaryBtn}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (product.purchase_url) {
+                      window.open(product.purchase_url, "_blank", "noopener,noreferrer");
+                    }
+                  }}
+                >
+                  <ExternalLink size={15} />
+                  View on Amazon
+                </button>
+              </div>
             </div>
           </div>
         )}
       </div>
 
       <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
-        <DialogContent className="max-w-2xl bg-black border-white/10">
+        <DialogContent className="max-w-md bg-black border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-white text-center">{selectedProduct?.name}</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-white text-center">{selectedProduct?.name}</DialogTitle>
           </DialogHeader>
 
           {selectedProduct && (
-            <div className="space-y-5">
+            <div className="space-y-4">
               {selectedProduct.image_url && (
-                <div className="flex justify-center overflow-hidden rounded-xl bg-white/5">
+                <div className="flex justify-center overflow-hidden rounded-xl bg-white/5 p-3">
                   <img
                     src={selectedProduct.image_url}
                     alt={selectedProduct.name}
-                    className="w-full max-h-96 object-contain"
+                    className="w-full max-h-80 object-contain"
                   />
                 </div>
               )}
 
-              <p className="text-white/70 text-center leading-relaxed">Christian book by Aline Ramiro.</p>
-
-              <p className="text-xs text-white/40 text-center">Opens externally</p>
+              <p className="text-white/70 text-center leading-relaxed text-sm">Christian book by Aline Ramiro.</p>
 
               <button
                 onClick={() => window.open(selectedProduct.purchase_url, "_blank", "noopener,noreferrer")}
@@ -142,7 +137,7 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: "100vh",
     background: "#000",
     color: "#fff",
-    padding: "18px 14px 90px",
+    padding: "14px 14px 84px",
   },
 
   loading: {
@@ -152,9 +147,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   header: {
-    maxWidth: 700,
+    maxWidth: 430,
     margin: "0 auto",
-    paddingBottom: 20,
+    paddingBottom: 14,
     borderBottom: "1px solid rgba(255,255,255,0.08)",
   },
 
@@ -165,8 +160,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   brandIcon: {
-    width: 48,
-    height: 48,
+    width: 44,
+    height: 44,
     borderRadius: 14,
     background: "rgba(255,106,0,0.12)",
     border: "1px solid rgba(255,106,0,0.25)",
@@ -177,33 +172,40 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   brandTitle: {
-    fontSize: 30,
+    fontSize: 26,
     fontWeight: 900,
   },
 
   brandSub: {
-    fontSize: 14,
+    fontSize: 13,
     opacity: 0.72,
   },
 
   content: {
-    maxWidth: 700,
-    margin: "24px auto 0",
+    maxWidth: 430,
+    margin: "16px auto 0",
   },
 
   card: {
     background: "rgba(255,255,255,0.03)",
     border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 20,
+    borderRadius: 18,
     overflow: "hidden",
     cursor: "pointer",
+    padding: 14,
+  },
+
+  compactRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
   },
 
   imageBox: {
-    width: "58%",
-    aspectRatio: "3 / 4",
-    margin: "20px auto 0",
-    borderRadius: 18,
+    width: 112,
+    minWidth: 112,
+    height: 150,
+    borderRadius: 14,
     overflow: "hidden",
     background: "rgba(255,255,255,0.04)",
     display: "flex",
@@ -214,47 +216,46 @@ const styles: Record<string, React.CSSProperties> = {
   image: {
     width: "100%",
     height: "100%",
-    objectFit: "cover",
+    objectFit: "contain",
   },
 
   imagePlaceholder: {
-    fontSize: 50,
+    fontSize: 42,
     opacity: 0.5,
   },
 
   cardBody: {
-    padding: 20,
+    flex: 1,
     display: "flex",
     flexDirection: "column",
-    gap: 14,
+    gap: 10,
   },
 
   cardTitle: {
-    fontSize: 24,
-    fontWeight: 700,
-    textAlign: "center",
+    fontSize: 18,
+    fontWeight: 800,
+    lineHeight: 1.15,
   },
 
   cardDesc: {
-    fontSize: 16,
-    opacity: 0.85,
-    lineHeight: 1.5,
-    textAlign: "center",
+    fontSize: 13,
+    opacity: 0.78,
+    lineHeight: 1.35,
   },
 
   primaryBtn: {
     background: ORANGE,
     color: "#000",
     border: "none",
-    borderRadius: 14,
-    padding: "14px",
+    borderRadius: 12,
+    padding: "11px 12px",
     fontWeight: 900,
-    fontSize: 16,
+    fontSize: 14,
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: 7,
   },
 
   primaryBtnFull: {
@@ -263,7 +264,7 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#000",
     border: "none",
     borderRadius: 14,
-    padding: "14px",
+    padding: "13px",
     fontWeight: 900,
     fontSize: 16,
     cursor: "pointer",
@@ -271,11 +272,5 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-  },
-
-  externalText: {
-    textAlign: "center",
-    fontSize: 12,
-    opacity: 0.45,
   },
 };
