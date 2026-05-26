@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Bell, User, Scale, LogOut } from "lucide-react";
+import { Bell, User, Scale, LogOut, Languages } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SettingsScreenProps {
@@ -20,6 +20,8 @@ interface SettingsScreenProps {
 }
 
 export function SettingsScreen({
+  language,
+  setLanguage,
   userName,
   userEmail,
   onAdminClick,
@@ -87,10 +89,19 @@ export function SettingsScreen({
           <h3 className="text-sm font-bold text-white">Legal</h3>
           <p className="text-xs text-zinc-500">View</p>
         </button>
+
+        <button onClick={setLanguage} className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left">
+          <Languages className="w-6 h-6 text-orange-500 mb-2" />
+          <h3 className="text-sm font-bold text-white">Language</h3>
+          <p className="text-xs text-zinc-500 uppercase">{language || "EN"}</p>
+        </button>
       </div>
 
       {isAdmin && !isGuest && (
-        <button onClick={onAdminClick} className="w-full max-w-xs mx-auto block bg-orange-500 text-white font-semibold py-2.5 rounded-xl text-sm">
+        <button
+          onClick={onAdminClick}
+          className="w-full max-w-xs mx-auto block bg-orange-500 text-white font-semibold py-2.5 rounded-xl text-sm"
+        >
           Admin Panel
         </button>
       )}
