@@ -200,8 +200,10 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   imageBox: {
-    width: "100%",
-    height: 420,
+    width: "58%",
+    aspectRatio: "3 / 4",
+    margin: "20px auto 0",
+    borderRadius: 18,
     overflow: "hidden",
     background: "rgba(255,255,255,0.04)",
     display: "flex",
@@ -228,15 +230,16 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   cardTitle: {
-    fontSize: 34,
-    fontWeight: 900,
-    textTransform: "uppercase",
+    fontSize: 24,
+    fontWeight: 700,
+    textAlign: "center",
   },
 
   cardDesc: {
     fontSize: 16,
-    opacity: 0.8,
+    opacity: 0.85,
     lineHeight: 1.5,
+    textAlign: "center",
   },
 
   primaryBtn: {
