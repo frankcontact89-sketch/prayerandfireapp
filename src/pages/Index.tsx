@@ -13,6 +13,7 @@ import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { LegalCenter } from "@/components/LegalCenter";
 import { BibleStudyScreen } from "@/components/BibleStudyScreen";
 import { BibleScreen } from "@/components/BibleScreen";
+import { LanguagesScreen } from "@/components/LanguagesScreen";
 
 import { supabase } from "@/integrations/supabase/client";
 import { translations, SupportedLanguage } from "@/config/translations";
@@ -222,6 +223,8 @@ const dailyContent = [
   },
 ];
 
+const SUPPORTED_LANGUAGE_CODES = ["en", "es", "pt", "fr", "it", "de", "zh", "ja", "ko", "ar", "hi", "ru", "sw"];
+
 function getDayOfYear(date: Date) {
   const start = new Date(date.getFullYear(), 0, 0);
   const diff = date.getTime() - start.getTime();
@@ -235,10 +238,29 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
   }, []);
 
   const labels = {
-    en: { verse: "VERSE OF THE DAY", prayer: "DAILY PRAYER", reflection: "DAILY REFLECTION", tagline: "Prayer that", connects: "connects nations." },
-    es: { verse: "VERSÍCULO DEL DÍA", prayer: "ORACIÓN DIARIA", reflection: "REFLEXIÓN DIARIA", tagline: "Oración que", connects: "conecta naciones." },
-    pt: { verse: "VERSÍCULO DO DIA", prayer: "ORAÇÃO DIÁRIA", reflection: "REFLEXÃO DIÁRIA", tagline: "Oração que", connects: "conecta nações." },
+    en: {
+      verse: "VERSE OF THE DAY",
+      prayer: "DAILY PRAYER",
+      reflection: "DAILY REFLECTION",
+      tagline: "Prayer that",
+      connects: "connects nations.",
+    },
+    es: {
+      verse: "VERSÍCULO DEL DÍA",
+      prayer: "ORACIÓN DIARIA",
+      reflection: "REFLEXIÓN DIARIA",
+      tagline: "Oración que",
+      connects: "conecta naciones.",
+    },
+    pt: {
+      verse: "VERSÍCULO DO DIA",
+      prayer: "ORAÇÃO DIÁRIA",
+      reflection: "REFLEXÃO DIÁRIA",
+      tagline: "Oração que",
+      connects: "conecta nações.",
+    },
   } as const;
+
   const L = (labels as any)[language] || labels.en;
 
   return (
@@ -269,9 +291,7 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
             <span className="block text-orange-500">{L.connects}</span>
           </h1>
 
-          <p className="text-zinc-300 mt-2 text-[14px] leading-snug max-w-sm">
-            {t("home_hero_subtitle")}
-          </p>
+          <p className="text-zinc-300 mt-2 text-[14px] leading-snug max-w-sm">{t("home_hero_subtitle")}</p>
         </div>
 
         <section className="relative w-full rounded-2xl border border-orange-500/20 bg-zinc-950/90 backdrop-blur-xl p-5 overflow-hidden shadow-[0_0_40px_rgba(249,115,22,0.10)]">
@@ -314,14 +334,16 @@ export default function Index() {
   const [language, setLanguageState] = useState<string>(() => {
     try {
       const saved = localStorage.getItem("pf_lang");
-      if (saved && ["en", "es", "pt"].includes(saved)) return saved;
+      if (saved && SUPPORTED_LANGUAGE_CODES.includes(saved)) return saved;
     } catch {}
     return "en";
   });
 
   const setLanguage = useCallback((lang: string) => {
     setLanguageState(lang);
-    try { localStorage.setItem("pf_lang", lang); } catch {}
+    try {
+      localStorage.setItem("pf_lang", lang);
+    } catch {}
   }, []);
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -342,8 +364,8 @@ export default function Index() {
   }, [isDarkMode]);
 
   const t = (key: keyof typeof translations.en): string => {
-    const lang = language as SupportedLanguage;
-    return translations[lang]?.[key] || translations.en[key] || key;
+    const safeLanguage = (translations as any)[language] ? language : "en";
+    return (translations as any)[safeLanguage]?.[key] || translations.en[key] || String(key);
   };
 
   const toggleDarkMode = () => {
@@ -415,6 +437,20 @@ export default function Index() {
     setUnreadNotifications(0);
     setPage("notifications");
   };
+
+  if (showLanguages) {
+    return (
+      <LanguagesScreen
+        t={t}
+        currentLanguage={language}
+        onLanguageChange={(code: string) => {
+          setLanguage(code);
+          setShowLanguages(false);
+        }}
+        onBack={() => setShowLanguages(false)}
+      />
+    );
+  }
 
   if (loading) {
     return (
