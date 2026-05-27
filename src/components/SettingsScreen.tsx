@@ -1,18 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Bell, User, Scale, LogOut, Languages, CreditCard } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { APP_CONFIG } from "@/config/constants";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 interface SettingsScreenProps {
   t: (key: string) => string;
@@ -44,8 +35,8 @@ export function SettingsScreen({
   isGuest,
 }: SettingsScreenProps) {
   const { isAdmin } = useUserRole();
+
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   useEffect(() => {
     loadAvatar();
@@ -53,7 +44,9 @@ export function SettingsScreen({
 
   const loadAvatar = async () => {
     const { data } = await supabase.auth.getUser();
+
     const user = data?.user;
+
     if (!user) return;
 
     const { data: profile } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
@@ -61,6 +54,10 @@ export function SettingsScreen({
     if (profile?.avatar_url) {
       setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
     }
+  };
+
+  const openCustomerPortal = () => {
+    window.open("https://billing.stripe.com/p/login/cNi00j3Ru6Aq5qD1rt7bW00", "_blank");
   };
 
   return (
@@ -79,11 +76,13 @@ export function SettingsScreen({
 
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-bold text-white">{t("profile")}</h3>
+
             <p className="text-xs text-zinc-400">{userName || "User"}</p>
+
             <p className="text-xs text-zinc-400 truncate">{userEmail}</p>
           </div>
 
-          <span className="text-zinc-500 text-xs">{t("saveChanges") ? "›" : "›"}</span>
+          <span className="text-zinc-500 text-xs">›</span>
         </div>
       </button>
 
@@ -93,32 +92,33 @@ export function SettingsScreen({
           className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left"
         >
           <Bell className="w-6 h-6 text-orange-500 mb-2" />
+
           <h3 className="text-sm font-bold text-white">{t("notifications")}</h3>
         </button>
 
         <button onClick={onLegalClick} className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left">
           <Scale className="w-6 h-6 text-orange-500 mb-2" />
+
           <h3 className="text-sm font-bold text-white">{t("privacy")}</h3>
         </button>
 
         <button onClick={setLanguage} className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left">
           <Languages className="w-6 h-6 text-orange-500 mb-2" />
+
           <h3 className="text-sm font-bold text-white">{t("language")}</h3>
+
           <p className="text-xs text-zinc-500 uppercase">{language || "EN"}</p>
         </button>
 
         <button
-          onClick={() => {
-            if (APP_CONFIG.STRIPE_CUSTOMER_PORTAL) {
-              window.open(APP_CONFIG.STRIPE_CUSTOMER_PORTAL, "_blank");
-            } else {
-              setShowCancelDialog(true);
-            }
-          }}
+          onClick={openCustomerPortal}
           className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left"
         >
           <CreditCard className="w-6 h-6 text-orange-500 mb-2" />
-          <h3 className="text-sm font-bold text-white">{t("cancelSubscription")}</h3>
+
+          <h3 className="text-sm font-bold text-white">Manage Subscription</h3>
+
+          <p className="text-xs text-zinc-500 mt-1">Billing · Cards · Cancel</p>
         </button>
       </div>
 
@@ -137,35 +137,10 @@ export function SettingsScreen({
           className="w-full bg-card border border-border text-white font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2"
         >
           <LogOut className="w-4 h-4" />
+
           {t("signout")}
         </button>
       )}
-
-      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("cancelSubscription")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("cancelSubscriptionWarning")}
-              {" "}
-              {`Please email ${APP_CONFIG.SUPPORT_EMAIL} to manage or cancel your subscription.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("close")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() =>
-                window.open(
-                  `mailto:${APP_CONFIG.SUPPORT_EMAIL}?subject=${encodeURIComponent("Cancel Subscription")}`,
-                  "_blank"
-                )
-              }
-            >
-              {t("connect_email_ministry")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
