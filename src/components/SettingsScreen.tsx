@@ -68,7 +68,7 @@ export function SettingsScreen({
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-primary/10 border border-orange-500/30 flex items-center justify-center overflow-hidden">
             {avatarUrl ? (
-              <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+              <img src={avatarUrl} alt={t("profile")} className="w-full h-full object-cover" />
             ) : (
               <User className="w-6 h-6 text-orange-500" />
             )}
@@ -116,9 +116,9 @@ export function SettingsScreen({
         >
           <CreditCard className="w-6 h-6 text-orange-500 mb-2" />
 
-          <h3 className="text-sm font-bold text-white">Manage Subscription</h3>
+          <h3 className="text-sm font-bold text-white">{t("manageSubscription")}</h3>
 
-          <p className="text-xs text-zinc-500 mt-1">Billing · Cards · Cancel</p>
+          <p className="text-xs text-zinc-500 mt-1">{t("billingCardsCancel")}</p>
         </button>
       </div>
 
