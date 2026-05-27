@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Bell, User, Scale, LogOut, Languages } from "lucide-react";
+import { Bell, User, Scale, LogOut, Languages, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { APP_CONFIG } from "@/config/constants";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface SettingsScreenProps {
   t: (key: string) => string;
@@ -20,6 +31,7 @@ interface SettingsScreenProps {
 }
 
 export function SettingsScreen({
+  t,
   language,
   setLanguage,
   userName,
@@ -33,6 +45,7 @@ export function SettingsScreen({
 }: SettingsScreenProps) {
   const { isAdmin } = useUserRole();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   useEffect(() => {
     loadAvatar();
@@ -51,8 +64,8 @@ export function SettingsScreen({
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-3 pb-24 space-y-3">
-      <h2 className="text-2xl font-bold text-white">Settings</h2>
+    <div className="max-w-[430px] mx-auto px-4 py-3 pb-24 space-y-3">
+      <h2 className="text-2xl font-bold text-white">{t("settings")}</h2>
 
       <button onClick={onProfileClick} className="w-full bg-card border border-border rounded-2xl p-3 text-left">
         <div className="flex items-center gap-3">
@@ -65,12 +78,12 @@ export function SettingsScreen({
           </div>
 
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-bold text-white">Profile</h3>
-            <p className="text-xs text-zinc-400">Name: {userName || "User"}</p>
+            <h3 className="text-base font-bold text-white">{t("profile")}</h3>
+            <p className="text-xs text-zinc-400">{userName || "User"}</p>
             <p className="text-xs text-zinc-400 truncate">{userEmail}</p>
           </div>
 
-          <span className="text-zinc-500 text-xs">Edit</span>
+          <span className="text-zinc-500 text-xs">{t("saveChanges") ? "›" : "›"}</span>
         </div>
       </button>
 
@@ -80,20 +93,32 @@ export function SettingsScreen({
           className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left"
         >
           <Bell className="w-6 h-6 text-orange-500 mb-2" />
-          <h3 className="text-sm font-bold text-white">Notifications</h3>
-          <p className="text-xs text-zinc-500">View</p>
+          <h3 className="text-sm font-bold text-white">{t("notifications")}</h3>
         </button>
 
         <button onClick={onLegalClick} className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left">
           <Scale className="w-6 h-6 text-orange-500 mb-2" />
-          <h3 className="text-sm font-bold text-white">Legal</h3>
-          <p className="text-xs text-zinc-500">View</p>
+          <h3 className="text-sm font-bold text-white">{t("privacy")}</h3>
         </button>
 
         <button onClick={setLanguage} className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left">
           <Languages className="w-6 h-6 text-orange-500 mb-2" />
-          <h3 className="text-sm font-bold text-white">Language</h3>
+          <h3 className="text-sm font-bold text-white">{t("language")}</h3>
           <p className="text-xs text-zinc-500 uppercase">{language || "EN"}</p>
+        </button>
+
+        <button
+          onClick={() => {
+            if (APP_CONFIG.STRIPE_CUSTOMER_PORTAL) {
+              window.open(APP_CONFIG.STRIPE_CUSTOMER_PORTAL, "_blank");
+            } else {
+              setShowCancelDialog(true);
+            }
+          }}
+          className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left"
+        >
+          <CreditCard className="w-6 h-6 text-orange-500 mb-2" />
+          <h3 className="text-sm font-bold text-white">{t("cancelSubscription")}</h3>
         </button>
       </div>
 
@@ -102,7 +127,7 @@ export function SettingsScreen({
           onClick={onAdminClick}
           className="w-full max-w-xs mx-auto block bg-orange-500 text-white font-semibold py-2.5 rounded-xl text-sm"
         >
-          Admin Panel
+          {t("adminPanel")}
         </button>
       )}
 
@@ -112,9 +137,35 @@ export function SettingsScreen({
           className="w-full bg-card border border-border text-white font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2"
         >
           <LogOut className="w-4 h-4" />
-          Sign Out
+          {t("signout")}
         </button>
       )}
+
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("cancelSubscription")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("cancelSubscriptionWarning")}
+              {" "}
+              {`Please email ${APP_CONFIG.SUPPORT_EMAIL} to manage or cancel your subscription.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("close")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                window.open(
+                  `mailto:${APP_CONFIG.SUPPORT_EMAIL}?subject=${encodeURIComponent("Cancel Subscription")}`,
+                  "_blank"
+                )
+              }
+            >
+              {t("connect_email_ministry")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
