@@ -311,13 +311,18 @@ export default function Index() {
   const [page, setPage] = useState("home");
   const [showLanguages, setShowLanguages] = useState(false);
 
-  const [language, setLanguage] = useState<string>(() => {
+  const [language, setLanguageState] = useState<string>(() => {
     try {
       const saved = localStorage.getItem("pf_lang");
       if (saved && ["en", "es", "pt"].includes(saved)) return saved;
     } catch {}
     return "en";
   });
+
+  const setLanguage = useCallback((lang: string) => {
+    setLanguageState(lang);
+    try { localStorage.setItem("pf_lang", lang); } catch {}
+  }, []);
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem("pf_dark_mode");
@@ -465,7 +470,7 @@ export default function Index() {
       </div>
 
       <div className="flex-1 overflow-y-auto pb-[90px]">
-        {page === "home" && <HomeScreen />}
+        {page === "home" && <HomeScreen t={t} language={language} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
         {page === "bible" && <BibleScreen />}
