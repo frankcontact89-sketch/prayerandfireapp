@@ -22,218 +22,171 @@ import { getLastReadAtMs, setLastReadAtNow } from "@/lib/notifications-last-seen
 import realisticFlame from "@/assets/realistic-flame.png";
 import entryLogo from "@/assets/prayer-fire-entry-logo.png";
 
+const SUPPORTED_LANGUAGE_CODES = ["en", "es", "pt", "fr", "it", "de"];
+
 const dailyContent = [
   {
-    verse: "The Lord is my shepherd; I shall not want.",
-    ref: "Psalm 23:1",
-    prayer: "Lord, guide me today and help me trust Your care.",
-    reflection: "God is not distant. He leads, provides, and walks with you through every season.",
+    en: {
+      verse: "The Lord is my shepherd; I shall not want.",
+      ref: "Psalm 23:1",
+      prayer: "Lord, guide me today and help me trust Your care.",
+      reflection: "God is not distant. He leads, provides, and walks with you through every season.",
+    },
+    es: {
+      verse: "El Señor es mi pastor; nada me faltará.",
+      ref: "Salmo 23:1",
+      prayer: "Señor, guíame hoy y ayúdame a confiar en Tu cuidado.",
+      reflection: "Dios no está lejos. Él guía, provee y camina contigo en cada temporada.",
+    },
+    pt: {
+      verse: "O Senhor é o meu pastor; nada me faltará.",
+      ref: "Salmo 23:1",
+      prayer: "Senhor, guia-me hoje e ajuda-me a confiar no Teu cuidado.",
+      reflection: "Deus não está distante. Ele guia, provê e caminha contigo em cada estação.",
+    },
+    fr: {
+      verse: "L’Éternel est mon berger; je ne manquerai de rien.",
+      ref: "Psaume 23:1",
+      prayer: "Seigneur, guide-moi aujourd’hui et aide-moi à faire confiance à Tes soins.",
+      reflection: "Dieu n’est pas loin. Il guide, pourvoit et marche avec toi en toute saison.",
+    },
+    it: {
+      verse: "Il Signore è il mio pastore; nulla mi mancherà.",
+      ref: "Salmo 23:1",
+      prayer: "Signore, guidami oggi e aiutami a confidare nella Tua cura.",
+      reflection: "Dio non è lontano. Egli guida, provvede e cammina con te in ogni stagione.",
+    },
+    de: {
+      verse: "Der Herr ist mein Hirte; mir wird nichts mangeln.",
+      ref: "Psalm 23:1",
+      prayer: "Herr, führe mich heute und hilf mir, Deiner Fürsorge zu vertrauen.",
+      reflection: "Gott ist nicht fern. Er führt, versorgt und geht mit dir durch jede Zeit.",
+    },
   },
   {
-    verse: "I can do all things through Christ who strengthens me.",
-    ref: "Philippians 4:13",
-    prayer: "Christ, strengthen my heart and renew my faith today.",
-    reflection: "Your strength does not come from pressure. It comes from Christ working in you.",
+    en: {
+      verse: "I can do all things through Christ who strengthens me.",
+      ref: "Philippians 4:13",
+      prayer: "Christ, strengthen my heart and renew my faith today.",
+      reflection: "Your strength does not come from pressure. It comes from Christ working in you.",
+    },
+    es: {
+      verse: "Todo lo puedo en Cristo que me fortalece.",
+      ref: "Filipenses 4:13",
+      prayer: "Cristo, fortalece mi corazón y renueva mi fe hoy.",
+      reflection: "Tu fuerza no viene de la presión. Viene de Cristo obrando en ti.",
+    },
+    pt: {
+      verse: "Tudo posso em Cristo que me fortalece.",
+      ref: "Filipenses 4:13",
+      prayer: "Cristo, fortalece meu coração e renova minha fé hoje.",
+      reflection: "Tua força não vem da pressão. Ela vem de Cristo agindo em você.",
+    },
+    fr: {
+      verse: "Je puis tout par Christ qui me fortifie.",
+      ref: "Philippiens 4:13",
+      prayer: "Christ, fortifie mon cœur et renouvelle ma foi aujourd’hui.",
+      reflection: "Ta force ne vient pas de la pression. Elle vient de Christ qui agit en toi.",
+    },
+    it: {
+      verse: "Io posso ogni cosa in Cristo che mi fortifica.",
+      ref: "Filippesi 4:13",
+      prayer: "Cristo, rafforza il mio cuore e rinnova la mia fede oggi.",
+      reflection: "La tua forza non viene dalla pressione. Viene da Cristo che opera in te.",
+    },
+    de: {
+      verse: "Ich vermag alles durch Christus, der mich stärkt.",
+      ref: "Philipper 4:13",
+      prayer: "Christus, stärke mein Herz und erneuere heute meinen Glauben.",
+      reflection: "Deine Kraft kommt nicht aus Druck. Sie kommt von Christus, der in dir wirkt.",
+    },
   },
   {
-    verse: "The joy of the Lord is my strength.",
-    ref: "Nehemiah 8:10",
-    prayer: "Lord, restore Your joy in me today.",
-    reflection: "Joy is not the absence of difficulty. It is the strength of God inside the difficulty.",
+    en: {
+      verse: "If God is for us, who can be against us?",
+      ref: "Romans 8:31",
+      prayer: "Lord, remind me today that You are with me.",
+      reflection: "When God stands with you, no opposition is final.",
+    },
+    es: {
+      verse: "Si Dios es por nosotros, ¿quién contra nosotros?",
+      ref: "Romanos 8:31",
+      prayer: "Señor, recuérdame hoy que Tú estás conmigo.",
+      reflection: "Cuando Dios está contigo, ninguna oposición tiene la última palabra.",
+    },
+    pt: {
+      verse: "Se Deus é por nós, quem será contra nós?",
+      ref: "Romanos 8:31",
+      prayer: "Senhor, lembra-me hoje que Tu estás comigo.",
+      reflection: "Quando Deus está contigo, nenhuma oposição é final.",
+    },
+    fr: {
+      verse: "Si Dieu est pour nous, qui sera contre nous?",
+      ref: "Romains 8:31",
+      prayer: "Seigneur, rappelle-moi aujourd’hui que Tu es avec moi.",
+      reflection: "Quand Dieu est avec toi, aucune opposition n’a le dernier mot.",
+    },
+    it: {
+      verse: "Se Dio è per noi, chi sarà contro di noi?",
+      ref: "Romani 8:31",
+      prayer: "Signore, ricordami oggi che Tu sei con me.",
+      reflection: "Quando Dio è con te, nessuna opposizione è definitiva.",
+    },
+    de: {
+      verse: "Ist Gott für uns, wer kann gegen uns sein?",
+      ref: "Römer 8:31",
+      prayer: "Herr, erinnere mich heute daran, dass Du mit mir bist.",
+      reflection: "Wenn Gott mit dir ist, hat kein Widerstand das letzte Wort.",
+    },
   },
   {
-    verse: "Give thanks to the Lord, for He is good.",
-    ref: "Psalm 107:1",
-    prayer: "Lord, teach me to see Your goodness today.",
-    reflection: "Gratitude opens your eyes to what God is already doing around you.",
-  },
-  {
-    verse: "Be still, and know that I am God.",
-    ref: "Psalm 46:10",
-    prayer: "Lord, quiet my heart so I can hear You today.",
-    reflection: "Stillness is not weakness. It is where God reveals Himself most clearly.",
-  },
-  {
-    verse: "For we walk by faith, not by sight.",
-    ref: "2 Corinthians 5:7",
-    prayer: "Lord, help me trust You beyond what I can see.",
-    reflection: "Faith sees what eyes cannot. Trust God's hand even in the unknown.",
-  },
-  {
-    verse: "The Lord is my light and my salvation; whom shall I fear?",
-    ref: "Psalm 27:1",
-    prayer: "Lord, be my light in every dark place.",
-    reflection: "When God is your light, fear loses its grip on your heart.",
-  },
-  {
-    verse: "Cast all your anxiety on Him because He cares for you.",
-    ref: "1 Peter 5:7",
-    prayer: "Lord, I release my worries into Your hands.",
-    reflection: "God is not too busy for your burdens. He invites you to bring them all.",
-  },
-  {
-    verse: "Trust in the Lord with all your heart.",
-    ref: "Proverbs 3:5",
-    prayer: "Lord, teach me to trust You more than my own understanding.",
-    reflection: "Real trust begins where self-reliance ends.",
-  },
-  {
-    verse: "My grace is sufficient for you.",
-    ref: "2 Corinthians 12:9",
-    prayer: "Lord, let Your grace carry me where my strength runs out.",
-    reflection: "God's grace meets you exactly where you feel most weak.",
-  },
-  {
-    verse: "Weeping may stay for the night, but rejoicing comes in the morning.",
-    ref: "Psalm 30:5",
-    prayer: "Lord, hold me through the night until joy returns.",
-    reflection: "Seasons of sorrow are real, but they are never the final word.",
-  },
-  {
-    verse: "The Lord will fight for you; you need only to be still.",
-    ref: "Exodus 14:14",
-    prayer: "Lord, fight my battles as I rest in You.",
-    reflection: "Sometimes obedience looks like stillness and trust.",
-  },
-  {
-    verse: "Come to Me, all you who are weary, and I will give you rest.",
-    ref: "Matthew 11:28",
-    prayer: "Jesus, I come to You today. Give me Your rest.",
-    reflection: "Rest is not a reward for finishing. It is a gift from Jesus right now.",
-  },
-  {
-    verse: "He restores my soul.",
-    ref: "Psalm 23:3",
-    prayer: "Lord, restore every weary place in me.",
-    reflection: "God does not just patch you up. He restores you completely.",
-  },
-  {
-    verse: "Delight yourself in the Lord, and He will give you the desires of your heart.",
-    ref: "Psalm 37:4",
-    prayer: "Lord, shape my desires to match Your heart.",
-    reflection: "Delighting in God reshapes what you want until His will becomes your joy.",
-  },
-  {
-    verse: "If God is for us, who can be against us?",
-    ref: "Romans 8:31",
-    prayer: "Lord, remind me today that You are with me.",
-    reflection: "When God stands with you, no opposition is final.",
-  },
-  {
-    verse: "Seek first the kingdom of God and His righteousness.",
-    ref: "Matthew 6:33",
-    prayer: "Lord, take first place in my heart today.",
-    reflection: "When God is first, everything else finds its right order.",
-  },
-  {
-    verse: "The name of the Lord is a fortified tower; the righteous run to it and are safe.",
-    ref: "Proverbs 18:10",
-    prayer: "Lord, be my refuge today.",
-    reflection: "There is real safety in the name of Jesus.",
-  },
-  {
-    verse: "I have loved you with an everlasting love.",
-    ref: "Jeremiah 31:3",
-    prayer: "Lord, let Your love anchor me today.",
-    reflection: "God's love for you has no end and no condition.",
-  },
-  {
-    verse: "Greater is He who is in you than he who is in the world.",
-    ref: "1 John 4:4",
-    prayer: "Holy Spirit, rise up in me today.",
-    reflection: "The power inside you is greater than the pressure around you.",
-  },
-  {
-    verse: "Be strong and courageous. Do not be afraid; the Lord your God will be with you.",
-    ref: "Joshua 1:9",
-    prayer: "Lord, give me courage to follow You today.",
-    reflection: "Courage is not the absence of fear; it is trusting God in the middle of it.",
-  },
-  {
-    verse: "The steadfast love of the Lord never ceases; His mercies are new every morning.",
-    ref: "Lamentations 3:22-23",
-    prayer: "Lord, thank You for Your fresh mercy today.",
-    reflection: "Today carries new mercy, not yesterday's failures.",
-  },
-  {
-    verse: "In all things God works for the good of those who love Him.",
-    ref: "Romans 8:28",
-    prayer: "Lord, work even this for good.",
-    reflection: "God is writing a story bigger than this moment.",
-  },
-  {
-    verse: "He gives strength to the weary and increases the power of the weak.",
-    ref: "Isaiah 40:29",
-    prayer: "Lord, refill me with Your strength.",
-    reflection: "Weakness in your hands becomes strength in God's hands.",
-  },
-  {
-    verse: "The Lord is close to the brokenhearted.",
-    ref: "Psalm 34:18",
-    prayer: "Lord, draw near to every hurting place in me.",
-    reflection: "God is nearest when your heart feels most broken.",
-  },
-  {
-    verse: "Do not be anxious about anything, but in every situation, by prayer, present your requests to God.",
-    ref: "Philippians 4:6",
-    prayer: "Lord, I trade my anxiety for trust today.",
-    reflection: "Prayer turns worry into worship.",
-  },
-  {
-    verse: "The peace of God, which transcends all understanding, will guard your hearts.",
-    ref: "Philippians 4:7",
-    prayer: "Lord, guard my heart with Your peace.",
-    reflection: "God's peace does not depend on circumstances.",
-  },
-  {
-    verse: "Wait for the Lord; be strong and take heart and wait for the Lord.",
-    ref: "Psalm 27:14",
-    prayer: "Lord, teach me to wait well.",
-    reflection: "Waiting on God is not wasted time. It is sacred time.",
-  },
-  {
-    verse: "Your word is a lamp for my feet, a light on my path.",
-    ref: "Psalm 119:105",
-    prayer: "Lord, let Your Word lead my steps today.",
-    reflection: "God gives enough light for the next step, not always the whole road.",
-  },
-  {
-    verse: "Ask and it will be given to you; seek and you will find.",
-    ref: "Matthew 7:7",
-    prayer: "Lord, I seek You today with all my heart.",
-    reflection: "God responds to a heart that truly seeks Him.",
-  },
-  {
-    verse: "He must become greater; I must become less.",
-    ref: "John 3:30",
-    prayer: "Lord, let Your name be lifted in my life.",
-    reflection: "True freedom begins when Christ takes center stage.",
-  },
-  {
-    verse: "Let everything that has breath praise the Lord.",
-    ref: "Psalm 150:6",
-    prayer: "Lord, let my life be praise to You today.",
-    reflection: "Praise is the natural overflow of a heart that knows God.",
-  },
-  {
-    verse: "Now faith is confidence in what we hope for and assurance about what we do not see.",
-    ref: "Hebrews 11:1",
-    prayer: "Lord, grow my faith today.",
-    reflection: "Faith stands firm even when sight has nothing to show.",
+    en: {
+      verse: "In all things God works for the good of those who love Him.",
+      ref: "Romans 8:28",
+      prayer: "Lord, work even this for good.",
+      reflection: "God is writing a story bigger than this moment.",
+    },
+    es: {
+      verse: "A los que aman a Dios, todas las cosas les ayudan a bien.",
+      ref: "Romanos 8:28",
+      prayer: "Señor, obra aun en esto para bien.",
+      reflection: "Dios está escribiendo una historia más grande que este momento.",
+    },
+    pt: {
+      verse: "Todas as coisas cooperam para o bem daqueles que amam a Deus.",
+      ref: "Romanos 8:28",
+      prayer: "Senhor, transforma até isto em bem.",
+      reflection: "Deus está escrevendo uma história maior que este momento.",
+    },
+    fr: {
+      verse: "Toutes choses concourent au bien de ceux qui aiment Dieu.",
+      ref: "Romains 8:28",
+      prayer: "Seigneur, fais aussi travailler cela pour le bien.",
+      reflection: "Dieu écrit une histoire plus grande que ce moment.",
+    },
+    it: {
+      verse: "Tutte le cose cooperano al bene di quelli che amano Dio.",
+      ref: "Romani 8:28",
+      prayer: "Signore, opera anche in questo per il bene.",
+      reflection: "Dio sta scrivendo una storia più grande di questo momento.",
+    },
+    de: {
+      verse: "Alle Dinge dienen denen zum Besten, die Gott lieben.",
+      ref: "Römer 8:28",
+      prayer: "Herr, wirke auch hierin zum Guten.",
+      reflection: "Gott schreibt eine Geschichte, die größer ist als dieser Moment.",
+    },
   },
 ];
 
-const SUPPORTED_LANGUAGE_CODES = ["en", "es", "pt", "fr", "it", "de"];
-
 function getFreshVerseIndex() {
   const lastIndex = Number(localStorage.getItem("pf_last_verse_index") || "-1");
-
-  if (dailyContent.length <= 1) return 0;
-
   let nextIndex = Math.floor(Math.random() * dailyContent.length);
 
-  while (nextIndex === lastIndex) {
-    nextIndex = Math.floor(Math.random() * dailyContent.length);
+  if (dailyContent.length > 1) {
+    while (nextIndex === lastIndex) {
+      nextIndex = Math.floor(Math.random() * dailyContent.length);
+    }
   }
 
   localStorage.setItem("pf_last_verse_index", String(nextIndex));
@@ -241,9 +194,11 @@ function getFreshVerseIndex() {
 }
 
 function HomeScreen({ t, language }: { t: (k: any) => string; language: string }) {
-  const [today] = useState(() => dailyContent[getFreshVerseIndex()]);
+  const [verseIndex] = useState(() => getFreshVerseIndex());
+  const safeLang = SUPPORTED_LANGUAGE_CODES.includes(language) ? language : "en";
+  const today = (dailyContent[verseIndex] as any)[safeLang] || dailyContent[verseIndex].en;
 
-  const labels = {
+  const labels: any = {
     en: {
       verse: "VERSE OF THE DAY",
       prayer: "DAILY PRAYER",
@@ -286,19 +241,15 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
       tagline: "Gebet, das",
       connects: "Nationen verbindet.",
     },
-  } as const;
+  };
 
-  const L = (labels as any)[language] || labels.en;
+  const L = labels[safeLang] || labels.en;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white">
       <div
         className="absolute inset-0 opacity-[0.09] pointer-events-none"
-        style={{
-          backgroundImage: `url(${realisticFlame})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+        style={{ backgroundImage: `url(${realisticFlame})`, backgroundSize: "cover", backgroundPosition: "center" }}
       />
 
       <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-orange-500/10 blur-[140px] pointer-events-none" />
@@ -369,9 +320,7 @@ export default function Index() {
   const setLanguage = useCallback((lang: string) => {
     const safeLang = SUPPORTED_LANGUAGE_CODES.includes(lang) ? lang : "en";
     setLanguageState(safeLang);
-    try {
-      localStorage.setItem("pf_lang", safeLang);
-    } catch {}
+    localStorage.setItem("pf_lang", safeLang);
   }, []);
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -384,11 +333,7 @@ export default function Index() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.toggle("dark", isDarkMode);
   }, [isDarkMode]);
 
   const t = (key: keyof typeof translations.en): string => {
@@ -407,9 +352,7 @@ export default function Index() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setUser(currentSession?.user ?? null);
-
       if (event === "SIGNED_IN") setPage("home");
-
       if (event === "SIGNED_OUT") {
         setPage("home");
         setUnreadNotifications(0);
@@ -479,7 +422,7 @@ export default function Index() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-primary text-lg">Loading...</div>
+        <div className="text-primary text-lg">{t("loading")}</div>
       </div>
     );
   }
@@ -509,12 +452,9 @@ export default function Index() {
 
             <button
               onClick={openNotifications}
-              className={`relative transition-colors duration-300 ${
-                unreadNotifications > 0 ? "text-blue-500" : "text-orange-500"
-              }`}
+              className={`relative ${unreadNotifications > 0 ? "text-blue-500" : "text-orange-500"}`}
             >
               <Bell className="w-5 h-5" />
-
               {unreadNotifications > 0 && (
                 <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
                   {unreadNotifications > 99 ? "99+" : unreadNotifications}
@@ -560,10 +500,8 @@ export default function Index() {
         {page === "social" && (
           <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />
         )}
-
         {page === "events" && <EventsScreen t={t} />}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
-
         {page === "profile" && (
           <ProfileScreen
             t={t}
@@ -577,10 +515,8 @@ export default function Index() {
             }}
           />
         )}
-
         {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
-
         {page === "bible_study" && (
           <BibleStudyScreen onBack={() => setPage("home")} onContact={() => setPage("home")} />
         )}
@@ -591,15 +527,12 @@ export default function Index() {
           <button onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
             <Flame className="w-7 h-7" />
           </button>
-
           <button onClick={() => setPage("bible")} className={page === "bible" ? "text-orange-500" : "text-zinc-500"}>
             <BookOpen className="w-7 h-7" />
           </button>
-
           <button onClick={() => setPage("giving")} className={page === "giving" ? "text-orange-500" : "text-zinc-500"}>
             <Heart className="w-7 h-7" />
           </button>
-
           <button
             onClick={() => setPage("shopping")}
             className={page === "shopping" ? "text-orange-500" : "text-zinc-500"}
