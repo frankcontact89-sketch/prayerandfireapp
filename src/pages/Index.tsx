@@ -222,11 +222,24 @@ const dailyContent = [
   },
 ];
 
-function HomeScreen() {
+function getDayOfYear(date: Date) {
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date.getTime() - start.getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+function HomeScreen({ t, language }: { t: (k: any) => string; language: string }) {
   const today = useMemo(() => {
-    const randomIndex = Math.floor(Math.random() * dailyContent.length);
-    return dailyContent[randomIndex];
+    const idx = getDayOfYear(new Date()) % dailyContent.length;
+    return dailyContent[idx];
   }, []);
+
+  const labels = {
+    en: { verse: "VERSE OF THE DAY", prayer: "DAILY PRAYER", reflection: "DAILY REFLECTION", tagline: "Prayer that", connects: "connects nations." },
+    es: { verse: "VERSÍCULO DEL DÍA", prayer: "ORACIÓN DIARIA", reflection: "REFLEXIÓN DIARIA", tagline: "Oración que", connects: "conecta naciones." },
+    pt: { verse: "VERSÍCULO DO DIA", prayer: "ORAÇÃO DIÁRIA", reflection: "REFLEXÃO DIÁRIA", tagline: "Oração que", connects: "conecta nações." },
+  } as const;
+  const L = (labels as any)[language] || labels.en;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-white">
@@ -251,20 +264,20 @@ function HomeScreen() {
 
           <p className="uppercase tracking-[0.3em] text-white/80 text-xs font-semibold mb-2">PRAYER & FIRE</p>
 
-          <h1 className="text-[28px] leading-[1.05] font-extrabold tracking-tight max-w-[320px]">
-            Prayer that
-            <span className="block text-orange-500">connects nations.</span>
+          <h1 className="text-[26px] leading-[1.05] font-extrabold tracking-tight max-w-[320px]">
+            {L.tagline}
+            <span className="block text-orange-500">{L.connects}</span>
           </h1>
 
-          <p className="text-zinc-300 mt-3 text-base leading-snug max-w-sm">
-            A global movement to ignite hearts, deepen prayer, and walk together in faith.
+          <p className="text-zinc-300 mt-2 text-[14px] leading-snug max-w-sm">
+            {t("home_hero_subtitle")}
           </p>
         </div>
 
         <section className="relative w-full rounded-2xl border border-orange-500/20 bg-zinc-950/90 backdrop-blur-xl p-5 overflow-hidden shadow-[0_0_40px_rgba(249,115,22,0.10)]">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">VERSE OF THE DAY</p>
+              <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">{L.verse}</p>
               <Quote className="w-4 h-4 text-orange-400" />
             </div>
 
@@ -274,7 +287,7 @@ function HomeScreen() {
             <div className="mt-3 pt-2.5 border-t border-orange-500/10">
               <div className="flex items-center gap-2 mb-1">
                 <HandHeart className="w-3.5 h-3.5 text-orange-400" />
-                <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">DAILY PRAYER</p>
+                <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">{L.prayer}</p>
               </div>
               <p className="text-zinc-200 text-[14px] leading-snug">{today.prayer}</p>
             </div>
@@ -282,7 +295,7 @@ function HomeScreen() {
             <div className="mt-2.5 pt-2.5 border-t border-orange-500/10">
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="w-3.5 h-3.5 text-orange-400" />
-                <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">DAILY REFLECTION</p>
+                <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">{L.reflection}</p>
               </div>
               <p className="text-zinc-200 text-[14px] leading-snug">{today.reflection}</p>
             </div>
@@ -298,13 +311,18 @@ export default function Index() {
   const [page, setPage] = useState("home");
   const [showLanguages, setShowLanguages] = useState(false);
 
-  const [language, setLanguage] = useState<string>(() => {
+  const [language, setLanguageState] = useState<string>(() => {
     try {
       const saved = localStorage.getItem("pf_lang");
       if (saved && ["en", "es", "pt"].includes(saved)) return saved;
     } catch {}
     return "en";
   });
+
+  const setLanguage = useCallback((lang: string) => {
+    setLanguageState(lang);
+    try { localStorage.setItem("pf_lang", lang); } catch {}
+  }, []);
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem("pf_dark_mode");
@@ -452,7 +470,7 @@ export default function Index() {
       </div>
 
       <div className="flex-1 overflow-y-auto pb-[90px]">
-        {page === "home" && <HomeScreen />}
+        {page === "home" && <HomeScreen t={t} language={language} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
         {page === "bible" && <BibleScreen />}
