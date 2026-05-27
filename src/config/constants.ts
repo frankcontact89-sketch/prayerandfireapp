@@ -19,6 +19,9 @@ export const APP_CONFIG = {
   // Stripe URLs
   STRIPE_SUBSCRIPTION: "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00",
   STRIPE_ONETIME: "https://buy.stripe.com/28E5kDbjWe2S4mz1rt7bW04",
+
+  // Stripe billing portal — leave empty string to show in-app modal instructions
+  STRIPE_CUSTOMER_PORTAL: "",
   
   // External Links
   BOOK_AMAZON_LINK: "https://a.co/d/dfgHEvM",
