@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Heart, Settings, Share2, ShoppingBag, Flame, Bell, Quote, Sparkles, HandHeart, BookOpen } from "lucide-react";
 
 import { SignInScreen } from "@/components/SignInScreen";
@@ -16,7 +16,7 @@ import { BibleScreen } from "@/components/BibleScreen";
 import { LanguagesScreen } from "@/components/LanguagesScreen";
 
 import { supabase } from "@/integrations/supabase/client";
-import { translations, SupportedLanguage } from "@/config/translations";
+import { translations } from "@/config/translations";
 import { getLastReadAtMs, setLastReadAtNow } from "@/lib/notifications-last-seen";
 
 import realisticFlame from "@/assets/realistic-flame.png";
@@ -223,19 +223,25 @@ const dailyContent = [
   },
 ];
 
-const SUPPORTED_LANGUAGE_CODES = ["en", "es", "pt", "fr", "it", "de", "zh", "ja", "ko", "ar", "hi", "ru", "sw"];
+const SUPPORTED_LANGUAGE_CODES = ["en", "es", "pt", "fr", "it", "de"];
 
-function getDayOfYear(date: Date) {
-  const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date.getTime() - start.getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
+function getFreshVerseIndex() {
+  const lastIndex = Number(localStorage.getItem("pf_last_verse_index") || "-1");
+
+  if (dailyContent.length <= 1) return 0;
+
+  let nextIndex = Math.floor(Math.random() * dailyContent.length);
+
+  while (nextIndex === lastIndex) {
+    nextIndex = Math.floor(Math.random() * dailyContent.length);
+  }
+
+  localStorage.setItem("pf_last_verse_index", String(nextIndex));
+  return nextIndex;
 }
 
 function HomeScreen({ t, language }: { t: (k: any) => string; language: string }) {
-  const today = useMemo(() => {
-    const idx = getDayOfYear(new Date()) % dailyContent.length;
-    return dailyContent[idx];
-  }, []);
+  const [today] = useState(() => dailyContent[getFreshVerseIndex()]);
 
   const labels = {
     en: {
@@ -258,6 +264,27 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
       reflection: "REFLEXÃO DIÁRIA",
       tagline: "Oração que",
       connects: "conecta nações.",
+    },
+    fr: {
+      verse: "VERSET DU JOUR",
+      prayer: "PRIÈRE DU JOUR",
+      reflection: "RÉFLEXION DU JOUR",
+      tagline: "Une prière qui",
+      connects: "unit les nations.",
+    },
+    it: {
+      verse: "VERSO DEL GIORNO",
+      prayer: "PREGHIERA DEL GIORNO",
+      reflection: "RIFLESSIONE DEL GIORNO",
+      tagline: "Preghiera che",
+      connects: "connette le nazioni.",
+    },
+    de: {
+      verse: "VERS DES TAGES",
+      prayer: "TÄGLICHES GEBET",
+      reflection: "TÄGLICHE REFLEXION",
+      tagline: "Gebet, das",
+      connects: "Nationen verbindet.",
     },
   } as const;
 
@@ -340,9 +367,10 @@ export default function Index() {
   });
 
   const setLanguage = useCallback((lang: string) => {
-    setLanguageState(lang);
+    const safeLang = SUPPORTED_LANGUAGE_CODES.includes(lang) ? lang : "en";
+    setLanguageState(safeLang);
     try {
-      localStorage.setItem("pf_lang", lang);
+      localStorage.setItem("pf_lang", safeLang);
     } catch {}
   }, []);
 
@@ -380,9 +408,7 @@ export default function Index() {
     } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setUser(currentSession?.user ?? null);
 
-      if (event === "SIGNED_IN") {
-        setPage("home");
-      }
+      if (event === "SIGNED_IN") setPage("home");
 
       if (event === "SIGNED_OUT") {
         setPage("home");
@@ -427,9 +453,7 @@ export default function Index() {
   }, [user]);
 
   useEffect(() => {
-    if (user) {
-      fetchUnreadCount();
-    }
+    if (user) fetchUnreadCount();
   }, [user, fetchUnreadCount]);
 
   const openNotifications = () => {
@@ -538,7 +562,6 @@ export default function Index() {
         )}
 
         {page === "events" && <EventsScreen t={t} />}
-
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
 
         {page === "profile" && (
@@ -556,7 +579,6 @@ export default function Index() {
         )}
 
         {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
-
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
 
         {page === "bible_study" && (
