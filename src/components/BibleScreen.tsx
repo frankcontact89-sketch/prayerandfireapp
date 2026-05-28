@@ -306,7 +306,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
   if (loading || !books) {
     return (
       <div className={`${pageBg} min-h-[100dvh] flex items-center justify-center`}>
-        <div className="text-orange-500">Loading Bible…</div>
+        <div className="text-orange-500">{tr("bible_loading", "Loading Bible…")}</div>
       </div>
     );
   }
@@ -316,7 +316,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
       <div className="h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+96px)]">
         {view === "books" && (
           <>
-            <Header title="Holy Bible" />
+            <Header title={tr("holy_bible", "Holy Bible")} />
 
             <div className="px-4 sm:px-5 pt-4 pb-8 max-w-[720px] mx-auto">
               <div className="flex gap-2 mb-4">
@@ -325,7 +325,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                   className={`flex-1 flex items-center gap-2 border rounded-xl px-4 py-3 text-sm ${card}`}
                 >
                   <Search className="w-4 h-4" />
-                  Search the Bible
+                  {tr("bible_search", "Search the Bible")}
                 </button>
 
                 <button
@@ -388,6 +388,8 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                 const verseNumber = index + 1;
                 const chapterNumber = chapterIdx + 1;
                 const fav = isFav(currentBook.name, chapterNumber, verseNumber);
+                const noteKey = noteKeyFor(currentBook.name, chapterNumber, verseNumber);
+                const hasNote = !!notes[noteKey];
 
                 return (
                   <div key={index} className={`rounded-xl border p-4 ${card}`}>
@@ -396,7 +398,24 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                       {text}
                     </p>
 
+                    {hasNote && (
+                      <p
+                        className={`mt-3 text-[13px] italic px-3 py-2 rounded-lg border-l-2 border-orange-500 ${
+                          isDay ? "bg-orange-50 text-zinc-700" : "bg-orange-500/10 text-zinc-300"
+                        }`}
+                      >
+                        {notes[noteKey]}
+                      </p>
+                    )}
+
                     <div className="flex items-center justify-end gap-4 mt-3">
+                      <button
+                        onClick={() => openNoteFor(currentBook.name, chapterNumber, verseNumber)}
+                        className={hasNote ? "text-orange-500" : "text-zinc-500"}
+                        aria-label={tr("bible_note", "Note")}
+                      >
+                        <StickyNote className="w-5 h-5" fill={hasNote ? "currentColor" : "none"} />
+                      </button>
                       <button
                         onClick={() =>
                           toggleFavorite({
@@ -422,7 +441,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                   onClick={() => setChapterIdx((current) => Math.max(0, current - 1))}
                   className={`px-4 py-2.5 rounded-xl border text-sm disabled:opacity-30 ${card}`}
                 >
-                  ← Previous
+                  ← {tr("previous", "Previous")}
                 </button>
 
                 <button
@@ -430,7 +449,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                   onClick={() => setChapterIdx((current) => Math.min(currentBook.chapters.length - 1, current + 1))}
                   className={`px-4 py-2.5 rounded-xl border text-sm disabled:opacity-30 ${card}`}
                 >
-                  Next →
+                  {tr("next", "Next")} →
                 </button>
               </div>
             </div>
@@ -439,7 +458,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
         {view === "search" && (
           <>
-            <Header title="Search" onBack={() => setView("books")} />
+            <Header title={tr("search", "Search")} onBack={() => setView("books")} />
 
             <div className="px-4 sm:px-5 pt-4 pb-8 max-w-[720px] mx-auto">
               <div className={`flex items-center gap-2 border rounded-xl px-4 py-3 mb-4 ${card}`}>
@@ -449,7 +468,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                   autoFocus
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search verses…"
+                  placeholder={tr("bible_search_verses", "Search verses…")}
                   className="bg-transparent outline-none flex-1 text-base"
                 />
               </div>
@@ -474,7 +493,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                 ))}
 
                 {query && searchResults.length === 0 && (
-                  <p className="text-zinc-500 text-center text-sm pt-6">No results</p>
+                  <p className="text-zinc-500 text-center text-sm pt-6">{tr("no_results", "No results")}</p>
                 )}
               </div>
             </div>
@@ -483,13 +502,13 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
         {view === "favorites" && (
           <>
-            <Header title="Favorites" onBack={() => setView("books")} />
+            <Header title={tr("favorites", "Favorites")} onBack={() => setView("books")} />
 
             <div className="px-4 sm:px-5 pt-4 pb-8 max-w-[720px] mx-auto space-y-2">
               {favorites.length === 0 && (
                 <div className="text-center pt-12">
                   <Star className="w-10 h-10 text-zinc-500 mx-auto mb-3" />
-                  <p className="text-zinc-500 text-sm">Tap the star on any verse to save it here.</p>
+                  <p className="text-zinc-500 text-sm">{tr("bible_favorites_empty", "Tap the star on any verse to save it here.")}</p>
                 </div>
               )}
 
@@ -523,7 +542,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
           >
             <div className="flex items-center gap-2 mb-4">
               <BookOpen className="w-5 h-5 text-orange-500" />
-              <h3 className="text-[18px] font-semibold">Bible Translation</h3>
+              <h3 className="text-[18px] font-semibold">{tr("bible_translation", "Bible Translation")}</h3>
             </div>
 
             <div className="space-y-2">
@@ -560,17 +579,17 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
           >
             <div className="flex items-center gap-2 mb-4">
               <Type className="w-5 h-5 text-orange-500" />
-              <h3 className="text-[18px] font-semibold">Reading Settings</h3>
+              <h3 className="text-[18px] font-semibold">{tr("bible_reading_settings", "Reading Settings")}</h3>
             </div>
 
             <div className="space-y-5">
               <div>
-                <p className="text-sm mb-2">Font</p>
+                <p className="text-sm mb-2">{tr("font", "Font")}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    ["system", "Default"],
-                    ["serif", "Serif"],
-                    ["mono", "Mono"],
+                    ["system", tr("font_default", "Default")],
+                    ["serif", tr("font_serif", "Serif")],
+                    ["mono", tr("font_mono", "Mono")],
                   ].map(([value, label]) => (
                     <button
                       key={value}
@@ -586,7 +605,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
               </div>
 
               <div>
-                <p className="text-sm mb-2">Font size: {fontSize}px</p>
+                <p className="text-sm mb-2">{tr("font_size", "Font size")}: {fontSize}px</p>
                 <input
                   type="range"
                   min="14"
@@ -598,7 +617,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
               </div>
 
               <div>
-                <p className="text-sm mb-2">Line spacing: {lineHeight}</p>
+                <p className="text-sm mb-2">{tr("line_spacing", "Line spacing")}: {lineHeight}</p>
                 <input
                   type="range"
                   min="1.2"
@@ -615,7 +634,54 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                 className="w-full rounded-xl bg-orange-500 text-white font-semibold py-3 flex items-center justify-center gap-2"
               >
                 {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                {isSpeaking ? "Stop Audio" : "Play Current Chapter"}
+                {isSpeaking ? tr("stop_audio", "Stop Audio") : tr("play_chapter", "Play Current Chapter")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {openNoteKey && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setOpenNoteKey(null)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full rounded-t-2xl p-5 pb-[calc(env(safe-area-inset-bottom)+20px)] ${
+              isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <StickyNote className="w-5 h-5 text-orange-500" />
+              <h3 className="text-[18px] font-semibold">{tr("bible_note", "Note")}</h3>
+            </div>
+
+            <textarea
+              autoFocus
+              value={noteDraft}
+              onChange={(e) => setNoteDraft(e.target.value)}
+              placeholder={tr("bible_note_placeholder", "Write your personal note for this verse…")}
+              rows={6}
+              className={`w-full rounded-xl border p-3 bg-transparent outline-none resize-none text-[15px] ${
+                isDay ? "border-zinc-200" : "border-zinc-800"
+              }`}
+            />
+
+            <div className="flex items-center gap-2 mt-4">
+              <button
+                onClick={deleteCurrentNote}
+                className={`px-4 py-2.5 rounded-xl border text-sm flex items-center gap-2 ${
+                  isDay ? "border-zinc-200" : "border-zinc-800"
+                } text-zinc-500`}
+              >
+                <Trash2 className="w-4 h-4" />
+                {tr("delete", "Delete")}
+              </button>
+
+              <button
+                onClick={saveCurrentNote}
+                className="flex-1 rounded-xl bg-orange-500 text-white font-semibold py-3 flex items-center justify-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                {tr("save", "Save")}
               </button>
             </div>
           </div>
