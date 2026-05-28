@@ -109,6 +109,9 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
   const [chapterIdx, setChapterIdx] = useState(() => Number(localStorage.getItem(CHAPTER_KEY) || 0));
   const [query, setQuery] = useState("");
   const [favorites, setFavorites] = useState<Favorite[]>(loadFavorites);
+  const [notes, setNotes] = useState<Record<string, string>>(loadNotes);
+  const [openNoteKey, setOpenNoteKey] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState("");
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [showReaderSettings, setShowReaderSettings] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -196,6 +199,34 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
         item.translation === translation && item.book === book && item.chapter === chapter && item.verse === verse,
     );
 
+  const noteKeyFor = (book: string, chapter: number, verse: number) =>
+    `${translation}|${book}|${chapter}|${verse}`;
+
+  const openNoteFor = (book: string, chapter: number, verse: number) => {
+    const key = noteKeyFor(book, chapter, verse);
+    setOpenNoteKey(key);
+    setNoteDraft(notes[key] || "");
+  };
+
+  const saveCurrentNote = () => {
+    if (!openNoteKey) return;
+    const next = { ...notes };
+    if (noteDraft.trim()) next[openNoteKey] = noteDraft.trim();
+    else delete next[openNoteKey];
+    setNotes(next);
+    saveNotes(next);
+    setOpenNoteKey(null);
+  };
+
+  const deleteCurrentNote = () => {
+    if (!openNoteKey) return;
+    const next = { ...notes };
+    delete next[openNoteKey];
+    setNotes(next);
+    saveNotes(next);
+    setOpenNoteKey(null);
+  };
+
   const playChapter = () => {
     if (!currentBook || !currentVerses.length) return;
 
@@ -210,7 +241,8 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
       .join(" ")}`;
 
     const utterance = new SpeechSynthesisUtterance(fullText);
-    utterance.lang = translation === "rvr" ? "es-ES" : "en-US";
+    utterance.lang =
+      translation === "rvr" ? "es-ES" : translation === "aa" ? "pt-BR" : "en-US";
     utterance.rate = 0.9;
     utterance.pitch = 1;
 
