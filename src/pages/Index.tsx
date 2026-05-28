@@ -473,7 +473,7 @@ export default function Index() {
         {page === "home" && <HomeScreen t={t} language={language} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
-        {page === "bible" && <BibleScreen />}
+        {page === "bible" && <BibleScreen t={t} language={language} />}
 
         {page === "settings" && (
           <SettingsScreen
