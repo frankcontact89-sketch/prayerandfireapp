@@ -53,8 +53,47 @@ function saveFavorites(favorites: Favorite[]) {
   localStorage.setItem(FAV_KEY, JSON.stringify(favorites));
 }
 
-export function BibleScreen() {
-  const [translation, setTranslation] = useState(() => localStorage.getItem(LANG_KEY) || "kjv");
+function loadNotes(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(NOTES_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveNotes(notes: Record<string, string>) {
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+}
+
+const APP_LANG_TO_BIBLE: Record<string, string> = { en: "kjv", es: "rvr", pt: "aa" };
+
+interface BibleScreenProps {
+  t?: (key: any) => string;
+  language?: string;
+}
+
+export function BibleScreen({ t, language }: BibleScreenProps = {}) {
+  const tr = (k: string, fallback: string) => {
+    if (!t) return fallback;
+    const v = t(k as any);
+    return v && v !== k ? v : fallback;
+  };
+
+  const [translation, setTranslation] = useState(() => {
+    const stored = localStorage.getItem(LANG_KEY);
+    if (stored && TRANSLATIONS.some((x) => x.code === stored)) return stored;
+    return (language && APP_LANG_TO_BIBLE[language]) || "kjv";
+  });
+
+  useEffect(() => {
+    if (!language) return;
+    const mapped = APP_LANG_TO_BIBLE[language];
+    if (mapped && mapped !== translation) {
+      setTranslation(mapped);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
+
   const [mode, setMode] = useState<"day" | "night">(
     () => (localStorage.getItem(MODE_KEY) as "day" | "night") || "night",
   );
