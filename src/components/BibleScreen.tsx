@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type } from "lucide-react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2 } from "lucide-react";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
 type Translation = { code: string; label: string; loader: () => Promise<Book[]> };
@@ -15,9 +15,15 @@ const TRANSLATIONS: Translation[] = [
     label: "Español — Reina-Valera",
     loader: () => import("@/data/bible/rvr.json").then((m) => m.default as Book[]),
   },
+  {
+    code: "aa",
+    label: "Português — Almeida",
+    loader: () => import("@/data/bible/aa.json").then((m) => m.default as Book[]),
+  },
 ];
 
 const FAV_KEY = "pf_bible_favorites";
+const NOTES_KEY = "pf_bible_notes";
 const LANG_KEY = "pf_bible_lang";
 const MODE_KEY = "pf_bible_mode";
 const BOOK_KEY = "pf_bible_book";
