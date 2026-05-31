@@ -19,24 +19,23 @@ interface Product {
 const ORANGE = "#FF6A00";
 
 export function ShoppingScreen({ t }: ShoppingScreenProps) {
-  const [product, setProduct] = useState<Product | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
-    fetchProduct();
+    fetchProducts();
   }, []);
 
-  const fetchProduct = async () => {
+  const fetchProducts = async () => {
     const { data } = await supabase
       .from("products")
       .select("*")
-      .ilike("name", "%voz%")
       .eq("is_active", true)
-      .limit(1)
-      .maybeSingle();
+      .order("is_featured", { ascending: false })
+      .order("created_at", { ascending: false });
 
-    setProduct(data as Product);
+    setProducts((data as Product[]) || []);
     setLoading(false);
   };
 
@@ -57,15 +56,20 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
           </div>
 
           <div>
-            <div style={styles.brandTitle}>Store</div>
-            <div style={styles.brandSub}>Featured resources</div>
+            <div style={styles.brandTitle}>{t("store")}</div>
+            <div style={styles.brandSub}>{t("featuredResources")}</div>
           </div>
         </div>
       </div>
 
       <div style={styles.content}>
-        {product && (
-          <div style={styles.card} onClick={() => setSelectedProduct(product)}>
+        {products.length === 0 && (
+          <div style={{ textAlign: "center", padding: "40px 16px", opacity: 0.7, fontSize: 15 }}>
+            {t("noResourcesAvailable")}
+          </div>
+        )}
+        {products.map((product) => (
+          <div key={product.id} style={{ ...styles.card, marginBottom: 12 }} onClick={() => setSelectedProduct(product)}>
             <div style={styles.compactRow}>
               <div style={styles.imageBox}>
                 {product.image_url ? (
@@ -77,7 +81,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
 
               <div style={styles.cardBody}>
                 <div style={styles.cardTitle}>{product.name}</div>
-                <div style={styles.cardDesc}>Christian book by Aline Ramiro.</div>
+                {product.description && <div style={styles.cardDesc}>{product.description}</div>}
 
                 <button
                   style={styles.primaryBtn}
@@ -89,12 +93,12 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                   }}
                 >
                   <ExternalLink size={15} />
-                  View on Amazon
+                  {(product as any).button_label || "View on Amazon"}
                 </button>
               </div>
             </div>
           </div>
-        )}
+        ))}
       </div>
 
       <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
@@ -115,14 +119,16 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                 </div>
               )}
 
-              <p className="text-white/70 text-center leading-relaxed text-sm">Christian book by Aline Ramiro.</p>
+              {selectedProduct.description && (
+                <p className="text-white/70 text-center leading-relaxed text-sm">{selectedProduct.description}</p>
+              )}
 
               <button
                 onClick={() => window.open(selectedProduct.purchase_url, "_blank", "noopener,noreferrer")}
                 style={styles.primaryBtnFull}
               >
                 <ExternalLink size={18} />
-                View on Amazon
+                {(selectedProduct as any).button_label || "View on Amazon"}
               </button>
             </div>
           )}

@@ -15,16 +15,6 @@ const LANGUAGES = [
   ["English", "en"],
   ["Español", "es"],
   ["Português", "pt"],
-  ["Français", "fr"],
-  ["Italiano", "it"],
-  ["Deutsch", "de"],
-  ["中文", "zh"],
-  ["日本語", "ja"],
-  ["한국어", "ko"],
-  ["العربية", "ar"],
-  ["हिन्दी", "hi"],
-  ["Русский", "ru"],
-  ["Kiswahili", "sw"],
 ];
 
 export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }: LanguagesScreenProps) {
