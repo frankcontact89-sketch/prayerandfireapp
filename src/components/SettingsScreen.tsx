@@ -59,7 +59,7 @@ export function SettingsScreen({
   };
 
   const openCustomerPortal = () => {
-    const portal = APP_CONFIG.STRIPE_CUSTOMER_PORTAL;
+    const portal = APP_CONFIG.STRIPE_CUSTOMER_PORTAL as string;
     if (portal && portal.trim().length > 0) {
       window.open(portal, "_blank", "noopener,noreferrer");
     } else {
