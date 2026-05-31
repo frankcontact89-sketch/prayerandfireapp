@@ -522,6 +522,7 @@ export default function Index() {
         )}
       </div>
 
+      {page !== "admin" && (
       <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-zinc-800 pb-[env(safe-area-inset-bottom)]">
         <nav className="flex justify-around items-center h-[64px] px-6 max-w-[430px] mx-auto">
           <button onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
@@ -541,6 +542,7 @@ export default function Index() {
           </button>
         </nav>
       </div>
+      )}
     </div>
   );
 }
