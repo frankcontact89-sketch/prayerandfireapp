@@ -18,6 +18,13 @@ interface Product {
 
 const ORANGE = "#FF6A00";
 
+function getButtonLabel(url: string, t: (key: string) => string): string {
+  const u = (url || "").toLowerCase();
+  if (u.includes("amazon.") || u.includes("a.co/")) return t("viewOnAmazon");
+  if (u.includes("etsy.")) return t("viewOnEtsy");
+  return t("openLink");
+}
+
 export function ShoppingScreen({ t }: ShoppingScreenProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,7 +100,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                   }}
                 >
                   <ExternalLink size={15} />
-                  {(product as any).button_label || "View on Amazon"}
+                  {getButtonLabel(product.purchase_url, t)}
                 </button>
               </div>
             </div>
@@ -128,7 +135,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
                 style={styles.primaryBtnFull}
               >
                 <ExternalLink size={18} />
-                {(selectedProduct as any).button_label || "View on Amazon"}
+                {getButtonLabel(selectedProduct.purchase_url, t)}
               </button>
             </div>
           )}
