@@ -112,15 +112,17 @@ export function AdminPanel({ t, onBack }: AdminPanelProps) {
       </div>
 
       <Tabs defaultValue="links" className="w-full">
-        <TabsList className="grid w-full grid-cols-7 bg-muted text-xs">
-          <TabsTrigger value="links">Links</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-          <TabsTrigger value="courses">Courses</TabsTrigger>
-          <TabsTrigger value="content">Content</TabsTrigger>
-          <TabsTrigger value="verses">Verses</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-        </TabsList>
+        <div className="w-full overflow-x-auto -mx-2 px-2 [&::-webkit-scrollbar]:hidden">
+          <TabsList className="inline-flex w-auto min-w-full gap-1 bg-muted text-xs whitespace-nowrap">
+            <TabsTrigger value="links" className="px-4">Links</TabsTrigger>
+            <TabsTrigger value="events" className="px-4">Events</TabsTrigger>
+            <TabsTrigger value="products" className="px-4">Products</TabsTrigger>
+            <TabsTrigger value="courses" className="px-4">Courses</TabsTrigger>
+            <TabsTrigger value="content" className="px-4">Content</TabsTrigger>
+            <TabsTrigger value="verses" className="px-4">Verses</TabsTrigger>
+            <TabsTrigger value="notifications" className="px-4">Notifications</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="links" className="mt-6">
           <AdminLinks t={t} />
