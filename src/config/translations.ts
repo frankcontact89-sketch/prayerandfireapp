@@ -715,6 +715,9 @@ export const translations: Record<string, Record<string, string>> = {
     subscriptionUnavailable: "La gestión de suscripciones aún no está disponible.",
     noResourcesAvailable: "No hay recursos disponibles en este momento.",
     featuredResources: "Recursos destacados",
+    viewOnAmazon: "Ver en Amazon",
+    viewOnEtsy: "Ver en Etsy",
+    openLink: "Abrir enlace",
   },
   fr: {
     title: "Prayer & Fire",
@@ -1337,6 +1340,9 @@ export const translations: Record<string, Record<string, string>> = {
     subscriptionUnavailable: "O gerenciamento de assinatura ainda não está disponível.",
     noResourcesAvailable: "Nenhum recurso disponível no momento.",
     featuredResources: "Recursos em destaque",
+    viewOnAmazon: "Ver na Amazon",
+    viewOnEtsy: "Ver no Etsy",
+    openLink: "Abrir link",
   },
   de: {
     title: "Prayer & Fire",
