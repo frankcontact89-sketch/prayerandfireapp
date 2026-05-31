@@ -355,6 +355,9 @@ export const translations: Record<string, Record<string, string>> = {
     subscriptionUnavailable: "Subscription management is not available yet.",
     noResourcesAvailable: "No resources available right now.",
     featuredResources: "Featured resources",
+    viewOnAmazon: "View on Amazon",
+    viewOnEtsy: "View on Etsy",
+    openLink: "Open Link",
   },
   es: {
     title: "Prayer & Fire",
