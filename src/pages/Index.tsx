@@ -22,7 +22,7 @@ import { getLastReadAtMs, setLastReadAtNow } from "@/lib/notifications-last-seen
 import realisticFlame from "@/assets/realistic-flame.png";
 import entryLogo from "@/assets/prayer-fire-entry-logo.png";
 
-const SUPPORTED_LANGUAGE_CODES = ["en", "es", "pt", "fr", "it", "de"];
+const SUPPORTED_LANGUAGE_CODES = ["en", "es", "pt"];
 
 const dailyContent = [
   {
