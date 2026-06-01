@@ -89,7 +89,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
   }
 
   return (
-    <div className="min-h-screen bg-black text-white px-5 pt-2 pb-20 max-w-[430px] mx-auto">
+    <div className="bg-black text-white px-5 pt-2 pb-4 max-w-[430px] mx-auto">
       <header className="mb-2">
         <button onClick={onBack} className="mb-1.5 inline-flex items-center gap-2 text-blue-400 font-semibold text-sm">
           <ArrowLeft className="w-4 h-4" />
