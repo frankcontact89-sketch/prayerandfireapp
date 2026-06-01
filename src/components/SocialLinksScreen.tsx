@@ -89,26 +89,26 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
   }
 
   return (
-    <div className="min-h-screen bg-black text-white px-5 pt-3 pb-24 max-w-[430px] mx-auto">
-      <header className="mb-4">
-        <button onClick={onBack} className="mb-3 inline-flex items-center gap-2 text-blue-400 font-semibold text-sm">
+    <div className="min-h-screen bg-black text-white px-5 pt-2 pb-24 max-w-[430px] mx-auto">
+      <header className="mb-3">
+        <button onClick={onBack} className="mb-2 inline-flex items-center gap-2 text-blue-400 font-semibold text-sm">
           <ArrowLeft className="w-4 h-4" />
           {t("back")}
         </button>
 
-        <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-[#1a0d0d] via-[#09090f] to-[#10182b] p-4 shadow-[0_0_40px_rgba(59,130,246,0.15)]">
-          <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-400/30 px-3 py-1 mb-3">
+        <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-[#1a0d0d] via-[#09090f] to-[#10182b] p-3 shadow-[0_0_40px_rgba(59,130,246,0.15)]">
+          <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-400/30 px-3 py-0.5 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-blue-400" />
             <span className="text-blue-400 text-xs font-bold tracking-wide uppercase">{t("connect")}</span>
           </div>
 
-          <h1 className="text-2xl font-extrabold mb-2">Prayer & Fire</h1>
+          <h1 className="text-xl font-extrabold mb-1">Prayer & Fire</h1>
 
           <p className="text-zinc-400 leading-snug text-[13px]">{t("connect_subtitle")}</p>
         </div>
       </header>
 
-      <section className="space-y-2.5 mb-6">
+      <section className="space-y-2 mb-4">
         <button
           onClick={() => window.open("https://prayerandfire.org", "_blank")}
           className="w-full rounded-xl bg-zinc-950 border border-blue-400/30 hover:border-blue-400 text-white font-semibold py-3 px-4 flex items-center justify-center gap-2 active:scale-95 transition text-sm shadow-[0_0_24px_rgba(59,130,246,0.08)]"

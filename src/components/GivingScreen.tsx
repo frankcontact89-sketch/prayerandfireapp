@@ -28,13 +28,13 @@ export function GivingScreen({ t }: GivingScreenProps) {
       <div className="mb-6 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 mb-3">
           <Sparkles className="w-4 h-4 text-orange-500" />
-          <span className="text-[13px] text-orange-400 font-semibold tracking-wide">SUPPORT PRAYER & FIRE</span>
+          <span className="text-[13px] text-orange-400 font-semibold tracking-wide uppercase">{t("supportPrayerFire")}</span>
         </div>
 
-        <h1 className="text-[30px] font-extrabold tracking-tight mb-2">Giving</h1>
+        <h1 className="text-[30px] font-extrabold tracking-tight mb-2">{t("giving_title")}</h1>
 
         <p className="text-zinc-300 text-[15px] leading-relaxed max-w-sm mx-auto">
-          Support Prayer & Fire global mission.
+          {t("giving_hero_subtitle")}
         </p>
       </div>
 
@@ -50,7 +50,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
         >
           <div className="flex flex-col items-center gap-1.5">
             <Heart className="w-5 h-5" />
-            <span className="text-[13px] font-semibold">Monthly</span>
+            <span className="text-[13px] font-semibold">{t("monthly")}</span>
           </div>
         </button>
 
@@ -64,7 +64,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
         >
           <div className="flex flex-col items-center gap-1.5">
             <DollarSign className="w-5 h-5" />
-            <span className="text-[13px] font-semibold">One-Time</span>
+            <span className="text-[13px] font-semibold">{t("oneTime")}</span>
           </div>
         </button>
 
@@ -78,7 +78,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
         >
           <div className="flex flex-col items-center gap-1.5">
             <CreditCard className="w-5 h-5" />
-            <span className="text-[13px] font-semibold">Mission</span>
+            <span className="text-[13px] font-semibold">{t("giving_mission_label")}</span>
           </div>
         </button>
       </div>
@@ -88,20 +88,16 @@ export function GivingScreen({ t }: GivingScreenProps) {
         {givingType === "subscription" && (
           <div className="space-y-5">
             <div>
-              <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">Monthly Support</p>
-
-              <h2 className="text-[22px] font-semibold mb-2">Help Sustain the Mission</h2>
-
-              <p className="text-zinc-200 text-[15px] leading-relaxed">
-                Support the Prayer & Fire mission around the world.
-              </p>
+              <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">{t("giving_monthly_eyebrow")}</p>
+              <h2 className="text-[22px] font-semibold mb-2">{t("giving_monthly_title")}</h2>
+              <p className="text-zinc-200 text-[15px] leading-relaxed">{t("giving_monthly_desc")}</p>
             </div>
 
             <Button
               onClick={handleGive}
               className="w-full h-[50px] rounded-2xl text-[15px] font-bold bg-orange-500 hover:bg-orange-600"
             >
-              Set Up Monthly Giving
+              {t("setUpMonthlyGiving")}
             </Button>
           </div>
         )}
@@ -109,20 +105,16 @@ export function GivingScreen({ t }: GivingScreenProps) {
         {givingType === "onetime" && (
           <div className="space-y-5">
             <div>
-              <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">One-Time Gift</p>
-
-              <h2 className="text-[22px] font-semibold mb-2">Support the Work</h2>
-
-              <p className="text-zinc-200 text-[15px] leading-relaxed">
-                Your support helps expand Prayer & Fire global mission.
-              </p>
+              <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">{t("giving_onetime_eyebrow")}</p>
+              <h2 className="text-[22px] font-semibold mb-2">{t("giving_onetime_title")}</h2>
+              <p className="text-zinc-200 text-[15px] leading-relaxed">{t("giving_onetime_desc")}</p>
             </div>
 
             <Button
               onClick={handleGive}
               className="w-full h-[50px] rounded-2xl text-[15px] font-bold bg-orange-500 hover:bg-orange-600"
             >
-              Give Now
+              {t("giveNow")}
             </Button>
           </div>
         )}
@@ -130,20 +122,16 @@ export function GivingScreen({ t }: GivingScreenProps) {
         {givingType === "project" && (
           <div className="space-y-5">
             <div>
-              <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">Mission Support</p>
-
-              <h2 className="text-[22px] font-semibold mb-2">Expand Global Outreach</h2>
-
-              <p className="text-zinc-200 text-[15px] leading-relaxed">
-                Help support Prayer & Fire global mission around the world.
-              </p>
+              <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">{t("giving_mission_eyebrow")}</p>
+              <h2 className="text-[22px] font-semibold mb-2">{t("giving_mission_title")}</h2>
+              <p className="text-zinc-200 text-[15px] leading-relaxed">{t("giving_mission_desc")}</p>
             </div>
 
             <Button
               onClick={handleGive}
               className="w-full h-[50px] rounded-2xl text-[15px] font-bold bg-orange-500 hover:bg-orange-600"
             >
-              Support Mission
+              {t("giving_mission_btn")}
             </Button>
           </div>
         )}

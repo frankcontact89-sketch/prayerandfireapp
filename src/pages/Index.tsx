@@ -444,27 +444,36 @@ export default function Index() {
   return (
     <div className="flex flex-col min-h-screen bg-black font-sans">
       <div className="sticky top-0 z-30 bg-black/80 backdrop-blur-md border-b border-zinc-800 pt-[env(safe-area-inset-top)]">
-        <div className="flex justify-between items-center px-5 py-3">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setPage("settings")} className="text-orange-500">
-              <Settings className="w-5 h-5" />
+        <div className="flex justify-between items-center px-4 py-2">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage("settings")}
+              aria-label={t("settings")}
+              className="text-orange-500 w-12 h-12 flex items-center justify-center"
+            >
+              <Settings className="w-7 h-7" />
             </button>
 
             <button
               onClick={openNotifications}
-              className={`relative ${unreadNotifications > 0 ? "text-blue-500" : "text-orange-500"}`}
+              aria-label={t("notifications")}
+              className={`relative w-12 h-12 flex items-center justify-center ${unreadNotifications > 0 ? "text-blue-500" : "text-orange-500"}`}
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="w-7 h-7" />
               {unreadNotifications > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
+                <span className="absolute top-1 right-1 bg-blue-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
                   {unreadNotifications > 99 ? "99+" : unreadNotifications}
                 </span>
               )}
             </button>
           </div>
 
-          <button onClick={() => setPage("social")} className="text-orange-500">
-            <Share2 className="w-5 h-5" />
+          <button
+            onClick={() => setPage("social")}
+            aria-label={t("connect")}
+            className="text-orange-500 w-12 h-12 flex items-center justify-center"
+          >
+            <Share2 className="w-7 h-7" />
           </button>
         </div>
       </div>
