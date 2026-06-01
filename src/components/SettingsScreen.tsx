@@ -60,8 +60,7 @@ export function SettingsScreen({
 
   const openCustomerPortal = () => {
     const portal = (APP_CONFIG.STRIPE_CUSTOMER_PORTAL as string) || "";
-    const fallback = (APP_CONFIG.STRIPE_SUBSCRIPTION as string) || "";
-    const target = portal.trim() || fallback.trim();
+    const target = portal.trim();
     if (target) {
       window.open(target, "_blank", "noopener,noreferrer");
     } else {
