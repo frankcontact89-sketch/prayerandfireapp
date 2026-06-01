@@ -89,8 +89,8 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
   }
 
   return (
-    <div className="bg-black text-white px-5 pt-2 pb-4 max-w-[430px] mx-auto">
-      <header className="mb-2">
+    <div className="bg-black text-white px-5 pt-2 pb-4 max-w-[430px] mx-auto min-h-full flex flex-col">
+      <header className="mb-3">
         <button onClick={onBack} className="mb-1.5 inline-flex items-center gap-2 text-blue-400 font-semibold text-sm">
           <ArrowLeft className="w-4 h-4" />
           {t("back")}
@@ -108,7 +108,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
         </div>
       </header>
 
-      <section className="space-y-2">
+      <section className="flex-1 flex flex-col justify-center gap-3 py-2">
         <button
           onClick={() => window.open("https://prayerandfire.org", "_blank")}
           className="w-full rounded-xl bg-zinc-950 border border-blue-400/30 hover:border-blue-400 text-white font-semibold py-3 px-4 flex items-center justify-center gap-2 active:scale-95 transition text-sm shadow-[0_0_24px_rgba(59,130,246,0.08)]"
