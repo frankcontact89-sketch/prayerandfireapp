@@ -4,7 +4,6 @@ import { Bell, User, Scale, LogOut, Languages, CreditCard } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { APP_CONFIG } from "@/config/constants";
-import { useToast } from "@/hooks/use-toast";
 
 interface SettingsScreenProps {
   t: (key: string) => string;
@@ -38,7 +37,6 @@ export function SettingsScreen({
   const { isAdmin } = useUserRole();
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     loadAvatar();
@@ -59,13 +57,7 @@ export function SettingsScreen({
   };
 
   const openCustomerPortal = () => {
-    const portal = (APP_CONFIG.STRIPE_CUSTOMER_PORTAL as string) || "";
-    const target = portal.trim();
-    if (target) {
-      window.open(target, "_blank", "noopener,noreferrer");
-    } else {
-      toast({ title: t("manageSubscription"), description: t("subscriptionUnavailable") });
-    }
+    window.open(APP_CONFIG.STRIPE_CUSTOMER_PORTAL, "_blank", "noopener,noreferrer");
   };
 
   return (
