@@ -59,9 +59,11 @@ export function SettingsScreen({
   };
 
   const openCustomerPortal = () => {
-    const portal = APP_CONFIG.STRIPE_CUSTOMER_PORTAL as string;
-    if (portal && portal.trim().length > 0) {
-      window.open(portal, "_blank", "noopener,noreferrer");
+    const portal = (APP_CONFIG.STRIPE_CUSTOMER_PORTAL as string) || "";
+    const fallback = (APP_CONFIG.STRIPE_SUBSCRIPTION as string) || "";
+    const target = portal.trim() || fallback.trim();
+    if (target) {
+      window.open(target, "_blank", "noopener,noreferrer");
     } else {
       toast({ title: t("manageSubscription"), description: t("subscriptionUnavailable") });
     }
@@ -96,36 +98,36 @@ export function SettingsScreen({
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={onNotificationsClick}
-          className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left"
+          className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left"
         >
           <Bell className="w-6 h-6 text-orange-500 mb-2" />
 
-          <h3 className="text-sm font-bold text-white">{t("notifications")}</h3>
+          <h3 className="text-sm font-bold text-white leading-tight">{t("notifications")}</h3>
         </button>
 
-        <button onClick={onLegalClick} className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left">
+        <button onClick={onLegalClick} className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left">
           <Scale className="w-6 h-6 text-orange-500 mb-2" />
 
-          <h3 className="text-sm font-bold text-white">{t("privacy")}</h3>
+          <h3 className="text-sm font-bold text-white leading-tight">{t("privacy")}</h3>
         </button>
 
-        <button onClick={setLanguage} className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left">
+        <button onClick={setLanguage} className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left">
           <Languages className="w-6 h-6 text-orange-500 mb-2" />
 
-          <h3 className="text-sm font-bold text-white">{t("language")}</h3>
+          <h3 className="text-sm font-bold text-white leading-tight">{t("language")}</h3>
 
           <p className="text-xs text-zinc-500 uppercase">{language || "EN"}</p>
         </button>
 
         <button
           onClick={openCustomerPortal}
-          className="bg-card border border-border rounded-2xl p-3 h-[96px] text-left"
+          className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left"
         >
           <CreditCard className="w-6 h-6 text-orange-500 mb-2" />
 
-          <h3 className="text-sm font-bold text-white">{t("manageSubscription")}</h3>
+          <h3 className="text-sm font-bold text-white leading-tight">{t("manageSubscription")}</h3>
 
-          <p className="text-xs text-zinc-500 mt-1">{t("billingCardsCancel")}</p>
+          <p className="text-xs text-zinc-400 mt-1 leading-tight">{t("billingCardsCancel")}</p>
         </button>
       </div>
 
