@@ -42,7 +42,13 @@ export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }
   const hasChanges = selectedLanguage !== currentLanguage;
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 space-y-6">
+    <div
+      className="min-h-screen bg-black text-white p-6 space-y-6"
+      style={{
+        paddingTop: "max(1.5rem, env(safe-area-inset-top))",
+        paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
+      }}
+    >
       <div className="flex items-center gap-4 mb-6">
         <Button variant="ghost" size="icon" onClick={onBack}>
           ←
