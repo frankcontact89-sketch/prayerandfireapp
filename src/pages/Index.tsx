@@ -11,7 +11,6 @@ import { SocialLinksScreen } from "@/components/SocialLinksScreen";
 import { ProfileScreen } from "@/components/ProfileScreen";
 import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { LegalCenter } from "@/components/LegalCenter";
-import { BibleStudyScreen } from "@/components/BibleStudyScreen";
 import { BibleScreen } from "@/components/BibleScreen";
 import { LanguagesScreen } from "@/components/LanguagesScreen";
 
@@ -526,9 +525,6 @@ export default function Index() {
         )}
         {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
-        {page === "bible_study" && (
-          <BibleStudyScreen onBack={() => setPage("home")} onContact={() => setPage("home")} />
-        )}
       </div>
 
       {page !== "admin" && (
