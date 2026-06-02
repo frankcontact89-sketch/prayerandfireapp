@@ -442,7 +442,10 @@ export default function Index() {
 
   return (
     <div className="flex flex-col min-h-screen bg-black font-sans">
-      <div className="sticky top-0 z-30 bg-black/80 backdrop-blur-md border-b border-zinc-800 pt-[env(safe-area-inset-top)]">
+      <div
+        className="sticky top-0 z-30 bg-black/95 backdrop-blur-md border-b border-zinc-800"
+        style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
+      >
         <div className="flex justify-between items-center px-4 py-2">
           <div className="flex items-center gap-1">
             <button
