@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* iOS safe-area background: keep status bar / notch area opaque so content
+   never appears to bleed beneath the Dynamic Island. */
+html, body, #root {
+  background-color: #000;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Reusable safe-area helpers */
+@layer utilities {
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-pad-top { padding-top: max(1rem, env(safe-area-inset-top)); }
+  .safe-pad-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
