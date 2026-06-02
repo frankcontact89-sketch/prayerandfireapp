@@ -141,7 +141,7 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
                 <li>Users may request data deletion.</li>
                 <li>App not intended for children under 13.</li>
                 <li>Contact: <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></li>
-                <li>Website: <a href="https://prayerandfire.app" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.app</a></li>
+                <li>Website: <a href="https://prayerandfire.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.org</a></li>
               </ul>
             </AccordionContent>
           </AccordionItem>
@@ -183,7 +183,7 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
               <div className="space-y-3 text-muted-foreground text-sm leading-relaxed">
                 <p>If you need help or have any questions, please contact us:</p>
                 <p><strong className="text-foreground">Email:</strong> <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></p>
-                <p><strong className="text-foreground">Website:</strong> <a href="https://prayerandfire.app" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.app</a></p>
+                <p><strong className="text-foreground">Website:</strong> <a href="https://prayerandfire.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.org</a></p>
                 <p><strong className="text-foreground">Response time:</strong> 24–48 business hours</p>
               </div>
             </AccordionContent>
@@ -196,7 +196,7 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
           <p className="mt-2">
             <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a>
             {" • "}
-            <a href="https://prayerandfire.app" className="text-primary hover:underline">prayerandfire.app</a>
+            <a href="https://prayerandfire.org" className="text-primary hover:underline">prayerandfire.org</a>
           </p>
         </div>
       </div>

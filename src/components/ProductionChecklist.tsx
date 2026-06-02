@@ -14,8 +14,8 @@ const checklist: ChecklistItem[] = [
   {
     category: "Domain & Links",
     items: [
-      { name: "Primary domain: https://prayerandfire.app", completed: true },
-      { name: "Share buttons use prayerandfire.app", completed: true },
+      { name: "Primary domain: https://prayerandfire.org", completed: true },
+      { name: "Share buttons use prayerandfire.org", completed: true },
       { name: "Landing page visible without login", completed: true },
       { name: "Legal pages accessible from landing", completed: true },
     ],

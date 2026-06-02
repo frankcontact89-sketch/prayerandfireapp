@@ -3,8 +3,8 @@
 
 export const APP_CONFIG = {
   // Primary domain - all URLs should point here
-  DOMAIN: "prayerandfire.app",
-  URL: "https://prayerandfire.app",
+  DOMAIN: "prayerandfire.org",
+  URL: "https://prayerandfire.org",
   
   // Contact & Support
   SUPPORT_EMAIL: "prayerandfireglobal@gmail.com",
@@ -28,4 +28,4 @@ export const APP_CONFIG = {
 } as const;
 
 // Note: If prayerandfireapp.com is added later, 
-// configure it as a redirect to prayerandfire.app in DNS settings
+// configure it as a redirect to prayerandfire.org in DNS settings
