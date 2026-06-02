@@ -16,7 +16,13 @@ interface LegalCenterProps {
 
 export function LegalCenter({ t, onBack }: LegalCenterProps) {
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
+    <div
+      className="max-w-2xl mx-auto px-6 space-y-6"
+      style={{
+        paddingTop: "max(1.5rem, env(safe-area-inset-top))",
+        paddingBottom: "max(6rem, calc(env(safe-area-inset-bottom) + 6rem))",
+      }}
+    >
       <button
         onClick={onBack}
         className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-4"
