@@ -16,7 +16,13 @@ interface LegalCenterProps {
 
 export function LegalCenter({ t, onBack }: LegalCenterProps) {
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
+    <div
+      className="max-w-2xl mx-auto px-6 space-y-6"
+      style={{
+        paddingTop: "max(1.5rem, env(safe-area-inset-top))",
+        paddingBottom: "max(6rem, calc(env(safe-area-inset-bottom) + 6rem))",
+      }}
+    >
       <button
         onClick={onBack}
         className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-4"
@@ -140,7 +146,7 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
               <li>{t("privacyDeletion")}</li>
               <li>{t("privacyChildren")}</li>
               <li>{t("contact")}: <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></li>
-              <li>{t("website")}: <a href="https://prayerandfire.app" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.app</a></li>
+              <li>{t("website")}: <a href="https://prayerandfire.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.org</a></li>
             </ul>
           </AccordionContent>
         </AccordionItem>
@@ -182,7 +188,7 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
             <div className="space-y-3 text-muted-foreground text-sm leading-relaxed">
               <p>If you need help or have any questions, please contact us:</p>
               <p><strong className="text-foreground">Email:</strong> <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></p>
-              <p><strong className="text-foreground">Website:</strong> <a href="https://prayerandfire.app" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.app</a></p>
+              <p><strong className="text-foreground">Website:</strong> <a href="https://prayerandfire.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.org</a></p>
               <p><strong className="text-foreground">Response time:</strong> 24–48 business hours</p>
             </div>
           </AccordionContent>

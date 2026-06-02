@@ -82,8 +82,6 @@ export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }
           {t("saveChanges")}
         </Button>
       </div>
-
-      <p className="text-center text-sm text-zinc-400">{t("translation_note")}</p>
     </div>
   );
 }
