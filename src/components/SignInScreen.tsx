@@ -173,7 +173,13 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background p-6">
+    <div
+      className="flex items-center justify-center min-h-screen bg-background p-6"
+      style={{
+        paddingTop: "max(1.5rem, env(safe-area-inset-top))",
+        paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
+      }}
+    >
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <img src={entryLogo} alt="Prayer & Fire Logo" className="w-32 h-32 object-contain animate-pulse" />
@@ -184,7 +190,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         <div className="mt-6 space-y-[15px]">
           <Input
             type="email"
-            placeholder="Email or Username"
+            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full bg-card border border-border rounded-xl text-foreground h-12 px-4 focus:border-primary transition-colors"

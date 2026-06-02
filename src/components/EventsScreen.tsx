@@ -224,8 +224,14 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
-        Events
+        {t("events")}
       </h1>
+
+      {events.length === 0 && (
+        <div className="text-center py-16 text-muted-foreground text-sm">
+          {t("noEventsYet") || "No upcoming events yet."}
+        </div>
+      )}
 
       <div className="grid gap-4">
         {events.map((event) => (
