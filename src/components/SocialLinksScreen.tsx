@@ -64,7 +64,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
   if (showWhatsAppContacts) {
     return (
-      <div className="min-h-screen bg-black text-white px-5 pt-4 pb-24 max-w-[430px] mx-auto">
+      <div className="min-h-screen bg-black text-white px-5 pt-4 pb-24 max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto">
         <div className="flex items-center gap-3 mb-5">
           <button onClick={() => setShowWhatsAppContacts(false)}>
             <ArrowLeft className="w-5 h-5 text-blue-400" />
@@ -89,7 +89,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
   }
 
   return (
-    <div className="bg-black text-white px-5 pt-2 pb-4 max-w-[430px] mx-auto min-h-[calc(100dvh-160px)] flex flex-col">
+    <div className="bg-black text-white px-5 pt-2 pb-4 max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto min-h-[calc(100dvh-160px)] flex flex-col">
       <header className="mb-3">
         <button onClick={onBack} className="mb-1.5 inline-flex items-center gap-2 text-blue-400 font-semibold text-sm">
           <ArrowLeft className="w-4 h-4" />

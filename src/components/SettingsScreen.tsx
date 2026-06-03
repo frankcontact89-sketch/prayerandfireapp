@@ -61,7 +61,7 @@ export function SettingsScreen({
   };
 
   return (
-    <div className="max-w-[430px] mx-auto px-4 py-3 pb-24 space-y-3">
+    <div className="max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto px-4 py-3 pb-24 space-y-3">
       <h2 className="text-2xl font-bold text-white">{t("settings")}</h2>
 
       <button onClick={onProfileClick} className="w-full bg-card border border-border rounded-2xl p-3 text-left">
