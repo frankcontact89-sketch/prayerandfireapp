@@ -45,18 +45,18 @@ export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }
     <div
       className="min-h-screen bg-black text-white p-6 space-y-6"
       style={{
-        paddingTop: "max(1.5rem, env(safe-area-inset-top))",
+        paddingTop: "calc(env(safe-area-inset-top) + 4rem)",
         paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
       }}
     >
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="icon" onClick={onBack}>
           ←
         </Button>
 
-        <div className="flex items-center gap-3">
-          <Globe className="w-8 h-8 text-orange-500" />
-          <h1 className="text-3xl font-extrabold text-white">{t("select_language")}</h1>
+        <div className="flex items-center gap-2 min-w-0">
+          <Globe className="w-6 h-6 text-orange-500 shrink-0" />
+          <h1 className="text-2xl font-extrabold text-white truncate">{t("select_language")}</h1>
         </div>
       </div>
 
