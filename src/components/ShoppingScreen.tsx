@@ -64,7 +64,6 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
 
           <div>
             <div style={styles.brandTitle}>{t("store")}</div>
-            <div style={styles.brandSub}>{t("featuredResources")}</div>
           </div>
         </div>
       </div>
