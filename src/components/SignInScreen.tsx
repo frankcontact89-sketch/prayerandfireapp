@@ -19,7 +19,54 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isForgotUsername, setIsForgotUsername] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = setInterval(() => setResendCooldown((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => clearInterval(id);
+  }, [resendCooldown]);
+
+  const friendlyError = (msg: string | undefined): string => {
+    if (!msg) return "An unexpected error occurred";
+    if (/for security purposes/i.test(msg) || /only request this after/i.test(msg) || /rate limit/i.test(msg)) {
+      return "Please wait a few seconds before requesting another confirmation email.";
+    }
+    return msg;
+  };
+
+  const handleResendConfirmation = async () => {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      toast({ title: "Error", description: "Please enter your email", variant: "destructive" });
+      return;
+    }
+    if (resendCooldown > 0) {
+      toast({ title: "Please wait", description: "Please wait before requesting another confirmation email." });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: trimmedEmail,
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      if (error) throw error;
+      toast({ title: "Email sent", description: "Confirmation email resent. Please check your inbox." });
+      setResendCooldown(45);
+    } catch (error: any) {
+      console.error("Resend confirmation error:", error);
+      toast({ title: "Error", description: friendlyError(error?.message), variant: "destructive" });
+      if (/only request this after|rate limit|for security purposes/i.test(error?.message || "")) {
+        setResendCooldown(45);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAuth = async () => {
     if (isForgotUsername) {
@@ -138,9 +185,11 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
             });
           } else {
             toast({
-              title: "Account created!",
-              description: "Please check your email to confirm your account",
+              title: "Account created",
+              description: "Please check your email and confirm your account before signing in.",
             });
+            setAwaitingConfirmation(true);
+            setResendCooldown(45);
             setIsSignUp(false);
           }
         }
@@ -161,9 +210,19 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
       }
     } catch (error: any) {
       console.error("Auth error:", error);
+      const msg = error?.message || "";
+      if (/email not confirmed/i.test(msg)) {
+        setAwaitingConfirmation(true);
+        toast({
+          title: "Email not confirmed",
+          description: "Please check your email and confirm your account before signing in.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
         title: "Error",
-        description: error?.message || "An unexpected error occurred",
+        description: friendlyError(msg),
         variant: "destructive",
       });
     } finally {
@@ -230,6 +289,24 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
             >
               {isSignUp ? "Already have account?" : "Register"}
             </Button>
+          )}
+
+          {awaitingConfirmation && !isForgotPassword && !isForgotUsername && (
+            <div className="space-y-2 mt-2">
+              <p className="text-sm text-muted-foreground text-center">
+                Please check your email and confirm your account before signing in.
+              </p>
+              <Button
+                variant="outline"
+                onClick={handleResendConfirmation}
+                disabled={loading || resendCooldown > 0}
+                className="w-full rounded-xl h-12"
+              >
+                {resendCooldown > 0
+                  ? `Resend confirmation email (${resendCooldown}s)`
+                  : "Resend confirmation email"}
+              </Button>
+            </div>
           )}
 
           {(isForgotPassword || isForgotUsername) && (
