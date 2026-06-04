@@ -123,9 +123,23 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const sendFeedback = async () => {
     if (!feedbackMessage.trim()) { toast({ title: t("error"), description: t("pleaseEnterFeedback"), variant: "destructive" }); return; }
     setSendingFeedback(true);
-    const { error } = await supabase.from("notifications").insert({ title: "User Feedback", message: feedbackMessage.trim(), type: "feedback", user_id: null });
-    if (error) toast({ title: t("error"), description: t("failedToSendFeedback"), variant: "destructive" });
-    else { toast({ title: t("success"), description: t("thankYouFeedback") }); setFeedbackMessage(""); setFeedbackOpen(false); }
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await (supabase as any).from("submissions").insert({
+        type: "feedback",
+        name: user?.user_metadata?.username || user?.email?.split("@")[0] || "Anonymous",
+        email: user?.email || "anonymous@app.local",
+        message: feedbackMessage.trim(),
+        user_id: user?.id ?? null,
+      });
+      if (error) throw error;
+      toast({ title: t("success"), description: t("thankYouFeedback") });
+      setFeedbackMessage("");
+      setFeedbackOpen(false);
+    } catch (err: any) {
+      console.error("Feedback submission error:", err);
+      toast({ title: t("error"), description: err?.message || t("failedToSendFeedback"), variant: "destructive" });
+    }
     setSendingFeedback(false);
   };
 
@@ -143,17 +157,10 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
           <div className="max-w-2xl mx-auto space-y-4">
             <div className="flex items-center gap-3"><div className="p-3 rounded-full bg-primary text-primary-foreground"><Flame className="w-6 h-6" /></div><div><h3 className="text-xl font-bold text-foreground">{selectedNotification.title}</h3><p className="text-sm text-muted-foreground">{new Date(selectedNotification.created_at).toLocaleDateString()}</p></div></div>
             <div className="bg-muted/30 rounded-lg p-6"><p className="text-foreground text-lg leading-relaxed whitespace-pre-wrap">{selectedNotification.message}</p></div>
-            {selectedNotification.link && (
+            {selectedNotification.link && /^https?:\/\//i.test(selectedNotification.link) && (
               <Button 
                 onClick={() => {
-                  // Handle in-app navigation for store links
-                  if (selectedNotification.link === '/store' || selectedNotification.link?.startsWith('/store')) {
-                    setSelectedNotification(null);
-                    // Trigger navigation via parent - for now open external
-                    window.location.hash = selectedNotification.link;
-                  } else {
-                    window.open(selectedNotification.link!, "_blank");
-                  }
+                  window.open(selectedNotification.link!, "_blank");
                 }} 
                 className="w-full"
               >
