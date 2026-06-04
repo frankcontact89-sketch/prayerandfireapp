@@ -138,7 +138,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
       setFeedbackOpen(false);
     } catch (err: any) {
       console.error("Feedback submission error:", err);
-      toast({ title: t("error"), description: err?.message || t("failedToSendFeedback"), variant: "destructive" });
+      toast({ title: t("error"), description: t("failedToSendFeedback"), variant: "destructive" });
     }
     setSendingFeedback(false);
   };

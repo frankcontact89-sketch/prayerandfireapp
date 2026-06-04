@@ -1,0 +1,2 @@
+ALTER TABLE public.submissions DROP CONSTRAINT submissions_type_check;
+ALTER TABLE public.submissions ADD CONSTRAINT submissions_type_check CHECK (type = ANY (ARRAY['prayer_request'::text, 'testimony'::text, 'contact'::text, 'feedback'::text]));
