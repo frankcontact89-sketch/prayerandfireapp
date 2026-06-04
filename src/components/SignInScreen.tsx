@@ -122,19 +122,6 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         if (error) throw error;
 
         if (data.user) {
-          const { error: profileError } = await supabase.from("profiles").insert([
-            {
-              id: data.user.id,
-              email: data.user.email,
-              username: email.split("@")[0],
-              welcome_seen: false,
-            },
-          ]);
-
-          if (profileError) {
-            console.error("Profile creation error:", profileError);
-          }
-
           if (data.session) {
             setUser(data.user);
             toast({
