@@ -34,6 +34,9 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
     if (/for security purposes/i.test(msg) || /only request this after/i.test(msg) || /rate limit/i.test(msg)) {
       return "Please wait a few seconds before requesting another confirmation email.";
     }
+    if (/invalid login credentials/i.test(msg)) {
+      return "Incorrect email or password. If you just registered, make sure you confirmed your email first.";
+    }
     return msg;
   };
 
