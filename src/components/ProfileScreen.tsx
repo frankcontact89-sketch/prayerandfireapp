@@ -76,9 +76,62 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) await uploadAvatar(file);
-    setShowImageDialog(false);
+    try {
+      const file = e.target.files?.[0];
+      if (file) await uploadAvatar(file);
+    } catch (err: any) {
+      console.error("File select error:", err);
+      toast({ title: t("error"), description: err?.message || t("couldNotUploadPhoto"), variant: "destructive" });
+    } finally {
+      if (e.target) e.target.value = "";
+      setShowImageDialog(false);
+    }
+  };
+
+  const isCameraCaptureSupported = () => {
+    try {
+      const input = document.createElement("input");
+      input.setAttribute("type", "file");
+      // If capture attribute isn't supported, this stays empty/undefined
+      const supportsCapture = "capture" in input;
+      const isIPad = /iPad/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1);
+      // Many iPads still support capture via Safari; only block if API is truly missing
+      return supportsCapture && !!navigator.mediaDevices;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleTakePhoto = () => {
+    try {
+      if (!isCameraCaptureSupported()) {
+        toast({
+          title: t("error") || "Camera unavailable",
+          description: t("cameraUnavailableUseLibrary") || "Camera not available. Opening photo library instead.",
+        });
+        fileInputRef.current?.click();
+        return;
+      }
+      cameraInputRef.current?.click();
+    } catch (err: any) {
+      console.error("Take photo error:", err);
+      toast({
+        title: t("error"),
+        description: err?.message || t("couldNotUploadPhoto"),
+        variant: "destructive",
+      });
+      try { fileInputRef.current?.click(); } catch {}
+    }
+  };
+
+  const handleUploadPhoto = () => {
+    try {
+      fileInputRef.current?.click();
+    } catch (err: any) {
+      console.error("Upload photo error:", err);
+      toast({ title: t("error"), description: err?.message || t("couldNotUploadPhoto"), variant: "destructive" });
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -141,8 +194,8 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
         <AlertDialogContent>
           <AlertDialogHeader><AlertDialogTitle>{t("choosePhotoSource")}</AlertDialogTitle><AlertDialogDescription>{t("selectHowToAddPhoto")}</AlertDialogDescription></AlertDialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
-            <Button variant="outline" className="h-24 flex flex-col gap-2" onClick={() => cameraInputRef.current?.click()}><Camera className="w-8 h-8" /><span>{t("takePhoto")}</span></Button>
-            <Button variant="outline" className="h-24 flex flex-col gap-2" onClick={() => fileInputRef.current?.click()}><Upload className="w-8 h-8" /><span>{t("uploadPhoto")}</span></Button>
+            <Button variant="outline" className="h-24 flex flex-col gap-2" onClick={handleTakePhoto}><Camera className="w-8 h-8" /><span>{t("takePhoto")}</span></Button>
+            <Button variant="outline" className="h-24 flex flex-col gap-2" onClick={handleUploadPhoto}><Upload className="w-8 h-8" /><span>{t("uploadPhoto")}</span></Button>
           </div>
           <AlertDialogFooter><AlertDialogCancel>{t("cancel")}</AlertDialogCancel></AlertDialogFooter>
         </AlertDialogContent>
