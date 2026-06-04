@@ -99,10 +99,15 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
       return;
     }
 
-    if (!email || !password) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
       toast({
         title: "Error",
-        description: "Please fill all fields",
+        description: !trimmedEmail && !password
+          ? "Please enter your email and password"
+          : !trimmedEmail
+            ? "Please enter your email"
+            : "Please enter your password",
         variant: "destructive",
       });
       return;
@@ -112,14 +117,17 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
     try {
       if (isSignUp) {
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: trimmedEmail,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Signup error:", error);
+          throw error;
+        }
 
         if (data.user) {
           if (data.session) {
@@ -138,20 +146,24 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: trimmedEmail,
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Sign in error:", error);
+          throw error;
+        }
 
         if (data.user) {
           setUser(data.user);
         }
       }
     } catch (error: any) {
+      console.error("Auth error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error?.message || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
