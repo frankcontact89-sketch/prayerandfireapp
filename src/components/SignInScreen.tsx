@@ -37,7 +37,10 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
     if (/invalid login credentials/i.test(msg)) {
       return "Incorrect email or password. If you just registered, make sure you confirmed your email first.";
     }
-    return msg;
+    if (/email not confirmed/i.test(msg)) {
+      return "Please check your email and confirm your account before signing in.";
+    }
+    return "Something went wrong. Please try again.";
   };
 
   const handleResendConfirmation = async () => {
@@ -104,9 +107,10 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         });
         setIsForgotUsername(false);
       } catch (error: any) {
+        console.error("Forgot username error:", error);
         toast({
           title: "Error",
-          description: error.message,
+          description: friendlyError(error?.message),
           variant: "destructive",
         });
       } finally {
@@ -211,6 +215,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         }
 
         if (data.user) {
+          await supabase.auth.getUser();
           setUser(data.user);
         }
       }
