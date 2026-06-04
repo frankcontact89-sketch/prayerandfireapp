@@ -195,7 +195,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: trimmedEmail,
+          email: trimmedEmail.toLowerCase(),
           password,
         });
 
