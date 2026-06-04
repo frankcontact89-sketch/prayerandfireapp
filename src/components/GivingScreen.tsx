@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Heart, DollarSign, CreditCard, Sparkles } from "lucide-react";
+import { Heart, DollarSign, Sparkles } from "lucide-react";
 
 interface GivingScreenProps {
   t: (key: string) => string;
@@ -12,7 +12,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
 
   const STRIPE_ONETIME = "https://buy.stripe.com/9B66oHco06AqdX9dab7bW01";
 
-  const [givingType, setGivingType] = useState<"subscription" | "onetime" | "project">("subscription");
+  const [givingType, setGivingType] = useState<"subscription" | "onetime">("subscription");
 
   const handleGive = () => {
     if (givingType === "subscription") {
@@ -31,7 +31,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
           <span className="text-[13px] text-orange-400 font-semibold tracking-wide uppercase">{t("supportPrayerFire")}</span>
         </div>
 
-        <h1 className="text-[30px] font-extrabold tracking-tight mb-2">{t("giving_title")}</h1>
+        <h1 className="text-[30px] font-extrabold tracking-tight mb-2">Support Prayer & Fire Global Mission</h1>
 
         <p className="text-zinc-300 text-[15px] leading-relaxed max-w-sm mx-auto">
           {t("giving_hero_subtitle")}
@@ -39,7 +39,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
       </div>
 
       {/* Buttons */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-6">
         <button
           onClick={() => setGivingType("subscription")}
           className={`rounded-2xl border p-4 transition-all duration-300 ${
@@ -67,20 +67,6 @@ export function GivingScreen({ t }: GivingScreenProps) {
             <span className="text-[13px] font-semibold">{t("oneTime")}</span>
           </div>
         </button>
-
-        <button
-          onClick={() => setGivingType("project")}
-          className={`rounded-2xl border p-4 transition-all duration-300 ${
-            givingType === "project"
-              ? "bg-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/20"
-              : "bg-zinc-950 border-zinc-800 text-zinc-400"
-          }`}
-        >
-          <div className="flex flex-col items-center gap-1.5">
-            <CreditCard className="w-5 h-5" />
-            <span className="text-[13px] font-semibold">{t("giving_mission_label")}</span>
-          </div>
-        </button>
       </div>
 
       {/* Main Card */}
@@ -89,15 +75,15 @@ export function GivingScreen({ t }: GivingScreenProps) {
           <div className="space-y-5">
             <div>
               <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">{t("giving_monthly_eyebrow")}</p>
-              <h2 className="text-[22px] font-semibold mb-2">{t("giving_monthly_title")}</h2>
-              <p className="text-zinc-200 text-[15px] leading-relaxed">{t("giving_monthly_desc")}</p>
+              <h2 className="text-[22px] font-semibold mb-2">Become a Monthly Partner</h2>
+              <p className="text-zinc-200 text-[15px] leading-relaxed">Support the Prayer & Fire global mission every month.</p>
             </div>
 
             <Button
               onClick={handleGive}
               className="w-full h-[50px] rounded-2xl text-[15px] font-bold bg-orange-500 hover:bg-orange-600"
             >
-              {t("setUpMonthlyGiving")}
+              Become a Partner
             </Button>
           </div>
         )}
@@ -106,32 +92,15 @@ export function GivingScreen({ t }: GivingScreenProps) {
           <div className="space-y-5">
             <div>
               <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">{t("giving_onetime_eyebrow")}</p>
-              <h2 className="text-[22px] font-semibold mb-2">{t("giving_onetime_title")}</h2>
-              <p className="text-zinc-200 text-[15px] leading-relaxed">{t("giving_onetime_desc")}</p>
+              <h2 className="text-[22px] font-semibold mb-2">One-Time Gift</h2>
+              <p className="text-zinc-200 text-[15px] leading-relaxed">Support the Prayer & Fire global mission with a single contribution.</p>
             </div>
 
             <Button
               onClick={handleGive}
               className="w-full h-[50px] rounded-2xl text-[15px] font-bold bg-orange-500 hover:bg-orange-600"
             >
-              {t("giveNow")}
-            </Button>
-          </div>
-        )}
-
-        {givingType === "project" && (
-          <div className="space-y-5">
-            <div>
-              <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">{t("giving_mission_eyebrow")}</p>
-              <h2 className="text-[22px] font-semibold mb-2">{t("giving_mission_title")}</h2>
-              <p className="text-zinc-200 text-[15px] leading-relaxed">{t("giving_mission_desc")}</p>
-            </div>
-
-            <Button
-              onClick={handleGive}
-              className="w-full h-[50px] rounded-2xl text-[15px] font-bold bg-orange-500 hover:bg-orange-600"
-            >
-              {t("giving_mission_btn")}
+              Give Now
             </Button>
           </div>
         )}
