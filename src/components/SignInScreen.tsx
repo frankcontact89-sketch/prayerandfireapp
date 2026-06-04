@@ -41,8 +41,8 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
   };
 
   const handleResendConfirmation = async () => {
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
       toast({ title: "Error", description: "Please enter your email", variant: "destructive" });
       return;
     }
@@ -54,7 +54,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
     try {
       const { error } = await supabase.auth.resend({
         type: "signup",
-        email: trimmedEmail,
+        email: normalizedEmail,
         options: { emailRedirectTo: `${window.location.origin}/` },
       });
       if (error) throw error;
@@ -73,7 +73,8 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
 
   const handleAuth = async () => {
     if (isForgotUsername) {
-      if (!email) {
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail) {
         toast({
           title: "Error",
           description: "Please enter your email",
@@ -84,7 +85,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
 
       setLoading(true);
       try {
-        const { data, error } = await supabase.rpc("get_username_by_email", { _email: email });
+        const { data, error } = await supabase.rpc("get_username_by_email", { _email: normalizedEmail });
 
         if (error) throw error;
 
@@ -115,7 +116,8 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
     }
 
     if (isForgotPassword) {
-      if (!email) {
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail) {
         toast({
           title: "Error",
           description: "Please enter your email",
@@ -126,8 +128,8 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
 
       setLoading(true);
       try {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/`,
+        const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+          redirectTo: `${window.location.origin}/reset-password`,
         });
 
         if (error) throw error;
@@ -138,9 +140,10 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         });
         setIsForgotPassword(false);
       } catch (error: any) {
+        console.error("Password reset request error:", error);
         toast({
           title: "Error",
-          description: error.message,
+          description: friendlyError(error?.message),
           variant: "destructive",
         });
       } finally {
@@ -149,13 +152,13 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
       return;
     }
 
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail || !password) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
       toast({
         title: "Error",
-        description: !trimmedEmail && !password
+        description: !normalizedEmail && !password
           ? "Please enter your email and password"
-          : !trimmedEmail
+          : !normalizedEmail
             ? "Please enter your email"
             : "Please enter your password",
         variant: "destructive",
@@ -167,7 +170,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
     try {
       if (isSignUp) {
         const { data, error } = await supabase.auth.signUp({
-          email: trimmedEmail.toLowerCase(),
+          email: normalizedEmail,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
@@ -198,7 +201,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: trimmedEmail.toLowerCase(),
+          email: normalizedEmail,
           password,
         });
 
