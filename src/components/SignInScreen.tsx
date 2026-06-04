@@ -164,7 +164,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
     try {
       if (isSignUp) {
         const { data, error } = await supabase.auth.signUp({
-          email: trimmedEmail,
+          email: trimmedEmail.toLowerCase(),
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
