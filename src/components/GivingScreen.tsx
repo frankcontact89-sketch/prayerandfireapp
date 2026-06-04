@@ -64,7 +64,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
         >
           <div className="flex flex-col items-center gap-1.5">
             <DollarSign className="w-5 h-5" />
-            <span className="text-[13px] font-semibold">{t("oneTime")}</span>
+            <span className="text-[13px] font-semibold">One-Time Gift</span>
           </div>
         </button>
       </div>
