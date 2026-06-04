@@ -12,7 +12,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
 
   const STRIPE_ONETIME = "https://buy.stripe.com/9B66oHco06AqdX9dab7bW01";
 
-  const [givingType, setGivingType] = useState<"subscription" | "onetime" | "project">("subscription");
+  const [givingType, setGivingType] = useState<"subscription" | "onetime">("subscription");
 
   const handleGive = () => {
     if (givingType === "subscription") {
