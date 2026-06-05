@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2 } from "lucide-react";
+import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
 type Translation = { code: string; label: string; loader: () => Promise<Book[]> };
@@ -78,6 +79,8 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     const v = t(k as any);
     return v && v !== k ? v : fallback;
   };
+
+  const bookName = (book: Book) => getLocalizedBookName(book.abbrev, book.name, language);
 
   const [translation, setTranslation] = useState(() => {
     const stored = localStorage.getItem(LANG_KEY);
@@ -339,6 +342,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                     className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl border ${card}`}
                   >
                     <span className="text-base font-medium">{book.name}</span>
+                    {/* localized name handled below */}
                     <ChevronRight className="w-4 h-4 text-zinc-500" />
                   </button>
                 ))}
