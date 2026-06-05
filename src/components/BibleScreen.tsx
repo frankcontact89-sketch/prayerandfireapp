@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2 } from "lucide-react";
+import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
 type Translation = { code: string; label: string; loader: () => Promise<Book[]> };
@@ -78,6 +79,8 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     const v = t(k as any);
     return v && v !== k ? v : fallback;
   };
+
+  const bookName = (book: Book) => getLocalizedBookName(book.abbrev, book.name, language);
 
   const [translation, setTranslation] = useState(() => {
     const stored = localStorage.getItem(LANG_KEY);
@@ -338,7 +341,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                     }}
                     className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl border ${card}`}
                   >
-                    <span className="text-base font-medium">{book.name}</span>
+                    <span className="text-base font-medium">{bookName(book)}</span>
                     <ChevronRight className="w-4 h-4 text-zinc-500" />
                   </button>
                 ))}
@@ -349,7 +352,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
         {view === "chapters" && currentBook && (
           <>
-            <Header title={currentBook.name} onBack={() => setView("books")} />
+            <Header title={bookName(currentBook)} onBack={() => setView("books")} />
 
             <div className="px-4 sm:px-5 pt-4 pb-8 max-w-[720px] mx-auto">
               <div className="grid grid-cols-5 sm:grid-cols-6 landscape:grid-cols-8 gap-2">
@@ -372,7 +375,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
         {view === "verses" && currentBook && (
           <>
-            <Header title={`${currentBook.name} ${chapterIdx + 1}`} onBack={() => setView("chapters")} />
+            <Header title={`${bookName(currentBook)} ${chapterIdx + 1}`} onBack={() => setView("chapters")} />
 
             <div className="px-4 sm:px-5 pt-4 pb-10 max-w-[760px] mx-auto space-y-3">
               {currentVerses.map((text, index) => {
@@ -476,7 +479,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                     className={`w-full text-left rounded-xl border p-3.5 ${card}`}
                   >
                     <p className="text-orange-500 text-xs font-bold mb-1">
-                      {result.book.name} {result.cIdx + 1}:{result.vIdx + 1}
+                      {bookName(result.book)} {result.cIdx + 1}:{result.vIdx + 1}
                     </p>
 
                     <p className="text-sm leading-relaxed">{result.text}</p>
