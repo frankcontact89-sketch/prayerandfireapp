@@ -7,17 +7,17 @@ type Translation = { code: string; label: string; loader: () => Promise<Book[]> 
 const TRANSLATIONS: Translation[] = [
   {
     code: "kjv",
-    label: "English — KJV",
+    label: "English | KJV",
     loader: () => import("@/data/bible/kjv.json").then((m) => m.default as Book[]),
   },
   {
     code: "rvr",
-    label: "Español — Reina-Valera",
+    label: "Español | Reina-Valera",
     loader: () => import("@/data/bible/rvr.json").then((m) => m.default as Book[]),
   },
   {
     code: "aa",
-    label: "Português — Almeida",
+    label: "Português | Almeida",
     loader: () => import("@/data/bible/aa.json").then((m) => m.default as Book[]),
   },
 ];
@@ -84,15 +84,6 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     if (stored && TRANSLATIONS.some((x) => x.code === stored)) return stored;
     return (language && APP_LANG_TO_BIBLE[language]) || "kjv";
   });
-
-  useEffect(() => {
-    if (!language) return;
-    const mapped = APP_LANG_TO_BIBLE[language];
-    if (mapped && mapped !== translation) {
-      setTranslation(mapped);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language]);
 
   const [mode, setMode] = useState<"day" | "night">(
     () => (localStorage.getItem(MODE_KEY) as "day" | "night") || "night",
