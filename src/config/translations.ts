@@ -700,7 +700,7 @@ export const translations: Record<string, Record<string, string>> = {
     holy_bible: "Santa Biblia",
     bible_search: "Buscar en la Biblia",
     bible_search_verses: "Buscar versículos…",
-    bible_translation: "Traducción de la Biblia",
+    bible_translation: "Traducción Bíblica",
     bible_reading_settings: "Ajustes de Lectura",
     bible_favorites_empty: "Toca la estrella de cualquier versículo para guardarlo aquí.",
     bible_loading: "Cargando Biblia…",
