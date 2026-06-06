@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Rewind, FastForward, Mic, X } from "lucide-react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Rewind, FastForward, Mic } from "lucide-react";
 import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
@@ -166,7 +166,6 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
   const [voiceGender, setVoiceGender] = useState<"female" | "male">(
     () => (localStorage.getItem(VOICE_GENDER_KEY) as "female" | "male") || "female",
   );
-  const [hasStartedAudio, setHasStartedAudio] = useState(false);
   const speakingRef = React.useRef(false);
 
   const isDay = mode === "day";
@@ -356,7 +355,6 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     window.speechSynthesis.speak(utterance);
     speakingRef.current = true;
     setIsSpeaking(true);
-    setHasStartedAudio(true);
     updateMediaSession(bIdx, cIdx, vIdx);
   };
 
