@@ -923,6 +923,48 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
           </div>
         </div>
       )}
+
+      {hasStartedAudio && currentBook && (
+        <div
+          className="fixed left-0 right-0 z-40 px-3"
+          style={{ bottom: "calc(64px + env(safe-area-inset-bottom))" }}
+        >
+          <div className={`max-w-[720px] mx-auto rounded-2xl border shadow-lg backdrop-blur-md ${
+            isDay ? "bg-white/95 border-zinc-200 text-zinc-950" : "bg-zinc-950/95 border-zinc-800 text-white"
+          }`}>
+            <div className="flex items-center gap-2 px-3 py-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] text-orange-500 font-bold truncate uppercase tracking-wider">
+                  {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
+                </p>
+                <p className="text-[11px] text-zinc-500 truncate">
+                  {translation.toUpperCase()} · {voiceGender === "female" ? tr("voice_female", "Female") : tr("voice_male", "Male")} · {audioRate}x
+                </p>
+              </div>
+              <button onClick={() => skipVerses(-2)} aria-label="Rewind" className="text-orange-500 p-2">
+                <Rewind className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => (isSpeaking ? pauseAudio() : resumeAudio())}
+                aria-label={isSpeaking ? "Pause" : "Play"}
+                className="rounded-full bg-orange-500 text-white w-10 h-10 flex items-center justify-center"
+              >
+                {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              </button>
+              <button onClick={() => skipVerses(2)} aria-label="Forward" className="text-orange-500 p-2">
+                <FastForward className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => { pauseAudio(); setHasStartedAudio(false); }}
+                aria-label="Close player"
+                className="text-zinc-500 p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
