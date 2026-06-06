@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Rewind, FastForward, Mic } from "lucide-react";
 import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
@@ -33,6 +33,53 @@ const VIEW_KEY = "pf_bible_view";
 const FONT_SIZE_KEY = "pf_bible_font_size";
 const LINE_HEIGHT_KEY = "pf_bible_line_height";
 const FONT_KEY = "pf_bible_font";
+const VERSE_KEY = "pf_bible_verse";
+const RATE_KEY = "pf_bible_audio_rate";
+const VOICE_GENDER_KEY = "pf_bible_voice_gender";
+
+// Heuristic gender detection from voice names across platforms/locales.
+const FEMALE_NAME_HINTS = [
+  "female", "mujer", "femen", "femin", "feminina",
+  "samantha", "victoria", "karen", "moira", "tessa", "fiona", "veena", "susan", "allison", "ava", "serena",
+  "monica", "paulina", "marisol", "esperanza", "soledad", "angelica", "rosa", "lucia", "sofia", "valentina", "isabela", "luciana",
+  "joana", "raquel", "ines", "catarina", "amelie", "audrey", "marie",
+  "google.*female", "microsoft zira", "microsoft hazel", "microsoft helena", "microsoft sabina", "microsoft elsa",
+  "microsoft maria", "microsoft helia", "microsoft francisca",
+];
+const MALE_NAME_HINTS = [
+  "male", "hombre", "masc", "masculino",
+  "alex", "daniel", "fred", "tom", "oliver", "aaron", "arthur", "gordon", "lee", "rishi",
+  "diego", "jorge", "juan", "pablo", "carlos", "miguel", "javier",
+  "joaquim", "duarte", "felipe",
+  "google.*male", "microsoft david", "microsoft mark", "microsoft george", "microsoft pablo",
+  "microsoft jorge", "microsoft antonio", "microsoft duarte",
+];
+
+function voiceGenderScore(name: string, hints: string[]): boolean {
+  const lower = name.toLowerCase();
+  return hints.some((h) => new RegExp(`(^|[^a-z])${h}([^a-z]|$)`, "i").test(lower));
+}
+
+function pickVoice(lang: string, gender: "female" | "male"): SpeechSynthesisVoice | null {
+  const synth = window.speechSynthesis;
+  if (!synth) return null;
+  const all = synth.getVoices();
+  if (!all.length) return null;
+  const langPrefix = lang.split("-")[0];
+  const matches = all.filter((v) => v.lang?.toLowerCase().startsWith(langPrefix));
+  const pool = matches.length ? matches : all;
+
+  const primary = gender === "female" ? FEMALE_NAME_HINTS : MALE_NAME_HINTS;
+  const secondary = gender === "female" ? MALE_NAME_HINTS : FEMALE_NAME_HINTS;
+
+  const preferred = pool.find((v) => voiceGenderScore(v.name, primary));
+  if (preferred) return preferred;
+  // Avoid clearly opposite-gender voices; otherwise just take first match.
+  const neutral = pool.find((v) => !voiceGenderScore(v.name, secondary));
+  return neutral || pool[0] || null;
+}
+
+const VERSE_TICK_MS = 350; // ~ approximated time-step for skip back/forward
 
 type Favorite = {
   translation: string;
@@ -114,6 +161,13 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
   const [lineHeight, setLineHeight] = useState(() => Number(localStorage.getItem(LINE_HEIGHT_KEY) || 1.7));
   const [fontFamily, setFontFamily] = useState(() => localStorage.getItem(FONT_KEY) || "system");
 
+  const [verseIdx, setVerseIdx] = useState(() => Number(localStorage.getItem(VERSE_KEY) || 0));
+  const [audioRate, setAudioRate] = useState<number>(() => Number(localStorage.getItem(RATE_KEY) || 1));
+  const [voiceGender, setVoiceGender] = useState<"female" | "male">(
+    () => (localStorage.getItem(VOICE_GENDER_KEY) as "female" | "male") || "female",
+  );
+  const speakingRef = React.useRef(false);
+
   const isDay = mode === "day";
 
   useEffect(() => {
@@ -137,16 +191,31 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     localStorage.setItem(FONT_SIZE_KEY, String(fontSize));
     localStorage.setItem(LINE_HEIGHT_KEY, String(lineHeight));
     localStorage.setItem(FONT_KEY, fontFamily);
-  }, [mode, bookIdx, chapterIdx, view, fontSize, lineHeight, fontFamily]);
+    localStorage.setItem(VERSE_KEY, String(verseIdx));
+    localStorage.setItem(RATE_KEY, String(audioRate));
+    localStorage.setItem(VOICE_GENDER_KEY, voiceGender);
+  }, [mode, bookIdx, chapterIdx, view, fontSize, lineHeight, fontFamily, verseIdx, audioRate, voiceGender]);
 
   useEffect(() => {
     return () => {
       window.speechSynthesis?.cancel();
+      speakingRef.current = false;
     };
+  }, []);
+
+  // Pre-load voices (Chrome populates them asynchronously).
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    const handler = () => {/* trigger re-render via state if needed */};
+    window.speechSynthesis.onvoiceschanged = handler;
+    window.speechSynthesis.getVoices();
   }, []);
 
   const currentBook = books?.[bookIdx];
   const currentVerses = currentBook?.chapters?.[chapterIdx] || [];
+
+  const speechLang =
+    translation === "rvr" ? "es-ES" : translation === "aa" ? "pt-BR" : "en-US";
 
   const searchResults = useMemo(() => {
     if (!query.trim() || !books) return [];
@@ -221,25 +290,28 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     setOpenNoteKey(null);
   };
 
-  const speakChapterAt = (bIdx: number, cIdx: number) => {
+  const updateMediaSession = (bIdx: number, cIdx: number, vIdx: number) => {
+    if (!("mediaSession" in navigator) || !books) return;
+    const book = books[bIdx];
+    if (!book) return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: `${bookName(book)} ${cIdx + 1}:${vIdx + 1}`,
+        artist: "Prayer & Fire — Holy Bible",
+        album: TRANSLATIONS.find((t) => t.code === translation)?.label || "",
+      });
+    } catch {}
+  };
+
+  const speakVerseAt = (bIdx: number, cIdx: number, vIdx: number) => {
     if (!books) return;
     const book = books[bIdx];
     if (!book) return;
     const verses = book.chapters?.[cIdx];
     if (!verses || !verses.length) return;
 
-    const fullText = `${book.name} chapter ${cIdx + 1}. ${verses
-      .map((v, i) => `Verse ${i + 1}. ${v}`)
-      .join(" ")}`;
-
-    const utterance = new SpeechSynthesisUtterance(fullText);
-    utterance.lang =
-      translation === "rvr" ? "es-ES" : translation === "aa" ? "pt-BR" : "en-US";
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-
-    utterance.onend = () => {
-      // Auto-advance to next chapter; cross book boundaries when needed.
+    // Out of range -> auto advance chapter / book.
+    if (vIdx >= verses.length) {
       let nextBook = bIdx;
       let nextChapter = cIdx + 1;
       if (nextChapter >= book.chapters.length) {
@@ -247,30 +319,137 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
         nextChapter = 0;
       }
       if (nextBook >= books.length) {
+        speakingRef.current = false;
         setIsSpeaking(false);
         return;
       }
       setBookIdx(nextBook);
       setChapterIdx(nextChapter);
-      // Small delay to let state settle and any pending speech queue clear.
-      setTimeout(() => speakChapterAt(nextBook, nextChapter), 250);
+      setVerseIdx(0);
+      setTimeout(() => speakVerseAt(nextBook, nextChapter, 0), 250);
+      return;
+    }
+
+    setBookIdx(bIdx);
+    setChapterIdx(cIdx);
+    setVerseIdx(vIdx);
+
+    const text = verses[vIdx];
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = speechLang;
+    utterance.rate = audioRate;
+    utterance.pitch = 1;
+    const voice = pickVoice(speechLang, voiceGender);
+    if (voice) utterance.voice = voice;
+
+    utterance.onend = () => {
+      if (!speakingRef.current) return;
+      speakVerseAt(bIdx, cIdx, vIdx + 1);
     };
-    utterance.onerror = () => setIsSpeaking(false);
+    utterance.onerror = () => {
+      speakingRef.current = false;
+      setIsSpeaking(false);
+    };
 
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
+    speakingRef.current = true;
     setIsSpeaking(true);
+    updateMediaSession(bIdx, cIdx, vIdx);
   };
 
   const playChapter = () => {
     if (!currentBook || !currentVerses.length) return;
     if (isSpeaking) {
+      speakingRef.current = false;
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
       return;
     }
-    speakChapterAt(bookIdx, chapterIdx);
+    const startVerse = verseIdx < currentVerses.length ? verseIdx : 0;
+    speakVerseAt(bookIdx, chapterIdx, startVerse);
   };
+
+  const pauseAudio = () => {
+    speakingRef.current = false;
+    window.speechSynthesis?.cancel();
+    setIsSpeaking(false);
+  };
+
+  const resumeAudio = () => {
+    if (!currentBook || !currentVerses.length) return;
+    const startVerse = verseIdx < currentVerses.length ? verseIdx : 0;
+    speakVerseAt(bookIdx, chapterIdx, startVerse);
+  };
+
+  // Skip ±2 verses (≈10s of narration) and continue playback state.
+  const skipVerses = (delta: number) => {
+    if (!books || !currentBook) return;
+    let nb = bookIdx;
+    let nc = chapterIdx;
+    let nv = verseIdx + delta;
+    while (nv < 0) {
+      nc -= 1;
+      if (nc < 0) {
+        nb -= 1;
+        if (nb < 0) { nb = 0; nc = 0; nv = 0; break; }
+        nc = books[nb].chapters.length - 1;
+      }
+      nv += books[nb].chapters[nc].length;
+    }
+    while (nv >= (books[nb]?.chapters[nc]?.length || 0)) {
+      nv -= books[nb].chapters[nc].length;
+      nc += 1;
+      if (nc >= books[nb].chapters.length) {
+        nb += 1; nc = 0;
+        if (nb >= books.length) {
+          nb = books.length - 1;
+          nc = books[nb].chapters.length - 1;
+          nv = books[nb].chapters[nc].length - 1;
+          break;
+        }
+      }
+    }
+    if (isSpeaking) {
+      speakingRef.current = false;
+      window.speechSynthesis.cancel();
+      setTimeout(() => speakVerseAt(nb, nc, nv), 100);
+    } else {
+      setBookIdx(nb); setChapterIdx(nc); setVerseIdx(nv);
+      updateMediaSession(nb, nc, nv);
+    }
+  };
+
+  // If voice gender or rate changes while playing, restart current verse with new settings.
+  useEffect(() => {
+    if (!isSpeaking) return;
+    speakingRef.current = false;
+    window.speechSynthesis.cancel();
+    setTimeout(() => speakVerseAt(bookIdx, chapterIdx, verseIdx), 50);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioRate, voiceGender]);
+
+  // Wire up Media Session lock-screen / hardware controls when supported.
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.setActionHandler("play", () => resumeAudio());
+      navigator.mediaSession.setActionHandler("pause", () => pauseAudio());
+      navigator.mediaSession.setActionHandler("seekbackward", () => skipVerses(-2));
+      navigator.mediaSession.setActionHandler("seekforward", () => skipVerses(2));
+      navigator.mediaSession.setActionHandler("previoustrack", () => skipVerses(-2));
+      navigator.mediaSession.setActionHandler("nexttrack", () => skipVerses(2));
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [books, bookIdx, chapterIdx, verseIdx, isSpeaking, audioRate, voiceGender]);
+
+  // Keep verseIdx valid when chapter/book change manually.
+  useEffect(() => {
+    if (!books) return;
+    const len = books[bookIdx]?.chapters[chapterIdx]?.length || 0;
+    if (verseIdx >= len) setVerseIdx(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookIdx, chapterIdx, books]);
 
   const pageBg = isDay ? "bg-[#f8f5ef] text-zinc-950" : "bg-black text-white";
   const card = isDay ? "bg-white border-zinc-200 text-zinc-950" : "bg-zinc-950 border-zinc-900 text-white";
@@ -654,6 +833,43 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                 {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                 {isSpeaking ? tr("stop_audio", "Stop Audio") : tr("play_chapter", "Play Current Chapter")}
               </button>
+
+              <div>
+                <p className="text-sm mb-2 flex items-center gap-2">
+                  <Mic className="w-4 h-4 text-orange-500" />
+                  {tr("voice", "Voice")}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["female", "male"] as const).map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => setVoiceGender(g)}
+                      className={`rounded-xl border px-3 py-2 capitalize ${
+                        voiceGender === g ? "border-orange-500 bg-orange-500/10" : "border-zinc-700"
+                      }`}
+                    >
+                      {g === "female" ? tr("voice_female", "Female") : tr("voice_male", "Male")}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm mb-2">{tr("audio_speed", "Speed")}: {audioRate}x</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {[0.75, 1, 1.25, 1.5].map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setAudioRate(r)}
+                      className={`rounded-xl border px-3 py-2 text-sm ${
+                        audioRate === r ? "border-orange-500 bg-orange-500/10" : "border-zinc-700"
+                      }`}
+                    >
+                      {r}x
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -700,6 +916,41 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
               >
                 <Save className="w-4 h-4" />
                 {tr("save", "Save")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {currentBook && (
+        <div
+          className="fixed left-0 right-0 z-40 px-3"
+          style={{ bottom: "calc(64px + env(safe-area-inset-bottom))" }}
+        >
+          <div className={`max-w-[720px] mx-auto rounded-2xl border shadow-lg backdrop-blur-md ${
+            isDay ? "bg-white/95 border-zinc-200 text-zinc-950" : "bg-zinc-950/95 border-zinc-800 text-white"
+          }`}>
+            <div className="flex items-center gap-2 px-3 py-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] text-orange-500 font-bold truncate uppercase tracking-wider">
+                  {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
+                </p>
+                <p className="text-[11px] text-zinc-500 truncate">
+                  {translation.toUpperCase()} · {voiceGender === "female" ? tr("voice_female", "Female") : tr("voice_male", "Male")} · {audioRate}x
+                </p>
+              </div>
+              <button onClick={() => skipVerses(-2)} aria-label="Rewind" className="text-orange-500 p-2">
+                <Rewind className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => (isSpeaking ? pauseAudio() : resumeAudio())}
+                aria-label={isSpeaking ? "Pause" : "Play"}
+                className="rounded-full bg-orange-500 text-white w-10 h-10 flex items-center justify-center"
+              >
+                {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              </button>
+              <button onClick={() => skipVerses(2)} aria-label="Forward" className="text-orange-500 p-2">
+                <FastForward className="w-5 h-5" />
               </button>
             </div>
           </div>
