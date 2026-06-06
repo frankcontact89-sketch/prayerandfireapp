@@ -221,16 +221,14 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     setOpenNoteKey(null);
   };
 
-  const playChapter = () => {
-    if (!currentBook || !currentVerses.length) return;
+  const speakChapterAt = (bIdx: number, cIdx: number) => {
+    if (!books) return;
+    const book = books[bIdx];
+    if (!book) return;
+    const verses = book.chapters?.[cIdx];
+    if (!verses || !verses.length) return;
 
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      return;
-    }
-
-    const fullText = `${currentBook.name} chapter ${chapterIdx + 1}. ${currentVerses
+    const fullText = `${book.name} chapter ${cIdx + 1}. ${verses
       .map((v, i) => `Verse ${i + 1}. ${v}`)
       .join(" ")}`;
 
@@ -240,12 +238,38 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     utterance.rate = 0.9;
     utterance.pitch = 1;
 
-    utterance.onend = () => setIsSpeaking(false);
+    utterance.onend = () => {
+      // Auto-advance to next chapter; cross book boundaries when needed.
+      let nextBook = bIdx;
+      let nextChapter = cIdx + 1;
+      if (nextChapter >= book.chapters.length) {
+        nextBook = bIdx + 1;
+        nextChapter = 0;
+      }
+      if (nextBook >= books.length) {
+        setIsSpeaking(false);
+        return;
+      }
+      setBookIdx(nextBook);
+      setChapterIdx(nextChapter);
+      // Small delay to let state settle and any pending speech queue clear.
+      setTimeout(() => speakChapterAt(nextBook, nextChapter), 250);
+    };
     utterance.onerror = () => setIsSpeaking(false);
 
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
     setIsSpeaking(true);
+  };
+
+  const playChapter = () => {
+    if (!currentBook || !currentVerses.length) return;
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    speakChapterAt(bookIdx, chapterIdx);
   };
 
   const pageBg = isDay ? "bg-[#f8f5ef] text-zinc-950" : "bg-black text-white";
