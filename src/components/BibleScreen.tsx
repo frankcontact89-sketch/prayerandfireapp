@@ -924,7 +924,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
         </div>
       )}
 
-      {hasStartedAudio && currentBook && (
+      {currentBook && (
         <div
           className="fixed left-0 right-0 z-40 px-3"
           style={{ bottom: "calc(64px + env(safe-area-inset-bottom))" }}
@@ -953,13 +953,6 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
               </button>
               <button onClick={() => skipVerses(2)} aria-label="Forward" className="text-orange-500 p-2">
                 <FastForward className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => { pauseAudio(); setHasStartedAudio(false); }}
-                aria-label="Close player"
-                className="text-zinc-500 p-1"
-              >
-                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
