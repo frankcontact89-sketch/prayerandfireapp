@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Flame, ArrowLeft, Trash2, MessageSquarePlus, Send, X, Settings } from "lucide-react";
+import { Flame, ArrowLeft, Trash2, X, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { setLastReadAtNow } from "@/lib/notifications-last-seen";
@@ -15,9 +14,6 @@ interface Notification { id: string; title: string; message: string; type: strin
 export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [feedbackMessage, setFeedbackMessage] = useState("");
-  const [sendingFeedback, setSendingFeedback] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -120,28 +116,6 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     setLastReadAtNow();
   };
   const toggleNotifications = (enabled: boolean) => { setNotificationsEnabled(enabled); localStorage.setItem('notifications_enabled', JSON.stringify(enabled)); toast({ title: enabled ? t("notificationsEnabled") : t("notificationsDisabled"), description: enabled ? t("youWillReceiveNotifications") : t("notificationsDisabledMsg") }); };
-  const sendFeedback = async () => {
-    if (!feedbackMessage.trim()) { toast({ title: t("error"), description: t("pleaseEnterFeedback"), variant: "destructive" }); return; }
-    setSendingFeedback(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await (supabase as any).from("submissions").insert({
-        type: "feedback",
-        name: user?.user_metadata?.username || user?.email?.split("@")[0] || "Anonymous",
-        email: user?.email || "anonymous@app.local",
-        message: feedbackMessage.trim(),
-        user_id: user?.id ?? null,
-      });
-      if (error) throw error;
-      toast({ title: t("success"), description: t("thankYouFeedback") });
-      setFeedbackMessage("");
-      setFeedbackOpen(false);
-    } catch (err: any) {
-      console.error("Feedback submission error:", err);
-      toast({ title: t("error"), description: t("failedToSendFeedback"), variant: "destructive" });
-    }
-    setSendingFeedback(false);
-  };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
@@ -192,15 +166,6 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
                 <div className="flex items-center gap-3"><Flame className={`w-5 h-5 ${notificationsEnabled ? "text-orange-500" : "text-muted-foreground"}`} /><div><p className="font-medium text-foreground">{t("enableNotifications")}</p><p className="text-sm text-muted-foreground">{notificationsEnabled ? t("youWillReceiveNotifications") : t("notificationsDisabledMsg")}</p></div></div>
                 <Switch checked={notificationsEnabled} onCheckedChange={toggleNotifications} />
               </div>
-            </DialogContent>
-          </Dialog>
-          <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-            <DialogTrigger asChild><Button variant="outline" size="sm"><MessageSquarePlus className="w-4 h-4 mr-1" />{t("feedback")}</Button></DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader><DialogTitle>{t("suggestionOrFeedback")}</DialogTitle></DialogHeader>
-              <p className="text-sm text-muted-foreground">{t("feedbackDescription")}</p>
-              <Textarea placeholder={t("writeFeedback")} value={feedbackMessage} onChange={(e) => setFeedbackMessage(e.target.value)} rows={4} maxLength={500} />
-              <div className="flex justify-between items-center"><span className="text-xs text-muted-foreground">{feedbackMessage.length}/500</span><Button onClick={sendFeedback} disabled={sendingFeedback || !feedbackMessage.trim()}><Send className="w-4 h-4 mr-1" />{sendingFeedback ? t("sending") : t("send")}</Button></div>
             </DialogContent>
           </Dialog>
           {unreadCount > 0 && <Button variant="outline" size="sm" onClick={markAllAsRead}>{t("markAllRead")}</Button>}
