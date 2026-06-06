@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Rewind, FastForward, Mic, X } from "lucide-react";
 import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
@@ -33,6 +33,53 @@ const VIEW_KEY = "pf_bible_view";
 const FONT_SIZE_KEY = "pf_bible_font_size";
 const LINE_HEIGHT_KEY = "pf_bible_line_height";
 const FONT_KEY = "pf_bible_font";
+const VERSE_KEY = "pf_bible_verse";
+const RATE_KEY = "pf_bible_audio_rate";
+const VOICE_GENDER_KEY = "pf_bible_voice_gender";
+
+// Heuristic gender detection from voice names across platforms/locales.
+const FEMALE_NAME_HINTS = [
+  "female", "mujer", "femen", "femin", "feminina",
+  "samantha", "victoria", "karen", "moira", "tessa", "fiona", "veena", "susan", "allison", "ava", "serena",
+  "monica", "paulina", "marisol", "esperanza", "soledad", "angelica", "rosa", "lucia", "sofia", "valentina", "isabela", "luciana",
+  "joana", "raquel", "ines", "catarina", "amelie", "audrey", "marie",
+  "google.*female", "microsoft zira", "microsoft hazel", "microsoft helena", "microsoft sabina", "microsoft elsa",
+  "microsoft maria", "microsoft helia", "microsoft francisca",
+];
+const MALE_NAME_HINTS = [
+  "male", "hombre", "masc", "masculino",
+  "alex", "daniel", "fred", "tom", "oliver", "aaron", "arthur", "gordon", "lee", "rishi",
+  "diego", "jorge", "juan", "pablo", "carlos", "miguel", "javier",
+  "joaquim", "duarte", "felipe",
+  "google.*male", "microsoft david", "microsoft mark", "microsoft george", "microsoft pablo",
+  "microsoft jorge", "microsoft antonio", "microsoft duarte",
+];
+
+function voiceGenderScore(name: string, hints: string[]): boolean {
+  const lower = name.toLowerCase();
+  return hints.some((h) => new RegExp(`(^|[^a-z])${h}([^a-z]|$)`, "i").test(lower));
+}
+
+function pickVoice(lang: string, gender: "female" | "male"): SpeechSynthesisVoice | null {
+  const synth = window.speechSynthesis;
+  if (!synth) return null;
+  const all = synth.getVoices();
+  if (!all.length) return null;
+  const langPrefix = lang.split("-")[0];
+  const matches = all.filter((v) => v.lang?.toLowerCase().startsWith(langPrefix));
+  const pool = matches.length ? matches : all;
+
+  const primary = gender === "female" ? FEMALE_NAME_HINTS : MALE_NAME_HINTS;
+  const secondary = gender === "female" ? MALE_NAME_HINTS : FEMALE_NAME_HINTS;
+
+  const preferred = pool.find((v) => voiceGenderScore(v.name, primary));
+  if (preferred) return preferred;
+  // Avoid clearly opposite-gender voices; otherwise just take first match.
+  const neutral = pool.find((v) => !voiceGenderScore(v.name, secondary));
+  return neutral || pool[0] || null;
+}
+
+const VERSE_TICK_MS = 350; // ~ approximated time-step for skip back/forward
 
 type Favorite = {
   translation: string;
