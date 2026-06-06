@@ -305,7 +305,19 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
 
 export default function Index() {
   const [user, setUser] = useState<any>(null);
-  const [page, setPage] = useState("home");
+  const [page, setPageState] = useState<string>(() => {
+    try {
+      return localStorage.getItem("pf_last_page") || "home";
+    } catch {
+      return "home";
+    }
+  });
+  const setPage = useCallback((p: string) => {
+    setPageState(p);
+    try {
+      localStorage.setItem("pf_last_page", p);
+    } catch {}
+  }, []);
   const [showLanguages, setShowLanguages] = useState(false);
 
   const [language, setLanguageState] = useState<string>(() => {
@@ -347,20 +359,28 @@ export default function Index() {
   };
 
   useEffect(() => {
+    let prevUserId: string | null = null;
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, currentSession) => {
-      setUser(currentSession?.user ?? null);
-      if (event === "SIGNED_IN") setPage("home");
+      const nextUser = currentSession?.user ?? null;
+      setUser(nextUser);
+      // Only force Home on a true login transition (no user -> user),
+      // not on session restore / token refresh after backgrounding.
+      if (event === "SIGNED_IN" && !prevUserId && nextUser) {
+        setPage("home");
+      }
       if (event === "SIGNED_OUT") {
         setPage("home");
         setUnreadNotifications(0);
       }
+      prevUserId = nextUser?.id ?? null;
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      setPage("home");
+      prevUserId = session?.user?.id ?? null;
+      // Do NOT reset to Home on resume — keep the last visited page.
       setLoading(false);
     });
 
