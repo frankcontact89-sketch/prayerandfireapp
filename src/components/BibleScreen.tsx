@@ -161,6 +161,14 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
   const [lineHeight, setLineHeight] = useState(() => Number(localStorage.getItem(LINE_HEIGHT_KEY) || 1.7));
   const [fontFamily, setFontFamily] = useState(() => localStorage.getItem(FONT_KEY) || "system");
 
+  const [verseIdx, setVerseIdx] = useState(() => Number(localStorage.getItem(VERSE_KEY) || 0));
+  const [audioRate, setAudioRate] = useState<number>(() => Number(localStorage.getItem(RATE_KEY) || 1));
+  const [voiceGender, setVoiceGender] = useState<"female" | "male">(
+    () => (localStorage.getItem(VOICE_GENDER_KEY) as "female" | "male") || "female",
+  );
+  const [hasStartedAudio, setHasStartedAudio] = useState(false);
+  const speakingRef = React.useRef(false);
+
   const isDay = mode === "day";
 
   useEffect(() => {
@@ -184,16 +192,31 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     localStorage.setItem(FONT_SIZE_KEY, String(fontSize));
     localStorage.setItem(LINE_HEIGHT_KEY, String(lineHeight));
     localStorage.setItem(FONT_KEY, fontFamily);
-  }, [mode, bookIdx, chapterIdx, view, fontSize, lineHeight, fontFamily]);
+    localStorage.setItem(VERSE_KEY, String(verseIdx));
+    localStorage.setItem(RATE_KEY, String(audioRate));
+    localStorage.setItem(VOICE_GENDER_KEY, voiceGender);
+  }, [mode, bookIdx, chapterIdx, view, fontSize, lineHeight, fontFamily, verseIdx, audioRate, voiceGender]);
 
   useEffect(() => {
     return () => {
       window.speechSynthesis?.cancel();
+      speakingRef.current = false;
     };
+  }, []);
+
+  // Pre-load voices (Chrome populates them asynchronously).
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    const handler = () => {/* trigger re-render via state if needed */};
+    window.speechSynthesis.onvoiceschanged = handler;
+    window.speechSynthesis.getVoices();
   }, []);
 
   const currentBook = books?.[bookIdx];
   const currentVerses = currentBook?.chapters?.[chapterIdx] || [];
+
+  const speechLang =
+    translation === "rvr" ? "es-ES" : translation === "aa" ? "pt-BR" : "en-US";
 
   const searchResults = useMemo(() => {
     if (!query.trim() || !books) return [];
@@ -268,25 +291,28 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     setOpenNoteKey(null);
   };
 
-  const speakChapterAt = (bIdx: number, cIdx: number) => {
+  const updateMediaSession = (bIdx: number, cIdx: number, vIdx: number) => {
+    if (!("mediaSession" in navigator) || !books) return;
+    const book = books[bIdx];
+    if (!book) return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: `${bookName(book)} ${cIdx + 1}:${vIdx + 1}`,
+        artist: "Prayer & Fire — Holy Bible",
+        album: TRANSLATIONS.find((t) => t.code === translation)?.label || "",
+      });
+    } catch {}
+  };
+
+  const speakVerseAt = (bIdx: number, cIdx: number, vIdx: number) => {
     if (!books) return;
     const book = books[bIdx];
     if (!book) return;
     const verses = book.chapters?.[cIdx];
     if (!verses || !verses.length) return;
 
-    const fullText = `${book.name} chapter ${cIdx + 1}. ${verses
-      .map((v, i) => `Verse ${i + 1}. ${v}`)
-      .join(" ")}`;
-
-    const utterance = new SpeechSynthesisUtterance(fullText);
-    utterance.lang =
-      translation === "rvr" ? "es-ES" : translation === "aa" ? "pt-BR" : "en-US";
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-
-    utterance.onend = () => {
-      // Auto-advance to next chapter; cross book boundaries when needed.
+    // Out of range -> auto advance chapter / book.
+    if (vIdx >= verses.length) {
       let nextBook = bIdx;
       let nextChapter = cIdx + 1;
       if (nextChapter >= book.chapters.length) {
@@ -294,30 +320,138 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
         nextChapter = 0;
       }
       if (nextBook >= books.length) {
+        speakingRef.current = false;
         setIsSpeaking(false);
         return;
       }
       setBookIdx(nextBook);
       setChapterIdx(nextChapter);
-      // Small delay to let state settle and any pending speech queue clear.
-      setTimeout(() => speakChapterAt(nextBook, nextChapter), 250);
+      setVerseIdx(0);
+      setTimeout(() => speakVerseAt(nextBook, nextChapter, 0), 250);
+      return;
+    }
+
+    setBookIdx(bIdx);
+    setChapterIdx(cIdx);
+    setVerseIdx(vIdx);
+
+    const text = verses[vIdx];
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = speechLang;
+    utterance.rate = audioRate;
+    utterance.pitch = 1;
+    const voice = pickVoice(speechLang, voiceGender);
+    if (voice) utterance.voice = voice;
+
+    utterance.onend = () => {
+      if (!speakingRef.current) return;
+      speakVerseAt(bIdx, cIdx, vIdx + 1);
     };
-    utterance.onerror = () => setIsSpeaking(false);
+    utterance.onerror = () => {
+      speakingRef.current = false;
+      setIsSpeaking(false);
+    };
 
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
+    speakingRef.current = true;
     setIsSpeaking(true);
+    setHasStartedAudio(true);
+    updateMediaSession(bIdx, cIdx, vIdx);
   };
 
   const playChapter = () => {
     if (!currentBook || !currentVerses.length) return;
     if (isSpeaking) {
+      speakingRef.current = false;
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
       return;
     }
-    speakChapterAt(bookIdx, chapterIdx);
+    const startVerse = verseIdx < currentVerses.length ? verseIdx : 0;
+    speakVerseAt(bookIdx, chapterIdx, startVerse);
   };
+
+  const pauseAudio = () => {
+    speakingRef.current = false;
+    window.speechSynthesis?.cancel();
+    setIsSpeaking(false);
+  };
+
+  const resumeAudio = () => {
+    if (!currentBook || !currentVerses.length) return;
+    const startVerse = verseIdx < currentVerses.length ? verseIdx : 0;
+    speakVerseAt(bookIdx, chapterIdx, startVerse);
+  };
+
+  // Skip ±2 verses (≈10s of narration) and continue playback state.
+  const skipVerses = (delta: number) => {
+    if (!books || !currentBook) return;
+    let nb = bookIdx;
+    let nc = chapterIdx;
+    let nv = verseIdx + delta;
+    while (nv < 0) {
+      nc -= 1;
+      if (nc < 0) {
+        nb -= 1;
+        if (nb < 0) { nb = 0; nc = 0; nv = 0; break; }
+        nc = books[nb].chapters.length - 1;
+      }
+      nv += books[nb].chapters[nc].length;
+    }
+    while (nv >= (books[nb]?.chapters[nc]?.length || 0)) {
+      nv -= books[nb].chapters[nc].length;
+      nc += 1;
+      if (nc >= books[nb].chapters.length) {
+        nb += 1; nc = 0;
+        if (nb >= books.length) {
+          nb = books.length - 1;
+          nc = books[nb].chapters.length - 1;
+          nv = books[nb].chapters[nc].length - 1;
+          break;
+        }
+      }
+    }
+    if (isSpeaking) {
+      speakingRef.current = false;
+      window.speechSynthesis.cancel();
+      setTimeout(() => speakVerseAt(nb, nc, nv), 100);
+    } else {
+      setBookIdx(nb); setChapterIdx(nc); setVerseIdx(nv);
+      updateMediaSession(nb, nc, nv);
+    }
+  };
+
+  // If voice gender or rate changes while playing, restart current verse with new settings.
+  useEffect(() => {
+    if (!isSpeaking) return;
+    speakingRef.current = false;
+    window.speechSynthesis.cancel();
+    setTimeout(() => speakVerseAt(bookIdx, chapterIdx, verseIdx), 50);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioRate, voiceGender]);
+
+  // Wire up Media Session lock-screen / hardware controls when supported.
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.setActionHandler("play", () => resumeAudio());
+      navigator.mediaSession.setActionHandler("pause", () => pauseAudio());
+      navigator.mediaSession.setActionHandler("seekbackward", () => skipVerses(-2));
+      navigator.mediaSession.setActionHandler("seekforward", () => skipVerses(2));
+      navigator.mediaSession.setActionHandler("previoustrack", () => skipVerses(-2));
+      navigator.mediaSession.setActionHandler("nexttrack", () => skipVerses(2));
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [books, bookIdx, chapterIdx, verseIdx, isSpeaking, audioRate, voiceGender]);
+
+  // Keep verseIdx valid when chapter/book change manually.
+  useEffect(() => {
+    if (!books) return;
+    const len = books[bookIdx]?.chapters[chapterIdx]?.length || 0;
+    if (verseIdx >= len) setVerseIdx(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookIdx, chapterIdx, books]);
 
   const pageBg = isDay ? "bg-[#f8f5ef] text-zinc-950" : "bg-black text-white";
   const card = isDay ? "bg-white border-zinc-200 text-zinc-950" : "bg-zinc-950 border-zinc-900 text-white";
