@@ -457,6 +457,118 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookIdx, chapterIdx, books]);
 
+  // Auto-scroll active verse into view while audio plays.
+  useEffect(() => {
+    if (!isSpeaking || view !== "verses") return;
+    const el = verseRefsRef.current[verseIdx];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [verseIdx, isSpeaking, view]);
+
+  // Offer "resume from where you left off" when re-entering verses view.
+  useEffect(() => {
+    if (view === "verses" && verseIdx > 0 && !isSpeaking) {
+      setShowResumeBanner(true);
+    } else if (view !== "verses") {
+      setShowResumeBanner(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
+  const playFromVerse = (idx: number) => {
+    speakingRef.current = false;
+    window.speechSynthesis?.cancel();
+    setShowResumeBanner(false);
+    setTimeout(() => speakVerseAt(bookIdx, chapterIdx, idx), 60);
+  };
+
+  const startLongPress = (idx: number) => {
+    longPressFiredRef.current = false;
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = window.setTimeout(() => {
+      longPressFiredRef.current = true;
+      setActionVerse(idx);
+      if (navigator.vibrate) try { navigator.vibrate(15); } catch {}
+    }, 450);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const copyVerse = async (text: string, ref: string) => {
+    const payload = `"${text}" — ${ref}`;
+    try {
+      await navigator.clipboard.writeText(payload);
+      setCopiedKey(ref);
+      setTimeout(() => setCopiedKey(null), 1500);
+    } catch {}
+  };
+
+  const shareVerseImage = async (text: string, ref: string) => {
+    const shareText = `"${text}" — ${ref}\n\nPrayer & Fire`;
+    try {
+      const canvas = document.createElement("canvas");
+      const W = 1080, H = 1080;
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, "#0a0a0a");
+        grad.addColorStop(1, "#1f0a00");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+        ctx.strokeStyle = "#ff6a00";
+        ctx.lineWidth = 6;
+        ctx.strokeRect(50, 50, W - 100, H - 100);
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.font = "italic 44px Georgia, serif";
+        const words = text.split(/\s+/);
+        const lines: string[] = [];
+        let line = "";
+        const maxW = 880;
+        for (const w of words) {
+          const test = line ? line + " " + w : w;
+          if (ctx.measureText(test).width > maxW) { lines.push(line); line = w; }
+          else line = test;
+        }
+        if (line) lines.push(line);
+        const lineH = 60;
+        const startY = H / 2 - (lines.length * lineH) / 2;
+        lines.forEach((l, i) => ctx.fillText(l, W / 2, startY + i * lineH));
+        ctx.fillStyle = "#ff6a00";
+        ctx.font = "bold 40px sans-serif";
+        ctx.fillText(ref, W / 2, H - 170);
+        ctx.fillStyle = "#999999";
+        ctx.font = "bold 22px sans-serif";
+        ctx.fillText("PRAYER & FIRE", W / 2, H - 110);
+        const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+        if (blob) {
+          const file = new File([blob], `${ref.replace(/[^\w]+/g, "_")}.png`, { type: "image/png" });
+          const nav = navigator as any;
+          if (nav.canShare && nav.canShare({ files: [file] })) {
+            try { await nav.share({ files: [file], title: ref, text: shareText }); return; } catch {}
+          }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${ref.replace(/[^\w]+/g, "_")}.png`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          return;
+        }
+      }
+    } catch {}
+    try {
+      if ((navigator as any).share) await (navigator as any).share({ title: ref, text: shareText });
+      else await navigator.clipboard.writeText(shareText);
+    } catch {}
+  };
+
   const pageBg = isDay ? "bg-[#f8f5ef] text-zinc-950" : "bg-black text-white";
   const card = isDay ? "bg-white border-zinc-200 text-zinc-950" : "bg-zinc-950 border-zinc-900 text-white";
 
