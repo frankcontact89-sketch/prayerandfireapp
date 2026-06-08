@@ -173,6 +173,9 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
   const [actionVerse, setActionVerse] = useState<number | null>(null);
   const [showResumeBanner, setShowResumeBanner] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [playerExpanded, setPlayerExpanded] = useState(false);
+  const playerTapRef = useRef<number>(0);
+  const playerTouchStartYRef = useRef<number | null>(null);
 
   const isDay = mode === "day";
 
