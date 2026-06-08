@@ -1114,57 +1114,123 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
           className="fixed left-0 right-0 z-40 px-3"
           style={{ bottom: "calc(64px + env(safe-area-inset-bottom))" }}
         >
-          <div className={`max-w-[720px] mx-auto rounded-2xl border shadow-lg backdrop-blur-md ${
-            isDay ? "bg-white/95 border-zinc-200 text-zinc-950" : "bg-zinc-950/95 border-zinc-800 text-white"
-          }`}>
-            <div className="flex items-center gap-2 px-3 py-2">
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] text-orange-500 font-bold truncate uppercase tracking-wider">
-                  {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
-                </p>
-                <p className="text-[11px] text-zinc-500 truncate">
-                  {translation.toUpperCase()} · {voiceGender === "female" ? tr("voice_female", "Female") : tr("voice_male", "Male")} · {audioRate}x
-                </p>
-              </div>
-              <button onClick={() => skipVerses(-2)} aria-label="Rewind" className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center">
-                <Rewind className="w-5 h-5" />
-              </button>
+          <div
+            onTouchStart={(e) => { playerTouchStartYRef.current = e.touches[0]?.clientY ?? null; }}
+            onTouchEnd={(e) => {
+              const start = playerTouchStartYRef.current;
+              playerTouchStartYRef.current = null;
+              if (start == null || !playerExpanded) return;
+              const end = e.changedTouches[0]?.clientY ?? start;
+              if (end - start > 40) setPlayerExpanded(false);
+            }}
+            className={`max-w-[720px] mx-auto rounded-2xl border shadow-lg backdrop-blur-md overflow-hidden ${
+              isDay ? "bg-white/95 border-zinc-200 text-zinc-950" : "bg-zinc-950/95 border-zinc-800 text-white"
+            }`}
+          >
+            {!playerExpanded ? (
               <button
-                onClick={() => (isSpeaking ? pauseAudio() : resumeAudio())}
-                aria-label={isSpeaking ? "Pause" : "Play"}
-                className="rounded-full bg-orange-500 text-white w-11 h-11 flex items-center justify-center"
+                onClick={() => setPlayerExpanded(true)}
+                className="w-full flex items-center gap-3 px-3 py-2 text-left"
+                aria-label={tr("bible_expand_player", "Expand player")}
               >
-                {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider truncate">
+                    {tr("bible_now_playing", "Now Playing")}
+                  </p>
+                  <p className="text-[13px] font-semibold text-orange-500 truncate">
+                    {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); isSpeaking ? pauseAudio() : resumeAudio(); }}
+                  aria-label={isSpeaking ? "Pause" : "Play"}
+                  className="rounded-full bg-orange-500 text-white w-11 h-11 flex items-center justify-center shrink-0"
+                >
+                  {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                </button>
               </button>
-              <button onClick={() => skipVerses(2)} aria-label="Forward" className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center">
-                <FastForward className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="px-3 pb-2">
-              <input
-                type="range"
-                min={0}
-                max={Math.max(0, currentVerses.length - 1)}
-                value={Math.min(verseIdx, Math.max(0, currentVerses.length - 1))}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  if (isSpeaking) {
-                    speakingRef.current = false;
-                    window.speechSynthesis.cancel();
-                    setTimeout(() => speakVerseAt(bookIdx, chapterIdx, v), 60);
-                  } else {
-                    setVerseIdx(v);
-                    updateMediaSession(bookIdx, chapterIdx, v);
-                  }
-                }}
-                className="w-full accent-orange-500"
-                aria-label="Seek"
-              />
-              <div className="flex justify-between text-[10px] text-zinc-500 -mt-1">
-                <span>{tr("verse", "Verse")} {verseIdx + 1}</span>
-                <span>/ {currentVerses.length}</span>
+            ) : (
+              <div>
+                <button
+                  onClick={() => {
+                    const now = Date.now();
+                    if (now - playerTapRef.current < 300) { setPlayerExpanded(false); playerTapRef.current = 0; }
+                    else playerTapRef.current = now;
+                  }}
+                  className="w-full flex items-center justify-between px-3 pt-2 pb-1"
+                  aria-label={tr("bible_collapse_player", "Collapse player")}
+                >
+                  <span className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">
+                    {tr("bible_now_playing", "Now Playing")}
+                  </span>
+                  <ChevronDown className="w-5 h-5 text-zinc-500" />
+                </button>
+                <div className="px-3 pb-2">
+                  <p className="text-[13px] font-bold text-orange-500 truncate">
+                    {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
+                  </p>
+                  <p className="text-[12px] text-zinc-500 line-clamp-2 mt-0.5">
+                    {currentVerses[verseIdx] || ""}
+                  </p>
+                </div>
+                <div className="px-3">
+                  <input
+                    type="range"
+                    min={0}
+                    max={Math.max(0, currentVerses.length - 1)}
+                    value={Math.min(verseIdx, Math.max(0, currentVerses.length - 1))}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      if (isSpeaking) {
+                        speakingRef.current = false;
+                        window.speechSynthesis.cancel();
+                        setTimeout(() => speakVerseAt(bookIdx, chapterIdx, v), 60);
+                      } else {
+                        setVerseIdx(v);
+                        updateMediaSession(bookIdx, chapterIdx, v);
+                      }
+                    }}
+                    className="w-full accent-orange-500"
+                    aria-label="Seek"
+                  />
+                  <div className="flex justify-between text-[10px] text-zinc-500 -mt-1">
+                    <span>{tr("verse", "Verse")} {verseIdx + 1}</span>
+                    <span>/ {currentVerses.length}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2 px-3 py-2">
+                  <button
+                    onClick={() => {
+                      const rates = [0.75, 1, 1.25, 1.5, 2];
+                      const i = rates.indexOf(audioRate);
+                      setAudioRate(rates[(i + 1) % rates.length] ?? 1);
+                    }}
+                    aria-label="Playback speed"
+                    className="text-[12px] font-bold text-orange-500 min-w-[44px] min-h-[44px] px-2 rounded-lg"
+                  >
+                    {audioRate}x
+                  </button>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => skipVerses(-1)} aria-label="Previous verse" className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center">
+                      <SkipBack className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => (isSpeaking ? pauseAudio() : resumeAudio())}
+                      aria-label={isSpeaking ? "Pause" : "Play"}
+                      className="rounded-full bg-orange-500 text-white w-12 h-12 flex items-center justify-center"
+                    >
+                      {isSpeaking ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+                    </button>
+                    <button onClick={() => skipVerses(1)} aria-label="Next verse" className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center">
+                      <SkipForward className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <span className="text-[10px] text-zinc-500 min-w-[44px] text-right truncate">
+                    {translation.toUpperCase()}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
