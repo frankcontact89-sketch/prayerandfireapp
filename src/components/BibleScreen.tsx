@@ -705,7 +705,30 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
         {view === "verses" && currentBook && (
           <>
-            <Header title={`${bookName(currentBook)} ${chapterIdx + 1}`} onBack={() => setView("chapters")} />
+            <Header title={`${bookName(currentBook).toUpperCase()} ${chapterIdx + 1}`} onBack={() => setView("chapters")} />
+
+            {showResumeBanner && (
+              <div className="px-4 sm:px-5 pt-3 max-w-[760px] mx-auto">
+                <div className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${card}`}>
+                  <div className="flex-1 text-sm">
+                    {tr("bible_resume_from", "Resume from verse")} {verseIdx + 1}?
+                  </div>
+                  <button
+                    onClick={() => setShowResumeBanner(false)}
+                    className="text-zinc-500 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2"
+                    aria-label="Dismiss"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => playFromVerse(verseIdx)}
+                    className="rounded-lg bg-orange-500 text-white text-sm font-semibold px-3 py-2 min-h-[44px]"
+                  >
+                    {tr("resume", "Resume")}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="px-4 sm:px-5 pt-4 pb-10 max-w-[760px] mx-auto space-y-3">
               {currentVerses.map((text, index) => {
@@ -714,9 +737,28 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                 const fav = isFav(currentBook.name, chapterNumber, verseNumber);
                 const noteKey = noteKeyFor(currentBook.name, chapterNumber, verseNumber);
                 const hasNote = !!notes[noteKey];
+                const isActive = isSpeaking && verseIdx === index;
+                const refLabel = `${bookName(currentBook)} ${chapterNumber}:${verseNumber}`;
 
                 return (
-                  <div key={index} className={`rounded-xl border p-4 ${card}`}>
+                  <div
+                    key={index}
+                    ref={(el) => { verseRefsRef.current[index] = el; }}
+                    onTouchStart={() => startLongPress(index)}
+                    onTouchEnd={cancelLongPress}
+                    onTouchMove={cancelLongPress}
+                    onTouchCancel={cancelLongPress}
+                    onContextMenu={(e) => { e.preventDefault(); setActionVerse(index); }}
+                    onClick={() => {
+                      if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
+                      playFromVerse(index);
+                    }}
+                    className={`rounded-xl border p-4 transition-colors cursor-pointer select-none ${
+                      isActive
+                        ? "border-orange-500 bg-orange-500/15 ring-1 ring-orange-500"
+                        : card
+                    }`}
+                  >
                     <p className={`${fontClass}`} style={{ fontSize: `${fontSize}px`, lineHeight }}>
                       <span className="text-orange-500 font-bold mr-2">{verseNumber}</span>
                       {text}
@@ -732,10 +774,24 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                       </p>
                     )}
 
-                    <div className="flex items-center justify-end gap-4 mt-3">
+                    <div className="flex items-center justify-end gap-1 mt-3" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => copyVerse(text, refLabel)}
+                        className={`${copiedKey === refLabel ? "text-orange-500" : "text-zinc-500"} min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg`}
+                        aria-label={tr("copy", "Copy")}
+                      >
+                        {copiedKey === refLabel ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                      </button>
+                      <button
+                        onClick={() => shareVerseImage(text, refLabel)}
+                        className="text-zinc-500 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg"
+                        aria-label={tr("share", "Share")}
+                      >
+                        <Share2 className="w-5 h-5" />
+                      </button>
                       <button
                         onClick={() => openNoteFor(currentBook.name, chapterNumber, verseNumber)}
-                        className={hasNote ? "text-orange-500" : "text-zinc-500"}
+                        className={`${hasNote ? "text-orange-500" : "text-zinc-500"} min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg`}
                         aria-label={tr("bible_note", "Note")}
                       >
                         <StickyNote className="w-5 h-5" fill={hasNote ? "currentColor" : "none"} />
@@ -750,7 +806,8 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                             text,
                           })
                         }
-                        className={fav ? "text-orange-500" : "text-zinc-500"}
+                        className={`${fav ? "text-orange-500" : "text-zinc-500"} min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg`}
+                        aria-label={tr("favorite", "Favorite")}
                       >
                         <Star className="w-5 h-5" fill={fav ? "currentColor" : "none"} />
                       </button>
