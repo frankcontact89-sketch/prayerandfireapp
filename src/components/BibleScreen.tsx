@@ -1123,19 +1123,109 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                   {translation.toUpperCase()} · {voiceGender === "female" ? tr("voice_female", "Female") : tr("voice_male", "Male")} · {audioRate}x
                 </p>
               </div>
-              <button onClick={() => skipVerses(-2)} aria-label="Rewind" className="text-orange-500 p-2">
+              <button onClick={() => skipVerses(-2)} aria-label="Rewind" className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <Rewind className="w-5 h-5" />
               </button>
               <button
                 onClick={() => (isSpeaking ? pauseAudio() : resumeAudio())}
                 aria-label={isSpeaking ? "Pause" : "Play"}
-                className="rounded-full bg-orange-500 text-white w-10 h-10 flex items-center justify-center"
+                className="rounded-full bg-orange-500 text-white w-11 h-11 flex items-center justify-center"
               >
                 {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
               </button>
-              <button onClick={() => skipVerses(2)} aria-label="Forward" className="text-orange-500 p-2">
+              <button onClick={() => skipVerses(2)} aria-label="Forward" className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <FastForward className="w-5 h-5" />
               </button>
+            </div>
+            <div className="px-3 pb-2">
+              <input
+                type="range"
+                min={0}
+                max={Math.max(0, currentVerses.length - 1)}
+                value={Math.min(verseIdx, Math.max(0, currentVerses.length - 1))}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  if (isSpeaking) {
+                    speakingRef.current = false;
+                    window.speechSynthesis.cancel();
+                    setTimeout(() => speakVerseAt(bookIdx, chapterIdx, v), 60);
+                  } else {
+                    setVerseIdx(v);
+                    updateMediaSession(bookIdx, chapterIdx, v);
+                  }
+                }}
+                className="w-full accent-orange-500"
+                aria-label="Seek"
+              />
+              <div className="flex justify-between text-[10px] text-zinc-500 -mt-1">
+                <span>{tr("verse", "Verse")} {verseIdx + 1}</span>
+                <span>/ {currentVerses.length}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {actionVerse !== null && currentBook && currentVerses[actionVerse] !== undefined && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setActionVerse(null)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full rounded-t-2xl p-4 pb-[calc(env(safe-area-inset-bottom)+20px)] ${
+              isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
+            }`}
+          >
+            <p className="text-orange-500 text-xs font-bold uppercase tracking-wider mb-1">
+              {bookName(currentBook)} {chapterIdx + 1}:{actionVerse + 1}
+            </p>
+            <p className="text-sm text-zinc-500 mb-4 line-clamp-2">{currentVerses[actionVerse]}</p>
+            <div className="grid grid-cols-1 gap-1">
+              {[
+                {
+                  icon: <Play className="w-5 h-5" />,
+                  label: tr("bible_start_audio_here", "Start Audio Here"),
+                  onClick: () => { const i = actionVerse!; setActionVerse(null); playFromVerse(i); },
+                },
+                {
+                  icon: <Copy className="w-5 h-5" />,
+                  label: tr("copy", "Copy"),
+                  onClick: () => { copyVerse(currentVerses[actionVerse!], `${bookName(currentBook)} ${chapterIdx + 1}:${actionVerse! + 1}`); setActionVerse(null); },
+                },
+                {
+                  icon: <Star className="w-5 h-5" fill={isFav(currentBook.name, chapterIdx + 1, actionVerse + 1) ? "currentColor" : "none"} />,
+                  label: tr("favorite", "Favorite"),
+                  onClick: () => {
+                    toggleFavorite({
+                      translation,
+                      book: currentBook.name,
+                      chapter: chapterIdx + 1,
+                      verse: actionVerse! + 1,
+                      text: currentVerses[actionVerse!],
+                    });
+                    setActionVerse(null);
+                  },
+                },
+                {
+                  icon: <Share2 className="w-5 h-5" />,
+                  label: tr("share", "Share"),
+                  onClick: () => { shareVerseImage(currentVerses[actionVerse!], `${bookName(currentBook)} ${chapterIdx + 1}:${actionVerse! + 1}`); setActionVerse(null); },
+                },
+                {
+                  icon: <StickyNote className="w-5 h-5" />,
+                  label: tr("bible_add_note", "Add Note"),
+                  onClick: () => { openNoteFor(currentBook.name, chapterIdx + 1, actionVerse! + 1); setActionVerse(null); },
+                },
+              ].map((item, i) => (
+                <button
+                  key={i}
+                  onClick={item.onClick}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-left min-h-[48px] ${
+                    isDay ? "hover:bg-zinc-100" : "hover:bg-zinc-900"
+                  }`}
+                >
+                  <span className="text-orange-500">{item.icon}</span>
+                  <span className="text-[15px] font-medium">{item.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
