@@ -167,6 +167,12 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     () => (localStorage.getItem(VOICE_GENDER_KEY) as "female" | "male") || "female",
   );
   const speakingRef = React.useRef(false);
+  const verseRefsRef = useRef<Record<number, HTMLDivElement | null>>({});
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressFiredRef = useRef(false);
+  const [actionVerse, setActionVerse] = useState<number | null>(null);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const isDay = mode === "day";
 
