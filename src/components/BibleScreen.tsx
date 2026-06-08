@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Rewind, FastForward, Mic } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Rewind, FastForward, Mic, Copy, Share2, X, Check } from "lucide-react";
 import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
@@ -167,6 +167,12 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     () => (localStorage.getItem(VOICE_GENDER_KEY) as "female" | "male") || "female",
   );
   const speakingRef = React.useRef(false);
+  const verseRefsRef = useRef<Record<number, HTMLDivElement | null>>({});
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressFiredRef = useRef(false);
+  const [actionVerse, setActionVerse] = useState<number | null>(null);
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const isDay = mode === "day";
 
@@ -451,6 +457,118 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookIdx, chapterIdx, books]);
 
+  // Auto-scroll active verse into view while audio plays.
+  useEffect(() => {
+    if (!isSpeaking || view !== "verses") return;
+    const el = verseRefsRef.current[verseIdx];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [verseIdx, isSpeaking, view]);
+
+  // Offer "resume from where you left off" when re-entering verses view.
+  useEffect(() => {
+    if (view === "verses" && verseIdx > 0 && !isSpeaking) {
+      setShowResumeBanner(true);
+    } else if (view !== "verses") {
+      setShowResumeBanner(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
+  const playFromVerse = (idx: number) => {
+    speakingRef.current = false;
+    window.speechSynthesis?.cancel();
+    setShowResumeBanner(false);
+    setTimeout(() => speakVerseAt(bookIdx, chapterIdx, idx), 60);
+  };
+
+  const startLongPress = (idx: number) => {
+    longPressFiredRef.current = false;
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = window.setTimeout(() => {
+      longPressFiredRef.current = true;
+      setActionVerse(idx);
+      if (navigator.vibrate) try { navigator.vibrate(15); } catch {}
+    }, 450);
+  };
+  const cancelLongPress = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const copyVerse = async (text: string, ref: string) => {
+    const payload = `"${text}" — ${ref}`;
+    try {
+      await navigator.clipboard.writeText(payload);
+      setCopiedKey(ref);
+      setTimeout(() => setCopiedKey(null), 1500);
+    } catch {}
+  };
+
+  const shareVerseImage = async (text: string, ref: string) => {
+    const shareText = `"${text}" — ${ref}\n\nPrayer & Fire`;
+    try {
+      const canvas = document.createElement("canvas");
+      const W = 1080, H = 1080;
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, "#0a0a0a");
+        grad.addColorStop(1, "#1f0a00");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+        ctx.strokeStyle = "#ff6a00";
+        ctx.lineWidth = 6;
+        ctx.strokeRect(50, 50, W - 100, H - 100);
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.font = "italic 44px Georgia, serif";
+        const words = text.split(/\s+/);
+        const lines: string[] = [];
+        let line = "";
+        const maxW = 880;
+        for (const w of words) {
+          const test = line ? line + " " + w : w;
+          if (ctx.measureText(test).width > maxW) { lines.push(line); line = w; }
+          else line = test;
+        }
+        if (line) lines.push(line);
+        const lineH = 60;
+        const startY = H / 2 - (lines.length * lineH) / 2;
+        lines.forEach((l, i) => ctx.fillText(l, W / 2, startY + i * lineH));
+        ctx.fillStyle = "#ff6a00";
+        ctx.font = "bold 40px sans-serif";
+        ctx.fillText(ref, W / 2, H - 170);
+        ctx.fillStyle = "#999999";
+        ctx.font = "bold 22px sans-serif";
+        ctx.fillText("PRAYER & FIRE", W / 2, H - 110);
+        const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+        if (blob) {
+          const file = new File([blob], `${ref.replace(/[^\w]+/g, "_")}.png`, { type: "image/png" });
+          const nav = navigator as any;
+          if (nav.canShare && nav.canShare({ files: [file] })) {
+            try { await nav.share({ files: [file], title: ref, text: shareText }); return; } catch {}
+          }
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${ref.replace(/[^\w]+/g, "_")}.png`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          return;
+        }
+      }
+    } catch {}
+    try {
+      if ((navigator as any).share) await (navigator as any).share({ title: ref, text: shareText });
+      else await navigator.clipboard.writeText(shareText);
+    } catch {}
+  };
+
   const pageBg = isDay ? "bg-[#f8f5ef] text-zinc-950" : "bg-black text-white";
   const card = isDay ? "bg-white border-zinc-200 text-zinc-950" : "bg-zinc-950 border-zinc-900 text-white";
 
@@ -475,9 +593,18 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
         <div className="flex items-center gap-3 shrink-0">
           {view === "verses" && (
-            <button onClick={playChapter} className="text-orange-500">
-              {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            </button>
+            <>
+              <button
+                onClick={() => setView("search")}
+                aria-label="Search"
+                className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+              <button onClick={playChapter} aria-label={isSpeaking ? "Pause" : "Play"} className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2">
+                {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              </button>
+            </>
           )}
 
           <button onClick={() => setShowReaderSettings(true)} className="text-orange-500">
@@ -510,7 +637,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
   return (
     <div className={`${pageBg} min-h-[100dvh] overflow-hidden`}>
-      <div className="h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+96px)]">
+      <div className="h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+170px)]">
         {view === "books" && (
           <>
             <Header title={tr("holy_bible", "Holy Bible")} />
@@ -578,7 +705,30 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
         {view === "verses" && currentBook && (
           <>
-            <Header title={`${bookName(currentBook)} ${chapterIdx + 1}`} onBack={() => setView("chapters")} />
+            <Header title={`${bookName(currentBook).toUpperCase()} ${chapterIdx + 1}`} onBack={() => setView("chapters")} />
+
+            {showResumeBanner && (
+              <div className="px-4 sm:px-5 pt-3 max-w-[760px] mx-auto">
+                <div className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${card}`}>
+                  <div className="flex-1 text-sm">
+                    {tr("bible_resume_from", "Resume from verse")} {verseIdx + 1}?
+                  </div>
+                  <button
+                    onClick={() => setShowResumeBanner(false)}
+                    className="text-zinc-500 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2"
+                    aria-label="Dismiss"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => playFromVerse(verseIdx)}
+                    className="rounded-lg bg-orange-500 text-white text-sm font-semibold px-3 py-2 min-h-[44px]"
+                  >
+                    {tr("resume", "Resume")}
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="px-4 sm:px-5 pt-4 pb-10 max-w-[760px] mx-auto space-y-3">
               {currentVerses.map((text, index) => {
@@ -587,9 +737,28 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                 const fav = isFav(currentBook.name, chapterNumber, verseNumber);
                 const noteKey = noteKeyFor(currentBook.name, chapterNumber, verseNumber);
                 const hasNote = !!notes[noteKey];
+                const isActive = isSpeaking && verseIdx === index;
+                const refLabel = `${bookName(currentBook)} ${chapterNumber}:${verseNumber}`;
 
                 return (
-                  <div key={index} className={`rounded-xl border p-4 ${card}`}>
+                  <div
+                    key={index}
+                    ref={(el) => { verseRefsRef.current[index] = el; }}
+                    onTouchStart={() => startLongPress(index)}
+                    onTouchEnd={cancelLongPress}
+                    onTouchMove={cancelLongPress}
+                    onTouchCancel={cancelLongPress}
+                    onContextMenu={(e) => { e.preventDefault(); setActionVerse(index); }}
+                    onClick={() => {
+                      if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
+                      playFromVerse(index);
+                    }}
+                    className={`rounded-xl border p-4 transition-colors cursor-pointer select-none ${
+                      isActive
+                        ? "border-orange-500 bg-orange-500/15 ring-1 ring-orange-500"
+                        : card
+                    }`}
+                  >
                     <p className={`${fontClass}`} style={{ fontSize: `${fontSize}px`, lineHeight }}>
                       <span className="text-orange-500 font-bold mr-2">{verseNumber}</span>
                       {text}
@@ -605,10 +774,24 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                       </p>
                     )}
 
-                    <div className="flex items-center justify-end gap-4 mt-3">
+                    <div className="flex items-center justify-end gap-1 mt-3" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => copyVerse(text, refLabel)}
+                        className={`${copiedKey === refLabel ? "text-orange-500" : "text-zinc-500"} min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg`}
+                        aria-label={tr("copy", "Copy")}
+                      >
+                        {copiedKey === refLabel ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                      </button>
+                      <button
+                        onClick={() => shareVerseImage(text, refLabel)}
+                        className="text-zinc-500 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg"
+                        aria-label={tr("share", "Share")}
+                      >
+                        <Share2 className="w-5 h-5" />
+                      </button>
                       <button
                         onClick={() => openNoteFor(currentBook.name, chapterNumber, verseNumber)}
-                        className={hasNote ? "text-orange-500" : "text-zinc-500"}
+                        className={`${hasNote ? "text-orange-500" : "text-zinc-500"} min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg`}
                         aria-label={tr("bible_note", "Note")}
                       >
                         <StickyNote className="w-5 h-5" fill={hasNote ? "currentColor" : "none"} />
@@ -623,7 +806,8 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                             text,
                           })
                         }
-                        className={fav ? "text-orange-500" : "text-zinc-500"}
+                        className={`${fav ? "text-orange-500" : "text-zinc-500"} min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg`}
+                        aria-label={tr("favorite", "Favorite")}
                       >
                         <Star className="w-5 h-5" fill={fav ? "currentColor" : "none"} />
                       </button>
@@ -856,8 +1040,8 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
               <div>
                 <p className="text-sm mb-2">{tr("audio_speed", "Speed")}: {audioRate}x</p>
-                <div className="grid grid-cols-4 gap-2">
-                  {[0.75, 1, 1.25, 1.5].map((r) => (
+                <div className="grid grid-cols-5 gap-2">
+                  {[0.75, 1, 1.25, 1.5, 2].map((r) => (
                     <button
                       key={r}
                       onClick={() => setAudioRate(r)}
@@ -939,19 +1123,109 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                   {translation.toUpperCase()} · {voiceGender === "female" ? tr("voice_female", "Female") : tr("voice_male", "Male")} · {audioRate}x
                 </p>
               </div>
-              <button onClick={() => skipVerses(-2)} aria-label="Rewind" className="text-orange-500 p-2">
+              <button onClick={() => skipVerses(-2)} aria-label="Rewind" className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <Rewind className="w-5 h-5" />
               </button>
               <button
                 onClick={() => (isSpeaking ? pauseAudio() : resumeAudio())}
                 aria-label={isSpeaking ? "Pause" : "Play"}
-                className="rounded-full bg-orange-500 text-white w-10 h-10 flex items-center justify-center"
+                className="rounded-full bg-orange-500 text-white w-11 h-11 flex items-center justify-center"
               >
                 {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
               </button>
-              <button onClick={() => skipVerses(2)} aria-label="Forward" className="text-orange-500 p-2">
+              <button onClick={() => skipVerses(2)} aria-label="Forward" className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <FastForward className="w-5 h-5" />
               </button>
+            </div>
+            <div className="px-3 pb-2">
+              <input
+                type="range"
+                min={0}
+                max={Math.max(0, currentVerses.length - 1)}
+                value={Math.min(verseIdx, Math.max(0, currentVerses.length - 1))}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  if (isSpeaking) {
+                    speakingRef.current = false;
+                    window.speechSynthesis.cancel();
+                    setTimeout(() => speakVerseAt(bookIdx, chapterIdx, v), 60);
+                  } else {
+                    setVerseIdx(v);
+                    updateMediaSession(bookIdx, chapterIdx, v);
+                  }
+                }}
+                className="w-full accent-orange-500"
+                aria-label="Seek"
+              />
+              <div className="flex justify-between text-[10px] text-zinc-500 -mt-1">
+                <span>{tr("verse", "Verse")} {verseIdx + 1}</span>
+                <span>/ {currentVerses.length}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {actionVerse !== null && currentBook && currentVerses[actionVerse] !== undefined && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setActionVerse(null)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full rounded-t-2xl p-4 pb-[calc(env(safe-area-inset-bottom)+20px)] ${
+              isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
+            }`}
+          >
+            <p className="text-orange-500 text-xs font-bold uppercase tracking-wider mb-1">
+              {bookName(currentBook)} {chapterIdx + 1}:{actionVerse + 1}
+            </p>
+            <p className="text-sm text-zinc-500 mb-4 line-clamp-2">{currentVerses[actionVerse]}</p>
+            <div className="grid grid-cols-1 gap-1">
+              {[
+                {
+                  icon: <Play className="w-5 h-5" />,
+                  label: tr("bible_start_audio_here", "Start Audio Here"),
+                  onClick: () => { const i = actionVerse!; setActionVerse(null); playFromVerse(i); },
+                },
+                {
+                  icon: <Copy className="w-5 h-5" />,
+                  label: tr("copy", "Copy"),
+                  onClick: () => { copyVerse(currentVerses[actionVerse!], `${bookName(currentBook)} ${chapterIdx + 1}:${actionVerse! + 1}`); setActionVerse(null); },
+                },
+                {
+                  icon: <Star className="w-5 h-5" fill={isFav(currentBook.name, chapterIdx + 1, actionVerse + 1) ? "currentColor" : "none"} />,
+                  label: tr("favorite", "Favorite"),
+                  onClick: () => {
+                    toggleFavorite({
+                      translation,
+                      book: currentBook.name,
+                      chapter: chapterIdx + 1,
+                      verse: actionVerse! + 1,
+                      text: currentVerses[actionVerse!],
+                    });
+                    setActionVerse(null);
+                  },
+                },
+                {
+                  icon: <Share2 className="w-5 h-5" />,
+                  label: tr("share", "Share"),
+                  onClick: () => { shareVerseImage(currentVerses[actionVerse!], `${bookName(currentBook)} ${chapterIdx + 1}:${actionVerse! + 1}`); setActionVerse(null); },
+                },
+                {
+                  icon: <StickyNote className="w-5 h-5" />,
+                  label: tr("bible_add_note", "Add Note"),
+                  onClick: () => { openNoteFor(currentBook.name, chapterIdx + 1, actionVerse! + 1); setActionVerse(null); },
+                },
+              ].map((item, i) => (
+                <button
+                  key={i}
+                  onClick={item.onClick}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-left min-h-[48px] ${
+                    isDay ? "hover:bg-zinc-100" : "hover:bg-zinc-900"
+                  }`}
+                >
+                  <span className="text-orange-500">{item.icon}</span>
+                  <span className="text-[15px] font-medium">{item.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
