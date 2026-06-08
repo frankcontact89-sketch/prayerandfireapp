@@ -637,7 +637,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
   return (
     <div className={`${pageBg} min-h-[100dvh] overflow-hidden`}>
-      <div className="h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+96px)]">
+      <div className="h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+170px)]">
         {view === "books" && (
           <>
             <Header title={tr("holy_bible", "Holy Bible")} />
