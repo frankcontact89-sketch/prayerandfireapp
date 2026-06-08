@@ -1040,8 +1040,8 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
               <div>
                 <p className="text-sm mb-2">{tr("audio_speed", "Speed")}: {audioRate}x</p>
-                <div className="grid grid-cols-4 gap-2">
-                  {[0.75, 1, 1.25, 1.5].map((r) => (
+                <div className="grid grid-cols-5 gap-2">
+                  {[0.75, 1, 1.25, 1.5, 2].map((r) => (
                     <button
                       key={r}
                       onClick={() => setAudioRate(r)}
