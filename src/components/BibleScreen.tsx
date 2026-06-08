@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Rewind, FastForward, Mic } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Rewind, FastForward, Mic, Copy, Share2, X, Check } from "lucide-react";
 import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
