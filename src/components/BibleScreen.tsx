@@ -593,9 +593,6 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
               >
                 <Search className="w-5 h-5" />
               </button>
-              <button onClick={playChapter} aria-label={isSpeaking ? "Pause" : "Play"} className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2">
-                {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-              </button>
             </>
           )}
 
