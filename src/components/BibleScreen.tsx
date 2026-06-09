@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Search, Star, ChevronRight, ChevronDown, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Rewind, FastForward, Mic, Copy, Share2, X, Check, SkipBack, SkipForward } from "lucide-react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check } from "lucide-react";
 import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
@@ -35,7 +35,6 @@ const LINE_HEIGHT_KEY = "pf_bible_line_height";
 const FONT_KEY = "pf_bible_font";
 const VERSE_KEY = "pf_bible_verse";
 const RATE_KEY = "pf_bible_audio_rate";
-const VOICE_GENDER_KEY = "pf_bible_voice_gender";
 
 // Heuristic gender detection from voice names across platforms/locales.
 const FEMALE_NAME_HINTS = [
@@ -60,7 +59,7 @@ function voiceGenderScore(name: string, hints: string[]): boolean {
   return hints.some((h) => new RegExp(`(^|[^a-z])${h}([^a-z]|$)`, "i").test(lower));
 }
 
-function pickVoice(lang: string, gender: "female" | "male"): SpeechSynthesisVoice | null {
+function pickVoice(lang: string): SpeechSynthesisVoice | null {
   const synth = window.speechSynthesis;
   if (!synth) return null;
   const all = synth.getVoices();
@@ -69,13 +68,10 @@ function pickVoice(lang: string, gender: "female" | "male"): SpeechSynthesisVoic
   const matches = all.filter((v) => v.lang?.toLowerCase().startsWith(langPrefix));
   const pool = matches.length ? matches : all;
 
-  const primary = gender === "female" ? FEMALE_NAME_HINTS : MALE_NAME_HINTS;
-  const secondary = gender === "female" ? MALE_NAME_HINTS : FEMALE_NAME_HINTS;
-
-  const preferred = pool.find((v) => voiceGenderScore(v.name, primary));
+  const preferred = pool.find((v) => voiceGenderScore(v.name, FEMALE_NAME_HINTS));
   if (preferred) return preferred;
-  // Avoid clearly opposite-gender voices; otherwise just take first match.
-  const neutral = pool.find((v) => !voiceGenderScore(v.name, secondary));
+  // Avoid clearly male voices; otherwise just take first match.
+  const neutral = pool.find((v) => !voiceGenderScore(v.name, MALE_NAME_HINTS));
   return neutral || pool[0] || null;
 }
 
@@ -163,9 +159,6 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
   const [verseIdx, setVerseIdx] = useState(() => Number(localStorage.getItem(VERSE_KEY) || 0));
   const [audioRate, setAudioRate] = useState<number>(() => Number(localStorage.getItem(RATE_KEY) || 1));
-  const [voiceGender, setVoiceGender] = useState<"female" | "male">(
-    () => (localStorage.getItem(VOICE_GENDER_KEY) as "female" | "male") || "female",
-  );
   const speakingRef = React.useRef(false);
   const verseRefsRef = useRef<Record<number, HTMLDivElement | null>>({});
   const longPressTimerRef = useRef<number | null>(null);
@@ -173,9 +166,6 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
   const [actionVerse, setActionVerse] = useState<number | null>(null);
   const [showResumeBanner, setShowResumeBanner] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [playerExpanded, setPlayerExpanded] = useState(false);
-  const playerTapRef = useRef<number>(0);
-  const playerTouchStartYRef = useRef<number | null>(null);
 
   const isDay = mode === "day";
 
@@ -202,8 +192,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     localStorage.setItem(FONT_KEY, fontFamily);
     localStorage.setItem(VERSE_KEY, String(verseIdx));
     localStorage.setItem(RATE_KEY, String(audioRate));
-    localStorage.setItem(VOICE_GENDER_KEY, voiceGender);
-  }, [mode, bookIdx, chapterIdx, view, fontSize, lineHeight, fontFamily, verseIdx, audioRate, voiceGender]);
+  }, [mode, bookIdx, chapterIdx, view, fontSize, lineHeight, fontFamily, verseIdx, audioRate]);
 
   useEffect(() => {
     return () => {
@@ -348,7 +337,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     utterance.lang = speechLang;
     utterance.rate = audioRate;
     utterance.pitch = 1;
-    const voice = pickVoice(speechLang, voiceGender);
+    const voice = pickVoice(speechLang);
     if (voice) utterance.voice = voice;
 
     utterance.onend = () => {
@@ -429,14 +418,14 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     }
   };
 
-  // If voice gender or rate changes while playing, restart current verse with new settings.
+  // If rate changes while playing, restart current verse with new settings.
   useEffect(() => {
     if (!isSpeaking) return;
     speakingRef.current = false;
     window.speechSynthesis.cancel();
     setTimeout(() => speakVerseAt(bookIdx, chapterIdx, verseIdx), 50);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audioRate, voiceGender]);
+  }, [audioRate]);
 
   // Wire up Media Session lock-screen / hardware controls when supported.
   useEffect(() => {
@@ -444,13 +433,13 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     try {
       navigator.mediaSession.setActionHandler("play", () => resumeAudio());
       navigator.mediaSession.setActionHandler("pause", () => pauseAudio());
-      navigator.mediaSession.setActionHandler("seekbackward", () => skipVerses(-2));
-      navigator.mediaSession.setActionHandler("seekforward", () => skipVerses(2));
-      navigator.mediaSession.setActionHandler("previoustrack", () => skipVerses(-2));
-      navigator.mediaSession.setActionHandler("nexttrack", () => skipVerses(2));
+      navigator.mediaSession.setActionHandler("seekbackward", () => skipVerses(-1));
+      navigator.mediaSession.setActionHandler("seekforward", () => skipVerses(1));
+      navigator.mediaSession.setActionHandler("previoustrack", () => skipVerses(-1));
+      navigator.mediaSession.setActionHandler("nexttrack", () => skipVerses(1));
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [books, bookIdx, chapterIdx, verseIdx, isSpeaking, audioRate, voiceGender]);
+  }, [books, bookIdx, chapterIdx, verseIdx, isSpeaking, audioRate]);
 
   // Keep verseIdx valid when chapter/book change manually.
   useEffect(() => {
