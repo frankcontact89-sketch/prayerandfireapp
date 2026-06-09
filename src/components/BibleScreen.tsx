@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Search, Star, ChevronRight, ChevronDown, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Rewind, FastForward, Mic, Copy, Share2, X, Check, SkipBack, SkipForward } from "lucide-react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check } from "lucide-react";
 import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
@@ -35,7 +35,6 @@ const LINE_HEIGHT_KEY = "pf_bible_line_height";
 const FONT_KEY = "pf_bible_font";
 const VERSE_KEY = "pf_bible_verse";
 const RATE_KEY = "pf_bible_audio_rate";
-const VOICE_GENDER_KEY = "pf_bible_voice_gender";
 
 // Heuristic gender detection from voice names across platforms/locales.
 const FEMALE_NAME_HINTS = [
@@ -60,7 +59,7 @@ function voiceGenderScore(name: string, hints: string[]): boolean {
   return hints.some((h) => new RegExp(`(^|[^a-z])${h}([^a-z]|$)`, "i").test(lower));
 }
 
-function pickVoice(lang: string, gender: "female" | "male"): SpeechSynthesisVoice | null {
+function pickVoice(lang: string): SpeechSynthesisVoice | null {
   const synth = window.speechSynthesis;
   if (!synth) return null;
   const all = synth.getVoices();
@@ -69,13 +68,10 @@ function pickVoice(lang: string, gender: "female" | "male"): SpeechSynthesisVoic
   const matches = all.filter((v) => v.lang?.toLowerCase().startsWith(langPrefix));
   const pool = matches.length ? matches : all;
 
-  const primary = gender === "female" ? FEMALE_NAME_HINTS : MALE_NAME_HINTS;
-  const secondary = gender === "female" ? MALE_NAME_HINTS : FEMALE_NAME_HINTS;
-
-  const preferred = pool.find((v) => voiceGenderScore(v.name, primary));
+  const preferred = pool.find((v) => voiceGenderScore(v.name, FEMALE_NAME_HINTS));
   if (preferred) return preferred;
-  // Avoid clearly opposite-gender voices; otherwise just take first match.
-  const neutral = pool.find((v) => !voiceGenderScore(v.name, secondary));
+  // Avoid clearly male voices; otherwise just take first match.
+  const neutral = pool.find((v) => !voiceGenderScore(v.name, MALE_NAME_HINTS));
   return neutral || pool[0] || null;
 }
 
@@ -163,9 +159,6 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
   const [verseIdx, setVerseIdx] = useState(() => Number(localStorage.getItem(VERSE_KEY) || 0));
   const [audioRate, setAudioRate] = useState<number>(() => Number(localStorage.getItem(RATE_KEY) || 1));
-  const [voiceGender, setVoiceGender] = useState<"female" | "male">(
-    () => (localStorage.getItem(VOICE_GENDER_KEY) as "female" | "male") || "female",
-  );
   const speakingRef = React.useRef(false);
   const verseRefsRef = useRef<Record<number, HTMLDivElement | null>>({});
   const longPressTimerRef = useRef<number | null>(null);
@@ -173,9 +166,6 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
   const [actionVerse, setActionVerse] = useState<number | null>(null);
   const [showResumeBanner, setShowResumeBanner] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [playerExpanded, setPlayerExpanded] = useState(false);
-  const playerTapRef = useRef<number>(0);
-  const playerTouchStartYRef = useRef<number | null>(null);
 
   const isDay = mode === "day";
 
@@ -202,8 +192,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     localStorage.setItem(FONT_KEY, fontFamily);
     localStorage.setItem(VERSE_KEY, String(verseIdx));
     localStorage.setItem(RATE_KEY, String(audioRate));
-    localStorage.setItem(VOICE_GENDER_KEY, voiceGender);
-  }, [mode, bookIdx, chapterIdx, view, fontSize, lineHeight, fontFamily, verseIdx, audioRate, voiceGender]);
+  }, [mode, bookIdx, chapterIdx, view, fontSize, lineHeight, fontFamily, verseIdx, audioRate]);
 
   useEffect(() => {
     return () => {
@@ -348,7 +337,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     utterance.lang = speechLang;
     utterance.rate = audioRate;
     utterance.pitch = 1;
-    const voice = pickVoice(speechLang, voiceGender);
+    const voice = pickVoice(speechLang);
     if (voice) utterance.voice = voice;
 
     utterance.onend = () => {
@@ -429,14 +418,14 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     }
   };
 
-  // If voice gender or rate changes while playing, restart current verse with new settings.
+  // If rate changes while playing, restart current verse with new settings.
   useEffect(() => {
     if (!isSpeaking) return;
     speakingRef.current = false;
     window.speechSynthesis.cancel();
     setTimeout(() => speakVerseAt(bookIdx, chapterIdx, verseIdx), 50);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audioRate, voiceGender]);
+  }, [audioRate]);
 
   // Wire up Media Session lock-screen / hardware controls when supported.
   useEffect(() => {
@@ -444,13 +433,13 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
     try {
       navigator.mediaSession.setActionHandler("play", () => resumeAudio());
       navigator.mediaSession.setActionHandler("pause", () => pauseAudio());
-      navigator.mediaSession.setActionHandler("seekbackward", () => skipVerses(-2));
-      navigator.mediaSession.setActionHandler("seekforward", () => skipVerses(2));
-      navigator.mediaSession.setActionHandler("previoustrack", () => skipVerses(-2));
-      navigator.mediaSession.setActionHandler("nexttrack", () => skipVerses(2));
+      navigator.mediaSession.setActionHandler("seekbackward", () => skipVerses(-1));
+      navigator.mediaSession.setActionHandler("seekforward", () => skipVerses(1));
+      navigator.mediaSession.setActionHandler("previoustrack", () => skipVerses(-1));
+      navigator.mediaSession.setActionHandler("nexttrack", () => skipVerses(1));
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [books, bookIdx, chapterIdx, verseIdx, isSpeaking, audioRate, voiceGender]);
+  }, [books, bookIdx, chapterIdx, verseIdx, isSpeaking, audioRate]);
 
   // Keep verseIdx valid when chapter/book change manually.
   useEffect(() => {
@@ -640,7 +629,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
   return (
     <div className={`${pageBg} min-h-[100dvh] overflow-hidden`}>
-      <div className="h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+170px)]">
+      <div className="h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+80px)]">
         {view === "books" && (
           <>
             <Header title={tr("holy_bible", "Holy Bible")} />
@@ -710,6 +699,50 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
           <>
             <Header title={`${bookName(currentBook).toUpperCase()} ${chapterIdx + 1}`} onBack={() => setView("chapters")} />
 
+            {/* Compact top "Now Playing" strip — replaces the old large floating bottom player. */}
+            <div
+              className={`sticky top-[calc(env(safe-area-inset-top)+56px)] z-10 border-b ${
+                isDay ? "bg-white/95 border-zinc-200" : "bg-black/90 border-zinc-800"
+              } backdrop-blur-md`}
+            >
+              <div className="max-w-[760px] mx-auto px-4 sm:px-5 py-2 flex items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider truncate">
+                    {tr("bible_now_playing", "Now Playing")}
+                  </p>
+                  <p className="text-[13px] font-semibold text-orange-500 truncate">
+                    {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
+                  </p>
+                </div>
+                <button
+                  onClick={() => (isSpeaking ? pauseAudio() : playFromVerse(verseIdx))}
+                  aria-label={isSpeaking ? "Pause" : "Play"}
+                  className="rounded-full bg-orange-500 text-white w-10 h-10 flex items-center justify-center shrink-0"
+                >
+                  {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                </button>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={Math.max(0, currentVerses.length - 1)}
+                value={Math.min(verseIdx, Math.max(0, currentVerses.length - 1))}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  if (isSpeaking) {
+                    speakingRef.current = false;
+                    window.speechSynthesis.cancel();
+                    setTimeout(() => speakVerseAt(bookIdx, chapterIdx, v), 60);
+                  } else {
+                    setVerseIdx(v);
+                    updateMediaSession(bookIdx, chapterIdx, v);
+                  }
+                }}
+                className="w-full accent-orange-500 block h-1 -mt-1"
+                aria-label="Seek"
+              />
+            </div>
+
             {showResumeBanner && (
               <div className="px-4 sm:px-5 pt-3 max-w-[760px] mx-auto">
                 <div className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${card}`}>
@@ -740,7 +773,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                 const fav = isFav(currentBook.name, chapterNumber, verseNumber);
                 const noteKey = noteKeyFor(currentBook.name, chapterNumber, verseNumber);
                 const hasNote = !!notes[noteKey];
-                const isActive = isSpeaking && verseIdx === index;
+                const isActive = verseIdx === index;
                 const refLabel = `${bookName(currentBook)} ${chapterNumber}:${verseNumber}`;
 
                 return (
@@ -754,6 +787,12 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                     onContextMenu={(e) => { e.preventDefault(); setActionVerse(index); }}
                     onClick={() => {
                       if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
+                      // Single tap: select verse only — do not autoplay.
+                      setVerseIdx(index);
+                      updateMediaSession(bookIdx, chapterIdx, index);
+                    }}
+                    onDoubleClick={() => {
+                      // Double tap: start playing from this verse.
                       playFromVerse(index);
                     }}
                     className={`rounded-xl border p-4 transition-colors cursor-pointer select-none ${
@@ -1022,26 +1061,6 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
               </button>
 
               <div>
-                <p className="text-sm mb-2 flex items-center gap-2">
-                  <Mic className="w-4 h-4 text-orange-500" />
-                  {tr("voice", "Voice")}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {(["female", "male"] as const).map((g) => (
-                    <button
-                      key={g}
-                      onClick={() => setVoiceGender(g)}
-                      className={`rounded-xl border px-3 py-2 capitalize ${
-                        voiceGender === g ? "border-orange-500 bg-orange-500/10" : "border-zinc-700"
-                      }`}
-                    >
-                      {g === "female" ? tr("voice_female", "Female") : tr("voice_male", "Male")}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
                 <p className="text-sm mb-2">{tr("audio_speed", "Speed")}: {audioRate}x</p>
                 <div className="grid grid-cols-5 gap-2">
                   {[0.75, 1, 1.25, 1.5, 2].map((r) => (
@@ -1109,131 +1128,6 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
         </div>
       )}
 
-      {currentBook && (
-        <div
-          className="fixed left-0 right-0 z-40 px-3"
-          style={{ bottom: "calc(64px + env(safe-area-inset-bottom))" }}
-        >
-          <div
-            onTouchStart={(e) => { playerTouchStartYRef.current = e.touches[0]?.clientY ?? null; }}
-            onTouchEnd={(e) => {
-              const start = playerTouchStartYRef.current;
-              playerTouchStartYRef.current = null;
-              if (start == null || !playerExpanded) return;
-              const end = e.changedTouches[0]?.clientY ?? start;
-              if (end - start > 40) setPlayerExpanded(false);
-            }}
-            className={`max-w-[720px] mx-auto rounded-2xl border shadow-lg backdrop-blur-md overflow-hidden ${
-              isDay ? "bg-white/95 border-zinc-200 text-zinc-950" : "bg-zinc-950/95 border-zinc-800 text-white"
-            }`}
-          >
-            {!playerExpanded ? (
-              <button
-                onClick={() => setPlayerExpanded(true)}
-                className="w-full flex items-center gap-3 px-3 py-2 text-left"
-                aria-label={tr("bible_expand_player", "Expand player")}
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider truncate">
-                    {tr("bible_now_playing", "Now Playing")}
-                  </p>
-                  <p className="text-[13px] font-semibold text-orange-500 truncate">
-                    {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
-                  </p>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); isSpeaking ? pauseAudio() : resumeAudio(); }}
-                  aria-label={isSpeaking ? "Pause" : "Play"}
-                  className="rounded-full bg-orange-500 text-white w-11 h-11 flex items-center justify-center shrink-0"
-                >
-                  {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                </button>
-              </button>
-            ) : (
-              <div>
-                <button
-                  onClick={() => {
-                    const now = Date.now();
-                    if (now - playerTapRef.current < 300) { setPlayerExpanded(false); playerTapRef.current = 0; }
-                    else playerTapRef.current = now;
-                  }}
-                  className="w-full flex items-center justify-between px-3 pt-2 pb-1"
-                  aria-label={tr("bible_collapse_player", "Collapse player")}
-                >
-                  <span className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">
-                    {tr("bible_now_playing", "Now Playing")}
-                  </span>
-                  <ChevronDown className="w-5 h-5 text-zinc-500" />
-                </button>
-                <div className="px-3 pb-2">
-                  <p className="text-[13px] font-bold text-orange-500 truncate">
-                    {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
-                  </p>
-                  <p className="text-[12px] text-zinc-500 line-clamp-2 mt-0.5">
-                    {currentVerses[verseIdx] || ""}
-                  </p>
-                </div>
-                <div className="px-3">
-                  <input
-                    type="range"
-                    min={0}
-                    max={Math.max(0, currentVerses.length - 1)}
-                    value={Math.min(verseIdx, Math.max(0, currentVerses.length - 1))}
-                    onChange={(e) => {
-                      const v = Number(e.target.value);
-                      if (isSpeaking) {
-                        speakingRef.current = false;
-                        window.speechSynthesis.cancel();
-                        setTimeout(() => speakVerseAt(bookIdx, chapterIdx, v), 60);
-                      } else {
-                        setVerseIdx(v);
-                        updateMediaSession(bookIdx, chapterIdx, v);
-                      }
-                    }}
-                    className="w-full accent-orange-500"
-                    aria-label="Seek"
-                  />
-                  <div className="flex justify-between text-[10px] text-zinc-500 -mt-1">
-                    <span>{tr("verse", "Verse")} {verseIdx + 1}</span>
-                    <span>/ {currentVerses.length}</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-2 px-3 py-2">
-                  <button
-                    onClick={() => {
-                      const rates = [0.75, 1, 1.25, 1.5, 2];
-                      const i = rates.indexOf(audioRate);
-                      setAudioRate(rates[(i + 1) % rates.length] ?? 1);
-                    }}
-                    aria-label="Playback speed"
-                    className="text-[12px] font-bold text-orange-500 min-w-[44px] min-h-[44px] px-2 rounded-lg"
-                  >
-                    {audioRate}x
-                  </button>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => skipVerses(-1)} aria-label="Previous verse" className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center">
-                      <SkipBack className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => (isSpeaking ? pauseAudio() : resumeAudio())}
-                      aria-label={isSpeaking ? "Pause" : "Play"}
-                      className="rounded-full bg-orange-500 text-white w-12 h-12 flex items-center justify-center"
-                    >
-                      {isSpeaking ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-                    </button>
-                    <button onClick={() => skipVerses(1)} aria-label="Next verse" className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center">
-                      <SkipForward className="w-5 h-5" />
-                    </button>
-                  </div>
-                  <span className="text-[10px] text-zinc-500 min-w-[44px] text-right truncate">
-                    {translation.toUpperCase()}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {actionVerse !== null && currentBook && currentVerses[actionVerse] !== undefined && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setActionVerse(null)}>
