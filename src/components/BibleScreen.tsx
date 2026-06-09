@@ -743,6 +743,12 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                     onContextMenu={(e) => { e.preventDefault(); setActionVerse(index); }}
                     onClick={() => {
                       if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
+                      // Single tap: select verse only — do not autoplay.
+                      setVerseIdx(index);
+                      updateMediaSession(bookIdx, chapterIdx, index);
+                    }}
+                    onDoubleClick={() => {
+                      // Double tap: start playing from this verse.
                       playFromVerse(index);
                     }}
                     className={`rounded-xl border p-4 transition-colors cursor-pointer select-none ${
