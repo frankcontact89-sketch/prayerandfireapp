@@ -773,7 +773,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                 const fav = isFav(currentBook.name, chapterNumber, verseNumber);
                 const noteKey = noteKeyFor(currentBook.name, chapterNumber, verseNumber);
                 const hasNote = !!notes[noteKey];
-                const isActive = isSpeaking && verseIdx === index;
+                const isActive = verseIdx === index;
                 const refLabel = `${bookName(currentBook)} ${chapterNumber}:${verseNumber}`;
 
                 return (
