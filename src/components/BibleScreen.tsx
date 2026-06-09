@@ -1011,26 +1011,6 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
               </button>
 
               <div>
-                <p className="text-sm mb-2 flex items-center gap-2">
-                  <Mic className="w-4 h-4 text-orange-500" />
-                  {tr("voice", "Voice")}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {(["female", "male"] as const).map((g) => (
-                    <button
-                      key={g}
-                      onClick={() => setVoiceGender(g)}
-                      className={`rounded-xl border px-3 py-2 capitalize ${
-                        voiceGender === g ? "border-orange-500 bg-orange-500/10" : "border-zinc-700"
-                      }`}
-                    >
-                      {g === "female" ? tr("voice_female", "Female") : tr("voice_male", "Male")}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
                 <p className="text-sm mb-2">{tr("audio_speed", "Speed")}: {audioRate}x</p>
                 <div className="grid grid-cols-5 gap-2">
                   {[0.75, 1, 1.25, 1.5, 2].map((r) => (
