@@ -696,48 +696,51 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
           <>
             <Header title={`${bookName(currentBook).toUpperCase()} ${chapterIdx + 1}`} onBack={() => setView("chapters")} />
 
-            {/* Compact top "Now Playing" strip — replaces the old large floating bottom player. */}
+            {/* Integrated audio player — sits directly below the chapter title header,
+                above the verses. Never floats over scripture. */}
             <div
-              className={`sticky top-[calc(env(safe-area-inset-top)+56px)] z-10 border-b ${
+              className={`sticky top-[calc(env(safe-area-inset-top)+56px)] z-10 border-b shadow-sm ${
                 isDay ? "bg-white/95 border-zinc-200" : "bg-black/90 border-zinc-800"
               } backdrop-blur-md`}
             >
-              <div className="max-w-[760px] mx-auto px-4 sm:px-5 py-2 flex items-center gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider truncate">
-                    {tr("bible_now_playing", "Now Playing")}
-                  </p>
-                  <p className="text-[13px] font-semibold text-orange-500 truncate">
-                    {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
-                  </p>
-                </div>
+              <div className="max-w-[760px] mx-auto px-4 sm:px-5 py-3 flex items-center gap-3">
                 <button
                   onClick={() => (isSpeaking ? pauseAudio() : playFromVerse(verseIdx))}
                   aria-label={isSpeaking ? "Pause" : "Play"}
-                  className="rounded-full bg-orange-500 text-white w-10 h-10 flex items-center justify-center shrink-0"
+                  className="rounded-full bg-orange-500 text-white w-11 h-11 flex items-center justify-center shrink-0 active:scale-95 transition-transform"
                 >
-                  {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                  {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
                 </button>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <p className="text-[13px] font-semibold text-orange-500 truncate">
+                      {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
+                    </p>
+                    <p className={`text-[11px] font-medium tabular-nums shrink-0 ${isDay ? "text-zinc-500" : "text-zinc-400"}`}>
+                      {verseIdx + 1} / {currentVerses.length}
+                    </p>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={Math.max(0, currentVerses.length - 1)}
+                    value={Math.min(verseIdx, Math.max(0, currentVerses.length - 1))}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      if (isSpeaking) {
+                        speakingRef.current = false;
+                        window.speechSynthesis.cancel();
+                        setTimeout(() => speakVerseAt(bookIdx, chapterIdx, v), 60);
+                      } else {
+                        setVerseIdx(v);
+                        updateMediaSession(bookIdx, chapterIdx, v);
+                      }
+                    }}
+                    className="w-full accent-orange-500 block h-1"
+                    aria-label="Seek"
+                  />
+                </div>
               </div>
-              <input
-                type="range"
-                min={0}
-                max={Math.max(0, currentVerses.length - 1)}
-                value={Math.min(verseIdx, Math.max(0, currentVerses.length - 1))}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  if (isSpeaking) {
-                    speakingRef.current = false;
-                    window.speechSynthesis.cancel();
-                    setTimeout(() => speakVerseAt(bookIdx, chapterIdx, v), 60);
-                  } else {
-                    setVerseIdx(v);
-                    updateMediaSession(bookIdx, chapterIdx, v);
-                  }
-                }}
-                className="w-full accent-orange-500 block h-1 -mt-1"
-                aria-label="Seek"
-              />
             </div>
 
             {showResumeBanner && (
