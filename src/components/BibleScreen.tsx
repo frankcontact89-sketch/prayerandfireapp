@@ -700,17 +700,24 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                 isDay ? "bg-white/95 border-zinc-200" : "bg-black/90 border-zinc-800"
               }`}
             >
-              {/* Row 1: back + title + tool icons */}
-              <div className="flex items-center justify-between px-4 pt-3 pb-2 gap-2">
-                <div className="flex items-center gap-2 min-w-0">
+              {/* Row 1: back + title + play in the marked space + tool icons */}
+              <div className="flex items-center px-4 pt-3 pb-2 gap-2">
+                <div className="flex items-center gap-2 min-w-0 shrink">
                   <button onClick={() => setView("chapters")} className="text-orange-500 shrink-0" aria-label="Back">
                     <ArrowLeft className="w-5 h-5" />
                   </button>
-                  <h2 className="text-[17px] sm:text-[19px] font-semibold truncate">
+                  <h2 className="text-[17px] sm:text-[19px] font-semibold truncate max-w-[28vw] sm:max-w-[40vw]">
                     {`${bookName(currentBook).toUpperCase()} ${chapterIdx + 1}`}
                   </h2>
+                  <button
+                    onClick={() => (isSpeaking ? pauseAudio() : playFromVerse(verseIdx))}
+                    aria-label={isSpeaking ? "Pause" : "Play"}
+                    className="rounded-full bg-orange-500 text-white w-10 h-10 flex items-center justify-center shrink-0 active:scale-95 transition-transform shadow-sm"
+                  >
+                    {isSpeaking ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                  </button>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
                   <button onClick={() => setView("search")} aria-label="Search" className="text-orange-500 p-1">
                     <Search className="w-5 h-5" />
                   </button>
@@ -730,16 +737,9 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                   </button>
                 </div>
               </div>
-              {/* Row 2: integrated audio controls inside same white bar */}
+              {/* Row 2: current reference + progress inside same white bar */}
               <div className="px-4 pb-3 flex items-center gap-3">
-                <button
-                  onClick={() => (isSpeaking ? pauseAudio() : playFromVerse(verseIdx))}
-                  aria-label={isSpeaking ? "Pause" : "Play"}
-                  className="rounded-full bg-orange-500 text-white w-9 h-9 flex items-center justify-center shrink-0 active:scale-95 transition-transform"
-                >
-                  {isSpeaking ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
-                </button>
-                <p className="text-[13px] font-semibold text-orange-500 truncate shrink-0 max-w-[40%]">
+                <p className="text-[13px] font-semibold text-orange-500 truncate shrink-0 max-w-[42%]">
                   {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
                 </p>
                 <input
