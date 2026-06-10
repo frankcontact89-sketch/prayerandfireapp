@@ -694,32 +694,58 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
         {view === "verses" && currentBook && (
           <>
-            <Header title={`${bookName(currentBook).toUpperCase()} ${chapterIdx + 1}`} onBack={() => setView("chapters")} />
-
-            {/* Integrated audio player — sits directly below the chapter title header,
-                above the verses. Never floats over scripture. */}
+            {/* Unified sticky top bar: title row + integrated audio row */}
             <div
-              className={`sticky top-[calc(env(safe-area-inset-top)+56px)] z-10 border-b shadow-sm ${
+              className={`sticky top-0 z-20 backdrop-blur-md border-b pt-[env(safe-area-inset-top)] ${
                 isDay ? "bg-white/95 border-zinc-200" : "bg-black/90 border-zinc-800"
-              } backdrop-blur-md`}
+              }`}
             >
-              <div className="max-w-[760px] mx-auto px-4 sm:px-5 py-3 flex items-center gap-3">
-                <button
-                  onClick={() => (isSpeaking ? pauseAudio() : playFromVerse(verseIdx))}
-                  aria-label={isSpeaking ? "Pause" : "Play"}
-                  className="rounded-full bg-orange-500 text-white w-11 h-11 flex items-center justify-center shrink-0 active:scale-95 transition-transform"
-                >
-                  {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
-                </button>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-[13px] font-semibold text-orange-500 truncate">
-                      {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
-                    </p>
-                    <p className={`text-[11px] font-medium tabular-nums shrink-0 ${isDay ? "text-zinc-500" : "text-zinc-400"}`}>
-                      {verseIdx + 1} / {currentVerses.length}
-                    </p>
-                  </div>
+              <div className="flex items-center justify-between px-4 py-3 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <button onClick={() => setView("chapters")} className="text-orange-500 shrink-0" aria-label="Back">
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <h2 className="text-[18px] sm:text-[20px] font-semibold truncate">
+                    {`${bookName(currentBook).toUpperCase()} ${chapterIdx + 1}`}
+                  </h2>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <button
+                    onClick={() => setView("search")}
+                    aria-label="Search"
+                    className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2"
+                  >
+                    <Search className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => setShowReaderSettings(true)} className="text-orange-500" aria-label="Text settings">
+                    <Type className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => setMode(isDay ? "night" : "day")} className="text-orange-500" aria-label="Theme">
+                    {isDay ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                  </button>
+                  <button
+                    onClick={() => setShowLangPicker(true)}
+                    className="text-orange-500 shrink-0 flex items-center gap-1.5 text-sm"
+                    aria-label="Language"
+                  >
+                    <Globe className="w-4 h-4" />
+                    <span className="uppercase tracking-wider text-xs font-semibold">{translation}</span>
+                  </button>
+                </div>
+              </div>
+              {/* Second row: integrated audio controls */}
+              <div className={`border-t ${isDay ? "border-zinc-200/70" : "border-zinc-800/70"}`}>
+                <div className="max-w-[760px] mx-auto px-4 sm:px-5 py-2 flex items-center gap-3">
+                  <button
+                    onClick={() => (isSpeaking ? pauseAudio() : playFromVerse(verseIdx))}
+                    aria-label={isSpeaking ? "Pause" : "Play"}
+                    className="rounded-full bg-orange-500 text-white w-9 h-9 flex items-center justify-center shrink-0 active:scale-95 transition-transform"
+                  >
+                    {isSpeaking ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                  </button>
+                  <p className="text-[13px] font-semibold text-orange-500 truncate shrink-0 max-w-[45%]">
+                    {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
+                  </p>
                   <input
                     type="range"
                     min={0}
@@ -736,9 +762,12 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                         updateMediaSession(bookIdx, chapterIdx, v);
                       }
                     }}
-                    className="w-full accent-orange-500 block h-1"
+                    className="flex-1 min-w-0 accent-orange-500 block h-1"
                     aria-label="Seek"
                   />
+                  <p className={`text-[11px] font-medium tabular-nums shrink-0 ${isDay ? "text-zinc-500" : "text-zinc-400"}`}>
+                    {verseIdx + 1} / {currentVerses.length}
+                  </p>
                 </div>
               </div>
             </div>
