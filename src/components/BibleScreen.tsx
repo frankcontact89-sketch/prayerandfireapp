@@ -706,7 +706,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                   <button onClick={() => setView("chapters")} className="text-orange-500 shrink-0" aria-label="Back">
                     <ArrowLeft className="w-5 h-5" />
                   </button>
-                  <h2 className="text-[17px] sm:text-[19px] font-semibold truncate max-w-[40vw]">
+                  <h2 className="text-[17px] sm:text-[19px] font-semibold truncate max-w-[28vw] sm:max-w-[40vw]">
                     {`${bookName(currentBook).toUpperCase()} ${chapterIdx + 1}`}
                   </h2>
                   <button
@@ -717,7 +717,7 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
                     {isSpeaking ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                   </button>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 ml-auto">
+                <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
                   <button onClick={() => setView("search")} aria-label="Search" className="text-orange-500 p-1">
                     <Search className="w-5 h-5" />
                   </button>
