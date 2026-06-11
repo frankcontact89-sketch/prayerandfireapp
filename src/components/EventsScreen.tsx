@@ -28,11 +28,17 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
   const [declines, setDeclines] = useState<Set<string>>(new Set());
   const [reminders, setReminders] = useState<Record<string, ReturnType<typeof setTimeout>>>({});
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState<number>(Date.now());
   const { toast } = useToast();
 
   useEffect(() => {
     loadEvents();
     loadUserRSVPs();
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(id);
   }, []);
 
   const loadEvents = async () => {
@@ -281,6 +287,10 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
                         <BellOff className="w-4 h-4" />
                         {t("cancelReminder")}
                       </Button>
+                    ) : new Date(event.event_date).getTime() <= now ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+                        {t("eventEnded") || "Event Ended"}
+                      </span>
                     ) : (
                       <Button onClick={() => setReminder(event)} variant="outline" size="sm" className="flex items-center gap-1">
                         <Bell className="w-4 h-4" />
