@@ -228,7 +228,7 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
   const handleTakePhoto = () => {
     try {
       if (isNative) {
-        void pickNative(CameraSource.Camera);
+        void pickNative('CAMERA');
         return;
       }
       if (!isCameraCaptureSupported()) {
@@ -260,7 +260,7 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
   const handleUploadPhoto = () => {
     try {
       if (isNative) {
-        void pickNative(CameraSource.Photos);
+        void pickNative('PHOTOS');
         return;
       }
       fileInputRef.current?.click();
