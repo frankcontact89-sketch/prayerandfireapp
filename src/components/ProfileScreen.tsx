@@ -108,8 +108,23 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
   };
 
   const isNative = (() => {
-    try { return Capacitor?.isNativePlatform?.() === true; } catch { return false; }
+    try {
+      const cap = (globalThis as any)?.Capacitor;
+      return cap?.isNativePlatform?.() === true;
+    } catch { return false; }
   })();
+
+  // Dynamic loader keeps @capacitor/* out of the web build graph.
+  const loadCapCamera = async (): Promise<any | null> => {
+    try {
+      const spec = '@capacitor' + '/camera';
+      const mod: any = await import(/* @vite-ignore */ spec);
+      return mod?.Camera ?? null;
+    } catch (e) {
+      console.error("Capacitor camera plugin not available", e);
+      return null;
+    }
+  };
 
   const uploadFromDataUrl = async (dataUrl: string, ext: string) => {
     try {
