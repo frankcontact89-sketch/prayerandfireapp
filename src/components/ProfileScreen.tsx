@@ -4,8 +4,6 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Camera, Upload, ArrowLeft, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Capacitor } from "@capacitor/core";
-import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -110,8 +108,23 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
   };
 
   const isNative = (() => {
-    try { return Capacitor?.isNativePlatform?.() === true; } catch { return false; }
+    try {
+      const cap = (globalThis as any)?.Capacitor;
+      return cap?.isNativePlatform?.() === true;
+    } catch { return false; }
   })();
+
+  // Dynamic loader keeps @capacitor/* out of the web build graph.
+  const loadCapCamera = async (): Promise<any | null> => {
+    try {
+      const spec = '@capacitor' + '/camera';
+      const mod: any = await import(/* @vite-ignore */ spec);
+      return mod?.Camera ?? null;
+    } catch (e) {
+      console.error("Capacitor camera plugin not available", e);
+      return null;
+    }
+  };
 
   const uploadFromDataUrl = async (dataUrl: string, ext: string) => {
     try {
@@ -128,27 +141,35 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
     }
   };
 
-  const pickNative = async (source: CameraSource) => {
+  const pickNative = async (source: 'CAMERA' | 'PHOTOS') => {
     try {
+      const CapCamera = await loadCapCamera();
+      if (!CapCamera) {
+        toast({
+          title: t("error"),
+          description: "Photo upload is unavailable on this device. Please choose a photo from your library.",
+        });
+        return;
+      }
       // Request permissions first; never crash on denial
       try {
         const perm = await CapCamera.checkPermissions();
         const needsReq =
-          (source === CameraSource.Camera && perm.camera !== 'granted') ||
-          (source === CameraSource.Photos && perm.photos !== 'granted' && perm.photos !== 'limited');
+          (source === 'CAMERA' && perm.camera !== 'granted') ||
+          (source === 'PHOTOS' && perm.photos !== 'granted' && perm.photos !== 'limited');
         if (needsReq) {
           const req = await CapCamera.requestPermissions({
-            permissions: source === CameraSource.Camera ? ['camera'] : ['photos'],
+            permissions: source === 'CAMERA' ? ['camera'] : ['photos'],
           });
           const granted =
-            source === CameraSource.Camera
+            source === 'CAMERA'
               ? req.camera === 'granted'
               : req.photos === 'granted' || req.photos === 'limited';
           if (!granted) {
             toast({
               title: t("error"),
               description:
-                source === CameraSource.Camera
+                source === 'CAMERA'
                   ? "Camera permission denied. Please enable it in Settings."
                   : "Photo library permission denied. Please enable it in Settings.",
             });
@@ -157,7 +178,6 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
         }
       } catch (permErr) {
         console.error("permission error", permErr);
-        // Continue — getPhoto may still prompt; if it fails we catch below
       }
 
       let photo: any;
@@ -165,7 +185,7 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
         photo = await CapCamera.getPhoto({
           quality: 80,
           allowEditing: false,
-          resultType: CameraResultType.DataUrl,
+          resultType: 'dataUrl',
           source,
           saveToGallery: false,
         });
@@ -208,7 +228,7 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
   const handleTakePhoto = () => {
     try {
       if (isNative) {
-        void pickNative(CameraSource.Camera);
+        void pickNative('CAMERA');
         return;
       }
       if (!isCameraCaptureSupported()) {
@@ -240,7 +260,7 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
   const handleUploadPhoto = () => {
     try {
       if (isNative) {
-        void pickNative(CameraSource.Photos);
+        void pickNative('PHOTOS');
         return;
       }
       fileInputRef.current?.click();
