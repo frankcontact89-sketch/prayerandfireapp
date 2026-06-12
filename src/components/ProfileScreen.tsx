@@ -141,27 +141,35 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
     }
   };
 
-  const pickNative = async (source: CameraSource) => {
+  const pickNative = async (source: 'CAMERA' | 'PHOTOS') => {
     try {
+      const CapCamera = await loadCapCamera();
+      if (!CapCamera) {
+        toast({
+          title: t("error"),
+          description: "Photo upload is unavailable on this device. Please choose a photo from your library.",
+        });
+        return;
+      }
       // Request permissions first; never crash on denial
       try {
         const perm = await CapCamera.checkPermissions();
         const needsReq =
-          (source === CameraSource.Camera && perm.camera !== 'granted') ||
-          (source === CameraSource.Photos && perm.photos !== 'granted' && perm.photos !== 'limited');
+          (source === 'CAMERA' && perm.camera !== 'granted') ||
+          (source === 'PHOTOS' && perm.photos !== 'granted' && perm.photos !== 'limited');
         if (needsReq) {
           const req = await CapCamera.requestPermissions({
-            permissions: source === CameraSource.Camera ? ['camera'] : ['photos'],
+            permissions: source === 'CAMERA' ? ['camera'] : ['photos'],
           });
           const granted =
-            source === CameraSource.Camera
+            source === 'CAMERA'
               ? req.camera === 'granted'
               : req.photos === 'granted' || req.photos === 'limited';
           if (!granted) {
             toast({
               title: t("error"),
               description:
-                source === CameraSource.Camera
+                source === 'CAMERA'
                   ? "Camera permission denied. Please enable it in Settings."
                   : "Photo library permission denied. Please enable it in Settings.",
             });
@@ -170,7 +178,6 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
         }
       } catch (permErr) {
         console.error("permission error", permErr);
-        // Continue — getPhoto may still prompt; if it fails we catch below
       }
 
       let photo: any;
@@ -178,7 +185,7 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
         photo = await CapCamera.getPhoto({
           quality: 80,
           allowEditing: false,
-          resultType: CameraResultType.DataUrl,
+          resultType: 'dataUrl',
           source,
           saveToGallery: false,
         });
