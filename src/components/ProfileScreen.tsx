@@ -56,11 +56,17 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
   };
 
   const uploadAvatar = async (file: File) => {
-    if (!userId) return null;
+    if (!userId || !file) return null;
     try {
       setLoading(true);
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${userId}/${Math.random()}.${fileExt}`;
+      const safeName = (file as any)?.name || `photo-${Date.now()}.jpg`;
+      const fileExt = (safeName.split('.').pop() || 'jpg').toLowerCase();
+      const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+      // Save locally first (preview) so user sees it even if upload fails
+      try {
+        const localUrl = URL.createObjectURL(file);
+        setImage(localUrl);
+      } catch {}
       const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file, { cacheControl: '3600', upsert: true });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
@@ -70,20 +76,33 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
       toast({ title: t("success"), description: t("profilePhotoUpdated") });
       return publicUrl;
     } catch (error: any) {
-      toast({ title: t("error"), description: error.message || t("couldNotUploadPhoto"), variant: "destructive" });
+      console.error("uploadAvatar error:", error);
+      toast({
+        title: t("error"),
+        description: t("photoUploadUnavailable") || "Photo upload is temporarily unavailable. Please try again later.",
+        variant: "destructive",
+      });
       return null;
     } finally { setLoading(false); }
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      const file = e.target.files?.[0];
-      if (file) await uploadAvatar(file);
+      const file = e?.target?.files?.[0];
+      if (!file) {
+        // user cancelled — do nothing
+        return;
+      }
+      await uploadAvatar(file);
     } catch (err: any) {
       console.error("File select error:", err);
-      toast({ title: t("error"), description: err?.message || t("couldNotUploadPhoto"), variant: "destructive" });
+      toast({
+        title: t("error"),
+        description: t("photoUploadUnavailable") || "Photo upload is temporarily unavailable. Please try again later.",
+        variant: "destructive",
+      });
     } finally {
-      if (e.target) e.target.value = "";
+      try { if (e?.target) e.target.value = ""; } catch {}
       setShowImageDialog(false);
     }
   };
@@ -92,12 +111,8 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
     try {
       const input = document.createElement("input");
       input.setAttribute("type", "file");
-      // If capture attribute isn't supported, this stays empty/undefined
       const supportsCapture = "capture" in input;
-      const isIPad = /iPad/.test(navigator.userAgent) ||
-        (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1);
-      // Many iPads still support capture via Safari; only block if API is truly missing
-      return supportsCapture && !!navigator.mediaDevices;
+      return supportsCapture;
     } catch {
       return false;
     }
@@ -110,18 +125,24 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
           title: t("error") || "Camera unavailable",
           description: t("cameraUnavailableUseLibrary") || "Camera not available. Opening photo library instead.",
         });
-        fileInputRef.current?.click();
+        try { fileInputRef.current?.click(); } catch (e) { console.error(e); }
         return;
       }
-      cameraInputRef.current?.click();
+      try {
+        cameraInputRef.current?.click();
+      } catch (e) {
+        console.error("camera click failed", e);
+        toast({
+          title: t("error"),
+          description: t("photoUploadUnavailable") || "Photo upload is temporarily unavailable. Please try again later.",
+        });
+      }
     } catch (err: any) {
       console.error("Take photo error:", err);
       toast({
         title: t("error"),
-        description: err?.message || t("couldNotUploadPhoto"),
-        variant: "destructive",
+        description: t("photoUploadUnavailable") || "Photo upload is temporarily unavailable. Please try again later.",
       });
-      try { fileInputRef.current?.click(); } catch {}
     }
   };
 
@@ -130,7 +151,10 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
       fileInputRef.current?.click();
     } catch (err: any) {
       console.error("Upload photo error:", err);
-      toast({ title: t("error"), description: err?.message || t("couldNotUploadPhoto"), variant: "destructive" });
+      toast({
+        title: t("error"),
+        description: t("photoUploadUnavailable") || "Photo upload is temporarily unavailable. Please try again later.",
+      });
     }
   };
 
