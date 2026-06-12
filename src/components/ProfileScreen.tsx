@@ -4,8 +4,6 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Camera, Upload, ArrowLeft, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Capacitor } from "@capacitor/core";
-import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 import {
   AlertDialog,
   AlertDialogAction,
