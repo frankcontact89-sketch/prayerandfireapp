@@ -114,9 +114,13 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
     } catch { return false; }
   })();
 
-  // Dynamic loader keeps @capacitor/* out of the web build graph.
+  // On a real device the Capacitor bridge injects the plugin on the global object.
+  // (Dynamic import doesn't work because the JS bundle is served remotely.)
   const loadCapCamera = async (): Promise<any | null> => {
     try {
+      const cap = (globalThis as any)?.Capacitor;
+      const fromGlobal = cap?.Plugins?.Camera;
+      if (fromGlobal) return fromGlobal;
       const spec = '@capacitor' + '/camera';
       const mod: any = await import(/* @vite-ignore */ spec);
       return mod?.Camera ?? null;
