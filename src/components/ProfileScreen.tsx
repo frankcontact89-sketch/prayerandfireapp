@@ -114,9 +114,13 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
     } catch { return false; }
   })();
 
-  // Dynamic loader keeps @capacitor/* out of the web build graph.
+  // On a real device the Capacitor bridge injects the plugin on the global object.
+  // (Dynamic import doesn't work because the JS bundle is served remotely.)
   const loadCapCamera = async (): Promise<any | null> => {
     try {
+      const cap = (globalThis as any)?.Capacitor;
+      const fromGlobal = cap?.Plugins?.Camera;
+      if (fromGlobal) return fromGlobal;
       const spec = '@capacitor' + '/camera';
       const mod: any = await import(/* @vite-ignore */ spec);
       return mod?.Camera ?? null;
@@ -145,10 +149,12 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
     try {
       const CapCamera = await loadCapCamera();
       if (!CapCamera) {
-        toast({
-          title: t("error"),
-          description: "Photo upload is unavailable on this device. Please choose a photo from your library.",
-        });
+        // Plugin missing — fall back to the web file inputs so the user can
+        // still take/choose a photo instead of being blocked.
+        try {
+          if (source === 'CAMERA') cameraInputRef.current?.click();
+          else fileInputRef.current?.click();
+        } catch (e) { console.error(e); }
         return;
       }
       // Request permissions first; never crash on denial
@@ -183,7 +189,7 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
       let photo: any;
       try {
         photo = await CapCamera.getPhoto({
-          quality: 80,
+          quality: 85,
           allowEditing: false,
           resultType: 'dataUrl',
           source,
@@ -194,21 +200,32 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
         // User cancelled — silent
         if (/cancel/i.test(msg)) return;
         console.error("getPhoto error", pickErr);
-        toast({
-          title: t("error"),
-          description: "Photo upload is unavailable on this device. Please choose a photo from your library.",
-        });
-        return;
+        if (source === 'CAMERA') {
+          // Camera failed — automatically fall back to the photo library
+          try {
+            photo = await CapCamera.getPhoto({
+              quality: 85,
+              allowEditing: false,
+              resultType: 'dataUrl',
+              source: 'PHOTOS',
+              saveToGallery: false,
+            });
+          } catch (libErr: any) {
+            if (/cancel/i.test(String(libErr?.message || libErr || ""))) return;
+            try { fileInputRef.current?.click(); } catch {}
+            return;
+          }
+        } else {
+          try { fileInputRef.current?.click(); } catch {}
+          return;
+        }
       }
 
       if (!photo || !photo.dataUrl) return; // empty result — no-op
       await uploadFromDataUrl(photo.dataUrl, photo.format || 'jpg');
     } catch (err) {
       console.error("pickNative fatal", err);
-      toast({
-        title: t("error"),
-        description: "Photo upload is unavailable on this device. Please choose a photo from your library.",
-      });
+      try { fileInputRef.current?.click(); } catch {}
     } finally {
       setShowImageDialog(false);
     }
