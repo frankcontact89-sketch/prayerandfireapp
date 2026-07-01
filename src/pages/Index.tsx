@@ -245,7 +245,7 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
   const L = labels[safeLang] || labels.en;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-black text-white">
+    <div className="relative min-h-full overflow-hidden bg-black text-white">
       <div
         className="absolute inset-0 opacity-[0.09] pointer-events-none"
         style={{ backgroundImage: `url(${realisticFlame})`, backgroundSize: "cover", backgroundPosition: "center" }}
