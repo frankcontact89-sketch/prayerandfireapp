@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Heart, Settings, Share2, ShoppingBag, Flame, Bell, Quote, Sparkles, HandHeart, BookOpen } from "lucide-react";
+import { Heart, Share2, ShoppingBag, Flame, Bell, Quote, Sparkles, HandHeart, BookOpen, User as UserIcon } from "lucide-react";
 
 import { SignInScreen } from "@/components/SignInScreen";
 import { EventsScreen } from "@/components/EventsScreen";
@@ -245,7 +245,7 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
   const L = labels[safeLang] || labels.en;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-black text-white">
+    <div className="relative min-h-full overflow-hidden bg-black text-white">
       <div
         className="absolute inset-0 opacity-[0.09] pointer-events-none"
         style={{ backgroundImage: `url(${realisticFlame})`, backgroundSize: "cover", backgroundPosition: "center" }}
@@ -342,6 +342,7 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [userName] = useState("");
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDarkMode);
@@ -418,6 +419,33 @@ export default function Index() {
     if (user) fetchUnreadCount();
   }, [user, fetchUnreadCount]);
 
+  useEffect(() => {
+    if (!user) {
+      setAvatarUrl(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("avatar_url")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (!cancelled && profile?.avatar_url) {
+          setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
+        } else if (!cancelled) {
+          setAvatarUrl(null);
+        }
+      } catch {
+        if (!cancelled) setAvatarUrl(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, page]);
+
   const openNotifications = () => {
     setLastReadAtNow();
     setUnreadNotifications(0);
@@ -464,38 +492,42 @@ export default function Index() {
     <div className="flex flex-col min-h-screen bg-black font-sans">
       <div
         className="sticky top-0 z-30 bg-black/95 backdrop-blur-md border-b border-zinc-800"
-        style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="flex justify-between items-center px-4 py-2">
+        <div className="flex justify-between items-center px-4 h-12">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPage("settings")}
               aria-label={t("settings")}
-              className="text-orange-500 w-12 h-12 flex items-center justify-center"
+              className="w-10 h-10 flex items-center justify-center rounded-full overflow-hidden border border-orange-500/40 bg-zinc-900"
             >
-              <Settings className="w-7 h-7" />
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={t("profile")} className="w-full h-full object-cover" />
+              ) : (
+                <UserIcon className="w-5 h-5 text-orange-500" />
+              )}
             </button>
 
-            <button
-              onClick={openNotifications}
-              aria-label={t("notifications")}
-              className={`relative w-12 h-12 flex items-center justify-center ${unreadNotifications > 0 ? "text-blue-500" : "text-orange-500"}`}
-            >
-              <Bell className="w-7 h-7" />
-              {unreadNotifications > 0 && (
+            {unreadNotifications > 0 && (
+              <button
+                onClick={openNotifications}
+                aria-label={t("notifications")}
+                className="relative w-10 h-10 flex items-center justify-center text-blue-500"
+              >
+                <Bell className="w-6 h-6" />
                 <span className="absolute top-1 right-1 bg-blue-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
                   {unreadNotifications > 99 ? "99+" : unreadNotifications}
                 </span>
-              )}
-            </button>
+              </button>
+            )}
           </div>
 
           <button
             onClick={() => setPage("social")}
             aria-label={t("connect")}
-            className="text-orange-500 w-12 h-12 flex items-center justify-center"
+            className="text-orange-500 w-10 h-10 flex items-center justify-center"
           >
-            <Share2 className="w-7 h-7" />
+            <Share2 className="w-6 h-6" />
           </button>
         </div>
       </div>
