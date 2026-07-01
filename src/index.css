@@ -8,6 +8,7 @@ html, body, #root {
   background-color: #000;
   min-height: 100vh;
   min-height: 100dvh;
+  overscroll-behavior: none;
 }
 
 /* Reusable safe-area helpers */
@@ -147,6 +148,7 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: #000;
   }
 }
