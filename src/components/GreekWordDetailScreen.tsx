@@ -78,7 +78,6 @@ export function GreekWordDetailScreen({ slug, onBack, language }: Props) {
         itemType="greek_word"
         itemId={row.id}
         title={`${row.greek} — ${row.transliteration}`}
-        shareText={pick("meaning")}
         language={language}
       />
     </SimpleScreen>

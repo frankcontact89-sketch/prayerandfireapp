@@ -48,7 +48,6 @@ export function LibraryArticleScreen({ articleId, onBack, language }: Props) {
         itemType="article"
         itemId={row.id}
         title={title}
-        shareText={summary}
         language={language}
       />
     </SimpleScreen>

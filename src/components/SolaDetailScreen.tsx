@@ -54,7 +54,6 @@ export function SolaDetailScreen({ slug, onBack, language }: Props) {
         itemType="sola"
         itemId={row.id}
         title={`${row.latin} — ${pick("translation")}`}
-        shareText={pick("explanation")}
         language={language}
       />
     </SimpleScreen>
