@@ -369,6 +369,10 @@ export default function Index() {
     [setPage],
   );
 
+  const updateHeaderAvatar = useCallback((nextAvatar: string | null) => {
+    setAvatarUrl(nextAvatar);
+  }, []);
+
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDarkMode);
   }, [isDarkMode]);
@@ -522,6 +526,19 @@ export default function Index() {
       >
         <div className="flex justify-between items-center px-4 h-12">
           <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage("settings")}
+              aria-label={t("profile")}
+              className="w-10 h-10 flex items-center justify-center"
+            >
+              <span className="h-8 w-8 rounded-full border border-orange-500/40 bg-zinc-900 overflow-hidden flex items-center justify-center">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={t("profile")} className="h-full w-full object-cover" crossOrigin="anonymous" />
+                ) : (
+                  <UserIcon className="w-4 h-4 text-orange-500" />
+                )}
+              </span>
+            </button>
             {unreadNotifications > 0 && (
               <button
                 onClick={openNotifications}
@@ -577,7 +594,7 @@ export default function Index() {
             onAdminClick={() => setPage("admin")}
             onNotificationsClick={openNotifications}
             onLegalClick={() => setPage("legal")}
-            onEditProfileClick={() => setPage("profile")}
+            onProfileUpdated={updateHeaderAvatar}
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
             onSignOut={async () => {
