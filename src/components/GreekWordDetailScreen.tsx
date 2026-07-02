@@ -29,15 +29,14 @@ export function GreekWordDetailScreen({ slug, onBack, language }: Props) {
 
   const playAudio = () => {
     try {
-      const type = row.language_type || "greek";
-      // Pronunciation MUST use the original biblical language, independent of
-      // the app UI language. Prefer an explicit pronunciation_text override,
-      // then the original script; NEVER fall back to the Latin transliteration
-      // because that would be spoken with an English/Spanish/Portuguese accent.
-      const spoken = row.pronunciation_text || row.greek || row.transliteration || "";
+      // Pronunciation follows the selected app UI language so users hear the
+      // transliteration read with their own accent (EN/ES/PT). The original
+      // Greek/Hebrew script itself is never changed — we just speak the
+      // Latin transliteration using the selected UI language's TTS voice.
+      const spoken =
+        row.pronunciation_text || row.transliteration || row.greek || "";
       const locale =
-        row.pronunciation_locale ||
-        (type === "hebrew" ? "he-IL" : type === "greek" ? "el-GR" : "en-US");
+        language === "es" ? "es-ES" : language === "pt" ? "pt-BR" : "en-US";
       const u = new SpeechSynthesisUtterance(spoken);
       u.lang = locale;
       // Try to pick a matching voice if the browser has one installed.

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Bell, Scale, LogOut, Languages, Trash2 } from "lucide-react";
+import { Bell, Scale, LogOut, Languages, Trash2, User as UserIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -24,6 +24,7 @@ interface SettingsScreenProps {
   onNotificationsClick: () => void;
   onLegalClick: () => void;
   onSignOut: () => void;
+  onEditProfileClick?: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
   isGuest?: boolean;
@@ -37,6 +38,7 @@ export function SettingsScreen({
   onNotificationsClick,
   onLegalClick,
   onSignOut,
+  onEditProfileClick,
   isGuest,
 }: SettingsScreenProps) {
   const { isAdmin } = useUserRole();
@@ -70,6 +72,12 @@ export function SettingsScreen({
       <h2 className="text-2xl font-bold text-white">{t("settings")}</h2>
 
       <div className="grid grid-cols-2 gap-3">
+        {!isGuest && onEditProfileClick && (
+          <button onClick={onEditProfileClick} className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left">
+            <UserIcon className="w-6 h-6 text-orange-500 mb-2" />
+            <h3 className="text-sm font-bold text-white leading-tight">{t("profile")}</h3>
+          </button>
+        )}
         <button onClick={setLanguage} className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left">
           <Languages className="w-6 h-6 text-orange-500 mb-2" />
           <h3 className="text-sm font-bold text-white leading-tight">{t("language")}</h3>

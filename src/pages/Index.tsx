@@ -557,6 +557,7 @@ export default function Index() {
             onAdminClick={() => setPage("admin")}
             onNotificationsClick={openNotifications}
             onLegalClick={() => setPage("legal")}
+            onEditProfileClick={() => setPage("profile")}
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
             onSignOut={async () => {
@@ -578,7 +579,7 @@ export default function Index() {
             t={t}
             language={language}
             setLanguage={setLanguage}
-            onBack={() => setPage("home")}
+            onBack={() => setPage("settings")}
             onOpenNotifications={() => setPage("notifications")}
             onOpenPrivacy={() => setPage("legal")}
             onOpenLanguage={() => setShowLanguages(true)}
