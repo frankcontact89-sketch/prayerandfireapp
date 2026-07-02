@@ -16,8 +16,10 @@ export const APP_CONFIG = {
   // Social/Share
   SHARE_TEXT: "🔥 Download the Prayer & Fire App — a faith-based app for prayer, community, and spiritual growth!",
 
-  // App Store / Play Store download links
-  APP_STORE_URL: "https://apps.apple.com/app/prayer-fire/id0000000000",
+  // App Store / Play Store download links.
+  // Set these to the real store URLs when the listings are live. The Share
+  // Prayer & Fire button uses these — never the marketing website.
+  APP_STORE_URL: "",
   PLAY_STORE_URL: "",
   
   // Stripe URLs
