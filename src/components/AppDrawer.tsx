@@ -4,7 +4,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   Home, BookOpen, Library,
   Landmark, GraduationCap, ShoppingBag, Share2, Info, Settings as SettingsIcon,
-  ChevronDown, ChevronRight, Heart,
+  ChevronDown, ChevronRight,
 } from "lucide-react";
 import { APP_CONFIG } from "@/config/constants";
 
@@ -80,7 +80,6 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
           {item(<Home className="w-5 h-5" />, L(language, "Home", "Inicio", "Início"), () => go("home"))}
           {item(<BookOpen className="w-5 h-5" />, L(language, "Bible", "Biblia", "Bíblia"), () => go("bible"))}
           {item(<Library className="w-5 h-5" />, L(language, "Christian Library", "Biblioteca Cristiana", "Biblioteca Cristã"), () => go("library"))}
-          {item(<Heart className="w-5 h-5" />, L(language, "Favorites", "Favoritos", "Favoritos"), () => go("favorites"))}
 
           <Collapsible open={solasOpen} onOpenChange={setSolasOpen}>
             <CollapsibleTrigger className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-orange-500/10 transition">
