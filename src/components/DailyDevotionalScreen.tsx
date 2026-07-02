@@ -138,7 +138,6 @@ export function DailyDevotionalScreen({ onBack, language }: Props) {
           itemType="devotional"
           itemId={row.id}
           title={pick(row, "title", language)}
-          shareText={scriptureRef}
           language={language}
         />
       </div>

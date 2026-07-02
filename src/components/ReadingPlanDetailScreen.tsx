@@ -150,7 +150,6 @@ export function ReadingPlanDetailScreen({ planId, onBack, language }: Props) {
         itemType="reading_plan"
         itemId={plan.id}
         title={pick(plan, "title", language)}
-        shareText={pick(plan, "description", language)}
         language={language}
       />
     </SimpleScreen>
