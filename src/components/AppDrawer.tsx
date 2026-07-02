@@ -1,7 +1,7 @@
 import React from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
-  Home, BookOpen, Library, User as UserIcon,
+  Home, BookOpen, Library,
   ShoppingBag, Share2, Info, HandHeart, Settings as SettingsIcon,
 } from "lucide-react";
 import { APP_CONFIG } from "@/config/constants";
