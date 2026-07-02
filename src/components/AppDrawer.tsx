@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  Home, BookOpen, Library, Heart, User as UserIcon,
-  Landmark, GraduationCap, ShoppingBag, Share2, Info, Settings as SettingsIcon,
+  Home, BookOpen, Library, User as UserIcon,
+  GraduationCap, ShoppingBag, Share2, Info, Settings as SettingsIcon,
   ChevronDown, ChevronRight,
 } from "lucide-react";
 import { APP_CONFIG } from "@/config/constants";
@@ -18,20 +18,11 @@ interface AppDrawerProps {
   language: string;
 }
 
-const SOLAS = [
-  { slug: "sola-scriptura", label: "Sola Scriptura" },
-  { slug: "sola-fide", label: "Sola Fide" },
-  { slug: "sola-gratia", label: "Sola Gratia" },
-  { slug: "solus-christus", label: "Solus Christus" },
-  { slug: "soli-deo-gloria", label: "Soli Deo Gloria" },
-];
-
 function L(lang: string, en: string, es: string, pt: string) {
   return lang === "es" ? es : lang === "pt" ? pt : en;
 }
 
 export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawerProps) {
-  const [solasOpen, setSolasOpen] = useState(false);
   const [greekOpen, setGreekOpen] = useState(false);
 
   const go = (page: string) => {
@@ -80,35 +71,7 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
           {item(<Home className="w-5 h-5" />, L(language, "Home", "Inicio", "Início"), () => go("home"))}
           {item(<BookOpen className="w-5 h-5" />, L(language, "Bible", "Biblia", "Bíblia"), () => go("bible"))}
           {item(<Library className="w-5 h-5" />, L(language, "Christian Library", "Biblioteca Cristiana", "Biblioteca Cristã"), () => go("library"))}
-          {item(<Heart className="w-5 h-5" />, L(language, "Favorites", "Favoritos", "Favoritos"), () => go("favorites"))}
           {item(<UserIcon className="w-5 h-5" />, L(language, "Profile", "Perfil", "Perfil"), () => go("profile"))}
-
-          <Collapsible open={solasOpen} onOpenChange={setSolasOpen}>
-            <CollapsibleTrigger className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-orange-500/10 transition">
-              <Landmark className="w-5 h-5 text-orange-500" />
-              <span className="font-medium flex-1 text-left">
-                {L(language, "The Five Solas", "Los Cinco Solas", "Os Cinco Solas")}
-              </span>
-              {solasOpen ? <ChevronDown className="w-4 h-4 text-zinc-400" /> : <ChevronRight className="w-4 h-4 text-zinc-400" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pl-6 space-y-1 mt-1">
-              <button
-                onClick={() => go("solas")}
-                className="w-full text-left px-4 py-2 rounded-lg text-sm text-orange-400 hover:bg-orange-500/5"
-              >
-                {L(language, "Overview →", "Resumen →", "Visão geral →")}
-              </button>
-              {SOLAS.map((s) => (
-                <button
-                  key={s.slug}
-                  onClick={() => go(`sola:${s.slug}`)}
-                  className="w-full text-left px-4 py-2 rounded-lg text-sm text-zinc-300 hover:text-orange-400 hover:bg-orange-500/5"
-                >
-                  • {s.label}
-                </button>
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
 
           <Collapsible open={greekOpen} onOpenChange={setGreekOpen}>
             <CollapsibleTrigger className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-orange-500/10 transition">
