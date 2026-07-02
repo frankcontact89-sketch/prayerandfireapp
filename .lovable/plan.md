@@ -1,47 +1,79 @@
-You asked for a very large scope in one turn. To keep quality high and avoid a half-broken App Store build, I'll ship it in three phases. Phase 1 is what I'll build immediately after you approve. Phases 2 and 3 are follow-up turns — each one is a "reply 'go phase 2'" away.
+# Phase 1: Content System (Production-Ready)
 
-## Phase 1 — Navigation shell + Store upgrade (this turn)
+Focus: Daily Devotional, Reading Plans, and Christian Library — real, fully working, admin-managed, translated (EN/ES/PT). No placeholders.
 
-**Navigation**
-- Replace top-right Share icon on Home with a hamburger (☰) in the same spot.
-- Left slide-out drawer (shadcn `Sheet` on left side, dark theme, orange accents, safe-area aware).
-- Menu items in exact order requested: Home, Bible, Prayer, Favorites, Library, Daily Devotional, Daily Reading Plan, The Five Solas, 50 Greek Words, Store, Share Prayer & Fire, About, Settings.
-- Five Solas and 50 Greek Words are collapsible groups inside the drawer (shadcn `Collapsible`).
-- Every leaf item routes to a real screen. New content pages (Prayer, Favorites, Library, Daily Devotional, Reading Plan, About, individual Solas pages, individual Greek word pages) render from the DB with an empty state ("Coming soon — content will appear here once added in the Admin Panel"). No 404s, no dead buttons.
+Later phases (not this one): Prayer Journal, My Notes, Favorites sync, Join Prayer & Fire form, Share page rebuild, Push notifications, AI Assistant, expanded Solas/Greek admin. The hamburger menu will only expose sections that are ready — unfinished items stay hidden per your rule.
 
-**Store upgrades on the existing `products` table**
-- Add columns: `is_featured`, `is_published`, `order_index`, `category`, `stock_status` (in_stock/low_stock/out_of_stock), `sku`, `images` (jsonb array for multi-image).
-- Admin → Products: toggles for Featured, Publish/Hide, category dropdown, stock status, SKU, drag-to-reorder, multi-image upload.
-- Public Store screen: filter by category, search box, hidden items excluded, featured section on top, order respected. External buttons (Amazon/Etsy/Stripe/Shopify) already work — I'll keep those.
+---
 
-**Five Solas + Greek Words data model (seeded, admin-editable)**
-- New table `solas` (name, latin, english, explanation, history, verses, application, order_index, all in _en/_es/_pt).
-- New table `greek_words` (greek, transliteration, pronunciation, meaning, biblical_usage, references, explanation, order_index, all in _en/_es/_pt).
-- Seed 5 Solas with full AI-drafted Reformed content in all 3 languages.
-- Seed the first 10 Greek words (Agape, Logos, Christos, Pistis, Charis, Kurios, Ekklesia, Baptizo, Metanoia, Pneuma) so the section isn't empty. Remaining 40 come in Phase 3 to keep this turn shippable.
-- Admin tabs to CRUD both.
+## 1. Database (one migration)
 
-## Phase 2 — CMS expansion (next turn)
+Three new tables, all trilingual, all RLS-protected, all admin-managed via existing `has_role(auth.uid(), 'admin')`.
 
-New admin tabs + tables (CRUD, trilingual, RLS admin-write / public-read):
-Daily Devotionals, Daily Prayer, Daily Reflection, Reading Plans, Bible Studies, Mission Projects, Hero Banner, Home Cards, Announcements, Product Categories, Donation Campaigns, Media Library (images/videos). Verse of the Day already exists (`verses` table) — I'll surface it in the Verse of the Day slot on Home. Push Notifications, Events, and Store already have admin tabs.
+**`devotionals`** — one per date
+- `date` (unique), `is_published`
+- Trilingual fields (EN/ES/PT) for: `title`, `scripture_reference`, `scripture_text`, `context`, `reflection`, `application`, `prayer`, `questions` (text[]), `related_verses` (text[])
 
-## Phase 3 — Content depth (next turn)
+**`reading_plans`**
+- `slug`, `duration_days`, `order_index`, `is_published`
+- Trilingual: `title`, `description`
 
-- Remaining 40 Greek words seeded with full trilingual content.
-- Any polish on Solas/Devotional copy.
+**`reading_plan_days`**
+- FK to plan, `day_number`, trilingual `title` + `passages` (text[])
 
-## Out of scope unless you ask
+**`reading_plan_progress`** (per user)
+- `user_id`, `plan_id`, `day_number`, `completed_at` — private RLS
 
-- Rewriting Bible, Events, Notifications, Giving screens (already working).
-- Redesigning the visual system.
-- Automatic machine translation of admin-entered content (admins fill EN/ES/PT to stay App-Store-safe).
+**`library_articles`**
+- `category` (enum: bible_studies, doctrine, christology, pneumatology, soteriology, hermeneutics, homiletics, church_history, apologetics, leadership, missions, sermons, articles)
+- `slug`, `order_index`, `is_published`, `cover_image_url`
+- Trilingual: `title`, `summary`, `body` (markdown)
 
-## Files touched in Phase 1
+All tables get standard GRANTs, RLS policies (public read where `is_published=true`, admin full write, user-owned progress).
 
-- Migration: alter `products`; create `solas`, `greek_words`; seed rows.
-- New: `src/components/AppDrawer.tsx`, `src/components/SolaDetailScreen.tsx`, `src/components/GreekWordDetailScreen.tsx`, `src/components/PrayerScreen.tsx`, `src/components/FavoritesScreen.tsx`, `src/components/LibraryScreen.tsx`, `src/components/DailyDevotionalScreen.tsx`, `src/components/ReadingPlanScreen.tsx`, `src/components/AboutScreen.tsx`, `src/components/SolasListScreen.tsx`, `src/components/GreekWordsListScreen.tsx`.
-- New admin: `src/components/admin/AdminSolas.tsx`, `src/components/admin/AdminGreekWords.tsx`.
-- Edit: `src/pages/Index.tsx` (hamburger, drawer, new routes), `src/components/AdminPanel.tsx` (new tabs), `src/components/ShoppingScreen.tsx` (search/filter/featured/hidden), `src/components/admin/AdminProducts.tsx` (new fields + reorder).
+Seed data: 3 starter devotionals (today + past 2 days), 2 reading plans (Gospels in 30 Days, Psalms & Proverbs), 3 library articles across different categories — all trilingual — so nothing ships empty.
 
-Reply "approved" (or "go phase 1") and I'll build it. Reply with edits if you want to move something between phases.
+## 2. New user screens
+
+- **`DailyDevotionalScreen.tsx`** — pulls today's devotional (or latest published fallback). Renders all fields in current language. Share button (native share API). Save-to-favorites button is hidden this phase.
+- **`ReadingPlansScreen.tsx`** — list of published plans with progress %.
+- **`ReadingPlanDetailScreen.tsx`** — day-by-day list, "mark complete" toggle, "continue reading" jumps to first incomplete day, links passages to existing BibleScreen.
+- **`ChristianLibraryScreen.tsx`** — category grid, hides categories with zero published articles (per your rule).
+- **`LibraryArticleScreen.tsx`** — renders markdown body, back to category.
+
+All screens use existing `SimpleScreen` header pattern, safe-area padding, pure black.
+
+## 3. Admin CMS additions
+
+New tabs in `AdminPanel`:
+- **Devotionals** — CRUD with trilingual tabs, date picker, publish toggle.
+- **Reading Plans** — CRUD plan + nested day-by-day editor.
+- **Library** — CRUD articles with category select, markdown body editor, cover image upload to existing `product-images` bucket (or new `library-images` bucket).
+
+Existing admin CRUD pattern (`AdminSolas`, `AdminGreekWords`) is the template.
+
+## 4. Navigation
+
+Update `AppDrawer.tsx` menu order to only include working items this phase:
+Home, Bible, Daily Devotional, Reading Plans, Christian Library, The Five Solas, Biblical Languages Library, Store, About, Settings.
+
+Hidden until their phase: Prayer Journal, My Notes, Favorites, Join Prayer & Fire, Share Prayer & Fire (kept as native share for now).
+
+Rename "50 Greek Words" → "Biblical Languages Library" (label only this phase; Hebrew tables come with Phase for Biblical Languages expansion).
+
+## 5. Translations
+
+Add EN/ES/PT strings for all new UI labels to `src/config/translations.ts`. Content itself comes from DB in the selected language with EN fallback.
+
+## What is NOT in Phase 1
+
+Deferred to explicit later phases so nothing ships broken:
+- Prayer Journal, My Notes, Favorites sync
+- Join Prayer & Fire request form + admin approval workflow
+- Rebuilt Share page with editable admin links
+- Native push notifications (APNs/FCM) — needs your credentials
+- AI Assistant edge function + admin controls
+- Hebrew words + Biblical Expressions tables
+- Store multi-image, Shopify link, drag-reorder upgrades
+
+After you approve Phase 1, I'll ship it end-to-end (migration → screens → admin → drawer → translations → verify), then we move to Phase 2.
