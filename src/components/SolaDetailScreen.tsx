@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Landmark } from "lucide-react";
 import { SimpleScreen } from "./SimpleScreen";
+import { MarkdownView } from "./content/MarkdownView";
+import { ContentActions } from "./content/ContentActions";
 
 interface Props {
   slug: string;
@@ -28,7 +30,7 @@ export function SolaDetailScreen({ slug, onBack, language }: Props) {
   const section = (label: string, text: string) => text ? (
     <section className="mb-6">
       <h2 className="text-orange-400 uppercase tracking-[0.15em] text-xs font-black mb-2">{label}</h2>
-      <p className="text-zinc-200 leading-relaxed text-[15px] whitespace-pre-line">{text}</p>
+      <MarkdownView text={text} language={language} />
     </section>
   ) : null;
 
@@ -48,6 +50,13 @@ export function SolaDetailScreen({ slug, onBack, language }: Props) {
       {section(labels.his, pick("history"))}
       {section(labels.ver, pick("verses"))}
       {section(labels.app, pick("application"))}
+      <ContentActions
+        itemType="sola"
+        itemId={row.id}
+        title={`${row.latin} — ${pick("translation")}`}
+        shareText={pick("explanation")}
+        language={language}
+      />
     </SimpleScreen>
   );
 }
