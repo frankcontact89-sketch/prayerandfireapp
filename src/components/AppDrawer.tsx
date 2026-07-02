@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  Home, BookOpen, HandHeart, Heart, Library, Sunrise, CalendarDays,
+  Home, BookOpen, Library, Sunrise, CalendarDays,
   Landmark, GraduationCap, ShoppingBag, Share2, Info, Settings as SettingsIcon,
   ChevronDown, ChevronRight,
 } from "lucide-react";
@@ -79,11 +79,9 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
           {item(<Home className="w-5 h-5" />, L(language, "Home", "Inicio", "Início"), () => go("home"))}
           {item(<BookOpen className="w-5 h-5" />, L(language, "Bible", "Biblia", "Bíblia"), () => go("bible"))}
-          {item(<HandHeart className="w-5 h-5" />, L(language, "Prayer", "Oración", "Oração"), () => go("prayer"))}
-          {item(<Heart className="w-5 h-5" />, L(language, "Favorites", "Favoritos", "Favoritos"), () => go("favorites"))}
-          {item(<Library className="w-5 h-5" />, L(language, "Library", "Biblioteca", "Biblioteca"), () => go("library"))}
           {item(<Sunrise className="w-5 h-5" />, L(language, "Daily Devotional", "Devocional Diario", "Devocional Diário"), () => go("devotional"))}
-          {item(<CalendarDays className="w-5 h-5" />, L(language, "Daily Reading Plan", "Plan de Lectura Diario", "Plano de Leitura Diário"), () => go("reading-plan"))}
+          {item(<CalendarDays className="w-5 h-5" />, L(language, "Reading Plans", "Planes de Lectura", "Planos de Leitura"), () => go("reading-plans"))}
+          {item(<Library className="w-5 h-5" />, L(language, "Christian Library", "Biblioteca Cristiana", "Biblioteca Cristã"), () => go("library"))}
 
           <Collapsible open={solasOpen} onOpenChange={setSolasOpen}>
             <CollapsibleTrigger className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-orange-500/10 transition">
@@ -116,7 +114,7 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
             <CollapsibleTrigger className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-orange-500/10 transition">
               <GraduationCap className="w-5 h-5 text-orange-500" />
               <span className="font-medium flex-1 text-left">
-                {L(language, "50 Greek Words", "50 Palabras Griegas", "50 Palavras Gregas")}
+                {L(language, "Biblical Languages Library", "Biblioteca de Lenguas Bíblicas", "Biblioteca de Línguas Bíblicas")}
               </span>
               {greekOpen ? <ChevronDown className="w-4 h-4 text-zinc-400" /> : <ChevronRight className="w-4 h-4 text-zinc-400" />}
             </CollapsibleTrigger>
