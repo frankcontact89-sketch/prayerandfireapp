@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Sunrise, Heart, Share2, BookOpen, HandHeart, Sparkles, ListChecks } from "lucide-react";
+import { Sunrise, Share2, BookOpen, HandHeart, Sparkles, ListChecks } from "lucide-react";
 import { SimpleScreen } from "./SimpleScreen";
 import { supabase } from "@/integrations/supabase/client";
 import { L, pick, pickArr } from "./content/lang";
@@ -14,7 +14,6 @@ interface Props {
 export function DailyDevotionalScreen({ onBack, language }: Props) {
   const [row, setRow] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saved, setSaved] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -40,37 +39,6 @@ export function DailyDevotionalScreen({ onBack, language }: Props) {
       setLoading(false);
     })();
   }, []);
-
-  useEffect(() => {
-    if (!row) return;
-    (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      const { data } = await supabase
-        .from("favorites" as any)
-        .select("id")
-        .eq("user_id", u.user.id)
-        .eq("item_type", "devotional")
-        .eq("item_id", row.id)
-        .maybeSingle();
-      setSaved(!!data);
-    })();
-  }, [row]);
-
-  const toggleFav = async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    if (saved) {
-      await supabase.from("favorites" as any).delete()
-        .eq("user_id", u.user.id).eq("item_type", "devotional").eq("item_id", row.id);
-      setSaved(false);
-    } else {
-      await supabase.from("favorites" as any).insert({
-        user_id: u.user.id, item_type: "devotional", item_id: row.id,
-      });
-      setSaved(true);
-    }
-  };
 
   const share = async () => {
     if (!row) return;
@@ -182,21 +150,8 @@ export function DailyDevotionalScreen({ onBack, language }: Props) {
 
         <div className="flex gap-2 pt-2">
           <button
-            onClick={toggleFav}
-            className={`flex-1 flex items-center justify-center gap-2 rounded-xl border py-3 font-medium transition ${
-              saved
-                ? "bg-orange-500 text-black border-orange-500"
-                : "border-orange-500/40 text-orange-400 hover:bg-orange-500/10"
-            }`}
-          >
-            <Heart className={`w-4 h-4 ${saved ? "fill-current" : ""}`} />
-            {saved
-              ? L(language, "Saved", "Guardado", "Salvo")
-              : L(language, "Save to Favorites", "Guardar en Favoritos", "Salvar nos Favoritos")}
-          </button>
-          <button
             onClick={share}
-            className="flex items-center justify-center gap-2 rounded-xl border border-zinc-700 text-white px-4 py-3 hover:bg-zinc-900"
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-orange-500/40 text-orange-400 py-3 font-medium hover:bg-orange-500/10"
           >
             <Share2 className="w-4 h-4" />
             {L(language, "Share", "Compartir", "Compartilhar")}
