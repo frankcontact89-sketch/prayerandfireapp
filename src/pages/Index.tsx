@@ -592,9 +592,9 @@ export default function Index() {
             language={language}
             setLanguage={setLanguage}
             onBack={() => setPage("home")}
-            onOpenSettings={() => setPage("settings")}
             onOpenNotifications={() => setPage("notifications")}
             onOpenPrivacy={() => setPage("legal")}
+            onOpenLanguage={() => setShowLanguages(true)}
             signOut={async () => {
               await supabase.auth.signOut();
               setUser(null);
