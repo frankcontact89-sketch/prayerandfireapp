@@ -609,6 +609,13 @@ export default function Index() {
             onOpenArticle={(id) => setPage(`article:${id}`)}
           />
         )}
+        {page === "favorites" && (
+          <FavoritesScreen
+            onBack={() => setPage("home")}
+            language={language}
+            onOpen={(p) => setPage(p)}
+          />
+        )}
         {page.startsWith("article:") && (
           <LibraryArticleScreen
             articleId={page.slice(8)}
@@ -666,21 +673,21 @@ export default function Index() {
 
       {page !== "admin" && (
       <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-zinc-800 pb-[env(safe-area-inset-bottom)]">
-        <nav className="flex justify-around items-center h-[64px] px-6 max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto">
-          <button onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
-            <Flame className="w-7 h-7" />
+        <nav className="flex justify-around items-center h-[64px] px-4 max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto">
+          <button aria-label="Home" onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
+            <Flame className="w-6 h-6" />
           </button>
-          <button onClick={() => setPage("bible")} className={page === "bible" ? "text-orange-500" : "text-zinc-500"}>
-            <BookOpen className="w-7 h-7" />
+          <button aria-label="Bible" onClick={() => setPage("bible")} className={page === "bible" ? "text-orange-500" : "text-zinc-500"}>
+            <BookOpen className="w-6 h-6" />
           </button>
-          <button onClick={() => setPage("giving")} className={page === "giving" ? "text-orange-500" : "text-zinc-500"}>
-            <Heart className="w-7 h-7" />
+          <button aria-label="Library" onClick={() => setPage("library")} className={page === "library" || page.startsWith("article:") ? "text-orange-500" : "text-zinc-500"}>
+            <LibraryIcon className="w-6 h-6" />
           </button>
-          <button
-            onClick={() => setPage("shopping")}
-            className={page === "shopping" ? "text-orange-500" : "text-zinc-500"}
-          >
-            <ShoppingBag className="w-7 h-7" />
+          <button aria-label="Favorites" onClick={() => setPage("favorites")} className={page === "favorites" ? "text-orange-500" : "text-zinc-500"}>
+            <Heart className="w-6 h-6" />
+          </button>
+          <button aria-label="Profile" onClick={() => setPage("profile")} className={page === "profile" ? "text-orange-500" : "text-zinc-500"}>
+            <UserIcon className="w-6 h-6" />
           </button>
         </nav>
       </div>
