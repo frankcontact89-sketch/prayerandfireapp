@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  Home, BookOpen, Library, Heart, User as UserIcon,
-  Landmark, GraduationCap, ShoppingBag, Share2, Info, Settings as SettingsIcon,
+  Home, BookOpen, Library, User as UserIcon,
+  GraduationCap, ShoppingBag, Share2, Info, Settings as SettingsIcon,
   ChevronDown, ChevronRight,
 } from "lucide-react";
 import { APP_CONFIG } from "@/config/constants";
@@ -17,14 +17,6 @@ interface AppDrawerProps {
   t: (k: any) => string;
   language: string;
 }
-
-const SOLAS = [
-  { slug: "sola-scriptura", label: "Sola Scriptura" },
-  { slug: "sola-fide", label: "Sola Fide" },
-  { slug: "sola-gratia", label: "Sola Gratia" },
-  { slug: "solus-christus", label: "Solus Christus" },
-  { slug: "soli-deo-gloria", label: "Soli Deo Gloria" },
-];
 
 function L(lang: string, en: string, es: string, pt: string) {
   return lang === "es" ? es : lang === "pt" ? pt : en;
