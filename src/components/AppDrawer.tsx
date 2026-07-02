@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  Home, BookOpen, HandHeart, Heart, Library, Sunrise, CalendarDays,
+  Home, BookOpen, Library, Sunrise, CalendarDays,
   Landmark, GraduationCap, ShoppingBag, Share2, Info, Settings as SettingsIcon,
   ChevronDown, ChevronRight,
 } from "lucide-react";
