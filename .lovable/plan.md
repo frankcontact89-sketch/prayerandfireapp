@@ -1,52 +1,47 @@
-Most of what you listed is already admin-managed — only Home content and Verses are still hardcoded. Plan focuses on closing those two gaps without rebuilding what works.
+You asked for a very large scope in one turn. To keep quality high and avoid a half-broken App Store build, I'll ship it in three phases. Phase 1 is what I'll build immediately after you approve. Phases 2 and 3 are follow-up turns — each one is a "reply 'go phase 2'" away.
 
-## Already admin-managed (no work needed)
-- **Store products** — `products` table + Admin → Products tab (title, description, image, category, external link, link type Amazon/Etsy/Stripe/External, button label).
-- **Courses** — `courses` table + Admin → Courses tab (just shipped).
-- **Events / Global Prayer** — `events` table + Admin → Events tab.
-- **Connect section** — `app_links` table + Admin → Links tab (Instagram, email, WhatsApp, etc.).
-- **Admin gating** — Admin Panel is PIN-locked AND role-checked; normal users never see controls.
+## Phase 1 — Navigation shell + Store upgrade (this turn)
 
-The only missing field on Store is "Featured product" — added in step 2.
+**Navigation**
+- Replace top-right Share icon on Home with a hamburger (☰) in the same spot.
+- Left slide-out drawer (shadcn `Sheet` on left side, dark theme, orange accents, safe-area aware).
+- Menu items in exact order requested: Home, Bible, Prayer, Favorites, Library, Daily Devotional, Daily Reading Plan, The Five Solas, 50 Greek Words, Store, Share Prayer & Fire, About, Settings.
+- Five Solas and 50 Greek Words are collapsible groups inside the drawer (shadcn `Collapsible`).
+- Every leaf item routes to a real screen. New content pages (Prayer, Favorites, Library, Daily Devotional, Reading Plan, About, individual Solas pages, individual Greek word pages) render from the DB with an empty state ("Coming soon — content will appear here once added in the Admin Panel"). No 404s, no dead buttons.
 
-## What I'll build
+**Store upgrades on the existing `products` table**
+- Add columns: `is_featured`, `is_published`, `order_index`, `category`, `stock_status` (in_stock/low_stock/out_of_stock), `sku`, `images` (jsonb array for multi-image).
+- Admin → Products: toggles for Featured, Publish/Hide, category dropdown, stock status, SKU, drag-to-reorder, multi-image upload.
+- Public Store screen: filter by category, search box, hidden items excluded, featured section on top, order respected. External buttons (Amazon/Etsy/Stripe/Shopify) already work — I'll keep those.
 
-### 1. `app_content` table (multilingual key/value)
-One row per editable Home text block, with `value_en`, `value_es`, `value_pt`. Seeded with current Home strings:
-- `welcome_message`
-- `mission_text`
-- `missions_support_text`
-- `featured_devotional_title` + `_desc`
-- `featured_course_title` + `_desc`
-- `featured_resource_title` + `_desc`
+**Five Solas + Greek Words data model (seeded, admin-editable)**
+- New table `solas` (name, latin, english, explanation, history, verses, application, order_index, all in _en/_es/_pt).
+- New table `greek_words` (greek, transliteration, pronunciation, meaning, biblical_usage, references, explanation, order_index, all in _en/_es/_pt).
+- Seed 5 Solas with full AI-drafted Reformed content in all 3 languages.
+- Seed the first 10 Greek words (Agape, Logos, Christos, Pistis, Charis, Kurios, Ekklesia, Baptizo, Metanoia, Pneuma) so the section isn't empty. Remaining 40 come in Phase 3 to keep this turn shippable.
+- Admin tabs to CRUD both.
 
-RLS: public can read; only admins can write.
+## Phase 2 — CMS expansion (next turn)
 
-### 2. `verses` table (multilingual)
-Columns: `text_en`, `ref_en`, `text_es`, `ref_es`, `text_pt`, `ref_pt`, `is_active`, `order_index`. Seeded with the 10 existing verses in all 3 languages. Same RLS as above.
+New admin tabs + tables (CRUD, trilingual, RLS admin-write / public-read):
+Daily Devotionals, Daily Prayer, Daily Reflection, Reading Plans, Bible Studies, Mission Projects, Hero Banner, Home Cards, Announcements, Product Categories, Donation Campaigns, Media Library (images/videos). Verse of the Day already exists (`verses` table) — I'll surface it in the Verse of the Day slot on Home. Push Notifications, Events, and Store already have admin tabs.
 
-### 3. Admin UI
-Two new tabs in `AdminPanel.tsx`:
-- **Content** (`AdminContent.tsx`) — list of content keys; each row expands to 3 textareas (EN/ES/PT) + Save.
-- **Verses** (`AdminVerses.tsx`) — table with add/edit/delete; modal with EN/ES/PT text+reference fields, active toggle, order.
+## Phase 3 — Content depth (next turn)
 
-### 4. Wire HomeScreen to DB
-- Replace `VERSES_BY_LANG` constant with a Supabase fetch from `verses` (filtered to active, picks one at random).
-- Replace hardcoded `t("home_devotional_title")`, `t("home_mission_text")`, etc. with values from `app_content` (lang-aware), falling back to existing translations if a row is missing.
+- Remaining 40 Greek words seeded with full trilingual content.
+- Any polish on Solas/Devotional copy.
 
-### 5. Featured product flag
-Add `is_featured boolean default false` to `products`. Add a checkbox in the Add/Edit Product dialog. (No UI consumer change unless you later want a "Featured" carousel — flag is stored either way.)
+## Out of scope unless you ask
 
-## Out of scope (let me know if you want them)
-- Translating admin-entered content automatically (admins fill EN/ES/PT manually, which is the safest for App Store review).
-- "Welcome screen onboarding" copy — currently lives in `translations.ts`; making it DB-driven would force admins to maintain that too. Keep in translations unless you want it editable.
+- Rewriting Bible, Events, Notifications, Giving screens (already working).
+- Redesigning the visual system.
+- Automatic machine translation of admin-entered content (admins fill EN/ES/PT to stay App-Store-safe).
 
-## Files touched
-- New migration (creates `app_content`, `verses`, adds `is_featured` to `products`, seeds rows)
-- New: `src/components/admin/AdminContent.tsx`
-- New: `src/components/admin/AdminVerses.tsx`
-- Edit: `src/components/AdminPanel.tsx` (2 new tabs, grid-cols-7)
-- Edit: `src/components/HomeScreen.tsx` (load verses + content from DB with translation fallback)
-- Edit: `src/components/admin/AdminProducts.tsx` (featured checkbox)
+## Files touched in Phase 1
 
-Approve and I'll implement.
+- Migration: alter `products`; create `solas`, `greek_words`; seed rows.
+- New: `src/components/AppDrawer.tsx`, `src/components/SolaDetailScreen.tsx`, `src/components/GreekWordDetailScreen.tsx`, `src/components/PrayerScreen.tsx`, `src/components/FavoritesScreen.tsx`, `src/components/LibraryScreen.tsx`, `src/components/DailyDevotionalScreen.tsx`, `src/components/ReadingPlanScreen.tsx`, `src/components/AboutScreen.tsx`, `src/components/SolasListScreen.tsx`, `src/components/GreekWordsListScreen.tsx`.
+- New admin: `src/components/admin/AdminSolas.tsx`, `src/components/admin/AdminGreekWords.tsx`.
+- Edit: `src/pages/Index.tsx` (hamburger, drawer, new routes), `src/components/AdminPanel.tsx` (new tabs), `src/components/ShoppingScreen.tsx` (search/filter/featured/hidden), `src/components/admin/AdminProducts.tsx` (new fields + reorder).
+
+Reply "approved" (or "go phase 1") and I'll build it. Reply with edits if you want to move something between phases.
