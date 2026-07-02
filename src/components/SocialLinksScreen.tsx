@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageCircle, Instagram, Calendar, ArrowLeft, Mail, Globe2, ExternalLink, Sparkles } from "lucide-react";
+import { Instagram, Calendar, ArrowLeft, Mail, Globe2, ExternalLink, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SocialLink {
@@ -26,7 +26,6 @@ const openEmail = (subject: string) => {
 export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinksScreenProps) {
   const [links, setLinks] = useState<SocialLink[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showWhatsAppContacts, setShowWhatsAppContacts] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -49,7 +48,6 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
     setLoading(false);
   };
 
-  const whatsappLinks = links.filter((link) => link.icon?.toLowerCase() === "whatsapp");
   const instagramLinks = links.filter((link) => link.icon?.toLowerCase() === "instagram");
 
   if (loading) {
@@ -58,32 +56,6 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
         {[...Array(5)].map((_, index) => (
           <div key={index} className="h-12 rounded-xl bg-zinc-900 animate-pulse" />
         ))}
-      </div>
-    );
-  }
-
-  if (showWhatsAppContacts) {
-    return (
-      <div className="min-h-screen bg-black text-white px-5 pt-4 pb-24 max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto">
-        <div className="flex items-center gap-3 mb-5">
-          <button onClick={() => setShowWhatsAppContacts(false)}>
-            <ArrowLeft className="w-5 h-5 text-blue-400" />
-          </button>
-          <h1 className="text-lg font-bold">{t("connect_whatsapp_community")}</h1>
-        </div>
-
-        <div className="space-y-3">
-          {whatsappLinks.map((link) => (
-            <button
-              key={link.id}
-              onClick={() => window.open(link.url, "_blank")}
-              className="w-full rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 flex items-center justify-center gap-2 active:scale-95 transition text-sm"
-            >
-              <MessageCircle className="w-5 h-5" />
-              {link.title}
-            </button>
-          ))}
-        </div>
       </div>
     );
   }
@@ -117,16 +89,6 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
           {t("connect_official_website")}
           <ExternalLink className="w-3.5 h-3.5 text-zinc-500" />
         </button>
-
-        {whatsappLinks.length > 0 && (
-          <button
-            onClick={() => setShowWhatsAppContacts(true)}
-            className="w-full rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 flex items-center justify-center gap-2 active:scale-95 transition text-sm"
-          >
-            <MessageCircle className="w-5 h-5" />
-            {t("connect_whatsapp_community")}
-          </button>
-        )}
 
         {instagramLinks.map((link) => (
           <button
