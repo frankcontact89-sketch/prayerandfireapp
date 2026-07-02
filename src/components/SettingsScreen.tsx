@@ -51,6 +51,7 @@ export function SettingsScreen({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
   const [profileName, setProfileName] = useState(userName || "");
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -130,17 +131,169 @@ export function SettingsScreen({
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) await uploadAvatar(file);
-    e.target.value = "";
+    try {
+      const file = e.target.files?.[0];
+      if (file) await uploadAvatar(file);
+    } catch (error: any) {
+      toast({ title: t("error"), description: error?.message || t("couldNotUploadPhoto"), variant: "destructive" });
+    } finally {
+      e.target.value = "";
+      setShowImageDialog(false);
+    }
+  };
+
+  const isNative = (() => {
+    try {
+      const cap = (globalThis as any)?.Capacitor;
+      return cap?.isNativePlatform?.() === true;
+    } catch {
+      return false;
+    }
+  })();
+
+  const loadCapCamera = async (): Promise<any | null> => {
+    try {
+      const cap = (globalThis as any)?.Capacitor;
+      const fromGlobal = cap?.Plugins?.Camera;
+      if (fromGlobal) return fromGlobal;
+      const spec = "@capacitor" + "/camera";
+      const mod: any = await import(/* @vite-ignore */ spec);
+      return mod?.Camera ?? null;
+    } catch (error) {
+      console.error("Capacitor camera plugin not available", error);
+      return null;
+    }
+  };
+
+  const uploadFromDataUrl = async (dataUrl: string, ext: string) => {
+    try {
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `photo-${Date.now()}.${ext || "jpg"}`, { type: blob.type || "image/jpeg" });
+      await uploadAvatar(file);
+    } catch (error: any) {
+      toast({ title: t("error"), description: error?.message || t("couldNotUploadPhoto"), variant: "destructive" });
+    }
+  };
+
+  const pickNative = async (source: "CAMERA" | "PHOTOS") => {
+    try {
+      const CapCamera = await loadCapCamera();
+      if (!CapCamera) {
+        if (source === "CAMERA") cameraInputRef.current?.click();
+        else fileInputRef.current?.click();
+        return;
+      }
+
+      try {
+        const permissions = await CapCamera.checkPermissions();
+        const needsPermission =
+          (source === "CAMERA" && permissions.camera !== "granted") ||
+          (source === "PHOTOS" && permissions.photos !== "granted" && permissions.photos !== "limited");
+        if (needsPermission) {
+          const requested = await CapCamera.requestPermissions({
+            permissions: source === "CAMERA" ? ["camera"] : ["photos"],
+          });
+          const granted =
+            source === "CAMERA"
+              ? requested.camera === "granted"
+              : requested.photos === "granted" || requested.photos === "limited";
+          if (!granted) {
+            toast({
+              title: t("error"),
+              description: L(
+                language,
+                source === "CAMERA" ? "Camera permission denied." : "Photo library permission denied.",
+                source === "CAMERA" ? "Permiso de cámara denegado." : "Permiso de fotos denegado.",
+                source === "CAMERA" ? "Permissão da câmera negada." : "Permissão das fotos negada.",
+              ),
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Camera permission error", error);
+      }
+
+      let photo: any;
+      try {
+        photo = await CapCamera.getPhoto({
+          quality: 85,
+          allowEditing: false,
+          resultType: "dataUrl",
+          source,
+          saveToGallery: false,
+        });
+      } catch (pickError: any) {
+        const msg = String(pickError?.message || pickError || "");
+        if (/cancel/i.test(msg)) return;
+        if (source === "CAMERA") {
+          try {
+            photo = await CapCamera.getPhoto({
+              quality: 85,
+              allowEditing: false,
+              resultType: "dataUrl",
+              source: "PHOTOS",
+              saveToGallery: false,
+            });
+          } catch {
+            fileInputRef.current?.click();
+            return;
+          }
+        } else {
+          fileInputRef.current?.click();
+          return;
+        }
+      }
+
+      if (photo?.dataUrl) await uploadFromDataUrl(photo.dataUrl, photo.format || "jpg");
+    } catch (error) {
+      console.error("Photo picker error", error);
+      fileInputRef.current?.click();
+    } finally {
+      setShowImageDialog(false);
+    }
+  };
+
+  const isCameraCaptureSupported = () => {
+    try {
+      const input = document.createElement("input");
+      input.setAttribute("type", "file");
+      return "capture" in input;
+    } catch {
+      return false;
+    }
   };
 
   const handleTakePhoto = () => {
-    cameraInputRef.current?.click();
+    try {
+      if (isNative) {
+        void pickNative("CAMERA");
+        return;
+      }
+      if (!isCameraCaptureSupported()) {
+        fileInputRef.current?.click();
+        return;
+      }
+      cameraInputRef.current?.click();
+    } catch (error) {
+      console.error("Take photo error", error);
+      fileInputRef.current?.click();
+    }
   };
 
   const handleUploadPhoto = () => {
-    fileInputRef.current?.click();
+    try {
+      if (isNative) {
+        void pickNative("PHOTOS");
+        return;
+      }
+      fileInputRef.current?.click();
+    } catch (error) {
+      console.error("Upload photo error", error);
+      toast({ title: t("error"), description: t("couldNotUploadPhoto"), variant: "destructive" });
+    }
   };
 
   const handleRemovePhoto = async () => {
@@ -203,7 +356,7 @@ export function SettingsScreen({
           <div className="flex items-center gap-4">
             <button
               type="button"
-              onClick={handleUploadPhoto}
+              onClick={() => setShowImageDialog(true)}
               disabled={savingProfile}
               className="relative h-20 w-20 shrink-0 rounded-full border-2 border-orange-500/40 bg-muted overflow-hidden flex items-center justify-center"
               aria-label={t("changePhoto")}
@@ -315,6 +468,39 @@ export function SettingsScreen({
             >
               {deleting ? t("deleting") : t("delete")}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("choosePhotoSource")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("selectHowToAddPhoto")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <Button type="button" variant="outline" className="h-24 flex flex-col gap-2" onClick={handleTakePhoto} disabled={savingProfile}>
+              <Camera className="w-8 h-8" />
+              <span>{t("takePhoto")}</span>
+            </Button>
+            <Button type="button" variant="outline" className="h-24 flex flex-col gap-2" onClick={handleUploadPhoto} disabled={savingProfile}>
+              <Upload className="w-8 h-8" />
+              <span>{t("uploadPhoto")}</span>
+            </Button>
+          </div>
+          {profileImage && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 border-destructive/40 text-destructive hover:bg-destructive/10 flex items-center justify-center gap-2"
+              onClick={handleRemovePhoto}
+              disabled={savingProfile}
+            >
+              <Trash2 className="w-5 h-5" />
+              {L(language, "Remove Photo", "Eliminar foto", "Remover foto")}
+            </Button>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={savingProfile}>{t("cancel")}</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
