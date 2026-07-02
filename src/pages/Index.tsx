@@ -509,18 +509,6 @@ export default function Index() {
       >
         <div className="flex justify-between items-center px-4 h-12">
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage("settings")}
-              aria-label={t("settings")}
-              className="w-10 h-10 flex items-center justify-center rounded-full overflow-hidden border border-orange-500/40 bg-zinc-900"
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={t("profile")} className="w-full h-full object-cover" />
-              ) : (
-                <UserIcon className="w-5 h-5 text-orange-500" />
-              )}
-            </button>
-
             {unreadNotifications > 0 && (
               <button
                 onClick={openNotifications}
