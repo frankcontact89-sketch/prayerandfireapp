@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Heart, Flame, Bell, Quote, Sparkles, HandHeart, BookOpen, User as UserIcon, Menu, Library as LibraryIcon } from "lucide-react";
+import { Flame, Bell, Quote, Sparkles, HandHeart, BookOpen, User as UserIcon, Menu, Library as LibraryIcon } from "lucide-react";
 
 import { SignInScreen } from "@/components/SignInScreen";
 import { EventsScreen } from "@/components/EventsScreen";
@@ -684,8 +684,8 @@ export default function Index() {
           <button aria-label="Library" onClick={() => setPage("library")} className={page === "library" || page.startsWith("article:") ? "text-orange-500" : "text-zinc-500"}>
             <LibraryIcon className="w-6 h-6" />
           </button>
-          <button aria-label="Favorites" onClick={() => setPage("favorites")} className={page === "favorites" ? "text-orange-500" : "text-zinc-500"}>
-            <Heart className="w-6 h-6" />
+          <button aria-label="Support" onClick={() => setPage("giving")} className={page === "giving" ? "text-orange-500" : "text-zinc-500"}>
+            <HandHeart className="w-6 h-6" />
           </button>
           <button aria-label="Profile" onClick={() => setPage("profile")} className={page === "profile" ? "text-orange-500" : "text-zinc-500"}>
             <UserIcon className="w-6 h-6" />
