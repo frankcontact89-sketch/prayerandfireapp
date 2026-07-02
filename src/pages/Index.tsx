@@ -555,7 +555,6 @@ export default function Index() {
             userName={userName}
             userEmail={user?.email || ""}
             onAdminClick={() => setPage("admin")}
-            onProfileClick={() => setPage("profile")}
             onNotificationsClick={openNotifications}
             onLegalClick={() => setPage("legal")}
             isDarkMode={isDarkMode}
