@@ -18,7 +18,12 @@ import { SolasListScreen } from "@/components/SolasListScreen";
 import { SolaDetailScreen } from "@/components/SolaDetailScreen";
 import { GreekWordsListScreen } from "@/components/GreekWordsListScreen";
 import { GreekWordDetailScreen } from "@/components/GreekWordDetailScreen";
-import { PrayerScreen, FavoritesScreen, LibraryScreen, DevotionalScreen, ReadingPlanScreen, AboutScreen } from "@/components/StaticScreens";
+import { AboutScreen } from "@/components/StaticScreens";
+import { DailyDevotionalScreen } from "@/components/DailyDevotionalScreen";
+import { ReadingPlansScreen } from "@/components/ReadingPlansScreen";
+import { ReadingPlanDetailScreen } from "@/components/ReadingPlanDetailScreen";
+import { ChristianLibraryScreen } from "@/components/ChristianLibraryScreen";
+import { LibraryArticleScreen } from "@/components/LibraryArticleScreen";
 
 import { supabase } from "@/integrations/supabase/client";
 import { translations } from "@/config/translations";
@@ -596,11 +601,37 @@ export default function Index() {
         {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
 
-        {page === "prayer" && <PrayerScreen onBack={() => setPage("home")} language={language} />}
-        {page === "favorites" && <FavoritesScreen onBack={() => setPage("home")} language={language} />}
-        {page === "library" && <LibraryScreen onBack={() => setPage("home")} language={language} />}
-        {page === "devotional" && <DevotionalScreen onBack={() => setPage("home")} language={language} />}
-        {page === "reading-plan" && <ReadingPlanScreen onBack={() => setPage("home")} language={language} />}
+        {page === "library" && (
+          <ChristianLibraryScreen
+            onBack={() => setPage("home")}
+            language={language}
+            onOpenArticle={(id) => setPage(`article:${id}`)}
+          />
+        )}
+        {page.startsWith("article:") && (
+          <LibraryArticleScreen
+            articleId={page.slice(8)}
+            onBack={() => setPage("library")}
+            language={language}
+          />
+        )}
+        {page === "devotional" && (
+          <DailyDevotionalScreen onBack={() => setPage("home")} language={language} />
+        )}
+        {page === "reading-plans" && (
+          <ReadingPlansScreen
+            onBack={() => setPage("home")}
+            language={language}
+            onOpenPlan={(id) => setPage(`plan:${id}`)}
+          />
+        )}
+        {page.startsWith("plan:") && (
+          <ReadingPlanDetailScreen
+            planId={page.slice(5)}
+            onBack={() => setPage("reading-plans")}
+            language={language}
+          />
+        )}
         {page === "about" && <AboutScreen onBack={() => setPage("home")} language={language} />}
         {page === "solas" && (
           <SolasListScreen
