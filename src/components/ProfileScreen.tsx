@@ -305,6 +305,21 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack, onOpe
     } finally { setLoading(false); }
   };
 
+  const handleRemovePhoto = async () => {
+    if (!userId) return;
+    try {
+      setLoading(true);
+      await supabase.from('profiles').update({ avatar_url: null }).eq('id', userId);
+      setImage(null);
+      toast({ title: t("success"), description: t("profilePhotoUpdated") });
+    } catch (error: any) {
+      toast({ title: t("error"), description: error.message || t("couldNotSaveChanges"), variant: "destructive" });
+    } finally {
+      setLoading(false);
+      setShowImageDialog(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
@@ -359,6 +374,17 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack, onOpe
             <Button variant="outline" className="h-24 flex flex-col gap-2" onClick={handleTakePhoto}><Camera className="w-8 h-8" /><span>{t("takePhoto")}</span></Button>
             <Button variant="outline" className="h-24 flex flex-col gap-2" onClick={handleUploadPhoto}><Upload className="w-8 h-8" /><span>{t("uploadPhoto")}</span></Button>
           </div>
+          {image && (
+            <Button
+              variant="outline"
+              className="w-full h-12 border-destructive/40 text-destructive hover:bg-destructive/10 flex items-center justify-center gap-2"
+              onClick={handleRemovePhoto}
+              disabled={loading}
+            >
+              <Trash2 className="w-5 h-5" />
+              {L(language, "Remove Photo", "Eliminar foto", "Remover foto")}
+            </Button>
+          )}
           <AlertDialogFooter><AlertDialogCancel>{t("cancel")}</AlertDialogCancel></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
