@@ -27,15 +27,21 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
   };
 
   const share = async () => {
+    // Share the APP download link (App Store / Play Store), not the website.
+    const storeUrl =
+      APP_CONFIG.APP_STORE_URL || APP_CONFIG.PLAY_STORE_URL || "";
+    const text = "Download the Prayer & Fire App";
+    const shareUrl = storeUrl;
+    const composed = shareUrl ? `${text} ${shareUrl}` : text;
     try {
       if (navigator.share) {
         await navigator.share({
           title: APP_CONFIG.APP_NAME,
-          text: APP_CONFIG.SHARE_TEXT,
-          url: APP_CONFIG.URL,
+          text,
+          url: shareUrl || undefined,
         });
       } else {
-        await navigator.clipboard.writeText(`${APP_CONFIG.SHARE_TEXT} ${APP_CONFIG.URL}`);
+        await navigator.clipboard.writeText(composed);
       }
     } catch {}
     onOpenChange(false);
