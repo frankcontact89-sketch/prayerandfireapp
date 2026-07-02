@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Camera, Upload, ArrowLeft, Trash2 } from "lucide-react";
+import { Camera, Upload, ArrowLeft, Trash2, User as UserIcon, Pencil, Globe, Bell, Palette, CreditCard, Settings as SettingsIcon, Shield, LogOut, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -21,9 +21,12 @@ interface ProfileScreenProps {
   setLanguage: (lang: string) => void;
   signOut: () => void;
   onBack?: () => void;
+  onOpenSettings?: () => void;
+  onOpenNotifications?: () => void;
+  onOpenPrivacy?: () => void;
 }
 
-export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: ProfileScreenProps) {
+export function ProfileScreen({ t, language, setLanguage, signOut, onBack, onOpenSettings, onOpenNotifications, onOpenPrivacy }: ProfileScreenProps) {
   const [name, setName] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -340,6 +343,13 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
           <Input placeholder={t("name")} value={name} onChange={(e) => setName(e.target.value)} disabled={loading} className="h-12" />
           <Button onClick={handleSaveProfile} disabled={loading} className="w-full h-12 font-bold">{loading ? t("saving") : t("saveChanges")}</Button>
         </div>
+        <ProfileMenu
+          language={language}
+          onOpenSettings={onOpenSettings}
+          onOpenNotifications={onOpenNotifications}
+          onOpenPrivacy={onOpenPrivacy}
+          signOut={signOut}
+        />
         <div className="flex items-center justify-center gap-6">
           <button onClick={signOut} className="text-primary font-bold py-3 hover:underline">{t("signout")}</button>
           <span className="text-muted-foreground">|</span>
