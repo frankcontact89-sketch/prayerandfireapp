@@ -591,7 +591,10 @@ export default function Index() {
             t={t}
             language={language}
             setLanguage={setLanguage}
-            onBack={() => setPage("settings")}
+            onBack={() => setPage("home")}
+            onOpenSettings={() => setPage("settings")}
+            onOpenNotifications={() => setPage("notifications")}
+            onOpenPrivacy={() => setPage("legal")}
             signOut={async () => {
               await supabase.auth.signOut();
               setUser(null);
@@ -599,8 +602,8 @@ export default function Index() {
             }}
           />
         )}
-        {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
-        {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
+        {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("profile")} />}
+        {page === "legal" && <LegalCenter t={t} onBack={() => setPage("profile")} />}
 
         {page === "library" && (
           <ChristianLibraryScreen
