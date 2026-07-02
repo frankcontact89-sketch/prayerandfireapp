@@ -607,6 +607,7 @@ export default function Index() {
             onBack={() => setPage("home")}
             language={language}
             onOpenArticle={(id) => setPage(`article:${id}`)}
+            onNavigate={(p) => setPage(p)}
           />
         )}
         {page === "favorites" && (
