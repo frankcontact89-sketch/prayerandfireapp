@@ -602,8 +602,8 @@ export default function Index() {
             }}
           />
         )}
-        {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("profile")} />}
-        {page === "legal" && <LegalCenter t={t} onBack={() => setPage("profile")} />}
+        {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
+        {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
 
         {page === "library" && (
           <ChristianLibraryScreen
