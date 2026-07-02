@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  Home, BookOpen, Library, Sunrise, CalendarDays,
+  Home, BookOpen, Library,
   Landmark, GraduationCap, ShoppingBag, Share2, Info, Settings as SettingsIcon,
-  ChevronDown, ChevronRight,
+  ChevronDown, ChevronRight, Heart,
 } from "lucide-react";
 import { APP_CONFIG } from "@/config/constants";
 
@@ -79,9 +79,8 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
           {item(<Home className="w-5 h-5" />, L(language, "Home", "Inicio", "Início"), () => go("home"))}
           {item(<BookOpen className="w-5 h-5" />, L(language, "Bible", "Biblia", "Bíblia"), () => go("bible"))}
-          {item(<Sunrise className="w-5 h-5" />, L(language, "Daily Devotional", "Devocional Diario", "Devocional Diário"), () => go("devotional"))}
-          {item(<CalendarDays className="w-5 h-5" />, L(language, "Reading Plans", "Planes de Lectura", "Planos de Leitura"), () => go("reading-plans"))}
           {item(<Library className="w-5 h-5" />, L(language, "Christian Library", "Biblioteca Cristiana", "Biblioteca Cristã"), () => go("library"))}
+          {item(<Heart className="w-5 h-5" />, L(language, "Favorites", "Favoritos", "Favoritos"), () => go("favorites"))}
 
           <Collapsible open={solasOpen} onOpenChange={setSolasOpen}>
             <CollapsibleTrigger className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-orange-500/10 transition">
