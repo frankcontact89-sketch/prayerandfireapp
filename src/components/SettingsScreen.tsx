@@ -1,9 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Bell, User, Scale, LogOut, Languages, CreditCard } from "lucide-react";
-
+import { Bell, Scale, LogOut, Languages, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { APP_CONFIG } from "@/config/constants";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface SettingsScreenProps {
   t: (key: string) => string;
@@ -12,7 +21,6 @@ interface SettingsScreenProps {
   userName: string;
   userEmail: string;
   onAdminClick: () => void;
-  onProfileClick: () => void;
   onNotificationsClick: () => void;
   onLegalClick: () => void;
   onSignOut: () => void;
@@ -25,100 +33,60 @@ export function SettingsScreen({
   t,
   language,
   setLanguage,
-  userName,
-  userEmail,
   onAdminClick,
-  onProfileClick,
   onNotificationsClick,
   onLegalClick,
   onSignOut,
   isGuest,
 }: SettingsScreenProps) {
   const { isAdmin } = useUserRole();
+  const { toast } = useToast();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadAvatar();
-  }, []);
-
-  const loadAvatar = async () => {
-    const { data } = await supabase.auth.getUser();
-
-    const user = data?.user;
-
-    if (!user) return;
-
-    const { data: profile } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
-
-    if (profile?.avatar_url) {
-      setAvatarUrl(`${profile.avatar_url}?t=${Date.now()}`);
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("profiles").delete().eq("id", user.id);
+        await supabase.from("purchases").delete().eq("user_id", user.id);
+        await supabase.from("event_rsvps").delete().eq("user_id", user.id);
+        await supabase.from("notifications").delete().eq("user_id", user.id);
+      }
+      await supabase.auth.signOut();
+      toast({ title: t("accountDeleted"), description: t("accountDataDeleted") });
+      onSignOut();
+    } catch (error: any) {
+      toast({ title: t("error"), description: error?.message || t("couldNotDeleteAccount"), variant: "destructive" });
+    } finally {
+      setDeleting(false);
+      setShowDeleteDialog(false);
     }
-  };
-
-  const openCustomerPortal = () => {
-    window.open(APP_CONFIG.STRIPE_CUSTOMER_PORTAL, "_blank", "noopener,noreferrer");
   };
 
   return (
     <div className="max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto px-4 py-3 pb-24 space-y-3">
       <h2 className="text-2xl font-bold text-white">{t("settings")}</h2>
 
-      <button onClick={onProfileClick} className="w-full bg-card border border-border rounded-2xl p-3 text-left">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-primary/10 border border-orange-500/30 flex items-center justify-center overflow-hidden">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt={t("profile")} className="w-full h-full object-cover" />
-            ) : (
-              <User className="w-6 h-6 text-orange-500" />
-            )}
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base font-bold text-white">{t("profile")}</h3>
-
-            <p className="text-xs text-zinc-400">{userName || "User"}</p>
-
-            <p className="text-xs text-zinc-400 truncate">{userEmail}</p>
-          </div>
-
-          <span className="text-zinc-500 text-xs">›</span>
-        </div>
-      </button>
-
       <div className="grid grid-cols-2 gap-3">
+        <button onClick={setLanguage} className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left">
+          <Languages className="w-6 h-6 text-orange-500 mb-2" />
+          <h3 className="text-sm font-bold text-white leading-tight">{t("language")}</h3>
+          <p className="text-xs text-zinc-500 uppercase">{language || "EN"}</p>
+        </button>
+
         <button
           onClick={onNotificationsClick}
           className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left"
         >
           <Bell className="w-6 h-6 text-orange-500 mb-2" />
-
           <h3 className="text-sm font-bold text-white leading-tight">{t("notifications")}</h3>
         </button>
 
         <button onClick={onLegalClick} className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left">
           <Scale className="w-6 h-6 text-orange-500 mb-2" />
-
           <h3 className="text-sm font-bold text-white leading-tight">{t("privacy")}</h3>
-        </button>
-
-        <button onClick={setLanguage} className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left">
-          <Languages className="w-6 h-6 text-orange-500 mb-2" />
-
-          <h3 className="text-sm font-bold text-white leading-tight">{t("language")}</h3>
-
-          <p className="text-xs text-zinc-500 uppercase">{language || "EN"}</p>
-        </button>
-
-        <button
-          onClick={openCustomerPortal}
-          className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left"
-        >
-          <CreditCard className="w-6 h-6 text-orange-500 mb-2" />
-
-          <h3 className="text-sm font-bold text-white leading-tight">{t("manageSubscription")}</h3>
-
-          <p className="text-xs text-zinc-400 mt-1 leading-tight">{t("billingCardsCancel")}</p>
         </button>
       </div>
 
@@ -132,15 +100,42 @@ export function SettingsScreen({
       )}
 
       {!isGuest && (
-        <button
-          onClick={onSignOut}
-          className="w-full bg-card border border-border text-white font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2"
-        >
-          <LogOut className="w-4 h-4" />
-
-          {t("signout")}
-        </button>
+        <>
+          <button
+            onClick={onSignOut}
+            className="w-full bg-card border border-border text-white font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            {t("signout")}
+          </button>
+          <button
+            onClick={() => setShowDeleteDialog(true)}
+            className="w-full bg-card border border-destructive/40 text-destructive font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            {t("deleteAccount")}
+          </button>
+        </>
       )}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">{t("deleteAccountConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("deleteAccountConfirm")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? t("deleting") : t("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -509,18 +509,6 @@ export default function Index() {
       >
         <div className="flex justify-between items-center px-4 h-12">
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage("settings")}
-              aria-label={t("settings")}
-              className="w-10 h-10 flex items-center justify-center rounded-full overflow-hidden border border-orange-500/40 bg-zinc-900"
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={t("profile")} className="w-full h-full object-cover" />
-              ) : (
-                <UserIcon className="w-5 h-5 text-orange-500" />
-              )}
-            </button>
-
             {unreadNotifications > 0 && (
               <button
                 onClick={openNotifications}
@@ -567,7 +555,6 @@ export default function Index() {
             userName={userName}
             userEmail={user?.email || ""}
             onAdminClick={() => setPage("admin")}
-            onProfileClick={() => setPage("profile")}
             onNotificationsClick={openNotifications}
             onLegalClick={() => setPage("legal")}
             isDarkMode={isDarkMode}
@@ -602,8 +589,8 @@ export default function Index() {
             }}
           />
         )}
-        {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("profile")} />}
-        {page === "legal" && <LegalCenter t={t} onBack={() => setPage("profile")} />}
+        {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
+        {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
 
         {page === "library" && (
           <ChristianLibraryScreen
@@ -689,9 +676,6 @@ export default function Index() {
           </button>
           <button aria-label="Support" onClick={() => setPage("giving")} className={page === "giving" ? "text-orange-500" : "text-zinc-500"}>
             <HandHeart className="w-6 h-6" />
-          </button>
-          <button aria-label="Profile" onClick={() => setPage("settings")} className={page === "settings" || page === "profile" ? "text-orange-500" : "text-zinc-500"}>
-            <UserIcon className="w-6 h-6" />
           </button>
         </nav>
       </div>

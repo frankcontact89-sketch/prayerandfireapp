@@ -1,8 +1,8 @@
 import React from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
-  Home, BookOpen, Library, User as UserIcon,
-  ShoppingBag, Share2, Info, HandHeart,
+  Home, BookOpen, Library,
+  ShoppingBag, Share2, Info, HandHeart, Settings as SettingsIcon,
 } from "lucide-react";
 import { APP_CONFIG } from "@/config/constants";
 
@@ -71,7 +71,7 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
           {item(<HandHeart className="w-5 h-5" />, L(language, "Support Prayer & Fire", "Apoyar Prayer & Fire", "Apoiar Prayer & Fire"), () => go("giving"))}
           {item(<Share2 className="w-5 h-5" />, L(language, "Share Prayer & Fire", "Compartir Prayer & Fire", "Compartilhar Prayer & Fire"), share)}
           {item(<Info className="w-5 h-5" />, L(language, "About", "Acerca de", "Sobre"), () => go("about"))}
-          {item(<UserIcon className="w-5 h-5" />, L(language, "Profile", "Perfil", "Perfil"), () => go("profile"))}
+          {item(<SettingsIcon className="w-5 h-5" />, L(language, "Settings", "Ajustes", "Ajustes"), () => go("settings"))}
         </nav>
       </SheetContent>
     </Sheet>
