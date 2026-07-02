@@ -48,12 +48,12 @@ export function FavoritesScreen({ onBack, language, onOpen }: Props) {
       }
       if (groups["sola"]?.length) {
         const { data } = await supabase.from("solas")
-          .select("slug,title_en,title_es,title_pt,tagline_en,tagline_es,tagline_pt")
+          .select("slug,name_en,name_es,name_pt,translation_en,translation_es,translation_pt")
           .in("slug", groups["sola"]);
         (data || []).forEach((s: any) => enriched.push({
           kind: "sola", key: s.slug,
-          title: pick(s, "title", language),
-          summary: pick(s, "tagline", language),
+          title: pick(s, "name", language),
+          summary: pick(s, "translation", language),
           nav: `sola:${s.slug}`,
         }));
       }
