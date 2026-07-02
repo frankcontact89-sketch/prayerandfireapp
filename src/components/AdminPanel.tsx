@@ -7,6 +7,8 @@ import { AdminProducts } from "./admin/AdminProducts";
 import { AdminCourses } from "./admin/AdminCourses";
 import { AdminContent } from "./admin/AdminContent";
 import { AdminVerses } from "./admin/AdminVerses";
+import { AdminSolas } from "./admin/AdminSolas";
+import { AdminGreekWords } from "./admin/AdminGreekWords";
 import { ProductionChecklist } from "./ProductionChecklist";
 import { Shield, ArrowLeft, Lock, ClipboardCheck } from "lucide-react";
 import { Button } from "./ui/button";
@@ -120,6 +122,8 @@ export function AdminPanel({ t, onBack }: AdminPanelProps) {
             <TabsTrigger value="courses" className="px-4">Courses</TabsTrigger>
             <TabsTrigger value="content" className="px-4">Content</TabsTrigger>
             <TabsTrigger value="verses" className="px-4">Verses</TabsTrigger>
+            <TabsTrigger value="solas" className="px-4">Solas</TabsTrigger>
+            <TabsTrigger value="greek" className="px-4">Greek</TabsTrigger>
             <TabsTrigger value="notifications" className="px-4">Notifications</TabsTrigger>
           </TabsList>
         </div>
@@ -146,6 +150,14 @@ export function AdminPanel({ t, onBack }: AdminPanelProps) {
 
         <TabsContent value="verses" className="mt-6">
           <AdminVerses t={(en, es) => en} />
+        </TabsContent>
+
+        <TabsContent value="solas" className="mt-6">
+          <AdminSolas />
+        </TabsContent>
+
+        <TabsContent value="greek" className="mt-6">
+          <AdminGreekWords />
         </TabsContent>
 
         <TabsContent value="notifications" className="mt-6">
