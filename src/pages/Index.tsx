@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Heart, Share2, ShoppingBag, Flame, Bell, Quote, Sparkles, HandHeart, BookOpen, User as UserIcon } from "lucide-react";
+import { Heart, ShoppingBag, Flame, Bell, Quote, Sparkles, HandHeart, BookOpen, User as UserIcon, Menu } from "lucide-react";
 
 import { SignInScreen } from "@/components/SignInScreen";
 import { EventsScreen } from "@/components/EventsScreen";
@@ -13,6 +13,12 @@ import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { LegalCenter } from "@/components/LegalCenter";
 import { BibleScreen } from "@/components/BibleScreen";
 import { LanguagesScreen } from "@/components/LanguagesScreen";
+import { AppDrawer } from "@/components/AppDrawer";
+import { SolasListScreen } from "@/components/SolasListScreen";
+import { SolaDetailScreen } from "@/components/SolaDetailScreen";
+import { GreekWordsListScreen } from "@/components/GreekWordsListScreen";
+import { GreekWordDetailScreen } from "@/components/GreekWordDetailScreen";
+import { PrayerScreen, FavoritesScreen, LibraryScreen, DevotionalScreen, ReadingPlanScreen, AboutScreen } from "@/components/StaticScreens";
 
 import { supabase } from "@/integrations/supabase/client";
 import { translations } from "@/config/translations";
@@ -343,6 +349,7 @@ export default function Index() {
   const [userName] = useState("");
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDarkMode);
@@ -523,14 +530,22 @@ export default function Index() {
           </div>
 
           <button
-            onClick={() => setPage("social")}
-            aria-label={t("connect")}
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Menu"
             className="text-orange-500 w-10 h-10 flex items-center justify-center"
           >
-            <Share2 className="w-6 h-6" />
+            <Menu className="w-6 h-6" />
           </button>
         </div>
       </div>
+
+      <AppDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        language={language}
+        t={t}
+        onNavigate={(p) => setPage(p)}
+      />
 
       <div className="flex-1 overflow-y-auto pb-[90px] bg-black" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "none" }}>
         {page === "home" && <HomeScreen t={t} language={language} />}
@@ -580,6 +595,41 @@ export default function Index() {
         )}
         {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
+
+        {page === "prayer" && <PrayerScreen onBack={() => setPage("home")} language={language} />}
+        {page === "favorites" && <FavoritesScreen onBack={() => setPage("home")} language={language} />}
+        {page === "library" && <LibraryScreen onBack={() => setPage("home")} language={language} />}
+        {page === "devotional" && <DevotionalScreen onBack={() => setPage("home")} language={language} />}
+        {page === "reading-plan" && <ReadingPlanScreen onBack={() => setPage("home")} language={language} />}
+        {page === "about" && <AboutScreen onBack={() => setPage("home")} language={language} />}
+        {page === "solas" && (
+          <SolasListScreen
+            onBack={() => setPage("home")}
+            onOpen={(slug) => setPage(`sola:${slug}`)}
+            language={language}
+          />
+        )}
+        {page.startsWith("sola:") && (
+          <SolaDetailScreen
+            slug={page.slice(5)}
+            onBack={() => setPage("solas")}
+            language={language}
+          />
+        )}
+        {page === "greek-words" && (
+          <GreekWordsListScreen
+            onBack={() => setPage("home")}
+            onOpen={(slug) => setPage(`greek:${slug}`)}
+            language={language}
+          />
+        )}
+        {page.startsWith("greek:") && (
+          <GreekWordDetailScreen
+            slug={page.slice(6)}
+            onBack={() => setPage("greek-words")}
+            language={language}
+          />
+        )}
       </div>
 
       {page !== "admin" && (
