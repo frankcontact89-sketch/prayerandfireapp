@@ -366,9 +366,6 @@ export function SettingsScreen({
               ) : (
                 <UserIcon className="h-9 w-9 text-orange-500" />
               )}
-              <span className="absolute bottom-0 right-0 rounded-full bg-orange-500 p-1.5 text-white">
-                <Camera className="h-3.5 w-3.5" />
-              </span>
             </button>
             <div className="min-w-0 flex-1">
               <p className="text-xs uppercase tracking-widest text-zinc-500">{t("profile")}</p>
