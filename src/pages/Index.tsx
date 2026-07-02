@@ -8,7 +8,6 @@ import { ShoppingScreen } from "@/components/ShoppingScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
 import { SocialLinksScreen } from "@/components/SocialLinksScreen";
-import { ProfileScreen } from "@/components/ProfileScreen";
 import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { LegalCenter } from "@/components/LegalCenter";
 import { BibleScreen } from "@/components/BibleScreen";
@@ -320,7 +319,8 @@ export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPageState] = useState<string>(() => {
     try {
-      return localStorage.getItem("pf_last_page") || "home";
+      const savedPage = localStorage.getItem("pf_last_page") || "home";
+      return savedPage === "profile" ? "settings" : savedPage;
     } catch {
       return "home";
     }
@@ -368,6 +368,10 @@ export default function Index() {
     },
     [setPage],
   );
+
+  const updateHeaderAvatar = useCallback((nextAvatar: string | null) => {
+    setAvatarUrl(nextAvatar);
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDarkMode);
@@ -522,6 +526,19 @@ export default function Index() {
       >
         <div className="flex justify-between items-center px-4 h-12">
           <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage("settings")}
+              aria-label={t("profile")}
+              className="w-10 h-10 flex items-center justify-center"
+            >
+              <span className="h-8 w-8 rounded-full border border-orange-500/40 bg-zinc-900 overflow-hidden flex items-center justify-center">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={t("profile")} className="h-full w-full object-cover" crossOrigin="anonymous" />
+                ) : (
+                  <UserIcon className="w-4 h-4 text-orange-500" />
+                )}
+              </span>
+            </button>
             {unreadNotifications > 0 && (
               <button
                 onClick={openNotifications}
@@ -577,7 +594,7 @@ export default function Index() {
             onAdminClick={() => setPage("admin")}
             onNotificationsClick={openNotifications}
             onLegalClick={() => setPage("legal")}
-            onEditProfileClick={() => setPage("profile")}
+            onProfileUpdated={updateHeaderAvatar}
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
             onSignOut={async () => {
@@ -594,22 +611,6 @@ export default function Index() {
         )}
         {page === "events" && <EventsScreen t={t} />}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
-        {page === "profile" && (
-          <ProfileScreen
-            t={t}
-            language={language}
-            setLanguage={setLanguage}
-            onBack={() => setPage("settings")}
-            onOpenNotifications={() => setPage("notifications")}
-            onOpenPrivacy={() => setPage("legal")}
-            onOpenLanguage={() => setShowLanguages(true)}
-            signOut={async () => {
-              await supabase.auth.signOut();
-              setUser(null);
-              setPage("home");
-            }}
-          />
-        )}
         {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
 

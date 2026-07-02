@@ -7,6 +7,42 @@ import { ContentActions } from "./content/ContentActions";
 
 interface Props { slug: string; onBack: () => void; language: string; }
 
+function cleanTransliteration(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[ʾʿ‘’']/g, "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function localizedPronunciation(row: any, language: string): string {
+  const specific = row?.[`pronunciation_text_${language}`] || row?.[`pronunciation_${language}`];
+  if (specific) return specific;
+
+  if (language === "en") {
+    return row?.pronunciation_text || row?.pronunciation || row?.transliteration || row?.greek || "";
+  }
+
+  let spoken = cleanTransliteration(row?.transliteration || row?.pronunciation_text || row?.pronunciation || row?.greek || "");
+  if (language === "es") {
+    spoken = spoken
+      .replace(/ph/gi, "f")
+      .replace(/th/gi, "t")
+      .replace(/ch/gi, "j")
+      .replace(/kh/gi, "j")
+      .replace(/sh/gi, "sh");
+  } else if (language === "pt") {
+    spoken = spoken
+      .replace(/ph/gi, "f")
+      .replace(/th/gi, "t")
+      .replace(/kh/gi, "k")
+      .replace(/ch/gi, "k");
+  }
+  return spoken || row?.transliteration || row?.greek || "";
+}
+
 export function GreekWordDetailScreen({ slug, onBack, language }: Props) {
   const [row, setRow] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -33,8 +69,7 @@ export function GreekWordDetailScreen({ slug, onBack, language }: Props) {
       // transliteration read with their own accent (EN/ES/PT). The original
       // Greek/Hebrew script itself is never changed — we just speak the
       // Latin transliteration using the selected UI language's TTS voice.
-      const spoken =
-        row.pronunciation_text || row.transliteration || row.greek || "";
+      const spoken = localizedPronunciation(row, language);
       const locale =
         language === "es" ? "es-ES" : language === "pt" ? "pt-BR" : "en-US";
       const u = new SpeechSynthesisUtterance(spoken);
@@ -42,7 +77,8 @@ export function GreekWordDetailScreen({ slug, onBack, language }: Props) {
       // Try to pick a matching voice if the browser has one installed.
       try {
         const voices = window.speechSynthesis.getVoices();
-        const match = voices.find((v) => v.lang?.toLowerCase().startsWith(locale.toLowerCase().slice(0, 2)));
+        const exact = voices.find((v) => v.lang?.toLowerCase() === locale.toLowerCase());
+        const match = exact || voices.find((v) => v.lang?.toLowerCase().startsWith(locale.toLowerCase().slice(0, 2)));
         if (match) u.voice = match;
       } catch {}
       u.rate = 0.85;
@@ -63,9 +99,9 @@ export function GreekWordDetailScreen({ slug, onBack, language }: Props) {
       <div className="mb-6 pb-4 border-b border-orange-500/20">
         <div className="text-zinc-400 text-xs uppercase tracking-widest">{labels.tr}</div>
         <div className="text-xl italic text-white mt-1">{row.transliteration}</div>
-        {row.pronunciation && (<>
+        {(row.pronunciation || row.pronunciation_text || row.transliteration) && (<>
           <div className="text-zinc-400 text-xs uppercase tracking-widest mt-3">{labels.pr}</div>
-          <div className="text-lg text-white mt-1">/{row.pronunciation}/</div>
+          <div className="text-lg text-white mt-1">/{localizedPronunciation(row, language)}/</div>
         </>)}
         {row.ipa && (<>
           <div className="text-zinc-400 text-xs uppercase tracking-widest mt-3">{labels.ipa}</div>
