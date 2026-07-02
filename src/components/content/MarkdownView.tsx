@@ -2,6 +2,11 @@ import React, { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { localizeBibleRefs } from "@/lib/localize-bible-refs";
+import {
+  linkifyBibleRefs,
+  parseBibleRefHref,
+  useOpenBibleRef,
+} from "@/lib/bible-refs";
 
 interface Props {
   text: string;
@@ -13,8 +18,12 @@ interface Props {
 // the app's dark aesthetic. Also localizes English Bible book names into ES/PT
 // when the app language is set to those.
 export function MarkdownView({ text, language, className }: Props) {
-  const localized = useMemo(() => localizeBibleRefs(text || "", language), [text, language]);
-  if (!localized) return null;
+  const openRef = useOpenBibleRef();
+  const processed = useMemo(() => {
+    const localized = localizeBibleRefs(text || "", language);
+    return linkifyBibleRefs(localized, language);
+  }, [text, language]);
+  if (!processed) return null;
   return (
     <div className={`prose prose-invert max-w-none text-zinc-200 leading-relaxed ${className || ""}`}>
       <ReactMarkdown
@@ -33,12 +42,40 @@ export function MarkdownView({ text, language, className }: Props) {
           blockquote: (p) => (
             <blockquote className="border-l-2 border-orange-500/60 pl-3 my-3 text-zinc-300 italic" {...p} />
           ),
-          a: (p) => <a className="text-orange-400 underline" target="_blank" rel="noreferrer" {...p} />,
+          a: ({ href, children, ...rest }: any) => {
+            const parsed = parseBibleRefHref(href || "");
+            if (parsed && openRef) {
+              return (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openRef(parsed);
+                  }}
+                  className="text-orange-400 underline decoration-orange-400/60 underline-offset-2 hover:text-orange-300 font-semibold"
+                >
+                  {children}
+                </button>
+              );
+            }
+            return (
+              <a
+                className="text-orange-400 underline"
+                target="_blank"
+                rel="noreferrer"
+                href={href}
+                {...rest}
+              >
+                {children}
+              </a>
+            );
+          },
           code: (p) => <code className="bg-zinc-900 rounded px-1 py-0.5 text-orange-300 text-[0.9em]" {...p} />,
           hr: () => <hr className="my-4 border-zinc-800" />,
         }}
       >
-        {localized}
+        {processed}
       </ReactMarkdown>
     </div>
   );

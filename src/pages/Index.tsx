@@ -27,6 +27,7 @@ import { LibraryArticleScreen } from "@/components/LibraryArticleScreen";
 import { FavoritesScreen } from "@/components/FavoritesScreen";
 
 import { supabase } from "@/integrations/supabase/client";
+import { BibleRefProvider, type ParsedRef } from "@/lib/bible-refs";
 import { translations } from "@/config/translations";
 import { getLastReadAtMs, setLastReadAtNow } from "@/lib/notifications-last-seen";
 
@@ -356,6 +357,17 @@ export default function Index() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [pendingBibleRef, setPendingBibleRef] = useState<
+    (ParsedRef & { nonce: number }) | null
+  >(null);
+
+  const openBibleRef = useCallback(
+    (ref: ParsedRef) => {
+      setPendingBibleRef({ ...ref, nonce: Date.now() });
+      setPage("bible");
+    },
+    [setPage],
+  );
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", isDarkMode);
@@ -502,6 +514,7 @@ export default function Index() {
   }
 
   return (
+    <BibleRefProvider openRef={openBibleRef}>
     <div className="flex flex-col min-h-screen bg-black font-sans">
       <div
         className="sticky top-0 z-30 bg-black/95 backdrop-blur-md border-b border-zinc-800"
@@ -545,7 +558,14 @@ export default function Index() {
         {page === "home" && <HomeScreen t={t} language={language} />}
         {page === "giving" && <GivingScreen t={t} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
-        {page === "bible" && <BibleScreen t={t} language={language} />}
+        {page === "bible" && (
+          <BibleScreen
+            t={t}
+            language={language}
+            initialRef={pendingBibleRef}
+            onInitialRefApplied={() => setPendingBibleRef(null)}
+          />
+        )}
 
         {page === "settings" && (
           <SettingsScreen
@@ -682,5 +702,6 @@ export default function Index() {
       </div>
       )}
     </div>
+    </BibleRefProvider>
   );
 }
