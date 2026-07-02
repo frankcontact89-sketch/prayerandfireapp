@@ -170,6 +170,105 @@ export type Database = {
         }
         Relationships: []
       }
+      devotionals: {
+        Row: {
+          application_en: string | null
+          application_es: string | null
+          application_pt: string | null
+          context_en: string | null
+          context_es: string | null
+          context_pt: string | null
+          created_at: string
+          date: string
+          id: string
+          is_published: boolean
+          prayer_en: string | null
+          prayer_es: string | null
+          prayer_pt: string | null
+          questions_en: string[] | null
+          questions_es: string[] | null
+          questions_pt: string[] | null
+          reflection_en: string | null
+          reflection_es: string | null
+          reflection_pt: string | null
+          related_verses: string[] | null
+          scripture_reference_en: string | null
+          scripture_reference_es: string | null
+          scripture_reference_pt: string | null
+          scripture_text_en: string | null
+          scripture_text_es: string | null
+          scripture_text_pt: string | null
+          title_en: string
+          title_es: string | null
+          title_pt: string | null
+          updated_at: string
+        }
+        Insert: {
+          application_en?: string | null
+          application_es?: string | null
+          application_pt?: string | null
+          context_en?: string | null
+          context_es?: string | null
+          context_pt?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          is_published?: boolean
+          prayer_en?: string | null
+          prayer_es?: string | null
+          prayer_pt?: string | null
+          questions_en?: string[] | null
+          questions_es?: string[] | null
+          questions_pt?: string[] | null
+          reflection_en?: string | null
+          reflection_es?: string | null
+          reflection_pt?: string | null
+          related_verses?: string[] | null
+          scripture_reference_en?: string | null
+          scripture_reference_es?: string | null
+          scripture_reference_pt?: string | null
+          scripture_text_en?: string | null
+          scripture_text_es?: string | null
+          scripture_text_pt?: string | null
+          title_en: string
+          title_es?: string | null
+          title_pt?: string | null
+          updated_at?: string
+        }
+        Update: {
+          application_en?: string | null
+          application_es?: string | null
+          application_pt?: string | null
+          context_en?: string | null
+          context_es?: string | null
+          context_pt?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          is_published?: boolean
+          prayer_en?: string | null
+          prayer_es?: string | null
+          prayer_pt?: string | null
+          questions_en?: string[] | null
+          questions_es?: string[] | null
+          questions_pt?: string[] | null
+          reflection_en?: string | null
+          reflection_es?: string | null
+          reflection_pt?: string | null
+          related_verses?: string[] | null
+          scripture_reference_en?: string | null
+          scripture_reference_es?: string | null
+          scripture_reference_pt?: string | null
+          scripture_text_en?: string | null
+          scripture_text_es?: string | null
+          scripture_text_pt?: string | null
+          title_en?: string
+          title_es?: string | null
+          title_pt?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       event_rsvps: {
         Row: {
           created_at: string
@@ -312,6 +411,66 @@ export type Database = {
           scripture_refs?: string | null
           slug?: string
           transliteration?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      library_articles: {
+        Row: {
+          body_en: string | null
+          body_es: string | null
+          body_pt: string | null
+          category: Database["public"]["Enums"]["library_category"]
+          cover_image_url: string | null
+          created_at: string
+          id: string
+          is_published: boolean
+          order_index: number
+          slug: string
+          summary_en: string | null
+          summary_es: string | null
+          summary_pt: string | null
+          title_en: string
+          title_es: string | null
+          title_pt: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_en?: string | null
+          body_es?: string | null
+          body_pt?: string | null
+          category: Database["public"]["Enums"]["library_category"]
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          order_index?: number
+          slug: string
+          summary_en?: string | null
+          summary_es?: string | null
+          summary_pt?: string | null
+          title_en: string
+          title_es?: string | null
+          title_pt?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_en?: string | null
+          body_es?: string | null
+          body_pt?: string | null
+          category?: Database["public"]["Enums"]["library_category"]
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          order_index?: number
+          slug?: string
+          summary_en?: string | null
+          summary_es?: string | null
+          summary_pt?: string | null
+          title_en?: string
+          title_es?: string | null
+          title_pt?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -497,6 +656,127 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reading_plan_days: {
+        Row: {
+          created_at: string
+          day_number: number
+          id: string
+          passages: string[]
+          plan_id: string
+          title_en: string | null
+          title_es: string | null
+          title_pt: string | null
+        }
+        Insert: {
+          created_at?: string
+          day_number: number
+          id?: string
+          passages?: string[]
+          plan_id: string
+          title_en?: string | null
+          title_es?: string | null
+          title_pt?: string | null
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          id?: string
+          passages?: string[]
+          plan_id?: string
+          title_en?: string | null
+          title_es?: string | null
+          title_pt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_plan_days_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "reading_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reading_plan_progress: {
+        Row: {
+          completed_at: string
+          day_number: number
+          id: string
+          plan_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          day_number: number
+          id?: string
+          plan_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          day_number?: number
+          id?: string
+          plan_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_plan_progress_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "reading_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reading_plans: {
+        Row: {
+          created_at: string
+          description_en: string | null
+          description_es: string | null
+          description_pt: string | null
+          duration_days: number
+          id: string
+          is_published: boolean
+          order_index: number
+          slug: string
+          title_en: string
+          title_es: string | null
+          title_pt: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_en?: string | null
+          description_es?: string | null
+          description_pt?: string | null
+          duration_days: number
+          id?: string
+          is_published?: boolean
+          order_index?: number
+          slug: string
+          title_en: string
+          title_es?: string | null
+          title_pt?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_en?: string | null
+          description_es?: string | null
+          description_pt?: string | null
+          duration_days?: number
+          id?: string
+          is_published?: boolean
+          order_index?: number
+          slug?: string
+          title_en?: string
+          title_es?: string | null
+          title_pt?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       solas: {
         Row: {
@@ -688,6 +968,20 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      library_category:
+        | "bible_studies"
+        | "doctrine"
+        | "christology"
+        | "pneumatology"
+        | "soteriology"
+        | "hermeneutics"
+        | "homiletics"
+        | "church_history"
+        | "apologetics"
+        | "leadership"
+        | "missions"
+        | "sermons"
+        | "articles"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -816,6 +1110,21 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      library_category: [
+        "bible_studies",
+        "doctrine",
+        "christology",
+        "pneumatology",
+        "soteriology",
+        "hermeneutics",
+        "homiletics",
+        "church_history",
+        "apologetics",
+        "leadership",
+        "missions",
+        "sermons",
+        "articles",
+      ],
     },
   },
 } as const
