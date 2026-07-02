@@ -1,10 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Home, BookOpen, Library, User as UserIcon,
-  GraduationCap, ShoppingBag, Share2, Info, Settings as SettingsIcon,
-  ChevronDown, ChevronRight,
+  ShoppingBag, Share2, Info, Settings as SettingsIcon, HandHeart,
 } from "lucide-react";
 import { APP_CONFIG } from "@/config/constants";
 
@@ -23,8 +21,6 @@ function L(lang: string, en: string, es: string, pt: string) {
 }
 
 export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawerProps) {
-  const [greekOpen, setGreekOpen] = useState(false);
-
   const go = (page: string) => {
     onNavigate(page);
     onOpenChange(false);
@@ -71,29 +67,11 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
           {item(<Home className="w-5 h-5" />, L(language, "Home", "Inicio", "Início"), () => go("home"))}
           {item(<BookOpen className="w-5 h-5" />, L(language, "Bible", "Biblia", "Bíblia"), () => go("bible"))}
           {item(<Library className="w-5 h-5" />, L(language, "Christian Library", "Biblioteca Cristiana", "Biblioteca Cristã"), () => go("library"))}
-          {item(<UserIcon className="w-5 h-5" />, L(language, "Profile", "Perfil", "Perfil"), () => go("profile"))}
-
-          <Collapsible open={greekOpen} onOpenChange={setGreekOpen}>
-            <CollapsibleTrigger className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-orange-500/10 transition">
-              <GraduationCap className="w-5 h-5 text-orange-500" />
-              <span className="font-medium flex-1 text-left">
-                {L(language, "Biblical Languages Library", "Biblioteca de Lenguas Bíblicas", "Biblioteca de Línguas Bíblicas")}
-              </span>
-              {greekOpen ? <ChevronDown className="w-4 h-4 text-zinc-400" /> : <ChevronRight className="w-4 h-4 text-zinc-400" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pl-6 mt-1">
-              <button
-                onClick={() => go("greek-words")}
-                className="w-full text-left px-4 py-2 rounded-lg text-sm text-orange-400 hover:bg-orange-500/5"
-              >
-                {L(language, "Browse all words →", "Ver todas las palabras →", "Ver todas as palavras →")}
-              </button>
-            </CollapsibleContent>
-          </Collapsible>
-
           {item(<ShoppingBag className="w-5 h-5" />, L(language, "Store", "Tienda", "Loja"), () => go("shopping"))}
+          {item(<HandHeart className="w-5 h-5" />, L(language, "Support Prayer & Fire", "Apoyar Prayer & Fire", "Apoiar Prayer & Fire"), () => go("giving"))}
           {item(<Share2 className="w-5 h-5" />, L(language, "Share Prayer & Fire", "Compartir Prayer & Fire", "Compartilhar Prayer & Fire"), share)}
           {item(<Info className="w-5 h-5" />, L(language, "About", "Acerca de", "Sobre"), () => go("about"))}
+          {item(<UserIcon className="w-5 h-5" />, L(language, "Profile", "Perfil", "Perfil"), () => go("profile"))}
           {item(<SettingsIcon className="w-5 h-5" />, L(language, "Settings", "Ajustes", "Configurações"), () => go("settings"))}
         </nav>
       </SheetContent>
