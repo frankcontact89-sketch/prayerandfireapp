@@ -8,7 +8,6 @@ import { ShoppingScreen } from "@/components/ShoppingScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
 import { SocialLinksScreen } from "@/components/SocialLinksScreen";
-import { ProfileScreen } from "@/components/ProfileScreen";
 import { NotificationsScreen } from "@/components/NotificationsScreen";
 import { LegalCenter } from "@/components/LegalCenter";
 import { BibleScreen } from "@/components/BibleScreen";
@@ -320,7 +319,8 @@ export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPageState] = useState<string>(() => {
     try {
-      return localStorage.getItem("pf_last_page") || "home";
+      const savedPage = localStorage.getItem("pf_last_page") || "home";
+      return savedPage === "profile" ? "settings" : savedPage;
     } catch {
       return "home";
     }
@@ -611,22 +611,6 @@ export default function Index() {
         )}
         {page === "events" && <EventsScreen t={t} />}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
-        {page === "profile" && (
-          <ProfileScreen
-            t={t}
-            language={language}
-            setLanguage={setLanguage}
-            onBack={() => setPage("settings")}
-            onOpenNotifications={() => setPage("notifications")}
-            onOpenPrivacy={() => setPage("legal")}
-            onOpenLanguage={() => setShowLanguages(true)}
-            signOut={async () => {
-              await supabase.auth.signOut();
-              setUser(null);
-              setPage("home");
-            }}
-          />
-        )}
         {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
 
