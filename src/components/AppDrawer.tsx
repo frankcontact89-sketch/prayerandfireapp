@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  Home, BookOpen, Library,
+  Home, BookOpen, Library, Heart, User as UserIcon,
   Landmark, GraduationCap, ShoppingBag, Share2, Info, Settings as SettingsIcon,
   ChevronDown, ChevronRight,
 } from "lucide-react";
@@ -80,6 +80,8 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
           {item(<Home className="w-5 h-5" />, L(language, "Home", "Inicio", "Início"), () => go("home"))}
           {item(<BookOpen className="w-5 h-5" />, L(language, "Bible", "Biblia", "Bíblia"), () => go("bible"))}
           {item(<Library className="w-5 h-5" />, L(language, "Christian Library", "Biblioteca Cristiana", "Biblioteca Cristã"), () => go("library"))}
+          {item(<Heart className="w-5 h-5" />, L(language, "Favorites", "Favoritos", "Favoritos"), () => go("favorites"))}
+          {item(<UserIcon className="w-5 h-5" />, L(language, "Profile", "Perfil", "Perfil"), () => go("profile"))}
 
           <Collapsible open={solasOpen} onOpenChange={setSolasOpen}>
             <CollapsibleTrigger className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-orange-500/10 transition">
