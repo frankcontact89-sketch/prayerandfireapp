@@ -114,9 +114,11 @@ const APP_LANG_TO_BIBLE: Record<string, string> = { en: "kjv", es: "rvr", pt: "a
 interface BibleScreenProps {
   t?: (key: any) => string;
   language?: string;
+  initialRef?: { abbrev: string; chapter: number; verse: number; nonce: number } | null;
+  onInitialRefApplied?: () => void;
 }
 
-export function BibleScreen({ t, language }: BibleScreenProps = {}) {
+export function BibleScreen({ t, language, initialRef, onInitialRefApplied }: BibleScreenProps = {}) {
   const tr = (k: string, fallback: string) => {
     if (!t) return fallback;
     const v = t(k as any);
@@ -211,6 +213,35 @@ export function BibleScreen({ t, language }: BibleScreenProps = {}) {
 
   const currentBook = books?.[bookIdx];
   const currentVerses = currentBook?.chapters?.[chapterIdx] || [];
+
+  // When an external Bible reference is requested (e.g. tapping a link
+  // inside an article), jump to that book/chapter/verse using the current
+  // translation.
+  const appliedRefNonceRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!initialRef || !books) return;
+    if (appliedRefNonceRef.current === initialRef.nonce) return;
+    const idx = books.findIndex(
+      (b) => b.abbrev?.toLowerCase() === initialRef.abbrev.toLowerCase(),
+    );
+    if (idx < 0) return;
+    const targetBook = books[idx];
+    const cIdx = Math.max(0, Math.min(initialRef.chapter - 1, targetBook.chapters.length - 1));
+    const chapterLen = targetBook.chapters[cIdx]?.length || 1;
+    const vIdx = Math.max(0, Math.min(initialRef.verse - 1, chapterLen - 1));
+    try { window.speechSynthesis?.cancel(); } catch {}
+    setBookIdx(idx);
+    setChapterIdx(cIdx);
+    setVerseIdx(vIdx);
+    setView("verses");
+    appliedRefNonceRef.current = initialRef.nonce;
+    onInitialRefApplied?.();
+    // Scroll to verse after render
+    setTimeout(() => {
+      const el = verseRefsRef.current[vIdx];
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
+  }, [initialRef, books, onInitialRefApplied]);
 
   const speechLang =
     translation === "rvr" ? "es-ES" : translation === "aa" ? "pt-BR" : "en-US";
