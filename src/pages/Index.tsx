@@ -557,6 +557,7 @@ export default function Index() {
             onAdminClick={() => setPage("admin")}
             onNotificationsClick={openNotifications}
             onLegalClick={() => setPage("legal")}
+            onEditProfileClick={() => setPage("profile")}
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
             onSignOut={async () => {
