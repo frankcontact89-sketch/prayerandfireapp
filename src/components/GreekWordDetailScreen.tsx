@@ -29,9 +29,23 @@ export function GreekWordDetailScreen({ slug, onBack, language }: Props) {
 
   const playAudio = () => {
     try {
-      const u = new SpeechSynthesisUtterance(row.transliteration || row.greek);
       const type = row.language_type || "greek";
-      u.lang = type === "hebrew" ? "he-IL" : type === "greek" ? "el-GR" : "en-US";
+      // Pronunciation MUST use the original biblical language, independent of
+      // the app UI language. Prefer an explicit pronunciation_text override,
+      // then the original script; NEVER fall back to the Latin transliteration
+      // because that would be spoken with an English/Spanish/Portuguese accent.
+      const spoken = row.pronunciation_text || row.greek || row.transliteration || "";
+      const locale =
+        row.pronunciation_locale ||
+        (type === "hebrew" ? "he-IL" : type === "greek" ? "el-GR" : "en-US");
+      const u = new SpeechSynthesisUtterance(spoken);
+      u.lang = locale;
+      // Try to pick a matching voice if the browser has one installed.
+      try {
+        const voices = window.speechSynthesis.getVoices();
+        const match = voices.find((v) => v.lang?.toLowerCase().startsWith(locale.toLowerCase().slice(0, 2)));
+        if (match) u.voice = match;
+      } catch {}
       u.rate = 0.85;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(u);
