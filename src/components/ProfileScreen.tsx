@@ -380,3 +380,45 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack, onOpe
     </>
   );
 }
+
+function L(lang: string, en: string, es: string, pt: string) {
+  return lang === "es" ? es : lang === "pt" ? pt : en;
+}
+
+interface ProfileMenuProps {
+  language: string;
+  onOpenSettings?: () => void;
+  onOpenNotifications?: () => void;
+  onOpenPrivacy?: () => void;
+  signOut: () => void;
+}
+
+function ProfileMenu({ language, onOpenSettings, onOpenNotifications, onOpenPrivacy, signOut }: ProfileMenuProps) {
+  const scrollTop = () => { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch {} };
+  const items: { icon: React.ReactNode; label: string; onClick?: () => void; danger?: boolean }[] = [
+    { icon: <UserIcon className="w-5 h-5" />, label: L(language, "My Account", "Mi cuenta", "Minha conta"), onClick: scrollTop },
+    { icon: <Pencil className="w-5 h-5" />, label: L(language, "Edit Profile", "Editar perfil", "Editar perfil"), onClick: scrollTop },
+    { icon: <Globe className="w-5 h-5" />, label: L(language, "Language", "Idioma", "Idioma"), onClick: onOpenSettings },
+    { icon: <Bell className="w-5 h-5" />, label: L(language, "Notifications", "Notificaciones", "Notificações"), onClick: onOpenNotifications },
+    { icon: <Palette className="w-5 h-5" />, label: L(language, "Appearance", "Apariencia", "Aparência"), onClick: onOpenSettings },
+    { icon: <CreditCard className="w-5 h-5" />, label: L(language, "Subscription", "Suscripción", "Assinatura"), onClick: onOpenSettings },
+    { icon: <SettingsIcon className="w-5 h-5" />, label: L(language, "App Settings", "Ajustes de la app", "Ajustes do app"), onClick: onOpenSettings },
+    { icon: <Shield className="w-5 h-5" />, label: L(language, "Privacy", "Privacidad", "Privacidade"), onClick: onOpenPrivacy },
+    { icon: <LogOut className="w-5 h-5" />, label: L(language, "Sign Out", "Cerrar sesión", "Sair"), onClick: signOut, danger: true },
+  ];
+  return (
+    <div className="rounded-2xl border border-border bg-card/40 overflow-hidden">
+      {items.filter(i => !!i.onClick).map((i, idx, arr) => (
+        <button
+          key={i.label}
+          onClick={i.onClick}
+          className={`w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-white/5 transition-colors ${idx < arr.length - 1 ? "border-b border-border/60" : ""} ${i.danger ? "text-destructive" : "text-foreground"}`}
+        >
+          <span className={i.danger ? "text-destructive" : "text-primary"}>{i.icon}</span>
+          <span className="flex-1 font-semibold">{i.label}</span>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </button>
+      ))}
+    </div>
+  );
+}
