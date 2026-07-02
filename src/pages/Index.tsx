@@ -579,7 +579,7 @@ export default function Index() {
             t={t}
             language={language}
             setLanguage={setLanguage}
-            onBack={() => setPage("home")}
+            onBack={() => setPage("settings")}
             onOpenNotifications={() => setPage("notifications")}
             onOpenPrivacy={() => setPage("legal")}
             onOpenLanguage={() => setShowLanguages(true)}
