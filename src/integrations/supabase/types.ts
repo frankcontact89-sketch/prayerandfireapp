@@ -253,6 +253,69 @@ export type Database = {
         }
         Relationships: []
       }
+      greek_words: {
+        Row: {
+          biblical_usage_en: string | null
+          biblical_usage_es: string | null
+          biblical_usage_pt: string | null
+          created_at: string
+          explanation_en: string | null
+          explanation_es: string | null
+          explanation_pt: string | null
+          greek: string
+          id: string
+          meaning_en: string
+          meaning_es: string
+          meaning_pt: string
+          order_index: number
+          pronunciation: string
+          scripture_refs: string | null
+          slug: string
+          transliteration: string
+          updated_at: string
+        }
+        Insert: {
+          biblical_usage_en?: string | null
+          biblical_usage_es?: string | null
+          biblical_usage_pt?: string | null
+          created_at?: string
+          explanation_en?: string | null
+          explanation_es?: string | null
+          explanation_pt?: string | null
+          greek: string
+          id?: string
+          meaning_en: string
+          meaning_es: string
+          meaning_pt: string
+          order_index?: number
+          pronunciation: string
+          scripture_refs?: string | null
+          slug: string
+          transliteration: string
+          updated_at?: string
+        }
+        Update: {
+          biblical_usage_en?: string | null
+          biblical_usage_es?: string | null
+          biblical_usage_pt?: string | null
+          created_at?: string
+          explanation_en?: string | null
+          explanation_es?: string | null
+          explanation_pt?: string | null
+          greek?: string
+          id?: string
+          meaning_en?: string
+          meaning_es?: string
+          meaning_pt?: string
+          order_index?: number
+          pronunciation?: string
+          scripture_refs?: string | null
+          slug?: string
+          transliteration?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -318,11 +381,16 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          images: Json
           is_active: boolean | null
           is_featured: boolean | null
+          is_published: boolean
           name: string
+          order_index: number
           price: number | null
           purchase_url: string
+          sku: string | null
+          stock_status: string
           updated_at: string | null
         }
         Insert: {
@@ -332,11 +400,16 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          images?: Json
           is_active?: boolean | null
           is_featured?: boolean | null
+          is_published?: boolean
           name: string
+          order_index?: number
           price?: number | null
           purchase_url: string
+          sku?: string | null
+          stock_status?: string
           updated_at?: string | null
         }
         Update: {
@@ -346,11 +419,16 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          images?: Json
           is_active?: boolean | null
           is_featured?: boolean | null
+          is_published?: boolean
           name?: string
+          order_index?: number
           price?: number | null
           purchase_url?: string
+          sku?: string | null
+          stock_status?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -419,6 +497,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      solas: {
+        Row: {
+          application_en: string | null
+          application_es: string | null
+          application_pt: string | null
+          created_at: string
+          explanation_en: string | null
+          explanation_es: string | null
+          explanation_pt: string | null
+          history_en: string | null
+          history_es: string | null
+          history_pt: string | null
+          id: string
+          latin: string
+          name_en: string
+          name_es: string
+          name_pt: string
+          order_index: number
+          slug: string
+          translation_en: string
+          translation_es: string
+          translation_pt: string
+          updated_at: string
+          verses_en: string | null
+          verses_es: string | null
+          verses_pt: string | null
+        }
+        Insert: {
+          application_en?: string | null
+          application_es?: string | null
+          application_pt?: string | null
+          created_at?: string
+          explanation_en?: string | null
+          explanation_es?: string | null
+          explanation_pt?: string | null
+          history_en?: string | null
+          history_es?: string | null
+          history_pt?: string | null
+          id?: string
+          latin: string
+          name_en: string
+          name_es: string
+          name_pt: string
+          order_index?: number
+          slug: string
+          translation_en: string
+          translation_es: string
+          translation_pt: string
+          updated_at?: string
+          verses_en?: string | null
+          verses_es?: string | null
+          verses_pt?: string | null
+        }
+        Update: {
+          application_en?: string | null
+          application_es?: string | null
+          application_pt?: string | null
+          created_at?: string
+          explanation_en?: string | null
+          explanation_es?: string | null
+          explanation_pt?: string | null
+          history_en?: string | null
+          history_es?: string | null
+          history_pt?: string | null
+          id?: string
+          latin?: string
+          name_en?: string
+          name_es?: string
+          name_pt?: string
+          order_index?: number
+          slug?: string
+          translation_en?: string
+          translation_es?: string
+          translation_pt?: string
+          updated_at?: string
+          verses_en?: string | null
+          verses_es?: string | null
+          verses_pt?: string | null
+        }
+        Relationships: []
       }
       submissions: {
         Row: {
