@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Heart, ShoppingBag, Flame, Bell, Quote, Sparkles, HandHeart, BookOpen, User as UserIcon, Menu } from "lucide-react";
+import { Heart, Flame, Bell, Quote, Sparkles, HandHeart, BookOpen, User as UserIcon, Menu, Library as LibraryIcon } from "lucide-react";
 
 import { SignInScreen } from "@/components/SignInScreen";
 import { EventsScreen } from "@/components/EventsScreen";
@@ -24,6 +24,7 @@ import { ReadingPlansScreen } from "@/components/ReadingPlansScreen";
 import { ReadingPlanDetailScreen } from "@/components/ReadingPlanDetailScreen";
 import { ChristianLibraryScreen } from "@/components/ChristianLibraryScreen";
 import { LibraryArticleScreen } from "@/components/LibraryArticleScreen";
+import { FavoritesScreen } from "@/components/FavoritesScreen";
 
 import { supabase } from "@/integrations/supabase/client";
 import { translations } from "@/config/translations";
