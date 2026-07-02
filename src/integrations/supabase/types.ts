@@ -378,6 +378,9 @@ export type Database = {
       }
       greek_words: {
         Row: {
+          biblical_meaning_en: string | null
+          biblical_meaning_es: string | null
+          biblical_meaning_pt: string | null
           biblical_usage_en: string | null
           biblical_usage_es: string | null
           biblical_usage_pt: string | null
@@ -386,19 +389,33 @@ export type Database = {
           explanation_es: string | null
           explanation_pt: string | null
           greek: string
+          historical_background_en: string | null
+          historical_background_es: string | null
+          historical_background_pt: string | null
           id: string
+          ipa: string | null
           language_type: string
+          literal_meaning_en: string | null
+          literal_meaning_es: string | null
+          literal_meaning_pt: string | null
           meaning_en: string
           meaning_es: string
           meaning_pt: string
           order_index: number
+          practical_application_en: string | null
+          practical_application_es: string | null
+          practical_application_pt: string | null
           pronunciation: string
+          related_words: string | null
           scripture_refs: string | null
           slug: string
           transliteration: string
           updated_at: string
         }
         Insert: {
+          biblical_meaning_en?: string | null
+          biblical_meaning_es?: string | null
+          biblical_meaning_pt?: string | null
           biblical_usage_en?: string | null
           biblical_usage_es?: string | null
           biblical_usage_pt?: string | null
@@ -407,19 +424,33 @@ export type Database = {
           explanation_es?: string | null
           explanation_pt?: string | null
           greek: string
+          historical_background_en?: string | null
+          historical_background_es?: string | null
+          historical_background_pt?: string | null
           id?: string
+          ipa?: string | null
           language_type?: string
+          literal_meaning_en?: string | null
+          literal_meaning_es?: string | null
+          literal_meaning_pt?: string | null
           meaning_en: string
           meaning_es: string
           meaning_pt: string
           order_index?: number
+          practical_application_en?: string | null
+          practical_application_es?: string | null
+          practical_application_pt?: string | null
           pronunciation: string
+          related_words?: string | null
           scripture_refs?: string | null
           slug: string
           transliteration: string
           updated_at?: string
         }
         Update: {
+          biblical_meaning_en?: string | null
+          biblical_meaning_es?: string | null
+          biblical_meaning_pt?: string | null
           biblical_usage_en?: string | null
           biblical_usage_es?: string | null
           biblical_usage_pt?: string | null
@@ -428,13 +459,24 @@ export type Database = {
           explanation_es?: string | null
           explanation_pt?: string | null
           greek?: string
+          historical_background_en?: string | null
+          historical_background_es?: string | null
+          historical_background_pt?: string | null
           id?: string
+          ipa?: string | null
           language_type?: string
+          literal_meaning_en?: string | null
+          literal_meaning_es?: string | null
+          literal_meaning_pt?: string | null
           meaning_en?: string
           meaning_es?: string
           meaning_pt?: string
           order_index?: number
+          practical_application_en?: string | null
+          practical_application_es?: string | null
+          practical_application_pt?: string | null
           pronunciation?: string
+          related_words?: string | null
           scripture_refs?: string | null
           slug?: string
           transliteration?: string
