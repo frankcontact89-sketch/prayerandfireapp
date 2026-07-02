@@ -690,9 +690,6 @@ export default function Index() {
           <button aria-label="Support" onClick={() => setPage("giving")} className={page === "giving" ? "text-orange-500" : "text-zinc-500"}>
             <HandHeart className="w-6 h-6" />
           </button>
-          <button aria-label="Profile" onClick={() => setPage("settings")} className={page === "settings" || page === "profile" ? "text-orange-500" : "text-zinc-500"}>
-            <UserIcon className="w-6 h-6" />
-          </button>
         </nav>
       </div>
       )}
