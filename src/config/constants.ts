@@ -14,7 +14,11 @@ export const APP_CONFIG = {
   APP_DESCRIPTION: "A faith-based mobile application for prayer, community, and spiritual growth.",
   
   // Social/Share
-  SHARE_TEXT: "🔥 Check out the Prayer & Fire App - A faith-based app for prayer, community, and spiritual growth!",
+  SHARE_TEXT: "🔥 Download the Prayer & Fire App — a faith-based app for prayer, community, and spiritual growth!",
+
+  // App Store / Play Store download links
+  APP_STORE_URL: "https://apps.apple.com/app/prayer-fire/id0000000000",
+  PLAY_STORE_URL: "",
   
   // Stripe URLs
   STRIPE_SUBSCRIPTION: "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00",
