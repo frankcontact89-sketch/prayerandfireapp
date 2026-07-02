@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GraduationCap } from "lucide-react";
 import { SimpleScreen } from "./SimpleScreen";
+import { MarkdownView } from "./content/MarkdownView";
+import { ContentActions } from "./content/ContentActions";
 
 interface Props { slug: string; onBack: () => void; language: string; }
 
@@ -28,7 +30,7 @@ export function GreekWordDetailScreen({ slug, onBack, language }: Props) {
   const section = (label: string, text: string) => text ? (
     <section className="mb-5">
       <h2 className="text-orange-400 uppercase tracking-[0.15em] text-xs font-black mb-2">{label}</h2>
-      <p className="text-zinc-200 leading-relaxed text-[15px] whitespace-pre-line">{text}</p>
+      <MarkdownView text={text} language={language} />
     </section>
   ) : null;
 
@@ -44,6 +46,13 @@ export function GreekWordDetailScreen({ slug, onBack, language }: Props) {
       {section(labels.us, pick("biblical_usage"))}
       {section(labels.sc, row.scripture_refs)}
       {section(labels.ex, pick("explanation"))}
+      <ContentActions
+        itemType="greek_word"
+        itemId={row.id}
+        title={`${row.greek} — ${row.transliteration}`}
+        shareText={pick("meaning")}
+        language={language}
+      />
     </SimpleScreen>
   );
 }

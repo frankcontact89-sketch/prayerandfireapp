@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Sunrise, Share2, BookOpen, HandHeart, Sparkles, ListChecks } from "lucide-react";
+import { Sunrise, BookOpen, HandHeart, Sparkles, ListChecks } from "lucide-react";
 import { SimpleScreen } from "./SimpleScreen";
 import { supabase } from "@/integrations/supabase/client";
 import { L, pick, pickArr } from "./content/lang";
-import { APP_CONFIG } from "@/config/constants";
-import { useToast } from "@/hooks/use-toast";
+import { MarkdownView } from "./content/MarkdownView";
+import { ContentActions } from "./content/ContentActions";
+import { localizeBibleRefs } from "@/lib/localize-bible-refs";
 
 interface Props {
   onBack: () => void;
@@ -14,7 +15,6 @@ interface Props {
 export function DailyDevotionalScreen({ onBack, language }: Props) {
   const [row, setRow] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     (async () => {
@@ -40,20 +40,6 @@ export function DailyDevotionalScreen({ onBack, language }: Props) {
     })();
   }, []);
 
-  const share = async () => {
-    if (!row) return;
-    const title = pick(row, "title", language);
-    const scripture = pick(row, "scripture_reference", language);
-    const text = `${title}${scripture ? ` — ${scripture}` : ""}\n\n${APP_CONFIG.URL}`;
-    try {
-      if ((navigator as any).share) await (navigator as any).share({ title, text });
-      else {
-        await navigator.clipboard.writeText(text);
-        toast({ title: L(language, "Copied", "Copiado", "Copiado") });
-      }
-    } catch {}
-  };
-
   const title = L(language, "Daily Devotional", "Devocional Diario", "Devocional Diário");
 
   if (loading) {
@@ -76,7 +62,7 @@ export function DailyDevotionalScreen({ onBack, language }: Props) {
   const prayer = pick(row, "prayer", language);
   const questions = pickArr(row, "questions", language);
   const related: string[] = Array.isArray(row.related_verses) ? row.related_verses : [];
-  const scriptureRef = pick(row, "scripture_reference", language);
+  const scriptureRef = localizeBibleRefs(pick(row, "scripture_reference", language), language);
   const scriptureText = pick(row, "scripture_text", language);
 
   const H = ({ icon, en, es, pt }: any) => (
@@ -107,28 +93,28 @@ export function DailyDevotionalScreen({ onBack, language }: Props) {
         {context && (
           <section>
             <H icon={<Sparkles className="w-3.5 h-3.5" />} en="CONTEXT" es="CONTEXTO" pt="CONTEXTO" />
-            <p className="text-zinc-200 leading-relaxed">{context}</p>
+            <MarkdownView text={context} language={language} />
           </section>
         )}
 
         {reflection && (
           <section>
             <H icon={<Sparkles className="w-3.5 h-3.5" />} en="REFLECTION" es="REFLEXIÓN" pt="REFLEXÃO" />
-            <p className="text-zinc-200 leading-relaxed whitespace-pre-line">{reflection}</p>
+            <MarkdownView text={reflection} language={language} />
           </section>
         )}
 
         {application && (
           <section>
             <H icon={<Sparkles className="w-3.5 h-3.5" />} en="PRACTICAL APPLICATION" es="APLICACIÓN PRÁCTICA" pt="APLICAÇÃO PRÁTICA" />
-            <p className="text-zinc-200 leading-relaxed">{application}</p>
+            <MarkdownView text={application} language={language} />
           </section>
         )}
 
         {prayer && (
           <section className="rounded-2xl border border-orange-500/20 bg-zinc-950/70 p-4">
             <H icon={<HandHeart className="w-3.5 h-3.5" />} en="PRAYER" es="ORACIÓN" pt="ORAÇÃO" />
-            <p className="text-zinc-200 leading-relaxed">{prayer}</p>
+            <MarkdownView text={prayer} language={language} />
           </section>
         )}
 
@@ -144,19 +130,17 @@ export function DailyDevotionalScreen({ onBack, language }: Props) {
         {related.length > 0 && (
           <section>
             <H icon={<BookOpen className="w-3.5 h-3.5" />} en="RELATED VERSES" es="VERSÍCULOS RELACIONADOS" pt="VERSÍCULOS RELACIONADOS" />
-            <p className="text-zinc-300">{related.join(" • ")}</p>
+            <p className="text-zinc-300">{related.map((r) => localizeBibleRefs(r, language)).join(" • ")}</p>
           </section>
         )}
 
-        <div className="flex gap-2 pt-2">
-          <button
-            onClick={share}
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-orange-500/40 text-orange-400 py-3 font-medium hover:bg-orange-500/10"
-          >
-            <Share2 className="w-4 h-4" />
-            {L(language, "Share", "Compartir", "Compartilhar")}
-          </button>
-        </div>
+        <ContentActions
+          itemType="devotional"
+          itemId={row.id}
+          title={pick(row, "title", language)}
+          shareText={scriptureRef}
+          language={language}
+        />
       </div>
     </SimpleScreen>
   );

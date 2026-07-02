@@ -4,6 +4,8 @@ import { SimpleScreen } from "./SimpleScreen";
 import { supabase } from "@/integrations/supabase/client";
 import { L, pick } from "./content/lang";
 import { useToast } from "@/hooks/use-toast";
+import { localizeBibleRefs, localizeDayLabel } from "@/lib/localize-bible-refs";
+import { ContentActions } from "./content/ContentActions";
 
 interface Props {
   planId: string;
@@ -100,7 +102,7 @@ export function ReadingPlanDetailScreen({ planId, onBack, language }: Props) {
             className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500 text-black font-bold py-2.5"
           >
             <Play className="w-4 h-4" />
-            {L(language, "Continue reading", "Continuar lectura", "Continuar leitura")} · {L(language, "Day", "Día", "Dia")} {nextDay.day_number}
+            {L(language, "Continue reading", "Continuar lectura", "Continuar leitura")} · {localizeDayLabel(nextDay.day_number, language)}
           </button>
         )}
       </div>
@@ -131,11 +133,11 @@ export function ReadingPlanDetailScreen({ planId, onBack, language }: Props) {
                 </button>
                 <div className="flex-1">
                   <div className="text-xs uppercase tracking-wider text-orange-400 font-bold">
-                    {L(language, "Day", "Día", "Dia")} {d.day_number}
+                    {localizeDayLabel(d.day_number, language)}
                   </div>
                   {dayTitle && <div className="font-semibold text-white">{dayTitle}</div>}
                   <div className="text-sm text-zinc-300 mt-1">
-                    {(d.passages || []).join(" · ")}
+                    {(d.passages || []).map((p: string) => localizeBibleRefs(p, language)).join(" · ")}
                   </div>
                 </div>
               </div>
@@ -143,6 +145,14 @@ export function ReadingPlanDetailScreen({ planId, onBack, language }: Props) {
           );
         })}
       </div>
+
+      <ContentActions
+        itemType="reading_plan"
+        itemId={plan.id}
+        title={pick(plan, "title", language)}
+        shareText={pick(plan, "description", language)}
+        language={language}
+      />
     </SimpleScreen>
   );
 }
