@@ -94,6 +94,12 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
               {solasOpen ? <ChevronDown className="w-4 h-4 text-zinc-400" /> : <ChevronRight className="w-4 h-4 text-zinc-400" />}
             </CollapsibleTrigger>
             <CollapsibleContent className="pl-6 space-y-1 mt-1">
+              <button
+                onClick={() => go("solas")}
+                className="w-full text-left px-4 py-2 rounded-lg text-sm text-orange-400 hover:bg-orange-500/5"
+              >
+                {L(language, "Overview →", "Resumen →", "Visão geral →")}
+              </button>
               {SOLAS.map((s) => (
                 <button
                   key={s.slug}
