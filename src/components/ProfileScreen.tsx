@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Camera, Upload, ArrowLeft, Trash2 } from "lucide-react";
+import { Camera, Upload, ArrowLeft, Trash2, User as UserIcon, Pencil, Globe, Bell, Palette, CreditCard, Settings as SettingsIcon, Shield, LogOut, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -21,9 +21,12 @@ interface ProfileScreenProps {
   setLanguage: (lang: string) => void;
   signOut: () => void;
   onBack?: () => void;
+  onOpenSettings?: () => void;
+  onOpenNotifications?: () => void;
+  onOpenPrivacy?: () => void;
 }
 
-export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: ProfileScreenProps) {
+export function ProfileScreen({ t, language, setLanguage, signOut, onBack, onOpenSettings, onOpenNotifications, onOpenPrivacy }: ProfileScreenProps) {
   const [name, setName] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -340,6 +343,13 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
           <Input placeholder={t("name")} value={name} onChange={(e) => setName(e.target.value)} disabled={loading} className="h-12" />
           <Button onClick={handleSaveProfile} disabled={loading} className="w-full h-12 font-bold">{loading ? t("saving") : t("saveChanges")}</Button>
         </div>
+        <ProfileMenu
+          language={language}
+          onOpenSettings={onOpenSettings}
+          onOpenNotifications={onOpenNotifications}
+          onOpenPrivacy={onOpenPrivacy}
+          signOut={signOut}
+        />
         <div className="flex items-center justify-center gap-6">
           <button onClick={signOut} className="text-primary font-bold py-3 hover:underline">{t("signout")}</button>
           <span className="text-muted-foreground">|</span>
@@ -368,5 +378,47 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack }: Pro
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} className="hidden" />
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
     </>
+  );
+}
+
+function L(lang: string, en: string, es: string, pt: string) {
+  return lang === "es" ? es : lang === "pt" ? pt : en;
+}
+
+interface ProfileMenuProps {
+  language: string;
+  onOpenSettings?: () => void;
+  onOpenNotifications?: () => void;
+  onOpenPrivacy?: () => void;
+  signOut: () => void;
+}
+
+function ProfileMenu({ language, onOpenSettings, onOpenNotifications, onOpenPrivacy, signOut }: ProfileMenuProps) {
+  const scrollTop = () => { try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch {} };
+  const items: { icon: React.ReactNode; label: string; onClick?: () => void; danger?: boolean }[] = [
+    { icon: <UserIcon className="w-5 h-5" />, label: L(language, "My Account", "Mi cuenta", "Minha conta"), onClick: scrollTop },
+    { icon: <Pencil className="w-5 h-5" />, label: L(language, "Edit Profile", "Editar perfil", "Editar perfil"), onClick: scrollTop },
+    { icon: <Globe className="w-5 h-5" />, label: L(language, "Language", "Idioma", "Idioma"), onClick: onOpenSettings },
+    { icon: <Bell className="w-5 h-5" />, label: L(language, "Notifications", "Notificaciones", "Notificações"), onClick: onOpenNotifications },
+    { icon: <Palette className="w-5 h-5" />, label: L(language, "Appearance", "Apariencia", "Aparência"), onClick: onOpenSettings },
+    { icon: <CreditCard className="w-5 h-5" />, label: L(language, "Subscription", "Suscripción", "Assinatura"), onClick: onOpenSettings },
+    { icon: <SettingsIcon className="w-5 h-5" />, label: L(language, "App Settings", "Ajustes de la app", "Ajustes do app"), onClick: onOpenSettings },
+    { icon: <Shield className="w-5 h-5" />, label: L(language, "Privacy", "Privacidad", "Privacidade"), onClick: onOpenPrivacy },
+    { icon: <LogOut className="w-5 h-5" />, label: L(language, "Sign Out", "Cerrar sesión", "Sair"), onClick: signOut, danger: true },
+  ];
+  return (
+    <div className="rounded-2xl border border-border bg-card/40 overflow-hidden">
+      {items.filter(i => !!i.onClick).map((i, idx, arr) => (
+        <button
+          key={i.label}
+          onClick={i.onClick}
+          className={`w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-white/5 transition-colors ${idx < arr.length - 1 ? "border-b border-border/60" : ""} ${i.danger ? "text-destructive" : "text-foreground"}`}
+        >
+          <span className={i.danger ? "text-destructive" : "text-primary"}>{i.icon}</span>
+          <span className="flex-1 font-semibold">{i.label}</span>
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        </button>
+      ))}
+    </div>
   );
 }

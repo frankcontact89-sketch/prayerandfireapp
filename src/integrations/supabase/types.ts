@@ -406,6 +406,8 @@ export type Database = {
           practical_application_es: string | null
           practical_application_pt: string | null
           pronunciation: string
+          pronunciation_locale: string | null
+          pronunciation_text: string | null
           related_words: string | null
           scripture_refs: string | null
           slug: string
@@ -441,6 +443,8 @@ export type Database = {
           practical_application_es?: string | null
           practical_application_pt?: string | null
           pronunciation: string
+          pronunciation_locale?: string | null
+          pronunciation_text?: string | null
           related_words?: string | null
           scripture_refs?: string | null
           slug: string
@@ -476,6 +480,8 @@ export type Database = {
           practical_application_es?: string | null
           practical_application_pt?: string | null
           pronunciation?: string
+          pronunciation_locale?: string | null
+          pronunciation_text?: string | null
           related_words?: string | null
           scripture_refs?: string | null
           slug?: string
