@@ -27,9 +27,11 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
   };
 
   const share = async () => {
-    // Share the APP download link (App Store / Play Store), not the website.
+    // Share the APP download link (App Store / Play Store). Fall back to the
+    // marketing website so the button never breaks before the store listings
+    // are live.
     const storeUrl =
-      APP_CONFIG.APP_STORE_URL || APP_CONFIG.PLAY_STORE_URL || "";
+      APP_CONFIG.APP_STORE_URL || APP_CONFIG.PLAY_STORE_URL || APP_CONFIG.URL;
     const text = L(
       language,
       "Download the Prayer & Fire App",
