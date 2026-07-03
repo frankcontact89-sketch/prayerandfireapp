@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Flame, Bell, Quote, Sparkles, HandHeart, BookOpen, User as UserIcon, Menu, Library as LibraryIcon } from "lucide-react";
 
 import { SignInScreen } from "@/components/SignInScreen";
@@ -331,6 +331,11 @@ export default function Index() {
       localStorage.setItem("pf_last_page", p);
     } catch {}
   }, []);
+  const pageRef = useRef(page);
+
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
   const [showLanguages, setShowLanguages] = useState(false);
 
   const [language, setLanguageState] = useState<string>(() => {
@@ -364,10 +369,8 @@ export default function Index() {
 
   const openBibleRef = useCallback(
     (ref: ParsedRef) => {
-      setPageState((current) => {
-        if (current && current !== "bible") setBibleReturnTo(current);
-        return current;
-      });
+      const origin = pageRef.current;
+      if (origin && origin !== "bible") setBibleReturnTo(origin);
       setPendingBibleRef({ ...ref, nonce: Date.now() });
       setPage("bible");
     },
@@ -704,7 +707,7 @@ export default function Index() {
           <button aria-label="Home" onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
             <Flame className="w-6 h-6" />
           </button>
-          <button aria-label="Bible" onClick={() => setPage("bible")} className={page === "bible" ? "text-orange-500" : "text-zinc-500"}>
+          <button aria-label="Bible" onClick={() => { setBibleReturnTo(null); setPage("bible"); }} className={page === "bible" ? "text-orange-500" : "text-zinc-500"}>
             <BookOpen className="w-6 h-6" />
           </button>
           <button aria-label="Library" onClick={() => setPage("library")} className={page === "library" || page.startsWith("article:") ? "text-orange-500" : "text-zinc-500"}>

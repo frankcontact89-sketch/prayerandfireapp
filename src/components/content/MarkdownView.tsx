@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { localizeBibleRefs } from "@/lib/localize-bible-refs";
 import {
@@ -28,6 +28,9 @@ export function MarkdownView({ text, language, className }: Props) {
     <div className={`prose prose-invert max-w-none text-zinc-200 leading-relaxed ${className || ""}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        urlTransform={(url) =>
+          url.startsWith("bibleref://") ? url : defaultUrlTransform(url)
+        }
         components={{
           h1: (p) => <h1 className="text-2xl font-extrabold text-white mt-4 mb-2" {...p} />,
           h2: (p) => <h2 className="text-xl font-bold text-white mt-4 mb-2" {...p} />,
