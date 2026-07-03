@@ -172,7 +172,7 @@ export function Module2Screen({ t, onBack, onGoToStore }: Module2ScreenProps) {
         {/* Empty State */}
         {purchases.length === 0 && (
           <div className="space-y-4">
-            <p className="text-muted-foreground text-sm">Featured courses to grow your faith and prayer life.</p>
+            <p className="text-muted-foreground text-sm">{t("featuredCoursesSubtitle")}</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {courses.map((c) => (
                 <Card key={c.id} className="p-4 space-y-3 bg-card border-border/20 hover:border-primary/40 transition-colors">
@@ -207,7 +207,7 @@ export function Module2Screen({ t, onBack, onGoToStore }: Module2ScreenProps) {
                   {purchase.products?.image_url ? (
                     <img 
                       src={purchase.products.image_url} 
-                      alt={purchase.products?.name || "Product"} 
+                      alt={purchase.products?.name || t("products")} 
                       className="w-full h-full object-cover"
                     />
                   ) : (

@@ -24,8 +24,15 @@ export function SolaDetailScreen({ slug, onBack, language }: Props) {
 
   const pick = (field: string) => row?.[`${field}_${language}`] || row?.[`${field}_en`] || "";
 
+  const notFound = language === "es" ? "No encontrado" : language === "pt" ? "Não encontrado" : "Not found";
+  const notAvailable = language === "es"
+    ? "Esta entrada aún no está disponible."
+    : language === "pt"
+      ? "Esta entrada ainda não está disponível."
+      : "This entry is not available yet.";
+
   if (loading) return <SimpleScreen title="…" onBack={onBack}><div /></SimpleScreen>;
-  if (!row) return <SimpleScreen title="Not found" onBack={onBack}><p className="text-zinc-400">This entry is not available yet.</p></SimpleScreen>;
+  if (!row) return <SimpleScreen title={notFound} onBack={onBack}><p className="text-zinc-400">{notAvailable}</p></SimpleScreen>;
 
   const section = (label: string, text: string) => text ? (
     <section className="mb-6">

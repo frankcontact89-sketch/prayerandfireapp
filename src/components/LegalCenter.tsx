@@ -49,14 +49,14 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
           </AccordionTrigger>
           <AccordionContent className="px-5 pb-5">
             <div className="space-y-4 text-muted-foreground text-sm leading-relaxed">
-              <p>Prayer & Fire is a global movement dedicated to prayer, faith, and spiritual growth through Jesus Christ.</p>
-              <p><strong className="text-foreground">Mission:</strong> To ignite hearts with the fire of the Holy Spirit, strengthen believers through prayer, and build a global community rooted in faith, unity, and love.</p>
-              <p><strong className="text-foreground">Vision:</strong> Prayer & Fire exists to inspire transformation, raise leaders, and encourage people around the world to live a life guided by prayer, purpose, and the power of God.</p>
+              <p>{t("aboutGlobalMovement")}</p>
+              <p><strong className="text-foreground">{t("mission")}:</strong> {t("aboutMission")}</p>
+              <p><strong className="text-foreground">{t("vision")}:</strong> {t("aboutVision")}</p>
               
               {/* Leadership Section */}
               <div className="pt-4 mt-4 border-t border-border/30">
                 <h3 className="text-center font-semibold mt-4 mb-4">
-                  Founders
+                  {t("founders")}
                 </h3>
                 <div className="flex flex-col gap-6 items-center">
                   <div className="flex flex-col items-center">
@@ -65,7 +65,7 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
                       alt="Aline Ramiro"
                       className="w-24 h-24 rounded-full object-cover mb-2 border-2 border-primary/30 shadow-lg"
                     />
-                    <strong className="text-primary text-xs">Founder</strong>
+                    <strong className="text-primary text-xs">{t("founder")}</strong>
                     <p className="text-foreground font-medium text-sm">Aline Ramiro</p>
                   </div>
 
@@ -76,7 +76,7 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
                       alt="Francisco Rivera"
                       className="w-24 h-24 rounded-full object-cover mb-2 border-2 border-primary/30 shadow-lg"
                     />
-                    <strong className="text-primary text-xs">President</strong>
+                    <strong className="text-primary text-xs">{t("president")}</strong>
                     <p className="text-foreground font-medium text-sm">Francisco Rivera</p>
                   </div>
                 </div>
@@ -186,10 +186,10 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
           </AccordionTrigger>
           <AccordionContent className="px-5 pb-5">
             <div className="space-y-3 text-muted-foreground text-sm leading-relaxed">
-              <p>If you need help or have any questions, please contact us:</p>
-              <p><strong className="text-foreground">Email:</strong> <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></p>
-              <p><strong className="text-foreground">Website:</strong> <a href="https://prayerandfire.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.org</a></p>
-              <p><strong className="text-foreground">Response time:</strong> 24–48 business hours</p>
+              <p>{t("supportHelpIntro")}</p>
+              <p><strong className="text-foreground">{t("supportEmailLabel")}:</strong> <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></p>
+              <p><strong className="text-foreground">{t("website")}:</strong> <a href="https://prayerandfire.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.org</a></p>
+              <p><strong className="text-foreground">{t("responseTime")}:</strong> {t("responseTimeValue")}</p>
             </div>
           </AccordionContent>
         </AccordionItem>

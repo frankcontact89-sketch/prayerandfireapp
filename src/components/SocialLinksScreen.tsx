@@ -37,8 +37,8 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
     if (error) {
       toast({
-        title: "Error",
-        description: "Could not load links.",
+        title: t("error"),
+        description: t("couldNotLoadLinks"),
         variant: "destructive",
       });
     } else {
