@@ -187,7 +187,7 @@ export function LegalCenter({ t, onBack }: LegalCenterProps) {
           <AccordionContent className="px-5 pb-5">
             <div className="space-y-3 text-muted-foreground text-sm leading-relaxed">
               <p>{t("supportHelpIntro")}</p>
-              <p><strong className="text-foreground">{t("email")}:</strong> <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></p>
+              <p><strong className="text-foreground">{t("supportEmailLabel")}:</strong> <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></p>
               <p><strong className="text-foreground">{t("website")}:</strong> <a href="https://prayerandfire.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.org</a></p>
               <p><strong className="text-foreground">{t("responseTime")}:</strong> {t("responseTimeValue")}</p>
             </div>
