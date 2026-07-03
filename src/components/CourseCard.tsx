@@ -66,10 +66,10 @@ export default function CourseCard({ course, onOpenDetails }: Props) {
         ) : (
           <button
             type="button"
-            disabled
-            className="w-full rounded-xl bg-muted px-4 py-3 text-sm font-semibold text-muted-foreground cursor-not-allowed"
+            onClick={() => onOpenDetails(course)}
+            className="w-full rounded-xl bg-secondary px-4 py-3 text-sm font-semibold text-foreground hover:bg-secondary/80"
           >
-            Coming Soon
+            View Details
           </button>
         )}
       </div>

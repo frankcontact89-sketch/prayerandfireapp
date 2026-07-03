@@ -135,7 +135,13 @@ export function Module2Screen({ t, onBack, onGoToStore }: Module2ScreenProps) {
   };
 
   const handleCourseAction = (course: DbCourse) => {
-    toast({ title: t("courseContentSoon") });
+    if (course.link_url) {
+      try {
+        window.open(course.link_url, "_blank", "noopener,noreferrer");
+      } catch {
+        window.location.href = course.link_url;
+      }
+    }
   };
 
   const getButtonLabel = (course: DbCourse) => {

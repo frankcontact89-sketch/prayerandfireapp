@@ -54,7 +54,13 @@ export default function CoursesScreen({ t, onBack }: CoursesScreenProps) {
   }, []);
 
   const handleAction = (c: DbCourse) => {
-    toast({ title: t("courseContentSoon") });
+    if (c.link_url) {
+      try {
+        window.open(c.link_url, "_blank", "noopener,noreferrer");
+      } catch {
+        window.location.href = c.link_url;
+      }
+    }
   };
 
   return (
