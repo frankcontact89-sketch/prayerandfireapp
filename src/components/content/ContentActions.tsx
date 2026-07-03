@@ -126,7 +126,7 @@ export function ContentActions({ itemType, itemId, language }: Props) {
       </div>
 
       <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
-        <DialogContent className="bg-zinc-950 border-zinc-800 text-white top-[10%] translate-y-0 max-h-[80vh] overflow-y-auto w-[calc(100%-2rem)] max-w-md">
+        <DialogContent className="bg-zinc-950 border-zinc-800 text-white top-[5%] translate-y-0 max-h-[85vh] overflow-y-auto w-[calc(100%-2rem)] max-w-md">
           <DialogHeader>
             <DialogTitle className="text-white">
               {L(language, "Your note", "Tu nota", "Sua nota")}
