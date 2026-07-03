@@ -126,7 +126,7 @@ export function ContentActions({ itemType, itemId, language }: Props) {
       </div>
 
       <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
-        <DialogContent className="bg-zinc-950 border-zinc-800 text-white">
+        <DialogContent className="bg-zinc-950 border-zinc-800 text-white top-[10%] translate-y-0 max-h-[80vh] overflow-y-auto w-[calc(100%-2rem)] max-w-md">
           <DialogHeader>
             <DialogTitle className="text-white">
               {L(language, "Your note", "Tu nota", "Sua nota")}
@@ -135,7 +135,7 @@ export function ContentActions({ itemType, itemId, language }: Props) {
           <textarea
             value={noteContent}
             onChange={(e) => setNoteContent(e.target.value)}
-            rows={6}
+            rows={5}
             placeholder={L(
               language,
               "Write your thoughts…",
@@ -144,7 +144,7 @@ export function ContentActions({ itemType, itemId, language }: Props) {
             )}
             className="w-full rounded-lg bg-zinc-900 border border-zinc-800 p-3 text-white focus:outline-none focus:border-orange-500"
           />
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 flex-row justify-end">
             <button
               onClick={() => setNoteOpen(false)}
               className="rounded-lg border border-zinc-700 text-zinc-300 px-4 py-2 text-sm flex items-center gap-1"
