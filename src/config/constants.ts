@@ -22,8 +22,8 @@ export const APP_CONFIG = {
   APP_STORE_URL: "",
   PLAY_STORE_URL: "",
   
-  // Stripe URLs
-  STRIPE_SUBSCRIPTION: "https://buy.stripe.com/test_dRm4gz5Xu4A5bXb8qpgUM00",
+  // Stripe URLs (LIVE — never use test_ links in production builds)
+  STRIPE_SUBSCRIPTION: "https://buy.stripe.com/9B6cN5fAc0c29GTfij7bW03",
   STRIPE_ONETIME: "https://buy.stripe.com/28E5kDbjWe2S4mz1rt7bW04",
 
   // Stripe billing portal for managing/canceling subscriptions
