@@ -15,7 +15,14 @@ export function AboutScreen({ onBack, language }: { onBack: () => void; language
       onBack={onBack}
     >
       <div className="space-y-4 text-zinc-200 leading-relaxed">
-        <p>{APP_CONFIG.APP_DESCRIPTION}</p>
+        <p>
+          {L(
+            language,
+            APP_CONFIG.APP_DESCRIPTION,
+            "Una aplicación móvil basada en la fe para oración, comunidad y crecimiento espiritual.",
+            "Um aplicativo móvel baseado na fé para oração, comunidade e crescimento espiritual."
+          )}
+        </p>
         <p className="text-zinc-400 text-sm">
           {L(language,
             "Prayer & Fire exists to connect believers around the world in prayer, Scripture, and worship.",

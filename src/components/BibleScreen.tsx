@@ -194,6 +194,16 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   }, [translation]);
 
   useEffect(() => {
+    const appTranslation = language ? APP_LANG_TO_BIBLE[language] : null;
+    if (appTranslation && translation !== appTranslation) {
+      setTranslation(appTranslation);
+    }
+    // Only react when the app language changes; users can still change the
+    // Bible version manually while staying in the same app language.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
+
+  useEffect(() => {
     localStorage.setItem(MODE_KEY, mode);
     localStorage.setItem(BOOK_KEY, String(bookIdx));
     localStorage.setItem(CHAPTER_KEY, String(chapterIdx));

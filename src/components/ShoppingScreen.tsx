@@ -49,7 +49,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
   if (loading) {
     return (
       <div style={styles.page}>
-        <div style={styles.loading}>Loading...</div>
+        <div style={styles.loading}>{t("loading")}</div>
       </div>
     );
   }

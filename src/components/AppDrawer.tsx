@@ -30,7 +30,12 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
     // Share the APP download link (App Store / Play Store), not the website.
     const storeUrl =
       APP_CONFIG.APP_STORE_URL || APP_CONFIG.PLAY_STORE_URL || "";
-    const text = "Download the Prayer & Fire App";
+    const text = L(
+      language,
+      "Download the Prayer & Fire App",
+      "Descarga la app Prayer & Fire",
+      "Baixe o app Prayer & Fire"
+    );
     const shareUrl = storeUrl;
     const composed = shareUrl ? `${text} ${shareUrl}` : text;
     try {

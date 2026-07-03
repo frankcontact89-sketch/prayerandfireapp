@@ -54,14 +54,14 @@ export function GreekWordDetailScreen({ slug, onBack, language }: Props) {
   }, [slug]);
 
   const pick = (f: string) => row?.[`${f}_${language}`] || row?.[`${f}_en`] || "";
-  if (loading) return <SimpleScreen title="…" onBack={onBack}><div /></SimpleScreen>;
-  if (!row) return <SimpleScreen title="Not found" onBack={onBack}><p className="text-zinc-400">Not available.</p></SimpleScreen>;
-
   const labels = language === "es"
-    ? { tr: "Transliteración", pr: "Pronunciación", ipa: "IPA", me: "Significado", lit: "Sentido literal", bib: "Sentido bíblico", hist: "Contexto histórico", us: "Uso bíblico", sc: "Referencias", rel: "Palabras relacionadas", app: "Aplicación práctica", ex: "Explicación", play: "Escuchar" }
+    ? { tr: "Transliteración", pr: "Pronunciación", ipa: "IPA", me: "Significado", lit: "Sentido literal", bib: "Sentido bíblico", hist: "Contexto histórico", us: "Uso bíblico", sc: "Referencias", rel: "Palabras relacionadas", app: "Aplicación práctica", ex: "Explicación", play: "Escuchar", notFound: "No encontrado", notAvailable: "No disponible." }
     : language === "pt"
-    ? { tr: "Transliteração", pr: "Pronúncia", ipa: "IPA", me: "Significado", lit: "Sentido literal", bib: "Sentido bíblico", hist: "Contexto histórico", us: "Uso bíblico", sc: "Referências", rel: "Palavras relacionadas", app: "Aplicação prática", ex: "Explicação", play: "Ouvir" }
-    : { tr: "Transliteration", pr: "Pronunciation", ipa: "IPA", me: "Meaning", lit: "Literal meaning", bib: "Biblical meaning", hist: "Historical background", us: "Biblical usage", sc: "Scripture references", rel: "Related words", app: "Practical application", ex: "Explanation", play: "Listen" };
+    ? { tr: "Transliteração", pr: "Pronúncia", ipa: "IPA", me: "Significado", lit: "Sentido literal", bib: "Sentido bíblico", hist: "Contexto histórico", us: "Uso bíblico", sc: "Referências", rel: "Palavras relacionadas", app: "Aplicação prática", ex: "Explicação", play: "Ouvir", notFound: "Não encontrado", notAvailable: "Não disponível." }
+    : { tr: "Transliteration", pr: "Pronunciation", ipa: "IPA", me: "Meaning", lit: "Literal meaning", bib: "Biblical meaning", hist: "Historical background", us: "Biblical usage", sc: "Scripture references", rel: "Related words", app: "Practical application", ex: "Explanation", play: "Listen", notFound: "Not found", notAvailable: "Not available." };
+
+  if (loading) return <SimpleScreen title="…" onBack={onBack}><div /></SimpleScreen>;
+  if (!row) return <SimpleScreen title={labels.notFound} onBack={onBack}><p className="text-zinc-400">{labels.notAvailable}</p></SimpleScreen>;
 
   const playAudio = () => {
     try {
