@@ -325,16 +325,55 @@ export default function Index() {
       return "home";
     }
   });
+  const pageRef = useRef(page);
+  const contentScrollRef = useRef<HTMLDivElement | null>(null);
+  const pageScrollPositionsRef = useRef<Record<string, number>>({});
+  const pendingScrollRestoreRef = useRef<string | null>(null);
+
   const setPage = useCallback((p: string) => {
+    const currentPage = pageRef.current;
+    if (currentPage !== p) {
+      const scrollContainer = contentScrollRef.current;
+      if (scrollContainer) {
+        pageScrollPositionsRef.current[currentPage] = scrollContainer.scrollTop;
+      }
+      pendingScrollRestoreRef.current = p;
+    }
+    pageRef.current = p;
     setPageState(p);
     try {
       localStorage.setItem("pf_last_page", p);
     } catch {}
   }, []);
-  const pageRef = useRef(page);
 
   useEffect(() => {
     pageRef.current = page;
+
+    if (pendingScrollRestoreRef.current !== page) return;
+    pendingScrollRestoreRef.current = null;
+
+    const savedScrollTop = pageScrollPositionsRef.current[page] || 0;
+    const scrollContainer = contentScrollRef.current;
+    if (!scrollContainer) return;
+
+    let attempts = 0;
+    let timeoutId = 0;
+    let frameId = 0;
+    const restore = () => {
+      scrollContainer.scrollTop = savedScrollTop;
+      attempts += 1;
+      if (attempts < 12) {
+        timeoutId = window.setTimeout(() => {
+          frameId = window.requestAnimationFrame(restore);
+        }, 100);
+      }
+    };
+
+    frameId = window.requestAnimationFrame(restore);
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.cancelAnimationFrame(frameId);
+    };
   }, [page]);
   const [showLanguages, setShowLanguages] = useState(false);
 
@@ -579,7 +618,7 @@ export default function Index() {
         onNavigate={(p) => setPage(p)}
       />
 
-      <div className="flex-1 overflow-y-auto pb-[90px] bg-black" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "none" }}>
+      <div ref={contentScrollRef} className="flex-1 overflow-y-auto pb-[90px] bg-black" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "none" }}>
         {page === "home" && <HomeScreen t={t} language={language} />}
         {page === "giving" && <GivingScreen t={t} language={language} />}
         {page === "shopping" && <ShoppingScreen t={t} />}

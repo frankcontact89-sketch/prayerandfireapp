@@ -126,6 +126,13 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
     return v && v !== k ? v : fallback;
   };
 
+  const previousReadingLabel =
+    language === "es"
+      ? "Volver a la lectura"
+      : language === "pt"
+        ? "Voltar à leitura"
+        : "Return to reading";
+
   const bookName = (book: Book) => getLocalizedBookName(book.abbrev, book.name, language);
 
   const [translation, setTranslation] = useState(() => {
@@ -238,6 +245,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
     setView("verses");
     appliedRefNonceRef.current = initialRef.nonce;
     setArrivedViaRef(true);
+    setShowResumeBanner(false);
     onInitialRefApplied?.();
     // Scroll to verse after render
     setTimeout(() => {
@@ -810,6 +818,25 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                   {verseIdx + 1} / {currentVerses.length}
                 </p>
               </div>
+              {arrivedViaRef && onExitToOrigin && (
+                <div className="px-4 pb-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setArrivedViaRef(false);
+                      onExitToOrigin();
+                    }}
+                    className={`w-full min-h-[44px] rounded-lg border px-3 text-sm font-semibold flex items-center justify-center gap-2 ${
+                      isDay
+                        ? "bg-orange-50 border-orange-200 text-orange-700"
+                        : "bg-orange-500/10 border-orange-500/30 text-orange-400"
+                    }`}
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    {previousReadingLabel}
+                  </button>
+                </div>
+              )}
             </div>
 
             {showResumeBanner && (
