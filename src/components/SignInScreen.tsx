@@ -23,6 +23,9 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
   const [resendCooldown, setResendCooldown] = useState(0);
   const { toast } = useToast();
 
+  const L = (en: string, es: string, pt: string) =>
+    currentLanguage === "es" ? es : currentLanguage === "pt" ? pt : en;
+
   React.useEffect(() => {
     if (resendCooldown <= 0) return;
     const id = setInterval(() => setResendCooldown((s) => (s > 0 ? s - 1 : 0)), 1000);
@@ -30,27 +33,27 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
   }, [resendCooldown]);
 
   const friendlyError = (msg: string | undefined): string => {
-    if (!msg) return "An unexpected error occurred";
+    if (!msg) return t("unexpectedError");
     if (/for security purposes/i.test(msg) || /only request this after/i.test(msg) || /rate limit/i.test(msg)) {
-      return "Please wait a few seconds before requesting another confirmation email.";
+      return t("waitBeforeConfirmation");
     }
     if (/invalid login credentials/i.test(msg)) {
-      return "Incorrect email or password. If you just registered, make sure you confirmed your email first.";
+      return t("incorrectEmailOrPassword");
     }
     if (/email not confirmed/i.test(msg)) {
-      return "Please check your email and confirm your account before signing in.";
+      return t("confirmEmailBeforeSignIn");
     }
-    return "Something went wrong. Please try again.";
+    return t("somethingWrongTryAgain");
   };
 
   const handleResendConfirmation = async () => {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail) {
-      toast({ title: "Error", description: "Please enter your email", variant: "destructive" });
+      toast({ title: t("error"), description: t("pleaseEnterEmail"), variant: "destructive" });
       return;
     }
     if (resendCooldown > 0) {
-      toast({ title: "Please wait", description: "Please wait before requesting another confirmation email." });
+      toast({ title: t("pleaseWait"), description: t("waitBeforeConfirmation") });
       return;
     }
     setLoading(true);
@@ -61,11 +64,11 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         options: { emailRedirectTo: `${window.location.origin}/` },
       });
       if (error) throw error;
-      toast({ title: "Email sent", description: "Confirmation email resent. Please check your inbox." });
+      toast({ title: t("emailSent"), description: t("confirmationEmailResent") });
       setResendCooldown(45);
     } catch (error: any) {
       console.error("Resend confirmation error:", error);
-      toast({ title: "Error", description: friendlyError(error?.message), variant: "destructive" });
+      toast({ title: t("error"), description: friendlyError(error?.message), variant: "destructive" });
       if (/only request this after|rate limit|for security purposes/i.test(error?.message || "")) {
         setResendCooldown(45);
       }
@@ -79,8 +82,8 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
       const normalizedEmail = email.trim().toLowerCase();
       if (!normalizedEmail) {
         toast({
-          title: "Error",
-          description: "Please enter your email",
+          title: t("error"),
+          description: t("pleaseEnterEmail"),
           variant: "destructive",
         });
         return;
@@ -94,22 +97,22 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
 
         if (!data) {
           toast({
-            title: "Error",
-            description: "No account found with that email",
+            title: t("error"),
+            description: t("noAccountFound"),
             variant: "destructive",
           });
           return;
         }
 
         toast({
-          title: "Username Found!",
-          description: `Your username is: ${data}`,
+          title: t("usernameFound"),
+          description: `${t("yourUsernameIs")} ${data}`,
         });
         setIsForgotUsername(false);
       } catch (error: any) {
         console.error("Forgot username error:", error);
         toast({
-          title: "Error",
+          title: t("error"),
           description: friendlyError(error?.message),
           variant: "destructive",
         });
@@ -123,8 +126,8 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
       const normalizedEmail = email.trim().toLowerCase();
       if (!normalizedEmail) {
         toast({
-          title: "Error",
-          description: "Please enter your email",
+          title: t("error"),
+          description: t("pleaseEnterEmail"),
           variant: "destructive",
         });
         return;
@@ -139,14 +142,14 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         if (error) throw error;
 
         toast({
-          title: "Email sent!",
-          description: "Check your email to reset your password",
+          title: t("emailSent"),
+          description: t("checkEmailResetPassword"),
         });
         setIsForgotPassword(false);
       } catch (error: any) {
         console.error("Password reset request error:", error);
         toast({
-          title: "Error",
+          title: t("error"),
           description: friendlyError(error?.message),
           variant: "destructive",
         });
@@ -159,12 +162,12 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !password) {
       toast({
-        title: "Error",
+        title: t("error"),
         description: !normalizedEmail && !password
-          ? "Please enter your email and password"
+          ? t("pleaseEnterEmailPassword")
           : !normalizedEmail
-            ? "Please enter your email"
-            : "Please enter your password",
+            ? t("pleaseEnterEmail")
+            : t("pleaseEnterPassword"),
         variant: "destructive",
       });
       return;
@@ -190,13 +193,13 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
           if (data.session) {
             setUser(data.user);
             toast({
-              title: "Welcome!",
-              description: "Account created successfully",
+              title: t("welcome"),
+              description: t("accountCreatedSuccessfully"),
             });
           } else {
             toast({
-              title: "Account created",
-              description: "Please check your email and confirm your account before signing in.",
+              title: t("accountCreated"),
+              description: t("confirmEmailBeforeSignIn"),
             });
             setAwaitingConfirmation(true);
             setResendCooldown(45);
@@ -225,14 +228,14 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
       if (/email not confirmed/i.test(msg)) {
         setAwaitingConfirmation(true);
         toast({
-          title: "Email not confirmed",
-          description: "Please check your email and confirm your account before signing in.",
+          title: t("emailNotConfirmed"),
+          description: t("confirmEmailBeforeSignIn"),
           variant: "destructive",
         });
         return;
       }
       toast({
-        title: "Error",
+        title: t("error"),
         description: friendlyError(msg),
         variant: "destructive",
       });
@@ -259,7 +262,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
         <div className="mt-6 space-y-[15px]">
           <Input
             type="email"
-            placeholder="Email"
+            placeholder={t("email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full bg-card border border-border rounded-xl text-foreground h-12 px-4 focus:border-primary transition-colors"
@@ -268,7 +271,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
           {!isForgotPassword && !isForgotUsername && (
             <Input
               type="password"
-              placeholder="Password"
+              placeholder={t("password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-card border border-border rounded-xl text-foreground h-12 px-4 focus:border-primary transition-colors"
@@ -283,12 +286,12 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
             {loading
               ? t("loading")
               : isForgotUsername
-                ? "Find Username"
+                ? t("findUsername")
                 : isForgotPassword
                   ? t("send")
                   : isSignUp
                     ? t("signup")
-                    : "Sign In"}
+                    : t("signin")}
           </Button>
 
           {!isForgotPassword && !isForgotUsername && (
@@ -298,14 +301,14 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
               className="w-full bg-transparent border-2 border-border text-foreground hover:bg-secondary hover:border-primary rounded-xl h-12 text-base font-medium transition-all duration-200"
               disabled={loading}
             >
-              {isSignUp ? "Already have account?" : "Register"}
+              {isSignUp ? t("alreadyHaveAccount") : t("signup")}
             </Button>
           )}
 
           {awaitingConfirmation && !isForgotPassword && !isForgotUsername && (
             <div className="space-y-2 mt-2">
               <p className="text-sm text-muted-foreground text-center">
-                Please check your email and confirm your account before signing in.
+                {t("confirmEmailBeforeSignIn")}
               </p>
               <Button
                 variant="outline"
@@ -314,8 +317,8 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
                 className="w-full rounded-xl h-12"
               >
                 {resendCooldown > 0
-                  ? `Resend confirmation email (${resendCooldown}s)`
-                  : "Resend confirmation email"}
+                  ? `${t("resendConfirmationEmail")} (${resendCooldown}s)`
+                  : t("resendConfirmationEmail")}
               </Button>
             </div>
           )}
@@ -345,7 +348,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 disabled={loading}
               >
-                Forgot Password?
+                {t("forgot")}
               </button>
 
               <span className="text-muted-foreground">|</span>
@@ -359,7 +362,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 disabled={loading}
               >
-                Forgot Username?
+                {t("forgotUsername")}
               </button>
             </div>
           )}
