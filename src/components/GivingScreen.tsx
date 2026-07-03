@@ -5,9 +5,14 @@ import { Heart, DollarSign, Sparkles } from "lucide-react";
 
 interface GivingScreenProps {
   t: (key: string) => string;
+  language?: string;
 }
 
-export function GivingScreen({ t }: GivingScreenProps) {
+function L(lang: string, en: string, es: string, pt: string) {
+  return lang === "es" ? es : lang === "pt" ? pt : en;
+}
+
+export function GivingScreen({ t, language = "en" }: GivingScreenProps) {
   const STRIPE_SUBSCRIPTION = "https://buy.stripe.com/9B6cN5fAc0c29GTfij7bW03";
 
   const STRIPE_ONETIME = "https://buy.stripe.com/9B66oHco06AqdX9dab7bW01";
@@ -31,7 +36,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
           <span className="text-[13px] text-orange-400 font-semibold tracking-wide uppercase">{t("supportPrayerFire")}</span>
         </div>
 
-        <h1 className="text-[30px] font-extrabold tracking-tight mb-2">Support Prayer & Fire Global Mission</h1>
+        <h1 className="text-[30px] font-extrabold tracking-tight mb-2">{L(language, "Support Prayer & Fire Global Mission", "Apoya la Misión Global de Prayer & Fire", "Apoie a Missão Global da Prayer & Fire")}</h1>
 
         <p className="text-zinc-300 text-[15px] leading-relaxed max-w-sm mx-auto">
           {t("giving_hero_subtitle")}
@@ -50,7 +55,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
         >
           <div className="flex flex-col items-center gap-1.5">
             <Heart className="w-5 h-5" />
-            <span className="text-[13px] font-semibold">Monthly Partner</span>
+            <span className="text-[13px] font-semibold">{L(language, "Monthly Partner", "Socio Mensual", "Parceiro Mensal")}</span>
           </div>
         </button>
 
@@ -64,7 +69,7 @@ export function GivingScreen({ t }: GivingScreenProps) {
         >
           <div className="flex flex-col items-center gap-1.5">
             <DollarSign className="w-5 h-5" />
-            <span className="text-[13px] font-semibold">One-Time Gift</span>
+            <span className="text-[13px] font-semibold">{L(language, "One-Time Gift", "Donación Única", "Doação Única")}</span>
           </div>
         </button>
       </div>
@@ -75,15 +80,15 @@ export function GivingScreen({ t }: GivingScreenProps) {
           <div className="space-y-5">
             <div>
               <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">{t("giving_monthly_eyebrow")}</p>
-              <h2 className="text-[22px] font-semibold mb-2">Become a Monthly Partner</h2>
-              <p className="text-zinc-200 text-[15px] leading-relaxed">Support the Prayer & Fire global mission every month.</p>
+              <h2 className="text-[22px] font-semibold mb-2">{L(language, "Become a Monthly Partner", "Conviértete en Socio Mensual", "Torne-se um Parceiro Mensal")}</h2>
+              <p className="text-zinc-200 text-[15px] leading-relaxed">{L(language, "Support the Prayer & Fire global mission every month.", "Apoya la misión global de Prayer & Fire cada mes.", "Apoie a missão global da Prayer & Fire todos os meses.")}</p>
             </div>
 
             <Button
               onClick={handleGive}
               className="w-full h-[50px] rounded-2xl text-[15px] font-bold bg-orange-500 hover:bg-orange-600"
             >
-              Become a Partner
+              {L(language, "Become a Partner", "Ser Socio", "Tornar-se Parceiro")}
             </Button>
           </div>
         )}
@@ -92,15 +97,15 @@ export function GivingScreen({ t }: GivingScreenProps) {
           <div className="space-y-5">
             <div>
               <p className="text-orange-400 uppercase tracking-[0.25em] text-[11px] font-bold mb-2">{t("giving_onetime_eyebrow")}</p>
-              <h2 className="text-[22px] font-semibold mb-2">One-Time Gift</h2>
-              <p className="text-zinc-200 text-[15px] leading-relaxed">Support the Prayer & Fire global mission with a single contribution.</p>
+              <h2 className="text-[22px] font-semibold mb-2">{L(language, "One-Time Gift", "Donación Única", "Doação Única")}</h2>
+              <p className="text-zinc-200 text-[15px] leading-relaxed">{L(language, "Support the Prayer & Fire global mission with a single contribution.", "Apoya la misión global de Prayer & Fire con una sola contribución.", "Apoie a missão global da Prayer & Fire com uma única contribuição.")}</p>
             </div>
 
             <Button
               onClick={handleGive}
               className="w-full h-[50px] rounded-2xl text-[15px] font-bold bg-orange-500 hover:bg-orange-600"
             >
-              Give Now
+              {L(language, "Give Now", "Donar Ahora", "Doar Agora")}
             </Button>
           </div>
         )}
