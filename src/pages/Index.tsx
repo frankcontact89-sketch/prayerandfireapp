@@ -360,9 +360,14 @@ export default function Index() {
   const [pendingBibleRef, setPendingBibleRef] = useState<
     (ParsedRef & { nonce: number }) | null
   >(null);
+  const [bibleReturnTo, setBibleReturnTo] = useState<string | null>(null);
 
   const openBibleRef = useCallback(
     (ref: ParsedRef) => {
+      setPageState((current) => {
+        if (current && current !== "bible") setBibleReturnTo(current);
+        return current;
+      });
       setPendingBibleRef({ ...ref, nonce: Date.now() });
       setPage("bible");
     },
@@ -581,6 +586,15 @@ export default function Index() {
             language={language}
             initialRef={pendingBibleRef}
             onInitialRefApplied={() => setPendingBibleRef(null)}
+            onExitToOrigin={
+              bibleReturnTo
+                ? () => {
+                    const target = bibleReturnTo;
+                    setBibleReturnTo(null);
+                    setPage(target);
+                  }
+                : undefined
+            }
           />
         )}
 
