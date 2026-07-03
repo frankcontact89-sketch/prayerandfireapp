@@ -143,7 +143,7 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack, onOpe
       console.error("uploadFromDataUrl error", err);
       toast({
         title: t("error"),
-        description: "Photo upload is unavailable on this device. Please choose a photo from your library.",
+        description: t("photoUploadUnavailable"),
       });
     }
   };
@@ -179,8 +179,8 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack, onOpe
               title: t("error"),
               description:
                 source === 'CAMERA'
-                  ? "Camera permission denied. Please enable it in Settings."
-                  : "Photo library permission denied. Please enable it in Settings.",
+                  ? t("cameraPermissionDenied")
+                  : t("photoLibraryPermissionDenied"),
             });
             return;
           }
@@ -347,7 +347,7 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack, onOpe
         <div className="flex flex-col items-center space-y-3">
           <button onClick={() => setShowImageDialog(true)} disabled={loading} className="relative cursor-pointer group">
             <div className="w-32 h-32 rounded-full bg-muted border-4 border-border flex items-center justify-center overflow-hidden group-hover:border-primary transition-colors">
-              {image ? <img key={image} src={image} alt="Profile" className="w-full h-full object-cover" crossOrigin="anonymous" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center"><span className="text-4xl font-bold text-primary">{name ? name.charAt(0).toUpperCase() : "?"}</span></div>}
+              {image ? <img key={image} src={image} alt={t("profile")} className="w-full h-full object-cover" crossOrigin="anonymous" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center"><span className="text-4xl font-bold text-primary">{name ? name.charAt(0).toUpperCase() : "?"}</span></div>}
             </div>
             <div className="absolute bottom-0 right-0 bg-primary rounded-full p-2 group-hover:scale-110 transition-transform"><Camera className="w-5 h-5 text-primary-foreground" /></div>
           </button>
