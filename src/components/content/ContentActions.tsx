@@ -126,27 +126,29 @@ export function ContentActions({ itemType, itemId, language }: Props) {
       </div>
 
       <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
-        <DialogContent className="bg-zinc-950 border-zinc-800 text-white top-2 translate-y-0 max-h-[90vh] w-[calc(100%-2rem)] max-w-md flex flex-col p-4 gap-3">
+        <DialogContent
+          className="bg-zinc-950 border-zinc-800 text-white top-2 translate-y-0 w-[calc(100%-2rem)] max-w-md flex flex-col p-4 gap-3 h-[80vh] max-h-[80vh]"
+          style={{ paddingBottom: `calc(env(safe-area-inset-bottom) + 24px)` }}
+        >
           <DialogHeader className="shrink-0">
             <DialogTitle className="text-white">
               {L(language, "Your note", "Tu nota", "Sua nota")}
             </DialogTitle>
           </DialogHeader>
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto flex">
             <textarea
               value={noteContent}
               onChange={(e) => setNoteContent(e.target.value)}
-              rows={4}
               placeholder={L(
                 language,
                 "Write your thoughts…",
                 "Escribe tus pensamientos…",
                 "Escreva seus pensamentos…"
               )}
-              className="w-full rounded-lg bg-zinc-900 border border-zinc-800 p-3 text-white focus:outline-none focus:border-orange-500"
+              className="w-full flex-1 resize-none rounded-lg bg-zinc-900 border border-zinc-800 p-3 text-white focus:outline-none focus:border-orange-500"
             />
           </div>
-          <DialogFooter className="gap-2 flex-row justify-end shrink-0">
+          <DialogFooter className="gap-2 flex-row justify-end shrink-0 mt-2">
             <button
               onClick={() => setNoteOpen(false)}
               className="rounded-lg border border-zinc-700 text-zinc-300 px-4 py-2 text-sm flex items-center gap-1"
