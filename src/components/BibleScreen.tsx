@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check } from "lucide-react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check, Headphones } from "lucide-react";
 import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
@@ -663,6 +663,16 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
             <Globe className="w-4 h-4" />
             <span className="uppercase tracking-wider text-xs font-semibold">{translation}</span>
           </button>
+
+          {view === "verses" && (
+            <button
+              onClick={() => setShowReaderSettings(true)}
+              aria-label="Audio"
+              className="text-orange-500"
+            >
+              <Headphones className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -772,13 +782,6 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                   <h2 className="text-[17px] sm:text-[19px] font-semibold truncate max-w-[28vw] sm:max-w-[40vw]">
                     {`${bookName(currentBook).toUpperCase()} ${chapterIdx + 1}`}
                   </h2>
-                  <button
-                    onClick={() => (isSpeaking ? pauseAudio() : playFromVerse(verseIdx))}
-                    aria-label={isSpeaking ? "Pause" : "Play"}
-                    className="rounded-full bg-orange-500 text-white w-10 h-10 flex items-center justify-center shrink-0 active:scale-95 transition-transform shadow-sm"
-                  >
-                    {isSpeaking ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
-                  </button>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
                   <button onClick={() => setView("search")} aria-label="Search" className="text-orange-500 p-1">
@@ -798,35 +801,14 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                     <Globe className="w-4 h-4" />
                     <span className="uppercase tracking-wider text-xs font-semibold">{translation}</span>
                   </button>
+                  <button
+                    onClick={() => setShowReaderSettings(true)}
+                    className="text-orange-500 p-1"
+                    aria-label="Audio"
+                  >
+                    <Headphones className="w-5 h-5" />
+                  </button>
                 </div>
-              </div>
-              {/* Row 2: current reference + progress inside same white bar */}
-              <div className="px-4 pb-3 flex items-center gap-3">
-                <p className="text-[13px] font-semibold text-orange-500 truncate shrink-0 max-w-[42%]">
-                  {bookName(currentBook)} {chapterIdx + 1}:{verseIdx + 1}
-                </p>
-                <input
-                  type="range"
-                  min={0}
-                  max={Math.max(0, currentVerses.length - 1)}
-                  value={Math.min(verseIdx, Math.max(0, currentVerses.length - 1))}
-                  onChange={(e) => {
-                    const v = Number(e.target.value);
-                    if (isSpeaking) {
-                      speakingRef.current = false;
-                      window.speechSynthesis.cancel();
-                      setTimeout(() => speakVerseAt(bookIdx, chapterIdx, v), 60);
-                    } else {
-                      setVerseIdx(v);
-                      updateMediaSession(bookIdx, chapterIdx, v);
-                    }
-                  }}
-                  className="flex-1 min-w-0 accent-orange-500 block h-1"
-                  aria-label="Seek"
-                />
-                <p className={`text-[11px] font-medium tabular-nums shrink-0 ${isDay ? "text-zinc-500" : "text-zinc-400"}`}>
-                  {verseIdx + 1} / {currentVerses.length}
-                </p>
               </div>
               {arrivedViaRef && onExitToOrigin && (
                 <div className="px-4 pb-3">
@@ -848,29 +830,6 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                 </div>
               )}
             </div>
-
-            {showResumeBanner && (
-              <div className="px-4 sm:px-5 pt-3 max-w-[760px] mx-auto">
-                <div className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${card}`}>
-                  <div className="flex-1 text-sm">
-                    {tr("bible_resume_from", "Resume from verse")} {verseIdx + 1}?
-                  </div>
-                  <button
-                    onClick={() => setShowResumeBanner(false)}
-                    className="text-zinc-500 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2"
-                    aria-label="Dismiss"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => playFromVerse(verseIdx)}
-                    className="rounded-lg bg-orange-500 text-white text-sm font-semibold px-3 py-2 min-h-[44px]"
-                  >
-                    {tr("resume", "Resume")}
-                  </button>
-                </div>
-              </div>
-            )}
 
             <div className="px-4 sm:px-5 pt-4 pb-10 max-w-[760px] mx-auto space-y-3">
               {currentVerses.map((text, index) => {
@@ -898,8 +857,10 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                       updateMediaSession(bookIdx, chapterIdx, index);
                     }}
                     onDoubleClick={() => {
-                      // Double tap: start playing from this verse.
-                      playFromVerse(index);
+                      // Double tap: select verse only. Audio must be started
+                      // intentionally from the Reading Settings panel.
+                      setVerseIdx(index);
+                      updateMediaSession(bookIdx, chapterIdx, index);
                     }}
                     className={`rounded-xl border p-4 transition-colors cursor-pointer select-none ${
                       isActive
