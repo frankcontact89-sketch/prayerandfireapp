@@ -146,7 +146,6 @@ export function ContentActions({ itemType, itemId, language }: Props) {
               className="w-full rounded-lg bg-zinc-900 border border-zinc-800 p-3 text-white focus:outline-none focus:border-orange-500"
             />
           </div>
-          <parameter DialogPrimitive</parameter>
           <DialogFooter className="gap-2 flex-row justify-end shrink-0">
             <button
               onClick={() => setNoteOpen(false)}
