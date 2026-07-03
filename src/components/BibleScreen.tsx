@@ -857,8 +857,10 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                       updateMediaSession(bookIdx, chapterIdx, index);
                     }}
                     onDoubleClick={() => {
-                      // Double tap: start playing from this verse.
-                      playFromVerse(index);
+                      // Double tap: select verse only. Audio must be started
+                      // intentionally from the Reading Settings panel.
+                      setVerseIdx(index);
+                      updateMediaSession(bookIdx, chapterIdx, index);
                     }}
                     className={`rounded-xl border p-4 transition-colors cursor-pointer select-none ${
                       isActive
