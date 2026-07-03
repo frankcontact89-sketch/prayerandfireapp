@@ -116,9 +116,10 @@ interface BibleScreenProps {
   language?: string;
   initialRef?: { abbrev: string; chapter: number; verse: number; nonce: number } | null;
   onInitialRefApplied?: () => void;
+  onExitToOrigin?: () => void;
 }
 
-export function BibleScreen({ t, language, initialRef, onInitialRefApplied }: BibleScreenProps = {}) {
+export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onExitToOrigin }: BibleScreenProps = {}) {
   const tr = (k: string, fallback: string) => {
     if (!t) return fallback;
     const v = t(k as any);
@@ -168,6 +169,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied }: Bi
   const [actionVerse, setActionVerse] = useState<number | null>(null);
   const [showResumeBanner, setShowResumeBanner] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [arrivedViaRef, setArrivedViaRef] = useState(false);
 
   const isDay = mode === "day";
 
@@ -235,6 +237,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied }: Bi
     setVerseIdx(vIdx);
     setView("verses");
     appliedRefNonceRef.current = initialRef.nonce;
+    setArrivedViaRef(true);
     onInitialRefApplied?.();
     // Scroll to verse after render
     setTimeout(() => {
