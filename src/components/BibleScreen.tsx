@@ -737,15 +737,15 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
               {/* Row 1: back + title + play in the marked space + tool icons */}
               <div className="flex items-center px-4 pt-3 pb-2 gap-2">
                 <div className="flex items-center gap-2 min-w-0 shrink">
-                  <button
-                    onClick={() => {
-                      if (arrivedViaRef && onExitToOrigin) {
-                        setArrivedViaRef(false);
-                        onExitToOrigin();
-                      } else {
-                        setView("chapters");
-                      }
-                    }}
+                   <button
+                     onClick={() => {
+                       if (onExitToOrigin) {
+                         setArrivedViaRef(false);
+                         onExitToOrigin();
+                       } else {
+                         setView("chapters");
+                       }
+                     }}
                     className="text-orange-500 shrink-0"
                     aria-label="Back"
                   >
