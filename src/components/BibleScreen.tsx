@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check } from "lucide-react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check, Headphones } from "lucide-react";
 import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
@@ -663,6 +663,16 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
             <Globe className="w-4 h-4" />
             <span className="uppercase tracking-wider text-xs font-semibold">{translation}</span>
           </button>
+
+          {view === "verses" && (
+            <button
+              onClick={() => setShowReaderSettings(true)}
+              aria-label="Audio"
+              className="text-orange-500"
+            >
+              <Headphones className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
     </div>
