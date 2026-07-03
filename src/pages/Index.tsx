@@ -573,7 +573,7 @@ export default function Index() {
 
       <div className="flex-1 overflow-y-auto pb-[90px] bg-black" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "none" }}>
         {page === "home" && <HomeScreen t={t} language={language} />}
-        {page === "giving" && <GivingScreen t={t} />}
+        {page === "giving" && <GivingScreen t={t} language={language} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
         {page === "bible" && (
           <BibleScreen
