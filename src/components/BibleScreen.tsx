@@ -1207,6 +1207,18 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                   label: tr("bible_add_note", "Add Note"),
                   onClick: () => { openNoteFor(currentBook.name, chapterIdx + 1, actionVerse! + 1); setActionVerse(null); },
                 },
+                {
+                  icon: <Highlighter className="w-5 h-5" />,
+                  label: isHighlighted(currentBook.name, chapterIdx + 1, actionVerse + 1)
+                    ? tr("bible_remove_highlight", "Remove Highlight")
+                    : tr("bible_highlight", "Highlight"),
+                  onClick: () => { toggleHighlight(currentBook.name, chapterIdx + 1, actionVerse! + 1); setActionVerse(null); },
+                },
+                {
+                  icon: <Link2 className="w-5 h-5" />,
+                  label: tr("bible_copy_reference", "Copy Reference"),
+                  onClick: () => { copyReference(`${bookName(currentBook)} ${chapterIdx + 1}:${actionVerse! + 1}`); setActionVerse(null); },
+                },
               ].map((item, i) => (
                 <button
                   key={i}
