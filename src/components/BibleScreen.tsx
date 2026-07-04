@@ -797,53 +797,32 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                 isDay ? "bg-white/95 border-zinc-200" : "bg-black/90 border-zinc-800"
               }`}
             >
-              {/* Row 1: back + title + play in the marked space + tool icons */}
-              <div className="flex items-center px-4 pt-3 pb-2 gap-2">
-                <div className="flex items-center gap-2 min-w-0 shrink">
-                   <button
-                     onClick={() => {
-                       if (onExitToOrigin) {
-                         setArrivedViaRef(false);
-                         onExitToOrigin();
-                       } else {
-                         setView("chapters");
-                       }
-                     }}
-                    className="text-orange-500 shrink-0"
-                    aria-label="Back"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </button>
-                  <h2 className="text-[17px] sm:text-[19px] font-semibold truncate max-w-[28vw] sm:max-w-[40vw]">
-                    {`${bookName(currentBook).toUpperCase()} ${chapterIdx + 1}`}
-                  </h2>
-                </div>
-                <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
-                  <button onClick={() => setView("search")} aria-label="Search" className="text-orange-500 p-1">
-                    <Search className="w-5 h-5" />
-                  </button>
-                  <button onClick={() => setShowReaderSettings(true)} className="text-orange-500 p-1" aria-label="Text settings">
-                    <Type className="w-5 h-5" />
-                  </button>
-                  <button onClick={() => setMode(isDay ? "night" : "day")} className="text-orange-500 p-1" aria-label="Theme">
-                    {isDay ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-                  </button>
-                  <button
-                    onClick={() => setShowLangPicker(true)}
-                    className="text-orange-500 shrink-0 flex items-center gap-1 text-sm p-1"
-                    aria-label="Language"
-                  >
-                    <Globe className="w-4 h-4" />
-                    <span className="uppercase tracking-wider text-xs font-semibold">{translation}</span>
-                  </button>
-                  <button
-                    onClick={() => setShowReaderSettings(true)}
-                    className="text-orange-500 p-1"
-                    aria-label="Audio"
-                  >
-                    <Headphones className="w-5 h-5" />
-                  </button>
-                </div>
+              {/* Minimal top row: back + book/chapter + menu */}
+              <div className="flex items-center px-4 pt-3 pb-3 gap-2">
+                <button
+                  onClick={() => {
+                    if (onExitToOrigin) {
+                      setArrivedViaRef(false);
+                      onExitToOrigin();
+                    } else {
+                      setView("chapters");
+                    }
+                  }}
+                  className="text-orange-500 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -ml-2"
+                  aria-label="Back"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <h2 className="text-[17px] sm:text-[19px] font-semibold truncate flex-1 text-center">
+                  {`${bookName(currentBook)} ${chapterIdx + 1}`}
+                </h2>
+                <button
+                  onClick={() => setShowBibleMenu(true)}
+                  className="text-orange-500 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2"
+                  aria-label="Menu"
+                >
+                  <Menu className="w-6 h-6" />
+                </button>
               </div>
               {arrivedViaRef && onExitToOrigin && (
                 <div className="px-4 pb-3">
