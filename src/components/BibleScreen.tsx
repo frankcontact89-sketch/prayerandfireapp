@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check, Headphones } from "lucide-react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check, Headphones, Menu, Highlighter, Link2, BookMarked } from "lucide-react";
 import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
@@ -25,6 +25,7 @@ const TRANSLATIONS: Translation[] = [
 
 const FAV_KEY = "pf_bible_favorites";
 const NOTES_KEY = "pf_bible_notes";
+const HIGHLIGHT_KEY = "pf_bible_highlights";
 const LANG_KEY = "pf_bible_lang";
 const MODE_KEY = "pf_bible_mode";
 const BOOK_KEY = "pf_bible_book";
