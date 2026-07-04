@@ -797,7 +797,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
               }`}
             >
               {/* Minimal top row: back + book/chapter + menu */}
-              <div className="flex items-center px-4 pt-3 pb-3 gap-2">
+              <div className="flex items-center px-4 pt-2 pb-2 gap-2">
                 <button
                   onClick={() => {
                     if (onExitToOrigin) {
@@ -844,10 +844,15 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
               )}
             </div>
 
-            <div className="px-5 sm:px-6 pt-5 pb-10 max-w-[720px] mx-auto">
+            <div className="px-4 sm:px-5 pt-3 pb-10 max-w-[680px] mx-auto">
               <p
-                className={`${fontClass} tracking-normal`}
-                style={{ fontSize: `${fontSize}px`, lineHeight }}
+                className={`${fontClass} tracking-normal font-normal`}
+                style={{
+                  fontSize: `${fontSize}px`,
+                  lineHeight: 1.8,
+                  wordSpacing: "0.02em",
+                  WebkitFontSmoothing: "antialiased",
+                }}
               >
                 {currentVerses.map((text, index) => {
                   const verseNumber = index + 1;
@@ -876,7 +881,8 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                     >
                       <sup
                         onClick={(e) => { e.stopPropagation(); setActionVerse(index); }}
-                        className="text-orange-500 font-bold mr-1 text-[0.72em] align-super cursor-pointer"
+                        className="mr-1 align-super cursor-pointer"
+                        style={{ fontSize: "12px", fontWeight: 600, color: "#F97316", lineHeight: 1 }}
                       >
                         {verseNumber}
                         {hasNote && <span className="ml-0.5 text-orange-500">•</span>}
