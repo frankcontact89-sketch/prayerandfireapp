@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check, Headphones } from "lucide-react";
+import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check, Headphones, Menu, Highlighter, Link2, BookMarked } from "lucide-react";
 import { getLocalizedBookName } from "@/data/bible/book-names";
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
@@ -25,6 +25,7 @@ const TRANSLATIONS: Translation[] = [
 
 const FAV_KEY = "pf_bible_favorites";
 const NOTES_KEY = "pf_bible_notes";
+const HIGHLIGHT_KEY = "pf_bible_highlights";
 const LANG_KEY = "pf_bible_lang";
 const MODE_KEY = "pf_bible_mode";
 const BOOK_KEY = "pf_bible_book";
@@ -109,6 +110,18 @@ function saveNotes(notes: Record<string, string>) {
   localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
 }
 
+function loadHighlights(): Record<string, boolean> {
+  try {
+    return JSON.parse(localStorage.getItem(HIGHLIGHT_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveHighlights(h: Record<string, boolean>) {
+  localStorage.setItem(HIGHLIGHT_KEY, JSON.stringify(h));
+}
+
 const APP_LANG_TO_BIBLE: Record<string, string> = { en: "kjv", es: "rvr", pt: "aa" };
 
 interface BibleScreenProps {
@@ -161,6 +174,8 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   const [noteDraft, setNoteDraft] = useState("");
   const [showLangPicker, setShowLangPicker] = useState(false);
   const [showReaderSettings, setShowReaderSettings] = useState(false);
+  const [showBibleMenu, setShowBibleMenu] = useState(false);
+  const [highlights, setHighlights] = useState<Record<string, boolean>>(loadHighlights);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   const [fontSize, setFontSize] = useState(() => Number(localStorage.getItem(FONT_SIZE_KEY) || 17));
@@ -338,6 +353,25 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
     setNotes(next);
     saveNotes(next);
     setOpenNoteKey(null);
+  };
+
+  const toggleHighlight = (book: string, chapter: number, verse: number) => {
+    const key = noteKeyFor(book, chapter, verse);
+    const next = { ...highlights };
+    if (next[key]) delete next[key];
+    else next[key] = true;
+    setHighlights(next);
+    saveHighlights(next);
+  };
+  const isHighlighted = (book: string, chapter: number, verse: number) =>
+    !!highlights[noteKeyFor(book, chapter, verse)];
+
+  const copyReference = async (ref: string) => {
+    try {
+      await navigator.clipboard.writeText(ref);
+      setCopiedKey(ref);
+      setTimeout(() => setCopiedKey(null), 1500);
+    } catch {}
   };
 
   const updateMediaSession = (bIdx: number, cIdx: number, vIdx: number) => {
@@ -762,53 +796,32 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                 isDay ? "bg-white/95 border-zinc-200" : "bg-black/90 border-zinc-800"
               }`}
             >
-              {/* Row 1: back + title + play in the marked space + tool icons */}
-              <div className="flex items-center px-4 pt-3 pb-2 gap-2">
-                <div className="flex items-center gap-2 min-w-0 shrink">
-                   <button
-                     onClick={() => {
-                       if (onExitToOrigin) {
-                         setArrivedViaRef(false);
-                         onExitToOrigin();
-                       } else {
-                         setView("chapters");
-                       }
-                     }}
-                    className="text-orange-500 shrink-0"
-                    aria-label="Back"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </button>
-                  <h2 className="text-[17px] sm:text-[19px] font-semibold truncate max-w-[28vw] sm:max-w-[40vw]">
-                    {`${bookName(currentBook).toUpperCase()} ${chapterIdx + 1}`}
-                  </h2>
-                </div>
-                <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto">
-                  <button onClick={() => setView("search")} aria-label="Search" className="text-orange-500 p-1">
-                    <Search className="w-5 h-5" />
-                  </button>
-                  <button onClick={() => setShowReaderSettings(true)} className="text-orange-500 p-1" aria-label="Text settings">
-                    <Type className="w-5 h-5" />
-                  </button>
-                  <button onClick={() => setMode(isDay ? "night" : "day")} className="text-orange-500 p-1" aria-label="Theme">
-                    {isDay ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-                  </button>
-                  <button
-                    onClick={() => setShowLangPicker(true)}
-                    className="text-orange-500 shrink-0 flex items-center gap-1 text-sm p-1"
-                    aria-label="Language"
-                  >
-                    <Globe className="w-4 h-4" />
-                    <span className="uppercase tracking-wider text-xs font-semibold">{translation}</span>
-                  </button>
-                  <button
-                    onClick={() => setShowReaderSettings(true)}
-                    className="text-orange-500 p-1"
-                    aria-label="Audio"
-                  >
-                    <Headphones className="w-5 h-5" />
-                  </button>
-                </div>
+              {/* Minimal top row: back + book/chapter + menu */}
+              <div className="flex items-center px-4 pt-3 pb-3 gap-2">
+                <button
+                  onClick={() => {
+                    if (onExitToOrigin) {
+                      setArrivedViaRef(false);
+                      onExitToOrigin();
+                    } else {
+                      setView("chapters");
+                    }
+                  }}
+                  className="text-orange-500 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -ml-2"
+                  aria-label="Back"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <h2 className="text-[17px] sm:text-[19px] font-semibold truncate flex-1 text-center">
+                  {`${bookName(currentBook)} ${chapterIdx + 1}`}
+                </h2>
+                <button
+                  onClick={() => setShowBibleMenu(true)}
+                  className="text-orange-500 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2"
+                  aria-label="Menu"
+                >
+                  <Menu className="w-6 h-6" />
+                </button>
               </div>
               {arrivedViaRef && onExitToOrigin && (
                 <div className="px-4 pb-3">
@@ -831,99 +844,48 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
               )}
             </div>
 
-            <div className="px-4 sm:px-5 pt-4 pb-10 max-w-[760px] mx-auto space-y-3">
-              {currentVerses.map((text, index) => {
-                const verseNumber = index + 1;
-                const chapterNumber = chapterIdx + 1;
-                const fav = isFav(currentBook.name, chapterNumber, verseNumber);
-                const noteKey = noteKeyFor(currentBook.name, chapterNumber, verseNumber);
-                const hasNote = !!notes[noteKey];
-                const isActive = verseIdx === index;
-                const refLabel = `${bookName(currentBook)} ${chapterNumber}:${verseNumber}`;
-
-                return (
-                  <div
-                    key={index}
-                    ref={(el) => { verseRefsRef.current[index] = el; }}
-                    onTouchStart={() => startLongPress(index)}
-                    onTouchEnd={cancelLongPress}
-                    onTouchMove={cancelLongPress}
-                    onTouchCancel={cancelLongPress}
-                    onContextMenu={(e) => { e.preventDefault(); setActionVerse(index); }}
-                    onClick={() => {
-                      if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
-                      // Single tap: select verse only — do not autoplay.
-                      setVerseIdx(index);
-                      updateMediaSession(bookIdx, chapterIdx, index);
-                    }}
-                    onDoubleClick={() => {
-                      // Double tap: select verse only. Audio must be started
-                      // intentionally from the Reading Settings panel.
-                      setVerseIdx(index);
-                      updateMediaSession(bookIdx, chapterIdx, index);
-                    }}
-                    className={`rounded-xl border p-4 transition-colors cursor-pointer select-none ${
-                      isActive
-                        ? "border-orange-500 bg-orange-500/15 ring-1 ring-orange-500"
-                        : card
-                    }`}
-                  >
-                    <p className={`${fontClass}`} style={{ fontSize: `${fontSize}px`, lineHeight }}>
-                      <span className="text-orange-500 font-bold mr-2">{verseNumber}</span>
-                      {text}
-                    </p>
-
-                    {hasNote && (
-                      <p
-                        className={`mt-3 text-[13px] italic px-3 py-2 rounded-lg border-l-2 border-orange-500 ${
-                          isDay ? "bg-orange-50 text-zinc-700" : "bg-orange-500/10 text-zinc-300"
-                        }`}
+            <div className="px-5 sm:px-6 pt-5 pb-10 max-w-[720px] mx-auto">
+              <p
+                className={`${fontClass} tracking-normal`}
+                style={{ fontSize: `${fontSize}px`, lineHeight }}
+              >
+                {currentVerses.map((text, index) => {
+                  const verseNumber = index + 1;
+                  const chapterNumber = chapterIdx + 1;
+                  const isActive = verseIdx === index;
+                  const hl = isHighlighted(currentBook.name, chapterNumber, verseNumber);
+                  const noteKey = noteKeyFor(currentBook.name, chapterNumber, verseNumber);
+                  const hasNote = !!notes[noteKey];
+                  return (
+                    <span
+                      key={index}
+                      ref={(el) => { verseRefsRef.current[index] = el as any; }}
+                      onTouchStart={() => startLongPress(index)}
+                      onTouchEnd={cancelLongPress}
+                      onTouchMove={cancelLongPress}
+                      onTouchCancel={cancelLongPress}
+                      onContextMenu={(e) => { e.preventDefault(); setActionVerse(index); }}
+                      onClick={() => {
+                        if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
+                        setVerseIdx(index);
+                        updateMediaSession(bookIdx, chapterIdx, index);
+                      }}
+                      className={`cursor-pointer select-none transition-colors rounded-sm ${
+                        hl ? (isDay ? "bg-orange-200/60" : "bg-orange-500/25") : ""
+                      } ${isActive ? (isDay ? "bg-orange-100" : "bg-orange-500/15") : ""}`}
+                    >
+                      <sup
+                        onClick={(e) => { e.stopPropagation(); setActionVerse(index); }}
+                        className="text-orange-500 font-bold mr-1 text-[0.72em] align-super cursor-pointer"
                       >
-                        {notes[noteKey]}
-                      </p>
-                    )}
-
-                    <div className="flex items-center justify-end gap-1 mt-3" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => copyVerse(text, refLabel)}
-                        className={`${copiedKey === refLabel ? "text-orange-500" : "text-zinc-500"} min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg`}
-                        aria-label={tr("copy", "Copy")}
-                      >
-                        {copiedKey === refLabel ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                      </button>
-                      <button
-                        onClick={() => shareVerseImage(text, refLabel)}
-                        className="text-zinc-500 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg"
-                        aria-label={tr("share", "Share")}
-                      >
-                        <Share2 className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => openNoteFor(currentBook.name, chapterNumber, verseNumber)}
-                        className={`${hasNote ? "text-orange-500" : "text-zinc-500"} min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg`}
-                        aria-label={tr("bible_note", "Note")}
-                      >
-                        <StickyNote className="w-5 h-5" fill={hasNote ? "currentColor" : "none"} />
-                      </button>
-                      <button
-                        onClick={() =>
-                          toggleFavorite({
-                            translation,
-                            book: currentBook.name,
-                            chapter: chapterNumber,
-                            verse: verseNumber,
-                            text,
-                          })
-                        }
-                        className={`${fav ? "text-orange-500" : "text-zinc-500"} min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg`}
-                        aria-label={tr("favorite", "Favorite")}
-                      >
-                        <Star className="w-5 h-5" fill={fav ? "currentColor" : "none"} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+                        {verseNumber}
+                        {hasNote && <span className="ml-0.5 text-orange-500">•</span>}
+                      </sup>
+                      {text}{" "}
+                    </span>
+                  );
+                })}
+              </p>
 
               <div className="flex justify-between pt-2">
                 <button
@@ -1148,6 +1110,74 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
         </div>
       )}
 
+      {showBibleMenu && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setShowBibleMenu(false)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full rounded-t-2xl p-4 pb-[calc(env(safe-area-inset-bottom)+20px)] ${
+              isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
+            }`}
+          >
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-zinc-500/40" />
+            <div className="grid grid-cols-1 gap-1">
+              {[
+                {
+                  icon: <Search className="w-5 h-5" />,
+                  label: tr("bible_search", "Search the Bible"),
+                  onClick: () => { setShowBibleMenu(false); setView("search"); },
+                },
+                {
+                  icon: <Headphones className="w-5 h-5" />,
+                  label: tr("bible_audio", "Audio Bible"),
+                  onClick: () => { setShowBibleMenu(false); setShowReaderSettings(true); },
+                },
+                {
+                  icon: <Globe className="w-5 h-5" />,
+                  label: `${tr("bible_translation", "Bible Translation")} · ${translation.toUpperCase()}`,
+                  onClick: () => { setShowBibleMenu(false); setShowLangPicker(true); },
+                },
+                {
+                  icon: <Type className="w-5 h-5" />,
+                  label: tr("font_size", "Font size"),
+                  onClick: () => { setShowBibleMenu(false); setShowReaderSettings(true); },
+                },
+                {
+                  icon: isDay ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />,
+                  label: isDay ? tr("dark_mode", "Dark Mode") : tr("light_mode", "Light Mode"),
+                  onClick: () => { setMode(isDay ? "night" : "day"); setShowBibleMenu(false); },
+                },
+                {
+                  icon: <BookMarked className="w-5 h-5" />,
+                  label: tr("bible_go_to", "Go to book / chapter"),
+                  onClick: () => { setShowBibleMenu(false); setView("books"); },
+                },
+                {
+                  icon: <Star className="w-5 h-5" />,
+                  label: tr("favorites", "Favorites"),
+                  onClick: () => { setShowBibleMenu(false); setView("favorites"); },
+                },
+                {
+                  icon: <Type className="w-5 h-5" />,
+                  label: tr("bible_reading_settings", "Reading Settings"),
+                  onClick: () => { setShowBibleMenu(false); setShowReaderSettings(true); },
+                },
+              ].map((item, i) => (
+                <button
+                  key={i}
+                  onClick={item.onClick}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-left min-h-[48px] ${
+                    isDay ? "hover:bg-zinc-100" : "hover:bg-zinc-900"
+                  }`}
+                >
+                  <span className="text-orange-500">{item.icon}</span>
+                  <span className="text-[15px] font-medium">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {openNoteKey && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setOpenNoteKey(null)}>
           <div
@@ -1243,6 +1273,18 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                   icon: <StickyNote className="w-5 h-5" />,
                   label: tr("bible_add_note", "Add Note"),
                   onClick: () => { openNoteFor(currentBook.name, chapterIdx + 1, actionVerse! + 1); setActionVerse(null); },
+                },
+                {
+                  icon: <Highlighter className="w-5 h-5" />,
+                  label: isHighlighted(currentBook.name, chapterIdx + 1, actionVerse + 1)
+                    ? tr("bible_remove_highlight", "Remove Highlight")
+                    : tr("bible_highlight", "Highlight"),
+                  onClick: () => { toggleHighlight(currentBook.name, chapterIdx + 1, actionVerse! + 1); setActionVerse(null); },
+                },
+                {
+                  icon: <Link2 className="w-5 h-5" />,
+                  label: tr("bible_copy_reference", "Copy Reference"),
+                  onClick: () => { copyReference(`${bookName(currentBook)} ${chapterIdx + 1}:${actionVerse! + 1}`); setActionVerse(null); },
                 },
               ].map((item, i) => (
                 <button
