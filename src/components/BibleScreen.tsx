@@ -356,6 +356,25 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
     setOpenNoteKey(null);
   };
 
+  const toggleHighlight = (book: string, chapter: number, verse: number) => {
+    const key = noteKeyFor(book, chapter, verse);
+    const next = { ...highlights };
+    if (next[key]) delete next[key];
+    else next[key] = true;
+    setHighlights(next);
+    saveHighlights(next);
+  };
+  const isHighlighted = (book: string, chapter: number, verse: number) =>
+    !!highlights[noteKeyFor(book, chapter, verse)];
+
+  const copyReference = async (ref: string) => {
+    try {
+      await navigator.clipboard.writeText(ref);
+      setCopiedKey(ref);
+      setTimeout(() => setCopiedKey(null), 1500);
+    } catch {}
+  };
+
   const updateMediaSession = (bIdx: number, cIdx: number, vIdx: number) => {
     if (!("mediaSession" in navigator) || !books) return;
     const book = books[bIdx];
