@@ -110,6 +110,18 @@ function saveNotes(notes: Record<string, string>) {
   localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
 }
 
+function loadHighlights(): Record<string, boolean> {
+  try {
+    return JSON.parse(localStorage.getItem(HIGHLIGHT_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveHighlights(h: Record<string, boolean>) {
+  localStorage.setItem(HIGHLIGHT_KEY, JSON.stringify(h));
+}
+
 const APP_LANG_TO_BIBLE: Record<string, string> = { en: "kjv", es: "rvr", pt: "aa" };
 
 interface BibleScreenProps {
