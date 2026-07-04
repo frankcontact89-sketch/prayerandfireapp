@@ -178,8 +178,8 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   const [highlights, setHighlights] = useState<Record<string, boolean>>(loadHighlights);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const [fontSize, setFontSize] = useState(() => Number(localStorage.getItem(FONT_SIZE_KEY) || 19));
-  const [lineHeight, setLineHeight] = useState(() => Number(localStorage.getItem(LINE_HEIGHT_KEY) || 1.7));
+  const [fontSize, setFontSize] = useState(() => Number(localStorage.getItem(FONT_SIZE_KEY) || 20));
+  const [lineHeight, setLineHeight] = useState(() => Number(localStorage.getItem(LINE_HEIGHT_KEY) || 1.85));
   const [fontFamily, setFontFamily] = useState(() => localStorage.getItem(FONT_KEY) || "system");
 
   const [verseIdx, setVerseIdx] = useState(() => Number(localStorage.getItem(VERSE_KEY) || 0));
@@ -797,7 +797,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
               }`}
             >
               {/* Minimal top row: back + book/chapter + menu */}
-              <div className="flex items-center px-4 pt-2 pb-2 gap-2">
+              <div className="flex items-center px-4 pt-1.5 pb-1.5 gap-2">
                 <button
                   onClick={() => {
                     if (onExitToOrigin) {
@@ -844,12 +844,12 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
               )}
             </div>
 
-            <div className="px-4 sm:px-5 pt-3 pb-10 max-w-[680px] mx-auto">
+            <div className="px-4 pt-3 pb-10 max-w-[680px] mx-auto">
               <p
                 className={`${fontClass} tracking-normal font-normal`}
                 style={{
                   fontSize: `${fontSize}px`,
-                  lineHeight: 1.8,
+                  lineHeight: 1.85,
                   wordSpacing: "0.02em",
                   WebkitFontSmoothing: "antialiased",
                 }}
@@ -881,7 +881,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                     >
                       <sup
                         onClick={(e) => { e.stopPropagation(); setActionVerse(index); }}
-                        className="mr-1 align-super cursor-pointer"
+                        className="mr-0.5 align-super cursor-pointer"
                         style={{ fontSize: "12px", fontWeight: 600, color: "#F97316", lineHeight: 1 }}
                       >
                         {verseNumber}
