@@ -178,7 +178,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   const [highlights, setHighlights] = useState<Record<string, boolean>>(loadHighlights);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const [fontSize, setFontSize] = useState(() => Number(localStorage.getItem(FONT_SIZE_KEY) || 17));
+  const [fontSize, setFontSize] = useState(() => Number(localStorage.getItem(FONT_SIZE_KEY) || 19));
   const [lineHeight, setLineHeight] = useState(() => Number(localStorage.getItem(LINE_HEIGHT_KEY) || 1.7));
   const [fontFamily, setFontFamily] = useState(() => localStorage.getItem(FONT_KEY) || "system");
 
