@@ -845,99 +845,48 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
               )}
             </div>
 
-            <div className="px-4 sm:px-5 pt-4 pb-10 max-w-[760px] mx-auto space-y-3">
-              {currentVerses.map((text, index) => {
-                const verseNumber = index + 1;
-                const chapterNumber = chapterIdx + 1;
-                const fav = isFav(currentBook.name, chapterNumber, verseNumber);
-                const noteKey = noteKeyFor(currentBook.name, chapterNumber, verseNumber);
-                const hasNote = !!notes[noteKey];
-                const isActive = verseIdx === index;
-                const refLabel = `${bookName(currentBook)} ${chapterNumber}:${verseNumber}`;
-
-                return (
-                  <div
-                    key={index}
-                    ref={(el) => { verseRefsRef.current[index] = el; }}
-                    onTouchStart={() => startLongPress(index)}
-                    onTouchEnd={cancelLongPress}
-                    onTouchMove={cancelLongPress}
-                    onTouchCancel={cancelLongPress}
-                    onContextMenu={(e) => { e.preventDefault(); setActionVerse(index); }}
-                    onClick={() => {
-                      if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
-                      // Single tap: select verse only — do not autoplay.
-                      setVerseIdx(index);
-                      updateMediaSession(bookIdx, chapterIdx, index);
-                    }}
-                    onDoubleClick={() => {
-                      // Double tap: select verse only. Audio must be started
-                      // intentionally from the Reading Settings panel.
-                      setVerseIdx(index);
-                      updateMediaSession(bookIdx, chapterIdx, index);
-                    }}
-                    className={`rounded-xl border p-4 transition-colors cursor-pointer select-none ${
-                      isActive
-                        ? "border-orange-500 bg-orange-500/15 ring-1 ring-orange-500"
-                        : card
-                    }`}
-                  >
-                    <p className={`${fontClass}`} style={{ fontSize: `${fontSize}px`, lineHeight }}>
-                      <span className="text-orange-500 font-bold mr-2">{verseNumber}</span>
-                      {text}
-                    </p>
-
-                    {hasNote && (
-                      <p
-                        className={`mt-3 text-[13px] italic px-3 py-2 rounded-lg border-l-2 border-orange-500 ${
-                          isDay ? "bg-orange-50 text-zinc-700" : "bg-orange-500/10 text-zinc-300"
-                        }`}
+            <div className="px-5 sm:px-6 pt-5 pb-10 max-w-[720px] mx-auto">
+              <p
+                className={`${fontClass} tracking-normal`}
+                style={{ fontSize: `${fontSize}px`, lineHeight }}
+              >
+                {currentVerses.map((text, index) => {
+                  const verseNumber = index + 1;
+                  const chapterNumber = chapterIdx + 1;
+                  const isActive = verseIdx === index;
+                  const hl = isHighlighted(currentBook.name, chapterNumber, verseNumber);
+                  const noteKey = noteKeyFor(currentBook.name, chapterNumber, verseNumber);
+                  const hasNote = !!notes[noteKey];
+                  return (
+                    <span
+                      key={index}
+                      ref={(el) => { verseRefsRef.current[index] = el as any; }}
+                      onTouchStart={() => startLongPress(index)}
+                      onTouchEnd={cancelLongPress}
+                      onTouchMove={cancelLongPress}
+                      onTouchCancel={cancelLongPress}
+                      onContextMenu={(e) => { e.preventDefault(); setActionVerse(index); }}
+                      onClick={() => {
+                        if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
+                        setVerseIdx(index);
+                        updateMediaSession(bookIdx, chapterIdx, index);
+                      }}
+                      className={`cursor-pointer select-none transition-colors rounded-sm ${
+                        hl ? (isDay ? "bg-orange-200/60" : "bg-orange-500/25") : ""
+                      } ${isActive ? (isDay ? "bg-orange-100" : "bg-orange-500/15") : ""}`}
+                    >
+                      <sup
+                        onClick={(e) => { e.stopPropagation(); setActionVerse(index); }}
+                        className="text-orange-500 font-bold mr-1 text-[0.72em] align-super cursor-pointer"
                       >
-                        {notes[noteKey]}
-                      </p>
-                    )}
-
-                    <div className="flex items-center justify-end gap-1 mt-3" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => copyVerse(text, refLabel)}
-                        className={`${copiedKey === refLabel ? "text-orange-500" : "text-zinc-500"} min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg`}
-                        aria-label={tr("copy", "Copy")}
-                      >
-                        {copiedKey === refLabel ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                      </button>
-                      <button
-                        onClick={() => shareVerseImage(text, refLabel)}
-                        className="text-zinc-500 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg"
-                        aria-label={tr("share", "Share")}
-                      >
-                        <Share2 className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => openNoteFor(currentBook.name, chapterNumber, verseNumber)}
-                        className={`${hasNote ? "text-orange-500" : "text-zinc-500"} min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg`}
-                        aria-label={tr("bible_note", "Note")}
-                      >
-                        <StickyNote className="w-5 h-5" fill={hasNote ? "currentColor" : "none"} />
-                      </button>
-                      <button
-                        onClick={() =>
-                          toggleFavorite({
-                            translation,
-                            book: currentBook.name,
-                            chapter: chapterNumber,
-                            verse: verseNumber,
-                            text,
-                          })
-                        }
-                        className={`${fav ? "text-orange-500" : "text-zinc-500"} min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg`}
-                        aria-label={tr("favorite", "Favorite")}
-                      >
-                        <Star className="w-5 h-5" fill={fav ? "currentColor" : "none"} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+                        {verseNumber}
+                        {hasNote && <span className="ml-0.5 text-orange-500">•</span>}
+                      </sup>
+                      {text}{" "}
+                    </span>
+                  );
+                })}
+              </p>
 
               <div className="flex justify-between pt-2">
                 <button
