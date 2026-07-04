@@ -1111,6 +1111,74 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
         </div>
       )}
 
+      {showBibleMenu && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setShowBibleMenu(false)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full rounded-t-2xl p-4 pb-[calc(env(safe-area-inset-bottom)+20px)] ${
+              isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
+            }`}
+          >
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-zinc-500/40" />
+            <div className="grid grid-cols-1 gap-1">
+              {[
+                {
+                  icon: <Search className="w-5 h-5" />,
+                  label: tr("bible_search", "Search the Bible"),
+                  onClick: () => { setShowBibleMenu(false); setView("search"); },
+                },
+                {
+                  icon: <Headphones className="w-5 h-5" />,
+                  label: tr("bible_audio", "Audio Bible"),
+                  onClick: () => { setShowBibleMenu(false); setShowReaderSettings(true); },
+                },
+                {
+                  icon: <Globe className="w-5 h-5" />,
+                  label: `${tr("bible_translation", "Bible Translation")} · ${translation.toUpperCase()}`,
+                  onClick: () => { setShowBibleMenu(false); setShowLangPicker(true); },
+                },
+                {
+                  icon: <Type className="w-5 h-5" />,
+                  label: tr("font_size", "Font size"),
+                  onClick: () => { setShowBibleMenu(false); setShowReaderSettings(true); },
+                },
+                {
+                  icon: isDay ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />,
+                  label: isDay ? tr("dark_mode", "Dark Mode") : tr("light_mode", "Light Mode"),
+                  onClick: () => { setMode(isDay ? "night" : "day"); setShowBibleMenu(false); },
+                },
+                {
+                  icon: <BookMarked className="w-5 h-5" />,
+                  label: tr("bible_go_to", "Go to book / chapter"),
+                  onClick: () => { setShowBibleMenu(false); setView("books"); },
+                },
+                {
+                  icon: <Star className="w-5 h-5" />,
+                  label: tr("favorites", "Favorites"),
+                  onClick: () => { setShowBibleMenu(false); setView("favorites"); },
+                },
+                {
+                  icon: <Type className="w-5 h-5" />,
+                  label: tr("bible_reading_settings", "Reading Settings"),
+                  onClick: () => { setShowBibleMenu(false); setShowReaderSettings(true); },
+                },
+              ].map((item, i) => (
+                <button
+                  key={i}
+                  onClick={item.onClick}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-xl text-left min-h-[48px] ${
+                    isDay ? "hover:bg-zinc-100" : "hover:bg-zinc-900"
+                  }`}
+                >
+                  <span className="text-orange-500">{item.icon}</span>
+                  <span className="text-[15px] font-medium">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {openNoteKey && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setOpenNoteKey(null)}>
           <div
