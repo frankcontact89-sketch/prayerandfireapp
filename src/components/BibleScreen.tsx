@@ -1281,10 +1281,8 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
 
       {selectedVerses.size > 0 && currentBook && (
-        <div className="fixed inset-x-0 bottom-0 z-40 pointer-events-none">
-          <div
-            className={`pointer-events-auto mx-auto max-w-[720px] px-4 pb-[calc(env(safe-area-inset-bottom)+12px)]`}
-          >
+        <div className="fixed inset-x-0 top-[calc(env(safe-area-inset-top)+56px)] z-50 pointer-events-none">
+          <div className="pointer-events-auto mx-auto max-w-[720px] px-3">
             <div
               className={`rounded-2xl shadow-2xl border ${
                 isDay ? "bg-white border-zinc-200 text-zinc-900" : "bg-zinc-950 border-zinc-800 text-white"
