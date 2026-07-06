@@ -864,8 +864,9 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
             </div>
 
             <div className="px-4 pt-3 pb-10 max-w-[680px] mx-auto">
-              <p
-                className={`${fontClass} tracking-normal font-normal`}
+              {/* Chapter drop-cap */}
+              <div
+                className={`${fontClass} font-normal`}
                 style={{
                   fontSize: `${fontSize}px`,
                   lineHeight: 1.85,
@@ -873,6 +874,20 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                   WebkitFontSmoothing: "antialiased",
                 }}
               >
+                <span
+                  aria-hidden
+                  className="float-left mr-3 font-serif"
+                  style={{
+                    fontSize: `${fontSize * 3.8}px`,
+                    lineHeight: 0.9,
+                    color: "#B23A1A",
+                    fontWeight: 700,
+                    marginTop: "4px",
+                  }}
+                >
+                  {chapterIdx + 1}
+                </span>
+
                 {currentVerses.map((text, index) => {
                   const verseNumber = index + 1;
                   const chapterNumber = chapterIdx + 1;
@@ -880,37 +895,51 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                   const hl = isHighlighted(currentBook.name, chapterNumber, verseNumber);
                   const noteKey = noteKeyFor(currentBook.name, chapterNumber, verseNumber);
                   const hasNote = !!notes[noteKey];
+                  const isSelected = selectedVerses.has(index);
                   return (
-                    <span
+                    <p
                       key={index}
                       ref={(el) => { verseRefsRef.current[index] = el as any; }}
                       onTouchStart={() => startLongPress(index)}
                       onTouchEnd={cancelLongPress}
                       onTouchMove={cancelLongPress}
                       onTouchCancel={cancelLongPress}
-                      onContextMenu={(e) => { e.preventDefault(); setActionVerse(index); }}
+                      onContextMenu={(e) => { e.preventDefault(); toggleSelectVerse(index); }}
                       onClick={() => {
                         if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
+                        if (selectedVerses.size > 0) {
+                          toggleSelectVerse(index);
+                          return;
+                        }
                         setVerseIdx(index);
                         updateMediaSession(bookIdx, chapterIdx, index);
                       }}
-                      className={`cursor-pointer select-none transition-colors rounded-sm ${
-                        hl ? (isDay ? "bg-orange-200/60" : "bg-orange-500/25") : ""
-                      } ${isActive ? (isDay ? "bg-orange-100" : "bg-orange-500/15") : ""}`}
+                      className={`cursor-pointer select-none transition-colors rounded-md px-1 -mx-1 ${
+                        index === 0 ? "mb-4" : "my-4"
+                      } ${
+                        isSelected
+                          ? (isDay ? "bg-orange-300/60 ring-2 ring-orange-500" : "bg-orange-500/30 ring-2 ring-orange-500")
+                          : hl
+                            ? (isDay ? "bg-orange-200/60" : "bg-orange-500/25")
+                            : isActive
+                              ? (isDay ? "bg-orange-100" : "bg-orange-500/15")
+                              : ""
+                      }`}
                     >
                       <sup
-                        onClick={(e) => { e.stopPropagation(); setActionVerse(index); }}
-                        className="mr-0.5 align-super cursor-pointer"
-                        style={{ fontSize: "12px", fontWeight: 600, color: "#F97316", lineHeight: 1 }}
+                        onClick={(e) => { e.stopPropagation(); toggleSelectVerse(index); }}
+                        className="mr-1 align-super cursor-pointer"
+                        style={{ fontSize: "12px", fontWeight: 700, color: "#F97316", lineHeight: 1 }}
                       >
                         {verseNumber}
                         {hasNote && <span className="ml-0.5 text-orange-500">•</span>}
                       </sup>
-                      {text}{" "}
-                    </span>
+                      {text}
+                    </p>
                   );
                 })}
-              </p>
+                <div className="clear-both" />
+              </div>
 
               <div className="flex justify-between pt-2">
                 <button
