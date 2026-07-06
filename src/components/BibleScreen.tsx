@@ -1233,14 +1233,19 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
       )}
 
       {openNoteKey && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setOpenNoteKey(null)}>
+        <div
+          className="fixed inset-0 z-50 bg-black/70 flex items-start justify-center p-4 overflow-y-auto"
+          style={{ paddingTop: `calc(env(safe-area-inset-top) + 24px)` }}
+          onClick={() => setOpenNoteKey(null)}
+        >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`w-full rounded-t-2xl p-5 pb-[calc(env(safe-area-inset-bottom)+20px)] ${
+            className={`w-full max-w-md rounded-2xl p-4 flex flex-col gap-3 ${
               isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
             }`}
+            style={{ maxHeight: "70vh" }}
           >
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2">
               <StickyNote className="w-5 h-5 text-orange-500" />
               <h3 className="text-[18px] font-semibold">{tr("bible_note", "Note")}</h3>
             </div>
@@ -1250,13 +1255,13 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
               value={noteDraft}
               onChange={(e) => setNoteDraft(e.target.value)}
               placeholder={tr("bible_note_placeholder", "Write your personal note for this verse…")}
-              rows={6}
-              className={`w-full rounded-xl border p-3 bg-transparent outline-none resize-none text-[15px] ${
+              rows={4}
+              className={`w-full flex-1 min-h-[120px] rounded-xl border p-3 bg-transparent outline-none resize-none text-[15px] ${
                 isDay ? "border-zinc-200" : "border-zinc-800"
               }`}
             />
 
-            <div className="flex items-center gap-2 mt-4">
+            <div className="flex items-center gap-2">
               <button
                 onClick={deleteCurrentNote}
                 className={`px-4 py-2.5 rounded-xl border text-sm flex items-center gap-2 ${
@@ -1281,7 +1286,10 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
 
       {selectedVerses.size > 0 && currentBook && (
-        <div className="fixed inset-x-0 top-[calc(env(safe-area-inset-top)+56px)] z-50 pointer-events-none">
+        <div
+          className="fixed inset-x-0 z-50 pointer-events-none"
+          style={{ bottom: `calc(env(safe-area-inset-bottom) + 88px)` }}
+        >
           <div className="pointer-events-auto mx-auto max-w-[720px] px-3">
             <div
               className={`rounded-2xl shadow-2xl border ${
