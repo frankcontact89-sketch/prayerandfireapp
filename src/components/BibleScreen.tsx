@@ -1280,6 +1280,122 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
       )}
 
 
+      {selectedVerses.size > 0 && currentBook && (
+        <div className="fixed inset-x-0 bottom-0 z-40 pointer-events-none">
+          <div
+            className={`pointer-events-auto mx-auto max-w-[720px] px-4 pb-[calc(env(safe-area-inset-bottom)+12px)]`}
+          >
+            <div
+              className={`rounded-2xl shadow-2xl border ${
+                isDay ? "bg-white border-zinc-200 text-zinc-900" : "bg-zinc-950 border-zinc-800 text-white"
+              }`}
+            >
+              <div className="flex items-center justify-between px-4 pt-3">
+                <p className="text-sm font-semibold">
+                  {selectedVerses.size}{" "}
+                  {selectedVerses.size === 1
+                    ? tr("bible_verse_selected_one", "verse selected")
+                    : tr("bible_verse_selected_many", "verses selected")}
+                </p>
+                <button
+                  onClick={clearSelection}
+                  className="text-orange-500 min-w-[44px] min-h-[44px] -mr-2 flex items-center justify-end"
+                  aria-label="Clear selection"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-5 gap-1 px-2 pb-3">
+                {(() => {
+                  const sorted = Array.from(selectedVerses).sort((a, b) => a - b);
+                  const chapterN = chapterIdx + 1;
+                  const bookLabel = bookName(currentBook);
+                  const collectRef = () => {
+                    // Build compact reference like "Book 3:1,3-5"
+                    const parts: string[] = [];
+                    let i = 0;
+                    while (i < sorted.length) {
+                      let j = i;
+                      while (j + 1 < sorted.length && sorted[j + 1] === sorted[j] + 1) j++;
+                      parts.push(i === j ? `${sorted[i] + 1}` : `${sorted[i] + 1}-${sorted[j] + 1}`);
+                      i = j + 1;
+                    }
+                    return `${bookLabel} ${chapterN}:${parts.join(",")}`;
+                  };
+                  const collectText = () =>
+                    sorted
+                      .map((idx) => `${idx + 1} ${currentVerses[idx]}`)
+                      .join(" ");
+                  const applyAll = (fn: (idx: number) => void) => {
+                    sorted.forEach(fn);
+                  };
+                  const isSingle = sorted.length === 1;
+                  const singleIdx = sorted[0];
+                  return [
+                    {
+                      icon: <Copy className="w-5 h-5" />,
+                      label: tr("copy", "Copy"),
+                      onClick: () => { copyVerse(collectText(), collectRef()); clearSelection(); },
+                    },
+                    {
+                      icon: <Highlighter className="w-5 h-5" />,
+                      label: tr("bible_highlight", "Highlight"),
+                      onClick: () => {
+                        applyAll((idx) => toggleHighlight(currentBook.name, chapterN, idx + 1));
+                        clearSelection();
+                      },
+                    },
+                    {
+                      icon: <Star className="w-5 h-5" />,
+                      label: tr("favorite", "Favorite"),
+                      onClick: () => {
+                        applyAll((idx) =>
+                          toggleFavorite({
+                            translation,
+                            book: currentBook.name,
+                            chapter: chapterN,
+                            verse: idx + 1,
+                            text: currentVerses[idx],
+                          }),
+                        );
+                        clearSelection();
+                      },
+                    },
+                    {
+                      icon: <Share2 className="w-5 h-5" />,
+                      label: tr("share", "Share"),
+                      onClick: () => { shareVerseImage(collectText(), collectRef()); clearSelection(); },
+                    },
+                    {
+                      icon: <StickyNote className="w-5 h-5" />,
+                      label: tr("bible_add_note", "Note"),
+                      onClick: () => {
+                        if (!isSingle) return;
+                        openNoteFor(currentBook.name, chapterN, singleIdx + 1);
+                        clearSelection();
+                      },
+                      disabled: !isSingle,
+                    },
+                  ].map((item, i) => (
+                    <button
+                      key={i}
+                      onClick={item.onClick}
+                      disabled={(item as any).disabled}
+                      className={`flex flex-col items-center gap-1 py-2 rounded-xl min-h-[56px] ${
+                        (item as any).disabled ? "opacity-30" : isDay ? "hover:bg-zinc-100" : "hover:bg-zinc-900"
+                      }`}
+                    >
+                      <span className="text-orange-500">{item.icon}</span>
+                      <span className="text-[11px] font-medium">{item.label}</span>
+                    </button>
+                  ));
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {actionVerse !== null && currentBook && currentVerses[actionVerse] !== undefined && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setActionVerse(null)}>
           <div
