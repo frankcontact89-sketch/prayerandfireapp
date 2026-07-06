@@ -189,6 +189,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   const longPressTimerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
   const [actionVerse, setActionVerse] = useState<number | null>(null);
+  const [selectedVerses, setSelectedVerses] = useState<Set<number>>(new Set());
   const [showResumeBanner, setShowResumeBanner] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [arrivedViaRef, setArrivedViaRef] = useState(false);
@@ -564,10 +565,28 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
     longPressTimerRef.current = window.setTimeout(() => {
       longPressFiredRef.current = true;
-      setActionVerse(idx);
+      setSelectedVerses((prev) => {
+        const next = new Set(prev);
+        if (next.has(idx)) next.delete(idx); else next.add(idx);
+        return next;
+      });
       if (navigator.vibrate) try { navigator.vibrate(15); } catch {}
     }, 450);
   };
+
+  const toggleSelectVerse = (idx: number) => {
+    setSelectedVerses((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx); else next.add(idx);
+      return next;
+    });
+  };
+  const clearSelection = () => setSelectedVerses(new Set());
+
+  // Clear selection when chapter/book/translation changes.
+  useEffect(() => {
+    setSelectedVerses(new Set());
+  }, [bookIdx, chapterIdx, translation]);
   const cancelLongPress = () => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
