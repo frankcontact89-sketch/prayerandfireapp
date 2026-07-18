@@ -264,21 +264,6 @@ export function MeetingsScreen({ t, onBack }: MeetingsScreenProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Donor status badge */}
-                {isDonor && (
-                  <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                      <Crown className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-primary flex items-center gap-1">
-                        <Infinity className="w-4 h-4" /> Tiempo ilimitado
-                      </p>
-                      <p className="text-xs text-muted-foreground">Gracias por tu donación $6.99+</p>
-                    </div>
-                  </div>
-                )}
-
                 {/* Leader toggle */}
                 <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/30">
                   <div>
