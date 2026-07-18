@@ -197,21 +197,6 @@ export function VideoCallScreen({ t, onBack }: VideoCallScreenProps) {
                 <CardDescription>Inicia o únete a una videollamada con código.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Donor badge */}
-                {isDonor && (
-                  <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                      <Crown className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-primary flex items-center gap-1">
-                        <Infinity className="w-4 h-4" /> Tiempo ilimitado
-                      </p>
-                      <p className="text-xs text-muted-foreground">Gracias por tu donación $6.99+</p>
-                    </div>
-                  </div>
-                )}
-
                 {/* Leader toggle */}
                 <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/30">
                   <div>
@@ -295,13 +280,6 @@ export function VideoCallScreen({ t, onBack }: VideoCallScreenProps) {
                   </div>
                 )}
 
-                {/* Free plan notice */}
-                {!isDonor && (
-                  <div className="rounded-xl border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
-                    <p className="font-semibold text-foreground mb-1">Plan gratuito</p>
-                    <p>Límite: 30 min. Dona $6.99+ para llamadas sin límite.</p>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </>
@@ -311,15 +289,9 @@ export function VideoCallScreen({ t, onBack }: VideoCallScreenProps) {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Llamada en curso</CardTitle>
-                {isDonor && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-primary/20 border border-primary/40 text-primary flex items-center gap-1">
-                    <Crown className="w-3 h-3" /> Ilimitado
-                  </span>
-                )}
               </div>
               <CardDescription>
                 {activeCode ? `Código: ${activeCode}` : ""}
-                {isDonor && " • Sin límite de tiempo"}
               </CardDescription>
             </CardHeader>
             <CardContent>
