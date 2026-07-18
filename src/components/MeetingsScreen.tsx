@@ -374,11 +374,7 @@ export function MeetingsScreen({ t, onBack }: MeetingsScreenProps) {
             </Card>
 
             <p className="text-xs text-muted-foreground text-center">
-              {isDonor ? (
-                <span className="text-primary">✓ Reuniones sin límite de tiempo</span>
-              ) : (
-                "Gratis • Acceso por código • Sin link público"
-              )}
+              Gratis • Acceso por código • Sin link público
             </p>
           </>
         ) : (
@@ -387,15 +383,9 @@ export function MeetingsScreen({ t, onBack }: MeetingsScreenProps) {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Reunión en curso</CardTitle>
-                {isDonor && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-primary/20 border border-primary/40 text-primary flex items-center gap-1">
-                    <Crown className="w-3 h-3" /> Ilimitado
-                  </span>
-                )}
               </div>
               <CardDescription>
                 {activeCode ? `Código: ${activeCode}` : "Acceso por código"}
-                {isDonor && " • Sin límite de tiempo"}
               </CardDescription>
             </CardHeader>
             <CardContent>
