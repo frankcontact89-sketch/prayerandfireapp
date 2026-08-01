@@ -313,23 +313,68 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   const speechLang =
     translation === "rvr" ? "es-ES" : translation === "aa" ? "pt-BR" : "en-US";
 
-  const searchResults = useMemo(() => {
+  type SearchResult =
+    | { kind: "book"; book: Book; bIdx: number }
+    | { kind: "ref"; book: Book; bIdx: number; cIdx: number; vIdx: number | null; text?: string }
+    | { kind: "verse"; book: Book; bIdx: number; cIdx: number; vIdx: number; text: string };
+
+  const searchResults = useMemo<SearchResult[]>(() => {
     if (!query.trim() || !books) return [];
 
-    const q = query.toLowerCase();
-    const results: { book: Book; bIdx: number; cIdx: number; vIdx: number; text: string }[] = [];
+    const { name, chapter, verse } = parseQuery(query);
+    const results: SearchResult[] = [];
 
-    for (let b = 0; b < books.length && results.length < 80; b++) {
-      const book = books[b];
+    // 1 & 2 — book name / reference matches
+    if (name) {
+      const exact: number[] = [];
+      const starts: number[] = [];
+      const contains: number[] = [];
 
-      for (let c = 0; c < book.chapters.length && results.length < 80; c++) {
-        const chapter = book.chapters[c];
+      books.forEach((book, b) => {
+        const aliases = bookAliases(book.abbrev, book.name);
+        if (aliases.some((a) => a === name)) exact.push(b);
+        else if (aliases.some((a) => a.startsWith(name))) starts.push(b);
+        else if (name.length >= 3 && aliases.some((a) => a.includes(name))) contains.push(b);
+      });
 
-        for (let v = 0; v < chapter.length && results.length < 80; v++) {
-          const verseText = chapter[v];
+      const matched = [...exact, ...starts, ...contains].slice(0, 12);
 
-          if (verseText.toLowerCase().includes(q)) {
-            results.push({ book, bIdx: b, cIdx: c, vIdx: v, text: verseText });
+      for (const b of matched) {
+        const book = books[b];
+        if (chapter) {
+          const cIdx = Math.min(Math.max(chapter - 1, 0), book.chapters.length - 1);
+          const chapterVerses = book.chapters[cIdx] || [];
+          const vIdx =
+            verse != null ? Math.min(Math.max(verse - 1, 0), chapterVerses.length - 1) : null;
+          results.push({
+            kind: "ref",
+            book,
+            bIdx: b,
+            cIdx,
+            vIdx,
+            text: vIdx != null ? chapterVerses[vIdx] : undefined,
+          });
+        } else {
+          results.push({ kind: "book", book, bIdx: b });
+        }
+      }
+    }
+
+    // 3 — verse text search (lowest priority)
+    const q = normalize(query);
+    if (q.length >= 3) {
+      const limit = results.length ? 40 : 60;
+      let count = 0;
+      for (let b = 0; b < books.length && count < limit; b++) {
+        const book = books[b];
+        for (let c = 0; c < book.chapters.length && count < limit; c++) {
+          const chapterVerses = book.chapters[c];
+          for (let v = 0; v < chapterVerses.length && count < limit; v++) {
+            const verseText = chapterVerses[v];
+            if (normalize(verseText).includes(q)) {
+              results.push({ kind: "verse", book, bIdx: b, cIdx: c, vIdx: v, text: verseText });
+              count++;
+            }
           }
         }
       }
