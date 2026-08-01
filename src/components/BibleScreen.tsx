@@ -43,7 +43,7 @@ const TRANSLATIONS: Translation[] = [
   },
   {
     code: "rvr",
-    label: "Español | Reina-Valera",
+    label: "Español | Reina-Valera 1960",
     loader: () => import("@/data/bible/rvr.json").then((m) => m.default as Book[]),
   },
   {
