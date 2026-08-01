@@ -1,6 +1,36 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check, Headphones, Menu, Highlighter, Link2, BookMarked } from "lucide-react";
-import { getLocalizedBookName } from "@/data/bible/book-names";
+import { getLocalizedBookName, BIBLE_BOOK_NAMES } from "@/data/bible/book-names";
+
+const normalize = (s: string) =>
+  (s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+// All searchable names (EN/ES/PT + data name + abbrev) for a given book abbrev.
+function bookAliases(abbrev: string, dataName: string): string[] {
+  const entry = BIBLE_BOOK_NAMES[(abbrev || "").toLowerCase()];
+  const list = [dataName, abbrev];
+  if (entry) list.push(entry.en, entry.es, entry.pt);
+  if (entry?.en === "Psalms") list.push("Psalm", "Salmo", "Salmos");
+  return list.filter(Boolean).map(normalize);
+}
+
+// Splits "Romans 8:28" / "1 Juan 3" into { name, chapter, verse }
+function parseQuery(raw: string) {
+  const q = raw.trim();
+  const m = q.match(/^(.*?)[\s.]*(\d+)?\s*(?::\s*(\d+))?\s*$/);
+  if (!m) return { name: normalize(q), chapter: null as number | null, verse: null as number | null };
+  const name = normalize(m[1] || "");
+  return {
+    name,
+    chapter: m[2] ? Number(m[2]) : null,
+    verse: m[3] ? Number(m[3]) : null,
+  };
+}
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
 type Translation = { code: string; label: string; loader: () => Promise<Book[]> };
