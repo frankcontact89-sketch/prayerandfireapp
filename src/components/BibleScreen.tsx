@@ -1,6 +1,36 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check, Headphones, Menu, Highlighter, Link2, BookMarked } from "lucide-react";
-import { getLocalizedBookName } from "@/data/bible/book-names";
+import { getLocalizedBookName, BIBLE_BOOK_NAMES } from "@/data/bible/book-names";
+
+const normalize = (s: string) =>
+  (s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+// All searchable names (EN/ES/PT + data name + abbrev) for a given book abbrev.
+function bookAliases(abbrev: string, dataName: string): string[] {
+  const entry = BIBLE_BOOK_NAMES[(abbrev || "").toLowerCase()];
+  const list = [dataName, abbrev];
+  if (entry) list.push(entry.en, entry.es, entry.pt);
+  if (entry?.en === "Psalms") list.push("Psalm", "Salmo", "Salmos");
+  return list.filter(Boolean).map(normalize);
+}
+
+// Splits "Romans 8:28" / "1 Juan 3" into { name, chapter, verse }
+function parseQuery(raw: string) {
+  const q = raw.trim();
+  const m = q.match(/^(.*?)[\s.]*(\d+)?\s*(?::\s*(\d+))?\s*$/);
+  if (!m) return { name: normalize(q), chapter: null as number | null, verse: null as number | null };
+  const name = normalize(m[1] || "");
+  return {
+    name,
+    chapter: m[2] ? Number(m[2]) : null,
+    verse: m[3] ? Number(m[3]) : null,
+  };
+}
 
 type Book = { name: string; abbrev: string; chapters: string[][] };
 type Translation = { code: string; label: string; loader: () => Promise<Book[]> };
@@ -283,23 +313,68 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   const speechLang =
     translation === "rvr" ? "es-ES" : translation === "aa" ? "pt-BR" : "en-US";
 
-  const searchResults = useMemo(() => {
+  type SearchResult =
+    | { kind: "book"; book: Book; bIdx: number }
+    | { kind: "ref"; book: Book; bIdx: number; cIdx: number; vIdx: number | null; text?: string }
+    | { kind: "verse"; book: Book; bIdx: number; cIdx: number; vIdx: number; text: string };
+
+  const searchResults = useMemo<SearchResult[]>(() => {
     if (!query.trim() || !books) return [];
 
-    const q = query.toLowerCase();
-    const results: { book: Book; bIdx: number; cIdx: number; vIdx: number; text: string }[] = [];
+    const { name, chapter, verse } = parseQuery(query);
+    const results: SearchResult[] = [];
 
-    for (let b = 0; b < books.length && results.length < 80; b++) {
-      const book = books[b];
+    // 1 & 2 — book name / reference matches
+    if (name) {
+      const exact: number[] = [];
+      const starts: number[] = [];
+      const contains: number[] = [];
 
-      for (let c = 0; c < book.chapters.length && results.length < 80; c++) {
-        const chapter = book.chapters[c];
+      books.forEach((book, b) => {
+        const aliases = bookAliases(book.abbrev, book.name);
+        if (aliases.some((a) => a === name)) exact.push(b);
+        else if (aliases.some((a) => a.startsWith(name))) starts.push(b);
+        else if (name.length >= 3 && aliases.some((a) => a.includes(name))) contains.push(b);
+      });
 
-        for (let v = 0; v < chapter.length && results.length < 80; v++) {
-          const verseText = chapter[v];
+      const matched = [...exact, ...starts, ...contains].slice(0, 12);
 
-          if (verseText.toLowerCase().includes(q)) {
-            results.push({ book, bIdx: b, cIdx: c, vIdx: v, text: verseText });
+      for (const b of matched) {
+        const book = books[b];
+        if (chapter) {
+          const cIdx = Math.min(Math.max(chapter - 1, 0), book.chapters.length - 1);
+          const chapterVerses = book.chapters[cIdx] || [];
+          const vIdx =
+            verse != null ? Math.min(Math.max(verse - 1, 0), chapterVerses.length - 1) : null;
+          results.push({
+            kind: "ref",
+            book,
+            bIdx: b,
+            cIdx,
+            vIdx,
+            text: vIdx != null ? chapterVerses[vIdx] : undefined,
+          });
+        } else {
+          results.push({ kind: "book", book, bIdx: b });
+        }
+      }
+    }
+
+    // 3 — verse text search (lowest priority)
+    const q = normalize(query);
+    if (q.length >= 3) {
+      const limit = results.length ? 40 : 60;
+      let count = 0;
+      for (let b = 0; b < books.length && count < limit; b++) {
+        const book = books[b];
+        for (let c = 0; c < book.chapters.length && count < limit; c++) {
+          const chapterVerses = book.chapters[c];
+          for (let v = 0; v < chapterVerses.length && count < limit; v++) {
+            const verseText = chapterVerses[v];
+            if (normalize(verseText).includes(q)) {
+              results.push({ kind: "verse", book, bIdx: b, cIdx: c, vIdx: v, text: verseText });
+              count++;
+            }
           }
         }
       }
@@ -974,29 +1049,62 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                   autoFocus
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder={tr("bible_search_verses", "Search verses…")}
+                  placeholder={tr(
+                    "bible_search_placeholder",
+                    language === "es"
+                      ? "Libro, referencia o texto…"
+                      : language === "pt"
+                        ? "Livro, referência ou texto…"
+                        : "Book, reference or text…",
+                  )}
                   className="bg-transparent outline-none flex-1 text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                {searchResults.map((result, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setBookIdx(result.bIdx);
-                      setChapterIdx(result.cIdx);
-                      setView("verses");
-                    }}
-                    className={`w-full text-left rounded-xl border p-3.5 ${card}`}
-                  >
-                    <p className="text-orange-500 text-xs font-bold mb-1">
-                      {bookName(result.book)} {result.cIdx + 1}:{result.vIdx + 1}
-                    </p>
+                {searchResults.map((result, index) => {
+                  const open = () => {
+                    setBookIdx(result.bIdx);
+                    if (result.kind === "book") {
+                      setChapterIdx(0);
+                      setView("chapters");
+                      return;
+                    }
+                    setChapterIdx(result.cIdx);
+                    const v = result.kind === "verse" ? result.vIdx : result.vIdx ?? 0;
+                    setVerseIdx(v ?? 0);
+                    setView("verses");
+                    setTimeout(() => {
+                      verseRefsRef.current[v ?? 0]?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }, 150);
+                  };
 
-                    <p className="text-sm leading-relaxed">{result.text}</p>
-                  </button>
-                ))}
+                  return (
+                    <button
+                      key={index}
+                      onClick={open}
+                      className={`w-full text-left rounded-xl border p-3.5 ${card}`}
+                    >
+                      {result.kind === "book" ? (
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold">{bookName(result.book)}</span>
+                          <span className="text-xs text-zinc-500">
+                            {result.book.chapters.length}{" "}
+                            {language === "es" ? "capítulos" : language === "pt" ? "capítulos" : "chapters"}
+                          </span>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-orange-500 text-xs font-bold mb-1">
+                            {bookName(result.book)} {result.cIdx + 1}
+                            {result.vIdx != null ? `:${result.vIdx + 1}` : ""}
+                          </p>
+                          {result.text && <p className="text-sm leading-relaxed">{result.text}</p>}
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
 
                 {query && searchResults.length === 0 && (
                   <p className="text-zinc-500 text-center text-sm pt-6">{tr("no_results", "No results")}</p>
