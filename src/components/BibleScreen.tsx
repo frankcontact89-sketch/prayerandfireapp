@@ -1049,29 +1049,62 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                   autoFocus
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder={tr("bible_search_verses", "Search verses…")}
+                  placeholder={tr(
+                    "bible_search_placeholder",
+                    language === "es"
+                      ? "Libro, referencia o texto…"
+                      : language === "pt"
+                        ? "Livro, referência ou texto…"
+                        : "Book, reference or text…",
+                  )}
                   className="bg-transparent outline-none flex-1 text-base"
                 />
               </div>
 
               <div className="space-y-2">
-                {searchResults.map((result, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setBookIdx(result.bIdx);
-                      setChapterIdx(result.cIdx);
-                      setView("verses");
-                    }}
-                    className={`w-full text-left rounded-xl border p-3.5 ${card}`}
-                  >
-                    <p className="text-orange-500 text-xs font-bold mb-1">
-                      {bookName(result.book)} {result.cIdx + 1}:{result.vIdx + 1}
-                    </p>
+                {searchResults.map((result, index) => {
+                  const open = () => {
+                    setBookIdx(result.bIdx);
+                    if (result.kind === "book") {
+                      setChapterIdx(0);
+                      setView("chapters");
+                      return;
+                    }
+                    setChapterIdx(result.cIdx);
+                    const v = result.kind === "verse" ? result.vIdx : result.vIdx ?? 0;
+                    setVerseIdx(v ?? 0);
+                    setView("verses");
+                    setTimeout(() => {
+                      verseRefsRef.current[v ?? 0]?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }, 150);
+                  };
 
-                    <p className="text-sm leading-relaxed">{result.text}</p>
-                  </button>
-                ))}
+                  return (
+                    <button
+                      key={index}
+                      onClick={open}
+                      className={`w-full text-left rounded-xl border p-3.5 ${card}`}
+                    >
+                      {result.kind === "book" ? (
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold">{bookName(result.book)}</span>
+                          <span className="text-xs text-zinc-500">
+                            {result.book.chapters.length}{" "}
+                            {language === "es" ? "capítulos" : language === "pt" ? "capítulos" : "chapters"}
+                          </span>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-orange-500 text-xs font-bold mb-1">
+                            {bookName(result.book)} {result.cIdx + 1}
+                            {result.vIdx != null ? `:${result.vIdx + 1}` : ""}
+                          </p>
+                          {result.text && <p className="text-sm leading-relaxed">{result.text}</p>}
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
 
                 {query && searchResults.length === 0 && (
                   <p className="text-zinc-500 text-center text-sm pt-6">{tr("no_results", "No results")}</p>
