@@ -1,0 +1,49 @@
+UPDATE public.solas
+SET
+  explanation_en = $q$According to the Protestant doctrine of Sola Scriptura, Scripture is the supreme authority in matters of faith and practice.$q$,
+  explanation_es = $q$Según la doctrina protestante de Sola Scriptura, la Escritura es la suprema autoridad en asuntos de fe y práctica.$q$,
+  explanation_pt = $q$Segundo a doutrina protestante de Sola Scriptura, a Escritura é a suprema autoridade em matéria de fé e prática.$q$,
+  history_en = $q$The expression "Sola Scriptura" is not found verbatim in Scripture; it is a theological summary of the Reformers' teaching that the Bible alone is the supreme authority for faith and practice, developed during the Protestant Reformation of the 16th century. At the Diet of Worms (1521), Martin Luther declared his conscience captive to the Word of God.$q$,
+  history_es = $q$La expresión "Sola Scriptura" no se encuentra textualmente en la Escritura; es un resumen teológico de la enseñanza de los Reformadores sobre que la Biblia sola es la suprema autoridad en fe y práctica, desarrollado durante la Reforma Protestante del siglo XVI. En la Dieta de Worms (1521), Martín Lutero declaró su conciencia cautiva a la Palabra de Dios.$q$,
+  history_pt = $q$A expressão "Sola Scriptura" não se encontra textualmente nas Escrituras; é um resumo teológico do ensino dos Reformadores de que somente a Bíblia é a suprema autoridade em fé e prática, desenvolvido durante a Reforma Protestante do século XVI. Na Dieta de Worms (1521), Martinho Lutero declarou sua consciência cativa à Palavra de Deus.$q$
+WHERE id = '48bd622a-d395-4d7e-88d2-09006bd98159';
+
+UPDATE public.solas
+SET
+  explanation_en = $q$Sola Fide is a Protestant summary of the biblical teaching that we are justified — declared righteous before God — by faith alone in Jesus Christ, apart from any works of the law. Faith is the empty hand that receives the finished work of Christ.$q$,
+  explanation_es = $q$Sola Fide es un resumen protestante de la enseñanza bíblica de que somos justificados — declarados justos delante de Dios — por la fe sola en Jesucristo, aparte de cualquier obra de la ley. La fe es la mano vacía que recibe la obra terminada de Cristo.$q$,
+  explanation_pt = $q$Sola Fide é um resumo protestante do ensino bíblico de que somos justificados — declarados justos diante de Deus — pela fé somente em Jesus Cristo, à parte de qualquer obra da lei. A fé é a mão vazia que recebe a obra consumada de Cristo.$q$,
+  history_en = $q$The phrase "Sola Fide" does not appear verbatim in the Bible; it is a theological summary the Reformers used to recover the apostolic teaching of justification by faith. Luther rediscovered this truth studying Romans 1:17. The medieval church had taught justification through faith combined with sacraments and merit; the Reformers restored Paul's gospel: righteousness is a gift, received, never earned.$q$,
+  history_es = $q$La frase "Sola Fide" no aparece textualmente en la Biblia; es un resumen teológico que los Reformadores usaron para restaurar la enseñanza apostólica de la justificación por la fe. Lutero redescubrió esta verdad estudiando Romanos 1:17. La iglesia medieval enseñaba la justificación por la fe combinada con sacramentos y méritos; los Reformadores restauraron el evangelio de Pablo: la justicia es un don recibido, nunca ganado.$q$,
+  history_pt = $q$A frase "Sola Fide" não aparece textualmente na Bíblia; é um resumo teológico que os Reformadores usaram para restaurar o ensino apostólico da justificação pela fé. Lutero redescobriu esta verdade estudando Romanos 1:17. A igreja medieval ensinava justificação pela fé combinada com sacramentos e méritos; os Reformadores restauraram o evangelho de Paulo: a justiça é um dom recebido, nunca conquistado.$q$
+WHERE id = 'b8a342e2-894f-42e9-a273-957767bc7d04';
+
+UPDATE public.solas
+SET
+  explanation_en = $q$Sola Gratia is a Protestant summary of the biblical teaching that salvation is entirely a gift of God's unmerited favor. From election to calling to justification to glorification, every step is grace. We contribute nothing to our salvation but the sin from which we are saved.$q$,
+  explanation_es = $q$Sola Gratia es un resumen protestante de la enseñanza bíblica de que la salvación es enteramente un don del favor inmerecido de Dios. Desde la elección hasta la vocación, la justificación y la glorificación, cada paso es gracia. No aportamos nada a nuestra salvación excepto el pecado del cual somos salvados.$q$,
+  explanation_pt = $q$Sola Gratia é um resumo protestante do ensino bíblico de que a salvação é inteiramente um dom do favor imerecido de Deus. Da eleição ao chamado, à justificação e à glorificação, cada passo é graça. Nada contribuímos para nossa salvação senão o pecado do qual somos salvos.$q$,
+  history_en = $q$The expression "Sola Gratia" is not a literal biblical phrase; it is a theological summary the Reformers used to defend grace against any teaching that made it dependent on human cooperation. Augustine had opposed Pelagius in the 5th century, and a thousand years later the Reformers, especially Calvin, systematized this truth in the 16th-century Reformation.$q$,
+  history_es = $q$La expresión "Sola Gratia" no es una frase literal bíblica; es un resumen teológico que los Reformadores usaron para defender la gracia contra toda enseñanza que la hiciera dependiente de la cooperación humana. Agustín se opuso a Pelagio en el siglo V, y mil años después los Reformadores, especialmente Calvino, sistematizaron esta verdad en la Reforma del siglo XVI.$q$,
+  history_pt = $q$A expressão "Sola Gratia" não é uma frase literal bíblica; é um resumo teológico que os Reformadores usaram para defender a graça contra todo ensino que a tornasse dependente da cooperação humana. Agostinho opôs-se a Pelágio no século V, e mil anos depois os Reformadores, especialmente Calvino, sistematizaram esta verdade na Reforma do século XVI.$q$
+WHERE id = '94b9526f-5588-4068-a6cd-2ccab2bb59b4';
+
+UPDATE public.solas
+SET
+  explanation_en = $q$Solus Christus is a Protestant summary of the biblical teaching that Jesus Christ is the sole mediator between God and humanity. His life, death, and resurrection are the only ground of our salvation. No saint, priest, ritual, or sacrament can add to His finished work.$q$,
+  explanation_es = $q$Solus Christus es un resumen protestante de la enseñanza bíblica de que Jesucristo es el único mediador entre Dios y el hombre. Su vida, muerte y resurrección son el único fundamento de nuestra salvación. Ningún santo, sacerdote, rito o sacramento puede añadir a Su obra consumada.$q$,
+  explanation_pt = $q$Solus Christus é um resumo protestante do ensino bíblico de que Jesus Cristo é o único mediador entre Deus e o homem. Sua vida, morte e ressurreição são o único fundamento de nossa salvação. Nenhum santo, sacerdote, rito ou sacramento pode acrescentar à Sua obra consumada.$q$,
+  history_en = $q$The words "Solus Christus" do not appear verbatim in the Bible; they are a theological summary the Reformers used to reject the medieval system of intermediaries and to return to the New Testament's exclusive focus on Christ as prophet, priest, and king.$q$,
+  history_es = $q$Las palabras "Solus Christus" no aparecen textualmente en la Biblia; son un resumen teológico que los Reformadores usaron para rechazar el sistema medieval de intermediarios y regresar al enfoque exclusivo del Nuevo Testamento en Cristo como profeta, sacerdote y rey.$q$,
+  history_pt = $q$As palavras "Solus Christus" não aparecem textualmente na Bíblia; são um resumo teológico que os Reformadores usaram para rejeitar o sistema medieval de intermediários e retornar ao foco exclusivo do Novo Testamento em Cristo como profeta, sacerdote e rei.$q$
+WHERE id = '58e7f438-402f-4d70-9e5d-bcfdc5478bfb';
+
+UPDATE public.solas
+SET
+  explanation_en = $q$Soli Deo Gloria is a Protestant summary of the biblical teaching that all of life exists for the glory of God. Salvation, worship, work, and rest — everything ultimately serves to magnify Him. No credit for our redemption or our lives belongs to us.$q$,
+  explanation_es = $q$Soli Deo Gloria es un resumen protestante de la enseñanza bíblica de que toda la vida existe para la gloria de Dios. Salvación, adoración, trabajo y descanso — todo sirve finalmente para magnificarle. Ningún mérito por nuestra redención o nuestras vidas nos pertenece.$q$,
+  explanation_pt = $q$Soli Deo Gloria é um resumo protestante do ensino bíblico de que toda a vida existe para a glória de Deus. Salvação, adoração, trabalho e descanso — tudo serve finalmente para magnificá-Lo. Nenhum mérito por nossa redenção ou nossas vidas nos pertence.$q$,
+  history_en = $q$The phrase "Soli Deo Gloria" is not found word-for-word in Scripture; it is a theological summary that became the capstone of the Protestant Reformation. If Scripture, faith, grace, and Christ alone save us, then God alone gets the glory. J.S. Bach famously signed his manuscripts "S.D.G." to dedicate his art to God.$q$,
+  history_es = $q$La frase "Soli Deo Gloria" no se encuentra textualmente en la Escritura; es un resumen teológico que se convirtió en el cierre de la Reforma Protestante. Si la Escritura, la fe, la gracia y Cristo solo nos salvan, entonces solo Dios recibe la gloria. J.S. Bach firmaba sus manuscritos "S.D.G." para dedicar su arte a Dios.$q$,
+  history_pt = $q$A frase "Soli Deo Gloria" não se encontra textualmente nas Escrituras; é um resumo teológico que se tornou o arremate da Reforma Protestante. Se Escritura, fé, graça e Cristo somente nos salvam, então somente Deus recebe a glória. J.S. Bach assinava seus manuscritos "S.D.G." para dedicar sua arte a Deus.$q$
+WHERE id = '412fd863-ae3e-4e39-9228-eb9d7860f6ea';
