@@ -863,7 +863,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
           <>
             <Header title={bookName(currentBook)} onBack={() => setView("books")} />
 
-            <div className="px-4 sm:px-5 pt-3 pb-8 max-w-[720px] mx-auto">
+            <div className="px-4 sm:px-5 pt-3 pb-6 max-w-[720px] mx-auto">
               <div className="grid grid-cols-5 sm:grid-cols-6 landscape:grid-cols-8 gap-2">
                 {currentBook.chapters.map((_, index) => (
                   <button
@@ -1146,11 +1146,11 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
         )}
       </div>
 
-      {showLangPicker && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setShowLangPicker(false)}>
+        {showLangPicker && (
+        <div className="fixed inset-0 z-[70] bg-black/70 flex items-end" onClick={() => setShowLangPicker(false)}>
           <div
             onClick={(event) => event.stopPropagation()}
-            className={`w-full rounded-t-2xl p-5 max-h-[80dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+28px)] ${
+            className={`w-full rounded-t-2xl p-5 max-h-[75dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+88px)] ${
               isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
             }`}
           >
@@ -1159,7 +1159,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
               <h3 className="text-[18px] font-semibold">{tr("bible_translation", "Bible Translation")}</h3>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {TRANSLATIONS.map((item) => (
                 <button
                   key={item.code}
@@ -1167,7 +1167,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                     setTranslation(item.code);
                     setShowLangPicker(false);
                   }}
-                  className={`w-full text-left px-4 py-3.5 rounded-xl border ${
+                  className={`w-full text-left px-4 py-4 rounded-xl border ${
                     translation === item.code
                       ? "border-orange-500 bg-orange-500/10"
                       : isDay
