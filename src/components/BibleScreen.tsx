@@ -1150,7 +1150,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
         <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setShowLangPicker(false)}>
           <div
             onClick={(event) => event.stopPropagation()}
-            className={`w-full rounded-t-2xl p-5 pb-[calc(env(safe-area-inset-bottom)+20px)] ${
+            className={`w-full rounded-t-2xl p-5 max-h-[80dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+28px)] ${
               isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
             }`}
           >
