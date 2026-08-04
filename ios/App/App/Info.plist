@@ -47,5 +47,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>We need camera access so you can take a profile photo.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need photo library access so you can choose a profile photo.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need permission to save your profile photo to your photo library.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access is used for in-app audio features.</string>
 </dict>
 </plist>
