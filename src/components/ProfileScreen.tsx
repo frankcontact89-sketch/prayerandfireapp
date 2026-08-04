@@ -397,7 +397,7 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack, onOpe
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} className="hidden" />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="user" onChange={handleFileSelect} className="hidden" />
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
     </>
   );
