@@ -863,7 +863,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
           <>
             <Header title={bookName(currentBook)} onBack={() => setView("books")} />
 
-            <div className="px-4 sm:px-5 pt-4 pb-8 max-w-[720px] mx-auto">
+            <div className="px-4 sm:px-5 pt-3 pb-8 max-w-[720px] mx-auto">
               <div className="grid grid-cols-5 sm:grid-cols-6 landscape:grid-cols-8 gap-2">
                 {currentBook.chapters.map((_, index) => (
                   <button
