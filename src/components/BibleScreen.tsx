@@ -180,6 +180,13 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   const bibleBookLanguage = BIBLE_TO_BOOK_LANG[translation] || "en";
   const bookName = (book: Book) => getLocalizedBookName(book.abbrev, book.name, bibleBookLanguage);
 
+  const previousReadingLabel =
+    bibleBookLanguage === "es"
+      ? "Volver a la lectura"
+      : bibleBookLanguage === "pt"
+        ? "Voltar à leitura"
+        : "Return to reading";
+
   // All Bible-screen labels follow the selected Bible translation language,
   // so switching the Bible to English/Portuguese also switches its UI text.
   const tr = (k: string, fallback: string) => {
