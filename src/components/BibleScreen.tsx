@@ -748,11 +748,11 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
   const Header = ({ title, onBack }: { title: string; onBack?: () => void }) => (
     <div
-      className={`sticky top-0 z-20 backdrop-blur-md border-b pt-[env(safe-area-inset-top)] ${
+      className={`sticky top-0 z-20 backdrop-blur-md border-b ${
         isDay ? "bg-white/95 border-zinc-200" : "bg-black/90 border-zinc-800"
       }`}
     >
-      <div className="flex items-center justify-between px-4 py-3 gap-3">
+      <div className="flex items-center justify-between px-4 py-2 gap-3 min-h-[48px]">
         <div className="flex items-center gap-3 min-w-0">
           {onBack && (
             <button onClick={onBack} className="text-orange-500 shrink-0">
