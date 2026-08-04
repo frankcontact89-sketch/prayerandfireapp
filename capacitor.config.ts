@@ -10,7 +10,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const useDevServer = process.env.CAP_DEV_SERVER === '1';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.31c416da3493411f9e7fbcc4136f4a86',
+  appId: 'com.frankcontact89.prayerandfiremobile',
   appName: 'prayerandfire',
   webDir: 'dist',
   ...(useDevServer
