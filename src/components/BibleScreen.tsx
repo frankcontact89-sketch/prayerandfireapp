@@ -1150,7 +1150,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
         <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setShowLangPicker(false)}>
           <div
             onClick={(event) => event.stopPropagation()}
-            className={`w-full rounded-t-2xl p-5 max-h-[80dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+28px)] ${
+            className={`w-full rounded-t-2xl p-5 max-h-[75dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+88px)] ${
               isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
             }`}
           >
@@ -1159,7 +1159,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
               <h3 className="text-[18px] font-semibold">{tr("bible_translation", "Bible Translation")}</h3>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {TRANSLATIONS.map((item) => (
                 <button
                   key={item.code}
@@ -1167,7 +1167,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                     setTranslation(item.code);
                     setShowLangPicker(false);
                   }}
-                  className={`w-full text-left px-4 py-3.5 rounded-xl border ${
+                  className={`w-full text-left px-4 py-4 rounded-xl border ${
                     translation === item.code
                       ? "border-orange-500 bg-orange-500/10"
                       : isDay
