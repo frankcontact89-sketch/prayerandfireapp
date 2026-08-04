@@ -748,11 +748,11 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
   const Header = ({ title, onBack }: { title: string; onBack?: () => void }) => (
     <div
-      className={`sticky top-0 z-20 backdrop-blur-md border-b pt-[env(safe-area-inset-top)] ${
+      className={`sticky top-0 z-20 backdrop-blur-md border-b ${
         isDay ? "bg-white/95 border-zinc-200" : "bg-black/90 border-zinc-800"
       }`}
     >
-      <div className="flex items-center justify-between px-4 py-3 gap-3">
+      <div className="flex items-center justify-between px-4 py-2 gap-3 min-h-[48px]">
         <div className="flex items-center gap-3 min-w-0">
           {onBack && (
             <button onClick={onBack} className="text-orange-500 shrink-0">
@@ -808,21 +808,21 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
   if (loading || !books) {
     return (
-      <div className={`${pageBg} min-h-[100dvh] flex items-center justify-center`}>
+      <div className={`${pageBg} min-h-[60vh] flex items-center justify-center`}>
         <div className="text-orange-500">{tr("bible_loading", "Loading Bible…")}</div>
       </div>
     );
   }
 
   return (
-    <div className={`${pageBg} min-h-[100dvh] overflow-hidden`}>
-      <div className="h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+80px)]">
+    <div className={`${pageBg} min-h-full`}>
+      <div className="pb-[calc(env(safe-area-inset-bottom)+96px)]">
         {view === "books" && (
           <>
             <Header title={tr("holy_bible", "Holy Bible")} />
 
-            <div className="px-4 sm:px-5 pt-4 pb-8 max-w-[720px] mx-auto">
-              <div className="flex gap-2 mb-4">
+            <div className="px-4 sm:px-5 pt-3 pb-8 max-w-[720px] mx-auto">
+              <div className="flex gap-2 mb-3">
                 <button
                   onClick={() => setView("search")}
                   className={`flex-1 flex items-center gap-2 border rounded-xl px-4 py-3 text-sm ${card}`}
@@ -863,7 +863,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
           <>
             <Header title={bookName(currentBook)} onBack={() => setView("books")} />
 
-            <div className="px-4 sm:px-5 pt-4 pb-8 max-w-[720px] mx-auto">
+            <div className="px-4 sm:px-5 pt-3 pb-8 max-w-[720px] mx-auto">
               <div className="grid grid-cols-5 sm:grid-cols-6 landscape:grid-cols-8 gap-2">
                 {currentBook.chapters.map((_, index) => (
                   <button
@@ -886,7 +886,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
           <>
             {/* Unified sticky top bar: title row + integrated audio row */}
             <div
-              className={`sticky top-0 z-20 backdrop-blur-md border-b pt-[env(safe-area-inset-top)] ${
+              className={`sticky top-0 z-20 backdrop-blur-md border-b ${
                 isDay ? "bg-white/95 border-zinc-200" : "bg-black/90 border-zinc-800"
               }`}
             >
@@ -1150,7 +1150,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
         <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setShowLangPicker(false)}>
           <div
             onClick={(event) => event.stopPropagation()}
-            className={`w-full rounded-t-2xl p-5 pb-[calc(env(safe-area-inset-bottom)+20px)] ${
+            className={`w-full rounded-t-2xl p-5 max-h-[80dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+28px)] ${
               isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
             }`}
           >

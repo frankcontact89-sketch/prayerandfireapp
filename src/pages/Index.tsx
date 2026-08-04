@@ -566,19 +566,19 @@ export default function Index() {
 
   return (
     <BibleRefProvider openRef={openBibleRef}>
-    <div className="flex flex-col min-h-screen bg-black font-sans">
+    <div className="flex flex-col min-h-[100dvh] bg-black font-sans">
       <div
         className="sticky top-0 z-30 bg-black/95 backdrop-blur-md border-b border-zinc-800"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="flex justify-between items-center px-4 h-14">
+        <div className="flex justify-between items-center px-4 h-12">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPage("settings")}
               aria-label={t("profile")}
-              className="w-12 h-12 flex items-center justify-center"
+              className="w-10 h-10 -ml-1 flex items-center justify-center"
             >
-              <span className="h-11 w-11 rounded-full border border-orange-500/40 bg-zinc-900 overflow-hidden flex items-center justify-center">
+              <span className="h-9 w-9 rounded-full border border-orange-500/40 bg-zinc-900 overflow-hidden flex items-center justify-center">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={t("profile")} className="h-full w-full object-cover" crossOrigin="anonymous" />
                 ) : (
@@ -618,7 +618,7 @@ export default function Index() {
         onNavigate={(p) => setPage(p)}
       />
 
-      <div ref={contentScrollRef} className="flex-1 overflow-y-auto pb-[90px] bg-black" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "none" }}>
+      <div ref={contentScrollRef} className="flex-1 overflow-y-auto pt-3 pb-[calc(env(safe-area-inset-bottom)+96px)] bg-black" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "none" }}>
         {page === "home" && <HomeScreen t={t} language={language} />}
         {page === "giving" && <GivingScreen t={t} language={language} />}
         {page === "shopping" && <ShoppingScreen t={t} />}

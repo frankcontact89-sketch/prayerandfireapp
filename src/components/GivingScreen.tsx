@@ -28,7 +28,7 @@ export function GivingScreen({ t, language = "en" }: GivingScreenProps) {
   };
 
   return (
-    <div className="min-h-screen px-4 pt-4 pb-24 bg-black text-white max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto">
+    <div className="min-h-full px-4 pt-1 pb-16 bg-black text-white max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto">
       {/* Header */}
       <div className="mb-6 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 mb-3">
