@@ -165,12 +165,6 @@ interface BibleScreenProps {
 }
 
 export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onExitToOrigin }: BibleScreenProps = {}) {
-  const tr = (k: string, fallback: string) => {
-    if (!t) return fallback;
-    const v = t(k as any);
-    return v && v !== k ? v : fallback;
-  };
-
   const previousReadingLabel =
     language === "es"
       ? "Volver a la lectura"
@@ -191,6 +185,17 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   // interface language (for example, Spanish RVR while the app is in English).
   const bibleBookLanguage = BIBLE_TO_BOOK_LANG[translation] || "en";
   const bookName = (book: Book) => getLocalizedBookName(book.abbrev, book.name, bibleBookLanguage);
+
+  // All Bible-screen labels follow the selected Bible translation language,
+  // so switching the Bible to English/Portuguese also switches its UI text.
+  const tr = (k: string, fallback: string) => {
+    const dict = translations[bibleBookLanguage];
+    const v = dict?.[k];
+    if (v) return v;
+    if (!t) return fallback;
+    const appValue = t(k as any);
+    return appValue && appValue !== k ? appValue : fallback;
+  };
 
   const [mode, setMode] = useState<"day" | "night">(
     () => (localStorage.getItem(MODE_KEY) as "day" | "night") || "night",
