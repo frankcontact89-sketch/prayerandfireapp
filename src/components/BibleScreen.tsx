@@ -57,6 +57,7 @@ const FAV_KEY = "pf_bible_favorites";
 const NOTES_KEY = "pf_bible_notes";
 const HIGHLIGHT_KEY = "pf_bible_highlights";
 const LANG_KEY = "pf_bible_lang";
+const APP_LANG_KEY = "pf_bible_last_app_lang";
 const MODE_KEY = "pf_bible_mode";
 const BOOK_KEY = "pf_bible_book";
 const CHAPTER_KEY = "pf_bible_chapter";
@@ -153,6 +154,7 @@ function saveHighlights(h: Record<string, boolean>) {
 }
 
 const APP_LANG_TO_BIBLE: Record<string, string> = { en: "kjv", es: "rvr", pt: "aa" };
+const BIBLE_TO_BOOK_LANG: Record<string, "en" | "es" | "pt"> = { kjv: "en", rvr: "es", aa: "pt" };
 
 interface BibleScreenProps {
   t?: (key: any) => string;
@@ -176,13 +178,19 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
         ? "Voltar à leitura"
         : "Return to reading";
 
-  const bookName = (book: Book) => getLocalizedBookName(book.abbrev, book.name, language);
-
   const [translation, setTranslation] = useState(() => {
     const stored = localStorage.getItem(LANG_KEY);
+    const lastAppLanguage = localStorage.getItem(APP_LANG_KEY);
+    const appTranslation = language ? APP_LANG_TO_BIBLE[language] : null;
+    if (appTranslation && lastAppLanguage !== language) return appTranslation;
     if (stored && TRANSLATIONS.some((x) => x.code === stored)) return stored;
-    return (language && APP_LANG_TO_BIBLE[language]) || "kjv";
+    return appTranslation || "kjv";
   });
+
+  // Book names follow the selected Bible translation, independently from the
+  // interface language (for example, Spanish RVR while the app is in English).
+  const bibleBookLanguage = BIBLE_TO_BOOK_LANG[translation] || "en";
+  const bookName = (book: Book) => getLocalizedBookName(book.abbrev, book.name, bibleBookLanguage);
 
   const [mode, setMode] = useState<"day" | "night">(
     () => (localStorage.getItem(MODE_KEY) as "day" | "night") || "night",
@@ -241,12 +249,13 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
   useEffect(() => {
     const appTranslation = language ? APP_LANG_TO_BIBLE[language] : null;
-    if (appTranslation && translation !== appTranslation) {
+    const previousAppLanguage = localStorage.getItem(APP_LANG_KEY);
+    if (appTranslation && previousAppLanguage !== language) {
       setTranslation(appTranslation);
+      localStorage.setItem(APP_LANG_KEY, language);
     }
-    // Only react when the app language changes; users can still change the
-    // Bible version manually while staying in the same app language.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // React only to a real app-language change. A manually selected Bible
+    // translation remains selected while the interface language is unchanged.
   }, [language]);
 
   useEffect(() => {
