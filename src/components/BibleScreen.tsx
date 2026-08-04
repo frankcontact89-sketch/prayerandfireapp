@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check, Headphones, Menu, Highlighter, Link2, BookMarked } from "lucide-react";
 import { getLocalizedBookName, BIBLE_BOOK_NAMES } from "@/data/bible/book-names";
+import { translations } from "@/config/translations";
 
 const normalize = (s: string) =>
   (s || "")
