@@ -1147,19 +1147,22 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
       </div>
 
         {showLangPicker && (
-        <div className="fixed inset-0 z-[70] bg-black/70 flex items-end" onClick={() => setShowLangPicker(false)}>
+        <div
+          className="fixed inset-x-0 top-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-[70] bg-black/70 flex items-end"
+          onClick={() => setShowLangPicker(false)}
+        >
           <div
             onClick={(event) => event.stopPropagation()}
-            className={`w-full rounded-t-2xl p-5 max-h-[75dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+88px)] ${
+            className={`w-full rounded-t-2xl p-4 max-h-full overflow-y-auto overscroll-contain ${
               isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
             }`}
           >
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-3">
               <BookOpen className="w-5 h-5 text-orange-500" />
               <h3 className="text-[18px] font-semibold">{tr("bible_translation", "Bible Translation")}</h3>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {TRANSLATIONS.map((item) => (
                 <button
                   key={item.code}
@@ -1167,7 +1170,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                     setTranslation(item.code);
                     setShowLangPicker(false);
                   }}
-                  className={`w-full text-left px-4 py-4 rounded-xl border ${
+                  className={`w-full text-left px-4 py-3 rounded-xl border ${
                     translation === item.code
                       ? "border-orange-500 bg-orange-500/10"
                       : isDay
