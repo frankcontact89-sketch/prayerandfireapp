@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Search, Star, ChevronRight, BookOpen, Globe, Sun, Moon, Play, Pause, Type, StickyNote, Save, Trash2, Copy, Share2, X, Check, Headphones, Menu, Highlighter, Link2, BookMarked } from "lucide-react";
 import { getLocalizedBookName, BIBLE_BOOK_NAMES } from "@/data/bible/book-names";
+import { translations } from "@/config/translations";
 
 const normalize = (s: string) =>
   (s || "")
@@ -165,19 +166,6 @@ interface BibleScreenProps {
 }
 
 export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onExitToOrigin }: BibleScreenProps = {}) {
-  const tr = (k: string, fallback: string) => {
-    if (!t) return fallback;
-    const v = t(k as any);
-    return v && v !== k ? v : fallback;
-  };
-
-  const previousReadingLabel =
-    language === "es"
-      ? "Volver a la lectura"
-      : language === "pt"
-        ? "Voltar à leitura"
-        : "Return to reading";
-
   const [translation, setTranslation] = useState(() => {
     const stored = localStorage.getItem(LANG_KEY);
     const lastAppLanguage = localStorage.getItem(APP_LANG_KEY);
@@ -191,6 +179,24 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   // interface language (for example, Spanish RVR while the app is in English).
   const bibleBookLanguage = BIBLE_TO_BOOK_LANG[translation] || "en";
   const bookName = (book: Book) => getLocalizedBookName(book.abbrev, book.name, bibleBookLanguage);
+
+  const previousReadingLabel =
+    bibleBookLanguage === "es"
+      ? "Volver a la lectura"
+      : bibleBookLanguage === "pt"
+        ? "Voltar à leitura"
+        : "Return to reading";
+
+  // All Bible-screen labels follow the selected Bible translation language,
+  // so switching the Bible to English/Portuguese also switches its UI text.
+  const tr = (k: string, fallback: string) => {
+    const dict = translations[bibleBookLanguage];
+    const v = dict?.[k];
+    if (v) return v;
+    if (!t) return fallback;
+    const appValue = t(k as any);
+    return appValue && appValue !== k ? appValue : fallback;
+  };
 
   const [mode, setMode] = useState<"day" | "night">(
     () => (localStorage.getItem(MODE_KEY) as "day" | "night") || "night",
