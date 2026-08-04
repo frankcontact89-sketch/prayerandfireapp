@@ -6,9 +6,24 @@
    never appears to bleed beneath the Dynamic Island. */
 html, body, #root {
   background-color: #000;
-  min-height: 100vh;
   min-height: 100dvh;
   overscroll-behavior: none;
+}
+
+/* Paint the iOS rubber-band overscroll area black (top and bottom). */
+html {
+  background: #000;
+}
+body::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: env(safe-area-inset-bottom);
+  background: #000;
+  pointer-events: none;
+  z-index: 60;
 }
 
 /* Reusable safe-area helpers */
