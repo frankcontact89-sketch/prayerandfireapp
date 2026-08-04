@@ -166,13 +166,6 @@ interface BibleScreenProps {
 }
 
 export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onExitToOrigin }: BibleScreenProps = {}) {
-  const previousReadingLabel =
-    language === "es"
-      ? "Volver a la lectura"
-      : language === "pt"
-        ? "Voltar à leitura"
-        : "Return to reading";
-
   const [translation, setTranslation] = useState(() => {
     const stored = localStorage.getItem(LANG_KEY);
     const lastAppLanguage = localStorage.getItem(APP_LANG_KEY);
