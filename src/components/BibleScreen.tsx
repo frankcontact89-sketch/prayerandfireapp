@@ -808,21 +808,21 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
   if (loading || !books) {
     return (
-      <div className={`${pageBg} min-h-[100dvh] flex items-center justify-center`}>
+      <div className={`${pageBg} min-h-[60vh] flex items-center justify-center`}>
         <div className="text-orange-500">{tr("bible_loading", "Loading Bible…")}</div>
       </div>
     );
   }
 
   return (
-    <div className={`${pageBg} min-h-[100dvh] overflow-hidden`}>
-      <div className="h-[100dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+80px)]">
+    <div className={`${pageBg} min-h-full`}>
+      <div className="pb-[calc(env(safe-area-inset-bottom)+96px)]">
         {view === "books" && (
           <>
             <Header title={tr("holy_bible", "Holy Bible")} />
 
-            <div className="px-4 sm:px-5 pt-4 pb-8 max-w-[720px] mx-auto">
-              <div className="flex gap-2 mb-4">
+            <div className="px-4 sm:px-5 pt-3 pb-8 max-w-[720px] mx-auto">
+              <div className="flex gap-2 mb-3">
                 <button
                   onClick={() => setView("search")}
                   className={`flex-1 flex items-center gap-2 border rounded-xl px-4 py-3 text-sm ${card}`}
