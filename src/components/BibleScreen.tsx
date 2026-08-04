@@ -1146,8 +1146,8 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
         )}
       </div>
 
-      {showLangPicker && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setShowLangPicker(false)}>
+        {showLangPicker && (
+        <div className="fixed inset-0 z-[70] bg-black/70 flex items-end" onClick={() => setShowLangPicker(false)}>
           <div
             onClick={(event) => event.stopPropagation()}
             className={`w-full rounded-t-2xl p-5 max-h-[75dvh] overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+88px)] ${
