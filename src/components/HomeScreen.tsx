@@ -35,7 +35,7 @@ export function HomeScreen({ t }: HomeScreenProps) {
   const verse = verses[new Date().getDate() % verses.length];
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-black text-white">
+    <div className="relative min-h-full overflow-hidden bg-black text-white">
       <div
         className="absolute inset-0 opacity-[0.08]"
         style={{
@@ -48,8 +48,8 @@ export function HomeScreen({ t }: HomeScreenProps) {
       <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-orange-500/10 blur-[140px]" />
       <div className="absolute bottom-[-120px] right-[-100px] w-[300px] h-[300px] bg-orange-500/10 blur-[120px]" />
 
-      <div className="relative z-10 px-6 pt-8 pb-28">
-        <div className="flex items-center justify-between mb-10">
+      <div className="relative z-10 px-6 pt-2 pb-16">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-5">
             <button>
               <Settings className="w-6 h-6 text-orange-500" />
