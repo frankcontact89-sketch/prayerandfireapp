@@ -566,7 +566,7 @@ export default function Index() {
 
   return (
     <BibleRefProvider openRef={openBibleRef}>
-    <div className="flex flex-col min-h-[100dvh] bg-black font-sans">
+    <div className="flex flex-col h-[100dvh] min-h-[100dvh] overflow-hidden bg-black font-sans">
       <div
         className="sticky top-0 z-30 bg-black/95 backdrop-blur-md border-b border-zinc-800"
         style={{ paddingTop: "min(env(safe-area-inset-top), 12px)" }}
@@ -618,7 +618,7 @@ export default function Index() {
         onNavigate={(p) => setPage(p)}
       />
 
-      <div ref={contentScrollRef} className="flex-1 overflow-y-auto pt-3 pb-[calc(env(safe-area-inset-bottom)+96px)] bg-black" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "none" }}>
+      <div ref={contentScrollRef} className="flex-1 overflow-y-auto pt-3 pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom)+24px)] bg-black" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "none" }}>
         {page === "home" && <HomeScreen t={t} language={language} />}
         {page === "giving" && <GivingScreen t={t} language={language} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
@@ -741,7 +741,7 @@ export default function Index() {
       </div>
 
       {page !== "admin" && (
-      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-zinc-800 pb-[env(safe-area-inset-bottom)]">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-zinc-800 pb-[env(safe-area-inset-bottom)]">
         <nav className="flex justify-around items-center h-[64px] px-4 max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto">
           <button aria-label={t("home")} onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
             <Flame className="w-6 h-6" />
