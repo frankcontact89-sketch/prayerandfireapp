@@ -159,86 +159,125 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
       return;
     }
 
+    if (isSignUp) {
+      await handleSignUp();
+    } else {
+      await handleSignIn();
+    }
+  };
+
+  const validateCredentials = (): string | null => {
     const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail || !password) {
-      toast({
-        title: t("error"),
-        description: !normalizedEmail && !password
-          ? t("pleaseEnterEmailPassword")
-          : !normalizedEmail
-            ? t("pleaseEnterEmail")
-            : t("pleaseEnterPassword"),
-        variant: "destructive",
-      });
+    if (!normalizedEmail && !password) return t("pleaseEnterEmailPassword");
+    if (!normalizedEmail) return t("pleaseEnterEmail");
+    if (!password) return t("pleaseEnterPassword");
+    return null;
+  };
+
+  const handleSignUp = async () => {
+    const validationError = validateCredentials();
+    if (validationError) {
+      toast({ title: t("error"), description: validationError, variant: "destructive" });
       return;
     }
+    const normalizedEmail = email.trim().toLowerCase();
 
     setLoading(true);
     try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
-          email: normalizedEmail,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-          },
+      const { data, error } = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+
+      if (error) {
+        console.error("Signup error:", error);
+        if (/already registered|already been registered|user already exists/i.test(error.message || "")) {
+          toast({
+            title: t("error"),
+            description: L(
+              "This email is already registered. Please sign in instead.",
+              "Este correo ya está registrado. Inicia sesión en su lugar.",
+              "Este e-mail já está registrado. Faça login em vez disso.",
+            ),
+            variant: "destructive",
+          });
+          setIsSignUp(false);
+          return;
+        }
+        throw error;
+      }
+
+      // Supabase returns a user with empty identities when the email already exists
+      if (data.user && Array.isArray((data.user as any).identities) && (data.user as any).identities.length === 0) {
+        toast({
+          title: t("error"),
+          description: L(
+            "This email is already registered. Please sign in instead.",
+            "Este correo ya está registrado. Inicia sesión en su lugar.",
+            "Este e-mail já está registrado. Faça login em vez disso.",
+          ),
+          variant: "destructive",
         });
+        setIsSignUp(false);
+        return;
+      }
 
-        if (error) {
-          console.error("Signup error:", error);
-          throw error;
-        }
-
-        if (data.user) {
-          if (data.session) {
-            setUser(data.user);
-            toast({
-              title: t("welcome"),
-              description: t("accountCreatedSuccessfully"),
-            });
-          } else {
-            toast({
-              title: t("accountCreated"),
-              description: t("confirmEmailBeforeSignIn"),
-            });
-            setAwaitingConfirmation(true);
-            setResendCooldown(45);
-            setIsSignUp(false);
-          }
-        }
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: normalizedEmail,
-          password,
-        });
-
-        if (error) {
-          console.error("Sign in error:", error);
-          throw error;
-        }
-
-        if (data.user) {
-          await supabase.auth.getUser();
+      if (data.user) {
+        if (data.session) {
           setUser(data.user);
+          toast({ title: t("welcome"), description: t("accountCreatedSuccessfully") });
+        } else {
+          toast({ title: t("accountCreated"), description: t("confirmEmailBeforeSignIn") });
+          setAwaitingConfirmation(true);
+          setResendCooldown(45);
+          setIsSignUp(false);
         }
       }
     } catch (error: any) {
-      console.error("Auth error:", error);
-      const msg = error?.message || "";
-      if (/email not confirmed/i.test(msg)) {
-        setAwaitingConfirmation(true);
-        toast({
-          title: t("emailNotConfirmed"),
-          description: t("confirmEmailBeforeSignIn"),
-          variant: "destructive",
-        });
-        return;
-      }
-      toast({
-        title: t("error"),
-        description: friendlyError(msg),
-        variant: "destructive",
+      console.error("Signup error:", error);
+      toast({ title: t("error"), description: friendlyError(error?.message), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignIn = async () => {
+    const validationError = validateCredentials();
+    if (validationError) {
+      toast({ title: t("error"), description: validationError, variant: "destructive" });
+      return;
+    }
+    const normalizedEmail = email.trim().toLowerCase();
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
       });
+
+      if (error) {
+        console.error("Sign in error:", error);
+        if (/email not confirmed/i.test(error.message || "")) {
+          setAwaitingConfirmation(true);
+          toast({
+            title: t("emailNotConfirmed"),
+            description: t("confirmEmailBeforeSignIn"),
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
+
+      if (data.user) {
+        await supabase.auth.getUser();
+        setUser(data.user);
+      }
+    } catch (error: any) {
+      console.error("Sign in error:", error);
+      toast({ title: t("error"), description: friendlyError(error?.message), variant: "destructive" });
     } finally {
       setLoading(false);
     }
