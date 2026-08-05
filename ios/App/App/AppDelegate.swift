@@ -2,6 +2,38 @@ import UIKit
 import Capacitor
 import WebKit
 
+/// Keeps the entire native surface black and prevents WKWebView rubber-band
+/// scrolling from exposing iOS's default white background.
+class PrayerFireBridgeViewController: CAPBridgeViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        configureWebView()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        configureWebView()
+    }
+
+    private func configureWebView() {
+        guard let webView = bridge?.webView else {
+            DispatchQueue.main.async { [weak self] in
+                self?.configureWebView()
+            }
+            return
+        }
+
+        webView.isOpaque = true
+        webView.backgroundColor = .black
+        webView.scrollView.backgroundColor = .black
+        webView.scrollView.bounces = false
+        webView.scrollView.alwaysBounceVertical = false
+        webView.scrollView.alwaysBounceHorizontal = false
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
+    }
+}
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -38,12 +70,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window?.backgroundColor = .black
         if let root = window?.rootViewController {
             root.view.backgroundColor = .black
-            root.view.subviews.forEach { view in
-                if let webView = view as? WKWebView {
-                    webView.isOpaque = true
-                    webView.backgroundColor = .black
-                    webView.scrollView.backgroundColor = .black
-                }
+            if let bridgeController = root as? PrayerFireBridgeViewController {
+                bridgeController.view.backgroundColor = .black
             }
         }
     }
