@@ -52,7 +52,7 @@ body::before {
   height: env(safe-area-inset-top);
   background: #000000;
   pointer-events: none;
-  z-index: 60;
+  z-index: 10;
 }
 body::after {
   content: "";
