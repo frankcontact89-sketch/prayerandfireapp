@@ -146,7 +146,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    minHeight: "100vh",
+    minHeight: "auto",
     background: "#000",
     color: "#fff",
     padding: "14px 14px 84px",
