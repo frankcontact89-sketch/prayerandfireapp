@@ -13,6 +13,7 @@ const config: CapacitorConfig = {
   appId: 'com.frankcontact89.prayerandfiremobile',
   appName: 'prayerandfire',
   webDir: 'dist',
+  backgroundColor: '#000000',
   ...(useDevServer
     ? {
         server: {
@@ -23,6 +24,8 @@ const config: CapacitorConfig = {
     : {}),
   ios: {
     contentInset: 'always',
+    backgroundColor: '#000000',
+    scrollEnabled: true,
   },
   plugins: {
     Camera: {
