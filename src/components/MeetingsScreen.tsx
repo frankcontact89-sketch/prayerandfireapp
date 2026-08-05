@@ -201,7 +201,7 @@ export function MeetingsScreen({ t, onBack }: MeetingsScreenProps) {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-border">
         <Button
@@ -253,7 +253,7 @@ export function MeetingsScreen({ t, onBack }: MeetingsScreenProps) {
         )}
       </div>
 
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+      <div className="flex-1 p-4 space-y-4">
         {!inCall ? (
           <>
             <Card>

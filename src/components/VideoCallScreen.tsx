@@ -156,7 +156,7 @@ export function VideoCallScreen({ t, onBack }: VideoCallScreenProps) {
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-border">
         <Button variant="ghost" size="icon" onClick={onBack} className="text-primary">
@@ -188,7 +188,7 @@ export function VideoCallScreen({ t, onBack }: VideoCallScreenProps) {
         )}
       </div>
 
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+      <div className="flex-1 p-4 space-y-4">
         {!inCall ? (
           <>
             <Card>

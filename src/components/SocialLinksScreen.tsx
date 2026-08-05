@@ -52,7 +52,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black px-5 py-5 space-y-3">
+      <div className="bg-black px-5 py-5 space-y-3">
         {[...Array(5)].map((_, index) => (
           <div key={index} className="h-12 rounded-xl bg-zinc-900 animate-pulse" />
         ))}

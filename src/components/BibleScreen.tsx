@@ -830,8 +830,8 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   }
 
   return (
-    <div className={`${pageBg} min-h-full`}>
-      <div className="pb-[calc(env(safe-area-inset-bottom)+96px)]">
+    <div className={`${pageBg}`}>
+      <div>
         {view === "books" && (
           <>
             <Header title={tr("holy_bible", "Holy Bible")} />

@@ -64,7 +64,7 @@ export default function CoursesScreen({ t, onBack }: CoursesScreenProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
+    <div className="bg-background text-foreground p-6">
       <div className="max-w-xl mx-auto space-y-5">
         <div className="flex items-center gap-4 mb-6">
           <button onClick={onBack} className="p-2 rounded-lg hover:bg-muted/20 text-foreground">←</button>

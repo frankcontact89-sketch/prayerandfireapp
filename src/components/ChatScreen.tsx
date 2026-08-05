@@ -50,7 +50,7 @@ export function ChatScreen({ t, onBack }: ChatScreenProps) {
   if (view === "meetings") return <MeetingsScreen t={t} onBack={() => setView("home")} />;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground relative overflow-hidden">
+    <div className="flex flex-col bg-background text-foreground relative overflow-hidden">
       {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-40 -left-32 w-[28rem] h-[28rem] rounded-full bg-primary/15 blur-[120px]" />
