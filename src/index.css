@@ -28,10 +28,6 @@ html, body, #root {
   height: 0;
 }
 
-body {
-  overflow: hidden;
-}
-
 html {
   background: #000000;
   -webkit-tap-highlight-color: transparent;
