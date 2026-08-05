@@ -318,7 +318,13 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
           )}
 
           <Button
-            onClick={handleAuth}
+            onClick={
+              isForgotUsername || isForgotPassword
+                ? handleAuth
+                : isSignUp
+                  ? handleSignUp
+                  : handleSignIn
+            }
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-12 text-base font-semibold mt-[25px] transition-all duration-200 hover:scale-[1.02] active:scale-95 shadow-lg shadow-primary/20"
             disabled={loading}
           >
@@ -336,7 +342,10 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
           {!isForgotPassword && !isForgotUsername && (
             <Button
               variant="outline"
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={() => {
+                setIsSignUp((prev) => !prev);
+                setAwaitingConfirmation(false);
+              }}
               className="w-full bg-transparent border-2 border-border text-foreground hover:bg-secondary hover:border-primary rounded-xl h-12 text-base font-medium transition-all duration-200"
               disabled={loading}
             >
