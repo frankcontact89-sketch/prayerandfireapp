@@ -5,14 +5,39 @@
 /* iOS safe-area background: keep status bar / notch area opaque so content
    never appears to bleed beneath the Dynamic Island. */
 html, body, #root {
-  background-color: #000;
+  background-color: #000000;
+  min-height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overscroll-behavior-y: none;
+}
+
+html {
+  background: #000000;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
   min-height: 100dvh;
-  overscroll-behavior: none;
+}
+
+#root {
+  min-height: 100dvh;
+  background-color: #000000;
 }
 
 /* Paint the iOS rubber-band overscroll area black (top and bottom). */
-html {
-  background: #000;
+body::before {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: env(safe-area-inset-top);
+  background: #000000;
+  pointer-events: none;
+  z-index: 60;
 }
 body::after {
   content: "";
@@ -21,7 +46,8 @@ body::after {
   right: 0;
   bottom: 0;
   height: env(safe-area-inset-bottom);
-  background: #000;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #000000;
   pointer-events: none;
   z-index: 60;
 }
