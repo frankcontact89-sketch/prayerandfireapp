@@ -14,7 +14,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window?.rootViewController?.view.backgroundColor = .black
 
         WKWebView.appearance().backgroundColor = .black
-        WKWebView.appearance().isOpaque = true
         UIScrollView.appearance(whenContainedInInstancesOf: [WKWebView.self]).backgroundColor = .black
         UIView.appearance(whenContainedInInstancesOf: [CAPBridgeViewController.self]).backgroundColor = .black
         return true
@@ -35,7 +34,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        // Re-assert black backgrounds (covers late webview creation).
+        window?.backgroundColor = .black
+        if let root = window?.rootViewController {
+            root.view.backgroundColor = .black
+            root.view.subviews.forEach { view in
+                if let webView = view as? WKWebView {
+                    webView.isOpaque = true
+                    webView.backgroundColor = .black
+                    webView.scrollView.backgroundColor = .black
+                }
+            }
+        }
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
