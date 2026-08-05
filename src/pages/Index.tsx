@@ -569,7 +569,7 @@ export default function Index() {
     <div className="flex flex-col h-[100dvh] min-h-[100dvh] overflow-hidden bg-black font-sans">
       <div
         className="sticky top-0 z-30 bg-black/95 backdrop-blur-md border-b border-zinc-800"
-        style={{ paddingTop: "min(env(safe-area-inset-top), 12px)" }}
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="flex justify-between items-center px-4 h-11">
           <div className="flex items-center gap-1">
