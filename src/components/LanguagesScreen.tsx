@@ -43,7 +43,7 @@ export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }
 
   return (
     <div
-      className="min-h-full bg-black text-white p-6 space-y-6"
+      className="bg-black text-white p-6 space-y-6"
       style={{
         paddingTop: "calc(env(safe-area-inset-top) + 7rem)",
         paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",

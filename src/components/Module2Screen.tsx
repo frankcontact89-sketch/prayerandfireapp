@@ -164,7 +164,7 @@ export function Module2Screen({ t, onBack, onGoToStore }: Module2ScreenProps) {
   if (loading) return <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6"><div className="text-muted-foreground">{t("loading")}</div></div>;
 
   return (
-    <div className="min-h-full bg-background text-foreground p-6">
+    <div className="bg-background text-foreground p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">

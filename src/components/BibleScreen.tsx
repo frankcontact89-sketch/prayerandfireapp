@@ -830,7 +830,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   }
 
   return (
-    <div className={`${pageBg} min-h-full`}>
+    <div className={`${pageBg}`}>
       <div>
         {view === "books" && (
           <>

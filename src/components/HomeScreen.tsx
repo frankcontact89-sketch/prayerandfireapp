@@ -35,7 +35,7 @@ export function HomeScreen({ t }: HomeScreenProps) {
   const verse = verses[new Date().getDate() % verses.length];
 
   return (
-    <div className="relative min-h-full overflow-hidden bg-black text-white">
+    <div className="relative overflow-hidden bg-black text-white">
       <div
         className="absolute inset-0 opacity-[0.08]"
         style={{
