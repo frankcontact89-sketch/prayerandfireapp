@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,7 +8,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Force a black background everywhere so no white strip shows through
+        // the iOS safe areas (home indicator) or during rubber-band overscroll.
+        window?.backgroundColor = .black
+        window?.rootViewController?.view.backgroundColor = .black
+
+        WKWebView.appearance().backgroundColor = .black
+        WKWebView.appearance().isOpaque = true
+        UIScrollView.appearance(whenContainedInInstancesOf: [WKWebView.self]).backgroundColor = .black
+        UIView.appearance(whenContainedInInstancesOf: [CAPBridgeViewController.self]).backgroundColor = .black
         return true
     }
 
