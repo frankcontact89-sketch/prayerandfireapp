@@ -318,6 +318,7 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
 export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPageState] = useState<string>(() => {
+    return (() => {
     try {
       const savedPage = localStorage.getItem("pf_last_page") || "home";
       return savedPage === "profile" ? "settings" : savedPage;
