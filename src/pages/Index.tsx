@@ -325,6 +325,7 @@ export default function Index() {
       return "home";
     }
   });
+  const [eventsOrigin, setEventsOrigin] = useState<string>("home");
   const pageRef = useRef(page);
   const contentScrollRef = useRef<HTMLDivElement | null>(null);
   const pageScrollPositionsRef = useRef<Record<string, number>>({});
@@ -674,9 +675,16 @@ export default function Index() {
         )}
 
         {page === "social" && (
-          <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />
+          <SocialLinksScreen
+            t={t}
+            onBack={() => setPage("home")}
+            onNavigateToEvents={() => {
+              setEventsOrigin("social");
+              setPage("events");
+            }}
+          />
         )}
-        {page === "events" && <EventsScreen t={t} onBack={() => setPage("home")} />}
+        {page === "events" && <EventsScreen t={t} onBack={() => setPage(eventsOrigin)} />}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
         {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}
