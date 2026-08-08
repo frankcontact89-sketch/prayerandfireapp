@@ -208,3 +208,15 @@ All colors MUST be HSL.
     background-color: #000;
   }
 }
+
+/* Tablet / iPad adaptation: scale up the mobile-first UI so it fits larger screens */
+@media (min-width: 768px) {
+  html {
+    zoom: 1.2;
+  }
+}
+@media (min-width: 1024px) {
+  html {
+    zoom: 1.35;
+  }
+}

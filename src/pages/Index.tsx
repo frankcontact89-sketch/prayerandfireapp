@@ -265,7 +265,7 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
 
       <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-orange-500/10 blur-[140px] pointer-events-none" />
 
-      <div className="relative z-10 px-5 pt-3 pb-5 max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto">
+      <div className="relative z-10 px-5 pt-3 pb-5 max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto">
         <div className="flex flex-col items-center text-center mb-5">
           <img
             src={entryLogo}
@@ -761,7 +761,7 @@ export default function Index() {
 
       {page !== "admin" && (
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-zinc-800 pb-[env(safe-area-inset-bottom)]">
-        <nav className="flex justify-around items-center h-[64px] px-4 max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto">
+        <nav className="flex justify-around items-center h-[64px] px-4 max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto">
           <button aria-label={t("home")} onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
             <Flame className="w-6 h-6" />
           </button>

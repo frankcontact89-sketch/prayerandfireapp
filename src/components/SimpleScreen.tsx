@@ -13,7 +13,7 @@ interface SimpleScreenProps {
 export function SimpleScreen({ title, subtitle, onBack, icon, children }: SimpleScreenProps) {
   return (
     <div className="bg-black text-white">
-      <div className="max-w-[430px] md:max-w-[640px] lg:max-w-[768px] mx-auto px-5 pt-1 pb-16">
+      <div className="max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto px-5 pt-1 pb-16">
         <div className="flex items-center gap-2 mb-4">
           <Button variant="ghost" size="icon" onClick={onBack} className="text-white">
             <ArrowLeft className="w-5 h-5" />
