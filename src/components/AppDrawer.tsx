@@ -4,7 +4,7 @@ import {
   Home, BookOpen, Library,
   ShoppingBag, Share2, Info, HandHeart, Settings as SettingsIcon, Link2,
 } from "lucide-react";
-import { APP_CONFIG } from "@/config/constants";
+import { toast } from "@/hooks/use-toast";
 
 type Page = string;
 
