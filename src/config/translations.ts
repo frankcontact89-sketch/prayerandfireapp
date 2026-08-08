@@ -23,6 +23,7 @@ export const translations: Record<string, Record<string, string>> = {
     findUsername: "Find Username",
     alreadyHaveAccount: "Already have account?",
     pleaseEnterEmail: "Please enter your email",
+    pleaseEnterEmailOrUsername: "Please enter your email or username",
     pleaseEnterPassword: "Please enter your password",
     pleaseEnterEmailPassword: "Please enter your email and password",
     pleaseWait: "Please wait",
