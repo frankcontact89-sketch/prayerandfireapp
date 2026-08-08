@@ -5,6 +5,8 @@ import {
   ShoppingBag, Share2, Info, HandHeart, Settings as SettingsIcon, Link2,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Capacitor } from "@capacitor/core";
+import { Share } from "@capacitor/share";
 
 type Page = string;
 
@@ -31,9 +33,9 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
     const message = "Download Prayer & Fire and join a global movement of prayer and faith.";
     const appStoreUrl = "https://apps.apple.com/us/app/prayerandfire-mobile/id6757282653";
 
-    // Close the drawer first so its focus trap/overlay doesn't block the share sheet
+    // Close the drawer synchronously, then open sharing while the original tap
+    // still counts as an active user gesture (required by iOS and browsers).
     onOpenChange(false);
-    await new Promise((r) => setTimeout(r, 250));
 
     const copyFallback = async () => {
       try {
@@ -52,9 +54,7 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
     };
 
     try {
-      const { Capacitor } = await import("@capacitor/core");
-      if (Capacitor?.isNativePlatform?.()) {
-        const { Share } = await import("@capacitor/share");
+      if (Capacitor.isNativePlatform()) {
         await Share.share({ title, text: message, url: appStoreUrl, dialogTitle: title });
         return;
       }
