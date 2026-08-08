@@ -907,7 +907,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
           <>
             {/* Unified sticky top bar: title row + integrated audio row */}
             <div
-              className={`sticky -top-3 z-40 border-b ${
+              className={`sticky top-0 z-40 border-b ${
                 isDay ? "bg-white border-zinc-200" : "bg-black border-zinc-800"
               }`}
             >
