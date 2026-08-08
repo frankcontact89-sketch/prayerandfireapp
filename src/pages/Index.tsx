@@ -318,7 +318,6 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
 export default function Index() {
   const [user, setUser] = useState<any>(null);
   const [page, setPageState] = useState<string>(() => {
-    return (() => {
     try {
       const savedPage = localStorage.getItem("pf_last_page") || "home";
       return savedPage === "profile" ? "settings" : savedPage;
@@ -326,6 +325,7 @@ export default function Index() {
       return "home";
     }
   });
+  const [eventsOrigin, setEventsOrigin] = useState<string>("home");
   const pageRef = useRef(page);
   const contentScrollRef = useRef<HTMLDivElement | null>(null);
   const pageScrollPositionsRef = useRef<Record<string, number>>({});
