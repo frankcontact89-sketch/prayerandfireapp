@@ -31,18 +31,43 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
     const message = "Download Prayer & Fire and join a global movement of prayer and faith.";
     const appStoreUrl = "https://apps.apple.com/us/app/prayerandfire-mobile/id6757282653";
 
+    // Close the drawer first so its focus trap/overlay doesn't block the share sheet
+    onOpenChange(false);
+    await new Promise((r) => setTimeout(r, 250));
+
+    const copyFallback = async () => {
+      try {
+        await navigator.clipboard.writeText(appStoreUrl);
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = appStoreUrl;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch { /* ignore */ }
+        document.body.removeChild(ta);
+      }
+      toast({ title: "App Store link copied.", duration: 2000 });
+    };
+
     try {
+      const { Capacitor } = await import("@capacitor/core");
+      if (Capacitor?.isNativePlatform?.()) {
+        const { Share } = await import("@capacitor/share");
+        await Share.share({ title, text: message, url: appStoreUrl, dialogTitle: title });
+        return;
+      }
       if (navigator.share) {
         await navigator.share({ title, text: message, url: appStoreUrl });
-      } else {
-        await navigator.clipboard.writeText(appStoreUrl);
-        toast({ title: "App Store link copied.", duration: 2000 });
+        return;
       }
-    } catch (error) {
-      // User cancelled or share failed — no fallback copy needed.
-      // Swallow the error to avoid showing unwanted system errors.
+      await copyFallback();
+    } catch (error: any) {
+      const msg = String(error?.message || error || "");
+      if (/abort|cancel/i.test(msg)) return; // user dismissed the share sheet
+      await copyFallback();
     }
-    onOpenChange(false);
   };
 
   const item = (icon: React.ReactNode, label: string, onClick: () => void) => (
