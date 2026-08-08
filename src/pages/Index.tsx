@@ -566,7 +566,10 @@ export default function Index() {
 
   return (
     <BibleRefProvider openRef={openBibleRef}>
-    <div className="flex flex-col h-[100dvh] min-h-[100dvh] overflow-hidden bg-black font-sans">
+    <div
+      className="flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden bg-black font-sans"
+      style={{ paddingBottom: "calc(var(--bottom-nav-height) + env(safe-area-inset-bottom))" }}
+    >
       <div
         className="sticky top-0 z-30 bg-black/95 backdrop-blur-md border-b border-zinc-800"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
@@ -618,7 +621,7 @@ export default function Index() {
         onNavigate={(p) => setPage(p)}
       />
 
-      <div ref={contentScrollRef} className="flex-1 overflow-y-auto pt-3 pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom)+24px)] bg-black" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "none" }}>
+      <div ref={contentScrollRef} className="flex-1 min-h-0 overflow-y-auto pt-3 bg-black" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
         {page === "home" && <HomeScreen t={t} language={language} />}
         {page === "giving" && <GivingScreen t={t} language={language} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
