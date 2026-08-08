@@ -209,6 +209,12 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
     () => (localStorage.getItem(VIEW_KEY) as any) || "books",
   );
 
+  // Tell the app shell to hide the global hamburger while reading a chapter.
+  useEffect(() => {
+    onReadingChange?.(view === "verses");
+    return () => onReadingChange?.(false);
+  }, [view, onReadingChange]);
+
   const [bookIdx, setBookIdx] = useState(() => Number(localStorage.getItem(BOOK_KEY) || 0));
   const [chapterIdx, setChapterIdx] = useState(() => Number(localStorage.getItem(CHAPTER_KEY) || 0));
   const [query, setQuery] = useState("");
