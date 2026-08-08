@@ -405,6 +405,7 @@ export default function Index() {
     (ParsedRef & { nonce: number }) | null
   >(null);
   const [bibleReturnTo, setBibleReturnTo] = useState<string | null>(null);
+  const [bibleReading, setBibleReading] = useState(false);
 
   const openBibleRef = useCallback(
     (ref: ParsedRef) => {
