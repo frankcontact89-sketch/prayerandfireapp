@@ -180,7 +180,7 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
   const handleSignUp = async () => {
     const validationError = validateCredentials();
     if (validationError) {
-      toast({ title: t("error"), description: validationError, variant: "destructive" });
+      showValidationToast(validationError);
       return;
     }
     const normalizedEmail = email.trim().toLowerCase();
