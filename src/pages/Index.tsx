@@ -624,7 +624,11 @@ export default function Index() {
         onNavigate={(p) => setPage(p)}
       />
 
-      <div ref={contentScrollRef} className="flex-1 min-h-0 overflow-y-auto pt-3 bg-black" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
+      <div
+        ref={contentScrollRef}
+        className={`flex-1 min-h-0 overflow-y-auto bg-black ${page === "bible" ? "pt-0" : "pt-3"}`}
+        style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
+      >
         {page === "home" && <HomeScreen t={t} language={language} />}
         {page === "giving" && <GivingScreen t={t} language={language} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
