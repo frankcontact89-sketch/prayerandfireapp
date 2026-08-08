@@ -676,7 +676,7 @@ export default function Index() {
         {page === "social" && (
           <SocialLinksScreen t={t} onBack={() => setPage("home")} onNavigateToEvents={() => setPage("events")} />
         )}
-        {page === "events" && <EventsScreen t={t} />}
+        {page === "events" && <EventsScreen t={t} onBack={() => setPage("home")} />}
         {page === "admin" && <AdminPanel t={t} onBack={() => setPage("settings")} />}
         {page === "notifications" && <NotificationsScreen t={t} onBack={() => setPage("settings")} />}
         {page === "legal" && <LegalCenter t={t} onBack={() => setPage("settings")} />}

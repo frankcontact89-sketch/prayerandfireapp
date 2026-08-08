@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { Calendar, MapPin, Users, Video, XCircle, Bell, BellOff } from "lucide-react";
+import { Calendar, MapPin, Users, Video, XCircle, Bell, BellOff, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { notificationHaptic } from "@/lib/haptics";
 
@@ -20,9 +20,10 @@ interface Event {
 interface EventsScreenProps {
   t: (key: string) => string;
   onNewEvents?: (count: number) => void;
+  onBack?: () => void;
 }
 
-export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
+export function EventsScreen({ t, onNewEvents, onBack }: EventsScreenProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [rsvps, setRsvps] = useState<Set<string>>(new Set());
   const [declines, setDeclines] = useState<Set<string>>(new Set());
@@ -229,6 +230,15 @@ export function EventsScreen({ t, onNewEvents }: EventsScreenProps) {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-primary font-semibold text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {t("back")}
+        </button>
+      )}
       <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
         {t("events")}
       </h1>
