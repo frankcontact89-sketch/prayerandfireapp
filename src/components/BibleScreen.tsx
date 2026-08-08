@@ -1208,10 +1208,13 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
       )}
 
       {showReaderSettings && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={() => setShowReaderSettings(false)}>
+        <div
+          className="fixed inset-0 z-50 bg-black/70 flex items-end pb-[calc(64px+env(safe-area-inset-bottom))]"
+          onClick={() => setShowReaderSettings(false)}
+        >
           <div
             onClick={(event) => event.stopPropagation()}
-            className={`w-full rounded-t-2xl p-5 pb-[calc(env(safe-area-inset-bottom)+20px)] ${
+            className={`w-full rounded-t-2xl p-5 pb-6 max-h-[70vh] overflow-y-auto overscroll-contain ${
               isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
             }`}
           >
