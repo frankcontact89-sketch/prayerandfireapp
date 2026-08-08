@@ -27,30 +27,23 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
   };
 
   const share = async () => {
-    // Share the APP download link (App Store / Play Store). Fall back to the
-    // marketing website so the button never breaks before the store listings
-    // are live.
-    const storeUrl =
-      APP_CONFIG.APP_STORE_URL || APP_CONFIG.PLAY_STORE_URL || APP_CONFIG.URL;
-    const text = L(
-      language,
-      "Download the Prayer & Fire App",
-      "Descarga la app Prayer & Fire",
-      "Baixe o app Prayer & Fire"
-    );
-    const shareUrl = storeUrl;
-    const composed = shareUrl ? `${text} ${shareUrl}` : text;
+    const title = "Prayer & Fire";
+    const message = "Download Prayer & Fire and join a global movement of prayer and faith.";
+    const appStoreUrl = "https://apps.apple.com/us/app/prayerandfire-mobile/id6757282653";
+    const composed = `${message} ${appStoreUrl}`;
+
     try {
       if (navigator.share) {
-        await navigator.share({
-          title: APP_CONFIG.APP_NAME,
-          text,
-          url: shareUrl || undefined,
-        });
+        await navigator.share({ title, text: message, url: appStoreUrl });
       } else {
-        await navigator.clipboard.writeText(composed);
+        await navigator.clipboard.writeText(appStoreUrl);
       }
-    } catch {}
+    } catch (error) {
+      // User cancelled or share failed — fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(appStoreUrl);
+      } catch {}
+    }
     onOpenChange(false);
   };
 
