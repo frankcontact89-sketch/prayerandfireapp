@@ -168,10 +168,13 @@ export function SignInScreen({ setUser, t, onShowLanguages, currentLanguage = "e
 
   const validateCredentials = (): string | null => {
     const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail && !password) return t("pleaseEnterEmailPassword");
-    if (!normalizedEmail) return t("pleaseEnterEmail");
+    if (!normalizedEmail) return t("pleaseEnterEmailOrUsername");
     if (!password) return t("pleaseEnterPassword");
     return null;
+  };
+
+  const showValidationToast = (message: string) => {
+    toast({ title: message, variant: "destructive" });
   };
 
   const handleSignUp = async () => {
