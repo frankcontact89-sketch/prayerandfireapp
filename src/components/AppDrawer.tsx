@@ -30,19 +30,17 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
     const title = "Prayer & Fire";
     const message = "Download Prayer & Fire and join a global movement of prayer and faith.";
     const appStoreUrl = "https://apps.apple.com/us/app/prayerandfire-mobile/id6757282653";
-    const composed = `${message} ${appStoreUrl}`;
 
     try {
       if (navigator.share) {
         await navigator.share({ title, text: message, url: appStoreUrl });
       } else {
         await navigator.clipboard.writeText(appStoreUrl);
+        toast({ title: "App Store link copied.", duration: 2000 });
       }
     } catch (error) {
-      // User cancelled or share failed — fallback to clipboard
-      try {
-        await navigator.clipboard.writeText(appStoreUrl);
-      } catch {}
+      // User cancelled or share failed — no fallback copy needed.
+      // Swallow the error to avoid showing unwanted system errors.
     }
     onOpenChange(false);
   };
