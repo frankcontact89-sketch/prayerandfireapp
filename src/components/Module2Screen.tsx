@@ -161,7 +161,7 @@ export function Module2Screen({ t, onBack, onGoToStore }: Module2ScreenProps) {
     setDeleteId(null);
   };
 
-  if (loading) return <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6"><div className="text-muted-foreground">{t("loading")}</div></div>;
+  if (loading) return <div className="min-h-full bg-background text-foreground flex items-center justify-center p-6"><div className="text-muted-foreground">{t("loading")}</div></div>;
 
   return (
     <div className="bg-background text-foreground p-6">
