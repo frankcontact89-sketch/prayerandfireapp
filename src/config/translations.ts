@@ -1145,6 +1145,7 @@ export const translations: Record<string, Record<string, string>> = {
     findUsername: "Encontrar usuário",
     alreadyHaveAccount: "Já tem uma conta?",
     pleaseEnterEmail: "Digite seu e-mail",
+    pleaseEnterEmailOrUsername: "Digite seu e-mail ou nome de usuário",
     pleaseEnterPassword: "Digite sua senha",
     pleaseEnterEmailPassword: "Digite seu e-mail e senha",
     pleaseWait: "Aguarde",
