@@ -165,7 +165,7 @@ interface BibleScreenProps {
   onExitToOrigin?: () => void;
 }
 
-export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onExitToOrigin }: BibleScreenProps = {}) {
+export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onExitToOrigin, onReadingChange }: BibleScreenProps & { onReadingChange?: (reading: boolean) => void } = {}) {
   const [translation, setTranslation] = useState(() => {
     const stored = localStorage.getItem(LANG_KEY);
     const lastAppLanguage = localStorage.getItem(APP_LANG_KEY);
