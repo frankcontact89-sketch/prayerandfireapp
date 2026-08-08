@@ -165,7 +165,7 @@ interface BibleScreenProps {
   onExitToOrigin?: () => void;
 }
 
-export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onExitToOrigin }: BibleScreenProps = {}) {
+export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onExitToOrigin, onReadingChange }: BibleScreenProps & { onReadingChange?: (reading: boolean) => void } = {}) {
   const [translation, setTranslation] = useState(() => {
     const stored = localStorage.getItem(LANG_KEY);
     const lastAppLanguage = localStorage.getItem(APP_LANG_KEY);
@@ -208,6 +208,12 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   const [view, setView] = useState<"books" | "chapters" | "verses" | "search" | "favorites">(
     () => (localStorage.getItem(VIEW_KEY) as any) || "books",
   );
+
+  // Tell the app shell to hide the global hamburger while reading a chapter.
+  useEffect(() => {
+    onReadingChange?.(view === "verses");
+    return () => onReadingChange?.(false);
+  }, [view, onReadingChange]);
 
   const [bookIdx, setBookIdx] = useState(() => Number(localStorage.getItem(BOOK_KEY) || 0));
   const [chapterIdx, setChapterIdx] = useState(() => Number(localStorage.getItem(CHAPTER_KEY) || 0));
@@ -901,8 +907,8 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
           <>
             {/* Unified sticky top bar: title row + integrated audio row */}
             <div
-              className={`sticky top-0 z-20 backdrop-blur-md border-b ${
-                isDay ? "bg-white/95 border-zinc-200" : "bg-black/90 border-zinc-800"
+              className={`sticky top-0 z-40 border-b ${
+                isDay ? "bg-white border-zinc-200" : "bg-black border-zinc-800"
               }`}
             >
               {/* Minimal top row: back + book/chapter + menu */}

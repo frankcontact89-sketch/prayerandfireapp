@@ -405,6 +405,7 @@ export default function Index() {
     (ParsedRef & { nonce: number }) | null
   >(null);
   const [bibleReturnTo, setBibleReturnTo] = useState<string | null>(null);
+  const [bibleReading, setBibleReading] = useState(false);
 
   const openBibleRef = useCallback(
     (ref: ParsedRef) => {
@@ -571,7 +572,7 @@ export default function Index() {
       style={{ paddingBottom: "calc(var(--bottom-nav-height) + env(safe-area-inset-bottom))" }}
     >
       <div
-        className="sticky top-0 z-30 bg-black/95 backdrop-blur-md border-b border-zinc-800"
+        className="sticky top-0 z-30 bg-black border-b border-zinc-800"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="flex justify-between items-center px-4 h-11">
@@ -603,13 +604,15 @@ export default function Index() {
             )}
           </div>
 
-          <button
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Menu"
-            className="text-orange-500 w-10 h-10 flex items-center justify-center"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+          {!bibleReading && (
+            <button
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Menu"
+              className="text-orange-500 w-10 h-10 flex items-center justify-center"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -631,6 +634,7 @@ export default function Index() {
             language={language}
             initialRef={pendingBibleRef}
             onInitialRefApplied={() => setPendingBibleRef(null)}
+            onReadingChange={setBibleReading}
             onExitToOrigin={
               bibleReturnTo
                 ? () => {
