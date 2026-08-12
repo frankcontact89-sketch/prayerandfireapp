@@ -569,11 +569,10 @@ export default function Index() {
   return (
     <BibleRefProvider openRef={openBibleRef}>
     <div
-      className="flex flex-col h-[100dvh] max-h-[100dvh] overflow-hidden bg-black font-sans"
-      style={{ paddingBottom: "calc(var(--bottom-nav-height) + env(safe-area-inset-bottom))" }}
+      className="fixed inset-0 flex h-[100dvh] w-full flex-col overflow-hidden bg-black font-sans"
     >
       <div
-        className="sticky top-0 z-30 bg-black border-b border-zinc-800"
+        className="relative z-30 shrink-0 bg-black border-b border-zinc-800"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="flex justify-between items-center px-4 h-11">
@@ -760,7 +759,7 @@ export default function Index() {
       </div>
 
       {page !== "admin" && (
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-zinc-800 pb-[env(safe-area-inset-bottom)]">
+      <div className="relative z-50 shrink-0 bg-black border-t border-zinc-800 pb-[env(safe-area-inset-bottom)]">
         <nav className="flex justify-around items-center h-[64px] px-4 max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto">
           <button aria-label={t("home")} onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
             <Flame className="w-6 h-6" />
