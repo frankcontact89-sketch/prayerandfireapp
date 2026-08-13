@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/IndexWithCommunity";
 import ResetPassword from "./pages/ResetPassword";
 import OAuthConsent from "./pages/OAuthConsent";
-import Community from "./pages/CommunityAccess";
+import Community from "./pages/CommunityV2";
 
 const queryClient = new QueryClient();
 
