@@ -1,0 +1,68 @@
+export type Lang = "en" | "es" | "pt";
+
+export const getLang = (): Lang => {
+  const x = (localStorage.getItem("pf_lang") || localStorage.getItem("language") || "en").slice(0, 2);
+  return x === "es" || x === "pt" ? x : "en";
+};
+
+export const dict = {
+  en: {
+    title: "Community", search: "Search chats", all: "All", unread: "Unread", groups: "Groups",
+    empty: "No chats yet", sub: "Your conversations will appear here.", new: "New group", members: "members",
+    info: "Group info", mute: "Mute notifications", unmute: "Unmute notifications", fav: "Favorite group",
+    exit: "Exit group", edit: "Edit group", desc: "Description", save: "Save", type: "Message Prayer & Fire",
+    media: "Media, links and documents", searchMsg: "Search messages", permissions: "Group permissions",
+    addMembers: "Add members", admins: "Group admins",
+    privateTitle: "Private community", privateBody: "Prayer & Fire Community is private. Request access and a leader will review your request.",
+    requestAccess: "Request access", requesting: "Sending…", pendingTitle: "Request pending",
+    pendingBody: "Your request was sent. A leader will approve it soon.",
+    rejectedTitle: "Access not approved", rejectedBody: "Your request was not approved. You can contact a leader for more information.",
+    requestsPanel: "Access requests", noRequests: "No pending requests", approve: "Approve", reject: "Reject",
+    manageAdmins: "Community admins", makeAdmin: "Make admin", removeAdmin: "Remove admin", owner: "Owner", admin: "Admin", member: "Member",
+    approved: "Approved members", deleteMsg: "Delete message", cancel: "Cancel", delete: "Delete",
+    recording: "Recording", slideCancel: "Tap ✕ to cancel", send: "Send", document: "Document",
+    onlyAdminsCreate: "Only leaders can create groups", back: "Back", noPermission: "You do not have permission",
+    permissionsBody: "Only the owner and community admins can create groups, add members and remove any message. Members can delete only their own messages.",
+    addedMembers: "Members added", audioError: "Audio unavailable", voiceMessage: "Voice message",
+  },
+  es: {
+    title: "Comunidad", search: "Buscar chats", all: "Todos", unread: "No leídos", groups: "Grupos",
+    empty: "Todavía no hay chats", sub: "Tus conversaciones aparecerán aquí.", new: "Nuevo grupo", members: "miembros",
+    info: "Información del grupo", mute: "Silenciar notificaciones", unmute: "Activar notificaciones", fav: "Grupo favorito",
+    exit: "Salir del grupo", edit: "Editar grupo", desc: "Descripción", save: "Guardar", type: "Mensaje Prayer & Fire",
+    media: "Multimedia, enlaces y documentos", searchMsg: "Buscar mensajes", permissions: "Permisos del grupo",
+    addMembers: "Agregar miembros", admins: "Administradores del grupo",
+    privateTitle: "Comunidad privada", privateBody: "La Comunidad Prayer & Fire es privada. Solicita acceso y un líder revisará tu solicitud.",
+    requestAccess: "Solicitar acceso", requesting: "Enviando…", pendingTitle: "Solicitud pendiente",
+    pendingBody: "Tu solicitud fue enviada. Un líder la aprobará pronto.",
+    rejectedTitle: "Acceso no aprobado", rejectedBody: "Tu solicitud no fue aprobada. Puedes contactar a un líder para más información.",
+    requestsPanel: "Solicitudes de acceso", noRequests: "No hay solicitudes pendientes", approve: "Aprobar", reject: "Rechazar",
+    manageAdmins: "Administradores de la comunidad", makeAdmin: "Hacer administrador", removeAdmin: "Quitar administrador", owner: "Dueño", admin: "Administrador", member: "Miembro",
+    approved: "Miembros aprobados", deleteMsg: "Eliminar mensaje", cancel: "Cancelar", delete: "Eliminar",
+    recording: "Grabando", slideCancel: "Toca ✕ para cancelar", send: "Enviar", document: "Documento",
+    onlyAdminsCreate: "Solo los líderes pueden crear grupos", back: "Atrás", noPermission: "No tienes permiso",
+    permissionsBody: "Solo el dueño y los administradores pueden crear grupos, agregar miembros y borrar cualquier mensaje. Los miembros solo pueden borrar sus propios mensajes.",
+    addedMembers: "Miembros agregados", audioError: "Audio no disponible", voiceMessage: "Mensaje de voz",
+  },
+  pt: {
+    title: "Comunidade", search: "Buscar chats", all: "Todos", unread: "Não lidos", groups: "Grupos",
+    empty: "Ainda não há conversas", sub: "Suas conversas aparecerão aqui.", new: "Novo grupo", members: "membros",
+    info: "Informações do grupo", mute: "Silenciar notificações", unmute: "Ativar notificações", fav: "Grupo favorito",
+    exit: "Sair do grupo", edit: "Editar grupo", desc: "Descrição", save: "Salvar", type: "Mensagem Prayer & Fire",
+    media: "Mídia, links e documentos", searchMsg: "Buscar mensagens", permissions: "Permissões do grupo",
+    addMembers: "Adicionar membros", admins: "Administradores do grupo",
+    privateTitle: "Comunidade privada", privateBody: "A Comunidade Prayer & Fire é privada. Solicite acesso e um líder irá revisar seu pedido.",
+    requestAccess: "Solicitar acesso", requesting: "Enviando…", pendingTitle: "Pedido pendente",
+    pendingBody: "Seu pedido foi enviado. Um líder aprovará em breve.",
+    rejectedTitle: "Acesso não aprovado", rejectedBody: "Seu pedido não foi aprovado. Você pode falar com um líder para mais informações.",
+    requestsPanel: "Pedidos de acesso", noRequests: "Nenhum pedido pendente", approve: "Aprovar", reject: "Recusar",
+    manageAdmins: "Administradores da comunidade", makeAdmin: "Tornar administrador", removeAdmin: "Remover administrador", owner: "Dono", admin: "Administrador", member: "Membro",
+    approved: "Membros aprovados", deleteMsg: "Apagar mensagem", cancel: "Cancelar", delete: "Apagar",
+    recording: "Gravando", slideCancel: "Toque ✕ para cancelar", send: "Enviar", document: "Documento",
+    onlyAdminsCreate: "Somente líderes podem criar grupos", back: "Voltar", noPermission: "Você não tem permissão",
+    permissionsBody: "Somente o dono e os administradores podem criar grupos, adicionar membros e apagar qualquer mensagem. Os membros só podem apagar suas próprias mensagens.",
+    addedMembers: "Membros adicionados", audioError: "Áudio indisponível", voiceMessage: "Mensagem de voz",
+  },
+} as const;
+
+export type Words = { [K in keyof typeof dict["en"]]: string };

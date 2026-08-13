@@ -125,6 +125,60 @@ export type Database = {
         }
         Relationships: []
       }
+      community_access_requests: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      community_admins: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       community_blocks: {
         Row: {
           blocked_id: string
@@ -1314,11 +1368,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_community_approved: { Args: { _user_id: string }; Returns: boolean }
+      is_community_boss: { Args: { _user_id: string }; Returns: boolean }
       is_community_member: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
       is_community_owner: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_community_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_group_admin: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
