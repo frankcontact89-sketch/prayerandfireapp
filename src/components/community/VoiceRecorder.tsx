@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Mic, Send, X } from "lucide-react";
+import { Mic, Pause, Play, Send, Trash2 } from "lucide-react";
 import type { Words } from "./i18n";
 
 export function pickAudioMime(): { mime: string; ext: string } {
@@ -8,6 +8,7 @@ export function pickAudioMime(): { mime: string; ext: string } {
     { mime: "audio/mpeg", ext: "mp3" },
     { mime: "audio/webm;codecs=opus", ext: "webm" },
     { mime: "audio/webm", ext: "webm" },
+    { mime: "audio/ogg;codecs=opus", ext: "ogg" },
   ];
   const MR: any = typeof window !== "undefined" ? (window as any).MediaRecorder : undefined;
   for (const c of candidates) {
@@ -17,12 +18,14 @@ export function pickAudioMime(): { mime: string; ext: string } {
 }
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+const MAX_SECONDS = 20 * 60;
 
 type Props = { t: Words; onSend: (file: File) => Promise<void> | void; onClose: () => void };
 
 export default function VoiceRecorder({ t, onSend, onClose }: Props) {
   const [secs, setSecs] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [level, setLevel] = useState<number[]>(Array(24).fill(4));
   const rec = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
@@ -105,7 +108,21 @@ export default function VoiceRecorder({ t, onSend, onClose }: Props) {
   }, []);
 
   useEffect(() => {
-    const id = window.setInterval(() => setSecs((s) => s + 1), 1000);
+    const id = window.setInterval(() => {
+      if (rec.current?.state !== "recording") return;
+      setSecs((s) => {
+        const n = s + 1;
+        if (n >= MAX_SECONDS) {
+          cancelled.current = false;
+          try {
+            rec.current?.stop();
+          } catch {
+            /* ignore */
+          }
+        }
+        return n;
+      });
+    }, 1000);
     return () => window.clearInterval(id);
   }, []);
 
@@ -118,22 +135,35 @@ export default function VoiceRecorder({ t, onSend, onClose }: Props) {
     if (rec.current && rec.current.state !== "inactive") rec.current.stop();
     else onClose();
   };
+  const togglePause = () => {
+    const r = rec.current;
+    if (!r) return;
+    if (r.state === "recording") {
+      r.pause();
+      setPaused(true);
+    } else if (r.state === "paused") {
+      r.resume();
+      setPaused(false);
+    }
+  };
 
   return (
     <div className="flex items-center gap-3 w-full">
       <button onClick={cancel} aria-label={t.cancel} className="w-11 h-11 rounded-full bg-zinc-900 text-red-400 grid place-items-center shrink-0">
-        <X />
+        <Trash2 className="w-5 h-5" />
       </button>
-      <div className="flex-1 min-w-0 h-11 rounded-full bg-zinc-900 border border-red-500/40 px-4 flex items-center gap-2">
-        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+      <div className="flex-1 min-w-0 h-11 rounded-full bg-zinc-900 border border-red-500/40 px-3 flex items-center gap-2">
+        <span className={`w-2.5 h-2.5 rounded-full bg-red-500 shrink-0 ${paused ? "" : "animate-pulse"}`} />
         <Mic className="w-4 h-4 text-red-400 shrink-0" />
         <span className="text-sm tabular-nums text-red-300 shrink-0">{fmt(secs)}</span>
         <div className="flex-1 min-w-0 flex items-center gap-[2px] overflow-hidden h-6">
           {level.map((h, i) => (
-            <span key={i} style={{ height: h }} className="w-[3px] rounded-full bg-orange-500/80" />
+            <span key={i} style={{ height: paused ? 4 : h }} className="w-[3px] rounded-full bg-orange-500/80" />
           ))}
         </div>
-        <span className="text-[10px] text-zinc-500 hidden sm:block shrink-0">{t.recording}</span>
+        <button onClick={togglePause} aria-label={paused ? t.resume : t.pause} className="w-8 h-8 rounded-full bg-black/40 text-orange-400 grid place-items-center shrink-0">
+          {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+        </button>
       </div>
       <button
         onClick={stopAndSend}

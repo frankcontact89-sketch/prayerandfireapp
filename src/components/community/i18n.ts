@@ -24,6 +24,9 @@ export const dict = {
     onlyAdminsCreate: "Only leaders can create groups", back: "Back", noPermission: "You do not have permission",
     permissionsBody: "Only the owner and community admins can create groups, add members and remove any message. Members can delete only their own messages.",
     addedMembers: "Members added", audioError: "Audio unavailable", voiceMessage: "Voice message",
+    reply: "Reply", react: "React", star: "Star", unstar: "Unstar", copy: "Copy", copied: "Copied",
+    messageDeleted: "Message deleted", options: "Message options", pause: "Pause", resume: "Resume",
+    download: "Open file", replying: "Replying to", createGroupsPerm: "Can create groups", you: "You",
   },
   es: {
     title: "Comunidad", search: "Buscar chats", all: "Todos", unread: "No leídos", groups: "Grupos",
@@ -43,6 +46,9 @@ export const dict = {
     onlyAdminsCreate: "Solo los líderes pueden crear grupos", back: "Atrás", noPermission: "No tienes permiso",
     permissionsBody: "Solo el dueño y los administradores pueden crear grupos, agregar miembros y borrar cualquier mensaje. Los miembros solo pueden borrar sus propios mensajes.",
     addedMembers: "Miembros agregados", audioError: "Audio no disponible", voiceMessage: "Mensaje de voz",
+    reply: "Responder", react: "Reaccionar", star: "Destacar", unstar: "Quitar destacado", copy: "Copiar", copied: "Copiado",
+    messageDeleted: "Mensaje eliminado", options: "Opciones del mensaje", pause: "Pausar", resume: "Reanudar",
+    download: "Abrir archivo", replying: "Respondiendo a", createGroupsPerm: "Puede crear grupos", you: "Tú",
   },
   pt: {
     title: "Comunidade", search: "Buscar chats", all: "Todos", unread: "Não lidos", groups: "Grupos",
@@ -62,6 +68,9 @@ export const dict = {
     onlyAdminsCreate: "Somente líderes podem criar grupos", back: "Voltar", noPermission: "Você não tem permissão",
     permissionsBody: "Somente o dono e os administradores podem criar grupos, adicionar membros e apagar qualquer mensagem. Os membros só podem apagar suas próprias mensagens.",
     addedMembers: "Membros adicionados", audioError: "Áudio indisponível", voiceMessage: "Mensagem de voz",
+    reply: "Responder", react: "Reagir", star: "Destacar", unstar: "Remover destaque", copy: "Copiar", copied: "Copiado",
+    messageDeleted: "Mensagem apagada", options: "Opções da mensagem", pause: "Pausar", resume: "Retomar",
+    download: "Abrir arquivo", replying: "Respondendo a", createGroupsPerm: "Pode criar grupos", you: "Você",
   },
 } as const;
 

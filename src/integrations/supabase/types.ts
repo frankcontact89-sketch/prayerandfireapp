@@ -160,18 +160,21 @@ export type Database = {
       }
       community_admins: {
         Row: {
+          can_create_groups: boolean
           created_at: string
           granted_by: string | null
           role: string
           user_id: string
         }
         Insert: {
+          can_create_groups?: boolean
           created_at?: string
           granted_by?: string | null
           role?: string
           user_id: string
         }
         Update: {
+          can_create_groups?: boolean
           created_at?: string
           granted_by?: string | null
           role?: string
@@ -1356,6 +1359,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_create_community_group: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       can_see_community_message: {
         Args: { _message_id: string; _user_id: string }
         Returns: boolean

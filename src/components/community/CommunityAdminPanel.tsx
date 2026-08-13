@@ -6,7 +6,7 @@ import type { Words } from "./i18n";
 const db: any = supabase;
 
 type Row = { id: string; user_id: string; status: string; created_at: string; name: string; email?: string | null; avatar?: string | null };
-type AdminRow = { user_id: string; role: string; name: string; avatar?: string | null };
+type AdminRow = { user_id: string; role: string; name: string; avatar?: string | null; can_create_groups?: boolean };
 
 type Props = { t: Words; meId: string; isOwner: boolean; onClose: () => void; onChanged: () => void };
 
@@ -22,7 +22,7 @@ export default function CommunityAdminPanel({ t, meId, isOwner, onClose, onChang
       .from("community_access_requests")
       .select("id,user_id,status,created_at")
       .order("created_at", { ascending: false });
-    const { data: ads } = await db.from("community_admins").select("user_id,role");
+    const { data: ads } = await db.from("community_admins").select("user_id,role,can_create_groups");
     const ids = Array.from(new Set([...(reqs || []).map((r: any) => r.user_id), ...(ads || []).map((a: any) => a.user_id)]));
     const { data: profs } = ids.length
       ? await db.from("profiles").select("id,username,email,avatar_url").in("id", ids)
@@ -67,11 +67,18 @@ export default function CommunityAdminPanel({ t, meId, isOwner, onClose, onChang
 
   const toggleAdmin = async (userId: string, makeAdmin: boolean) => {
     setBusy(userId);
-    if (makeAdmin) await db.from("community_admins").insert({ user_id: userId, role: "admin", granted_by: meId });
+    if (makeAdmin) await db.from("community_admins").insert({ user_id: userId, role: "admin", granted_by: meId, can_create_groups: false });
     else await db.from("community_admins").delete().eq("user_id", userId).neq("role", "owner");
     setBusy(null);
     await load();
     onChanged();
+  };
+
+  const toggleCreate = async (userId: string, value: boolean) => {
+    setBusy(userId);
+    await db.from("community_admins").update({ can_create_groups: value }).eq("user_id", userId).neq("role", "owner");
+    setBusy(null);
+    await load();
   };
 
   const Avatar = ({ src, name }: { src?: string | null; name: string }) => (
@@ -137,9 +144,18 @@ export default function CommunityAdminPanel({ t, meId, isOwner, onClose, onChang
                   </div>
                 </div>
                 {a.role !== "owner" && (
-                  <button disabled={busy === a.user_id} onClick={() => toggleAdmin(a.user_id, false)} aria-label={t.removeAdmin} className="w-10 h-10 rounded-full bg-zinc-900 text-red-400 grid place-items-center">
-                    <ShieldMinus className="w-5 h-5" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      disabled={busy === a.user_id}
+                      onClick={() => toggleCreate(a.user_id, !a.can_create_groups)}
+                      className={`px-3 h-9 rounded-full text-[11px] font-bold border ${a.can_create_groups ? "bg-orange-500 text-black border-orange-400" : "bg-zinc-900 text-zinc-400 border-white/10"}`}
+                    >
+                      {t.createGroupsPerm}
+                    </button>
+                    <button disabled={busy === a.user_id} onClick={() => toggleAdmin(a.user_id, false)} aria-label={t.removeAdmin} className="w-10 h-10 rounded-full bg-zinc-900 text-red-400 grid place-items-center shrink-0">
+                      <ShieldMinus className="w-5 h-5" />
+                    </button>
+                  </div>
                 )}
               </div>
             ))}
