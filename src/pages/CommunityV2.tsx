@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState}from"react";
-import{ArrowLeft,Bell,BellOff,Camera,ChevronRight,CornerUpLeft,LogOut,Mic,MoreHorizontal,Paperclip,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
+import{ArrowLeft,Ban,Bell,BellOff,Camera,Flag,ChevronRight,CornerUpLeft,LogOut,Mic,MoreHorizontal,Paperclip,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
 import{supabase}from"@/integrations/supabase/client";
 import CreateGroupModal,{type CreatedGroup}from"@/components/community/CreateGroupModal";
 import AccessGate from"@/components/community/AccessGate";
@@ -9,6 +9,7 @@ import AudioBubble from"@/components/community/AudioBubble";
 import VoiceRecorder from"@/components/community/VoiceRecorder";
 import ReactionEmojiPicker from"@/components/community/ReactionEmojiPicker";
 import{dict,getLang}from"@/components/community/i18n";
+import{isBlockedContent}from"@/lib/content-filter";
 import entryLogo from"@/assets/prayer-fire-entry-logo.png";
 
 type Group=CreatedGroup&{role?:string;muted?:boolean;favorite?:boolean;archived?:boolean;memberCount?:number;description?:string};
@@ -36,6 +37,8 @@ export default function CommunityV2(){
  const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[emojiPicker,setEmojiPicker]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[flash,setFlash]=useState("");
  const file=useRef<HTMLInputElement>(null),photo=useRef<HTMLInputElement>(null),end=useRef<HTMLDivElement>(null);
  const press=useRef<number|null>(null);
+ const[blocks,setBlocks]=useState<string[]>([]),[reportFor,setReportFor]=useState<Msg|null>(null),[reportReason,setReportReason]=useState("harassment"),[reportNote,setReportNote]=useState(""),[blockFor,setBlockFor]=useState<Msg|null>(null),[busyMod,setBusyMod]=useState(false);
+ const REASONS:[string,string][]=[["harassment",t.reasonHarassment],["hate",t.reasonHate],["sexual",t.reasonSexual],["violence",t.reasonViolence],["spam",t.reasonSpam],["privacy",t.reasonPrivacy],["other",t.reasonOther]];
 
  const isStaff=!!staffRole;
  const isOwner=staffRole==="owner";
@@ -49,7 +52,7 @@ export default function CommunityV2(){
   setStaffRole(null);setCanCreate(false);
   const{data:req}=await db.from("community_access_requests").select("status").eq("user_id",uid).maybeSingle();
   if(!req){setAccess("none");return false}
-  setAccess(req.status==="approved"?"approved":req.status==="rejected"?"rejected":"pending");
+  setAccess(req.status==="approved"?"approved":req.status==="pending"?"pending":"rejected");
   return req.status==="approved";
  },[]);
 
@@ -94,6 +97,8 @@ export default function CommunityV2(){
   if(!user){setAccess("none");return}
   const{data:p}=await db.from("profiles").select("username,avatar_url").eq("id",user.id).maybeSingle();
   setMe({id:user.id,name:p?.username||user.email?.split("@")[0]||"Prayer & Fire Member",avatar:p?.avatar_url});
+  const{data:bl}=await db.from("community_blocks").select("blocked_id").eq("blocker_id",user.id);
+  setBlocks((bl||[]).map((b:any)=>b.blocked_id));
   const ok=await loadAccess(user.id);
   if(ok)await loadGroups(user.id);
  })()},[loadAccess,loadGroups]);
@@ -146,7 +151,11 @@ export default function CommunityV2(){
   await loadGroups(me.id);setCreate(false);
  };
 
- const send=async()=>{if(!draft.trim()||!selected||!me)return;const body=draft.trim().slice(0,10000);const r=replyTo?.id||null;setDraft("");setReplyTo(null);await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,body,reply_to:r})};
+ const send=async()=>{if(!draft.trim()||!selected||!me)return;const body=draft.trim().slice(0,10000);
+  if(isBlockedContent(body)){toast(t.contentBlocked);return}
+  const r=replyTo?.id||null;setDraft("");setReplyTo(null);
+  const{error}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,body,reply_to:r});
+  if(error){setDraft(body);toast(/CONTENT_BLOCKED/.test(error.message||"")?t.contentBlocked:error.message||"")}};
 
  const upload=async(f?:File)=>{
   if(!f||!selected||!me||f.size>50*1024*1024)return;
@@ -187,6 +196,21 @@ export default function CommunityV2(){
   }catch{/* cancelled or unavailable */}
  };
 
+
+ const submitReport=async()=>{
+  if(!me||!reportFor||reportFor.sender_id===me.id)return;
+  setBusyMod(true);
+  await db.from("community_reports").insert({reporter_id:me.id,reported_user_id:reportFor.sender_id,message_id:reportFor.id,group_id:selected?.id||null,reason:reportReason,details:reportNote.trim()||null,status:"pending"});
+  setBusyMod(false);setReportFor(null);setReportNote("");setReportReason("harassment");toast(t.reportSent);
+ };
+ const confirmBlock=async()=>{
+  if(!me||!blockFor||blockFor.sender_id===me.id)return;
+  setBusyMod(true);
+  const target=blockFor.sender_id;
+  await db.from("community_blocks").insert({blocker_id:me.id,blocked_id:target});
+  setBlocks(v=>Array.from(new Set([...v,target])));
+  setBusyMod(false);setBlockFor(null);toast(t.blockedDone);
+ };
  const memberUpdate=async(ch:any)=>{if(!selected||!me)return;await db.from("community_group_members").update(ch).eq("group_id",selected.id).eq("user_id",me.id);setSelected(s=>s?{...s,...ch}:s);setGroups(v=>v.map(g=>g.id===selected.id?{...g,...ch}:g))};
  const saveGroup=async()=>{if(!selected||!canManageGroup(selected))return;await db.from("community_groups").update({name:name.trim()||selected.name,description:desc.trim(),updated_at:new Date().toISOString()}).eq("id",selected.id);setSelected(s=>s?{...s,name:name.trim()||s.name,description:desc.trim(),subtitle:desc.trim()||s.subtitle}:s);setEdit(false)};
  const changePhoto=async(f?:File)=>{if(!f||!selected||!me||!canManageGroup(selected))return;const path=`${me.id}/groups/${selected.id}-${Date.now()}.jpg`;await supabase.storage.from("community-media").upload(path,f,{contentType:f.type,upsert:true});await db.from("community_groups").update({avatar_url:path}).eq("id",selected.id);const url=await signed(path);setSelected(s=>s?{...s,avatar:url}:s)};
@@ -202,7 +226,7 @@ export default function CommunityV2(){
  if(selected)return <div className="fixed inset-0 bg-[#080808] text-white flex flex-col" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
   <header className="shrink-0 min-h-16 px-2 bg-black/95 border-b border-white/10 flex items-center gap-2"><button onClick={()=>setSelected(null)} aria-label={t.back} className="w-10 h-10 grid place-items-center"><ArrowLeft/></button><button onClick={()=>setInfo(true)} className="flex-1 min-w-0 flex items-center gap-2 text-left"><img src={selected.avatar||entryLogo} alt="" className="w-11 h-11 rounded-full object-cover"/><div className="min-w-0"><b className="block truncate">{selected.name}</b><span className="text-xs text-zinc-400">{selected.memberCount||0} {t.members}</span></div></button><button onClick={()=>setInfo(true)} aria-label={t.info} className="w-9 h-9 grid place-items-center"><MoreHorizontal className="w-5 h-5"/></button></header>
   <main className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
-    {msgs.map(m=>{
+    {msgs.filter(m=>!blocks.includes(m.sender_id)).map(m=>{
      const s=senders[m.sender_id]||(m.sender_id===me?.id?{name:me?.name,avatar:me?.avatar}:undefined);
     const time=new Date(m.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
     const canDelete=m.sender_id===me?.id||canManageGroup(selected);
@@ -258,6 +282,8 @@ export default function CommunityV2(){
    <div className="flex gap-2 pb-3 overflow-x-auto">{EMOJIS.map(e=><button key={e} onClick={()=>react(menu,e)} className={`w-11 h-11 shrink-0 rounded-full border text-xl grid place-items-center ${(reactions[menu.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-orange-500/20 border-orange-500/60":"bg-zinc-900 border-white/10"}`}>{e}</button>)}<button onClick={()=>{const mm=menu;setMenu(null);setEmojiPicker(mm)}} aria-label={emojiTitle} className="w-11 h-11 shrink-0 rounded-full bg-zinc-900 border border-white/10 text-orange-400 grid place-items-center"><Plus className="w-5 h-5"/></button></div>
    <button onClick={()=>{setReplyTo(menu);setMenu(null)}} className="w-full h-13 py-3 px-2 flex items-center gap-3 border-t border-white/5"><CornerUpLeft className="w-5 h-5 text-orange-400"/><span>{t.reply}</span></button>
    <button onClick={()=>forwardMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Send className="w-5 h-5 text-orange-400"/><span>{forwardLabel}</span></button>
+   {menu.sender_id!==me?.id&&<button onClick={()=>{const mm=menu;setMenu(null);setReportFor(mm)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Flag className="w-5 h-5 text-orange-400"/><span>{t.report}</span></button>}
+   {menu.sender_id!==me?.id&&<button onClick={()=>{const mm=menu;setMenu(null);setBlockFor(mm)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Ban className="w-5 h-5"/><span>{t.block}</span></button>}
    {(menu.sender_id===me?.id||canManageGroup(selected))&&<button onClick={()=>{setConfirmDel(menu);setMenu(null)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Trash2 className="w-5 h-5"/><span>{t.deleteMsg}</span></button>}
   </div></div>}
   <ReactionEmojiPicker open={!!emojiPicker} title={emojiTitle} selected={emojiPicker?(reactions[emojiPicker.id]||[]).find(r=>r.user_id===me?.id)?.emoji:undefined} onClose={()=>setEmojiPicker(null)} onPick={emoji=>emojiPicker&&react(emojiPicker,emoji)}/>
@@ -269,6 +295,17 @@ export default function CommunityV2(){
     <span className="flex-1 truncate">{r.user_id===me?.id?t.you:senders[r.user_id]?.name||t.member}</span>
     <span className="text-xl">{r.emoji}</span>
    </div>)}
+  </div></div>}
+  {reportFor&&<div className="fixed inset-0 z-[60] bg-black/80 flex items-end" onClick={()=>setReportFor(null)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-4 pb-[max(20px,env(safe-area-inset-bottom))] max-h-[80vh] overflow-y-auto">
+   <div className="flex justify-between items-center mb-3"><b>{t.reportTitle}</b><button onClick={()=>setReportFor(null)} aria-label={t.cancel}><X/></button></div>
+   <div className="text-xs uppercase tracking-widest text-zinc-500 font-bold mb-2">{t.reportReason}</div>
+   <div className="space-y-2">{REASONS.map(([k,label])=><button key={k} onClick={()=>setReportReason(k)} className={`w-full text-left px-4 py-3 rounded-2xl border ${reportReason===k?"bg-orange-500/15 border-orange-500/60 text-orange-200":"bg-zinc-900 border-white/10 text-zinc-300"}`}>{label}</button>)}</div>
+   <textarea value={reportNote} onChange={e=>setReportNote(e.target.value.slice(0,500))} placeholder={t.reportDetails} rows={3} className="mt-3 w-full rounded-2xl bg-zinc-900 border border-white/10 p-3 outline-none text-sm"/>
+   <button disabled={busyMod} onClick={submitReport} className="mt-3 w-full h-12 rounded-2xl bg-orange-500 text-black font-black disabled:opacity-60">{t.submit}</button>
+  </div></div>}
+  {blockFor&&<div className="fixed inset-0 z-[60] bg-black/80 grid place-items-center px-8" onClick={()=>setBlockFor(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-zinc-950 border border-white/10 p-6">
+   <b className="text-lg">{t.blockTitle}</b><p className="text-sm text-zinc-400 mt-2">{t.blockBody}</p>
+   <div className="mt-6 flex gap-3"><button onClick={()=>setBlockFor(null)} className="flex-1 h-12 rounded-2xl bg-zinc-900">{t.cancel}</button><button disabled={busyMod} onClick={confirmBlock} className="flex-1 h-12 rounded-2xl bg-red-500 text-black font-black disabled:opacity-60">{t.block}</button></div>
   </div></div>}
   {confirmDel&&<div className="fixed inset-0 z-50 bg-black/80 grid place-items-center px-8" onClick={()=>setConfirmDel(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-zinc-950 border border-white/10 p-6"><b className="text-lg">{t.deleteMsg}</b><div className="mt-6 flex gap-3"><button onClick={()=>setConfirmDel(null)} className="flex-1 h-12 rounded-2xl bg-zinc-900">{t.cancel}</button><button onClick={()=>deleteMsg(confirmDel)} className="flex-1 h-12 rounded-2xl bg-red-500 text-black font-black">{t.delete}</button></div></div></div>}
  </div>;

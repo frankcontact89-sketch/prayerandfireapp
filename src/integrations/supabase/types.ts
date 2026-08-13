@@ -394,31 +394,46 @@ export type Database = {
       }
       community_reports: {
         Row: {
+          action: string | null
           created_at: string
+          details: string | null
           group_id: string | null
           id: string
           message_id: string | null
           reason: string
           reported_user_id: string | null
           reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
         }
         Insert: {
+          action?: string | null
           created_at?: string
+          details?: string | null
           group_id?: string | null
           id?: string
           message_id?: string | null
           reason?: string
           reported_user_id?: string | null
           reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
         }
         Update: {
+          action?: string | null
           created_at?: string
+          details?: string | null
           group_id?: string | null
           id?: string
           message_id?: string | null
           reason?: string
           reported_user_id?: string | null
           reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -1367,7 +1382,12 @@ export type Database = {
         Args: { _message_id: string; _user_id: string }
         Returns: boolean
       }
+      community_text_blocked: { Args: { _t: string }; Returns: boolean }
       get_username_by_email: { Args: { _email: string }; Returns: string }
+      has_blocked: {
+        Args: { _blocked: string; _blocker: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
