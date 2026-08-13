@@ -1,197 +1,59 @@
 import React from "react";
-import { ArrowLeft, Flame, Info, CreditCard, RefreshCw, Shield, FileText, Mail } from "lucide-react";
+import { ArrowLeft, Flame, Shield, FileText, Mail, Users, Ban, Database, Trash2 } from "lucide-react";
 import alineRamiro from "@/assets/aline-ramiro.jpg";
 import franciscoRivera from "@/assets/francisco-rivera.jpg";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-interface LegalCenterProps {
-  t: (key: string) => string;
-  onBack: () => void;
-}
+interface LegalCenterProps { t: (key: string) => string; onBack: () => void; }
+
+const supportEmail = "prayerandfireglobal@gmail.com";
 
 export function LegalCenter({ t, onBack }: LegalCenterProps) {
   return (
-    <div
-      className="max-w-2xl mx-auto px-6 space-y-6"
-      style={{
-        paddingTop: "max(1.5rem, env(safe-area-inset-top))",
-        paddingBottom: "max(6rem, calc(env(safe-area-inset-bottom) + 6rem))",
-      }}
-    >
-      <button
-        onClick={onBack}
-        className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-4"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>{t("back")}</span>
-      </button>
+    <div className="max-w-2xl mx-auto px-6 space-y-6" style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top))", paddingBottom: "max(6rem, calc(env(safe-area-inset-bottom) + 6rem))" }}>
+      <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-4"><ArrowLeft className="w-5 h-5" /><span>{t("back")}</span></button>
 
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-foreground mb-2">{t("legalPolicies")}</h1>
-        <p className="text-sm text-muted-foreground">{t("lastUpdated")}: 2026</p>
-      </div>
+      <div className="text-center mb-8"><h1 className="text-2xl font-bold text-foreground mb-2">{t("legalPolicies")}</h1><p className="text-sm text-muted-foreground">Last updated: August 2026</p></div>
 
       <Accordion type="single" collapsible className="space-y-4">
-        {/* About Prayer & Fire */}
         <AccordionItem value="about" className="bg-card border border-border rounded-xl overflow-hidden">
-          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <Flame className="w-4 h-4 text-primary" />
-              </div>
-              <span className="font-semibold text-foreground">{t("aboutPrayerFire")}</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-5 pb-5">
-            <div className="space-y-4 text-muted-foreground text-sm leading-relaxed">
-              <p>{t("aboutGlobalMovement")}</p>
-              <p><strong className="text-foreground">{t("mission")}:</strong> {t("aboutMission")}</p>
-              <p><strong className="text-foreground">{t("vision")}:</strong> {t("aboutVision")}</p>
-              
-              {/* Leadership Section */}
-              <div className="pt-4 mt-4 border-t border-border/30">
-                <h3 className="text-center font-semibold mt-4 mb-4">
-                  {t("founders")}
-                </h3>
-                <div className="flex flex-col gap-6 items-center">
-                  <div className="flex flex-col items-center">
-                    <img
-                      src={alineRamiro}
-                      alt="Aline Ramiro"
-                      className="w-24 h-24 rounded-full object-cover mb-2 border-2 border-primary/30 shadow-lg"
-                    />
-                    <strong className="text-primary text-xs">{t("founder")}</strong>
-                    <p className="text-foreground font-medium text-sm">Aline Ramiro</p>
-                  </div>
-
-                  {/* President */}
-                  <div className="flex flex-col items-center">
-                    <img
-                      src={franciscoRivera}
-                      alt="Francisco Rivera"
-                      className="w-24 h-24 rounded-full object-cover mb-2 border-2 border-primary/30 shadow-lg"
-                    />
-                    <strong className="text-primary text-xs">{t("president")}</strong>
-                    <p className="text-foreground font-medium text-sm">Francisco Rivera</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </AccordionContent>
+          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"><Flame className="w-4 h-4 text-primary" /></div><span className="font-semibold text-foreground">About Prayer & Fire</span></div></AccordionTrigger>
+          <AccordionContent className="px-5 pb-5"><div className="space-y-4 text-muted-foreground text-sm leading-relaxed"><p>Prayer & Fire is a faith-based global prayer and discipleship community. Community tools are provided to help members communicate, pray, share media and organize ministry groups.</p><div className="pt-4 mt-4 border-t border-border/30"><h3 className="text-center font-semibold mt-4 mb-4">Leadership</h3><div className="flex gap-8 justify-center"><div className="flex flex-col items-center"><img src={alineRamiro} alt="Aline Ramiro" className="w-20 h-20 rounded-full object-cover mb-2 border-2 border-primary/30"/><p className="text-foreground font-medium text-sm">Aline Ramiro</p></div><div className="flex flex-col items-center"><img src={franciscoRivera} alt="Francisco Rivera" className="w-20 h-20 rounded-full object-cover mb-2 border-2 border-primary/30"/><p className="text-foreground font-medium text-sm">Francisco Rivera</p></div></div></div></div></AccordionContent>
         </AccordionItem>
 
-        {/* Payments & Subscriptions */}
-        <AccordionItem value="payments" className="bg-card border border-border rounded-xl overflow-hidden">
-          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <CreditCard className="w-4 h-4 text-primary" />
-              </div>
-              <span className="font-semibold text-foreground">{t("paymentsSubscriptions")}</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-5 pb-5">
-            <ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside">
-              <li>{t("paymentSecure")}</li>
-              <li>{t("paymentNoStore")}</li>
-              <li>{t("paymentVoluntary")}</li>
-              <li>{t("paymentAutoRenew")}</li>
-              <li>{t("paymentCancelAnytime")}</li>
-              <li>{t("paymentApple")}</li>
-            </ul>
-          </AccordionContent>
+        <AccordionItem value="community" className="bg-card border border-border rounded-xl overflow-hidden">
+          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"><Users className="w-4 h-4 text-primary" /></div><span className="font-semibold text-foreground">Community Standards</span></div></AccordionTrigger>
+          <AccordionContent className="px-5 pb-5"><ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside"><li>Members must treat one another respectfully and may not use Prayer & Fire to harass, threaten, exploit, impersonate, spam or target others.</li><li>Content promoting violence, sexual exploitation, illegal activity, hateful abuse or deliberate harm is prohibited.</li><li>Do not publish another person's sensitive private information without permission.</li><li>Users can report messages or users and can block another user. Reports may be reviewed by Prayer & Fire administrators.</li><li>Prayer & Fire may remove content, restrict accounts or remove users when necessary to protect the community or comply with law and platform rules.</li><li>Users remain responsible for the content they send and for having permission to share photos, videos, audio and documents.</li></ul></AccordionContent>
         </AccordionItem>
 
-        {/* Refund & Cancellation Policy */}
-        <AccordionItem value="refunds" className="bg-card border border-border rounded-xl overflow-hidden">
-          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <RefreshCw className="w-4 h-4 text-primary" />
-              </div>
-              <span className="font-semibold text-foreground">{t("refundPolicy")}</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-5 pb-5">
-            <ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside">
-              <li>{t("refundNonRefundable")}</li>
-              <li>{t("refundCancelAnytime")}</li>
-              <li>{t("refundCaseByCase")}</li>
-              <li>{t("refundContact")}: <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></li>
-            </ul>
-          </AccordionContent>
+        <AccordionItem value="moderation" className="bg-card border border-border rounded-xl overflow-hidden">
+          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"><Ban className="w-4 h-4 text-primary" /></div><span className="font-semibold text-foreground">Reporting, Blocking & Moderation</span></div></AccordionTrigger>
+          <AccordionContent className="px-5 pb-5"><div className="space-y-3 text-muted-foreground text-sm leading-relaxed"><p>Use the message menu to report inappropriate content or block a user. Blocking prevents direct interaction where supported and hides blocked-user content from your personal experience.</p><p>Reports should include a truthful reason. Abuse of reporting tools may itself lead to restrictions.</p><p>Urgent safety concerns should also be reported to the appropriate local authorities when necessary. Prayer & Fire is not an emergency service.</p></div></AccordionContent>
         </AccordionItem>
 
-        {/* Privacy Policy */}
         <AccordionItem value="privacy" className="bg-card border border-border rounded-xl overflow-hidden">
-          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <Shield className="w-4 h-4 text-primary" />
-              </div>
-              <span className="font-semibold text-foreground">{t("privacyPolicy")}</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-5 pb-5">
-            <ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside">
-              <li><strong className="text-foreground">{t("dataCollected")}:</strong> {t("privacyDataCollected")}</li>
-              <li>{t("privacyStripe")}</li>
-              <li>{t("privacyNoSelling")}</li>
-              <li>{t("privacyDataUse")}</li>
-              <li>{t("privacyDeletion")}</li>
-              <li>{t("privacyChildren")}</li>
-              <li>{t("contact")}: <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></li>
-              <li>{t("website")}: <a href="https://prayerandfire.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.org</a></li>
-            </ul>
-          </AccordionContent>
+          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"><Shield className="w-4 h-4 text-primary" /></div><span className="font-semibold text-foreground">Privacy Policy</span></div></AccordionTrigger>
+          <AccordionContent className="px-5 pb-5"><ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside"><li><strong className="text-foreground">Account data:</strong> email address, display name, profile photo and authentication identifiers.</li><li><strong className="text-foreground">Community data:</strong> groups, membership, messages, reactions, read status, reports and block settings.</li><li><strong className="text-foreground">Media:</strong> photos, videos, audio and documents you choose to upload may be stored in cloud storage so authorized group members can access them.</li><li>We use this information to operate accounts, synchronize chats, prevent abuse, provide support and maintain security.</li><li>Prayer & Fire does not sell personal information to advertisers.</li><li>Cloud providers such as Supabase may process data on our behalf to provide authentication, databases and file storage.</li><li>Message and media retention may continue until content, a group or an account is deleted, subject to security, legal and backup requirements.</li><li>Users can delete their account from Settings. Account deletion removes or de-identifies account data as technically and legally appropriate.</li><li>Do not use the Community feature to share highly sensitive information that is not necessary for ministry communication.</li></ul></AccordionContent>
         </AccordionItem>
 
-        {/* Terms of Service */}
+        <AccordionItem value="storage" className="bg-card border border-border rounded-xl overflow-hidden">
+          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"><Database className="w-4 h-4 text-primary" /></div><span className="font-semibold text-foreground">Storage & Media</span></div></AccordionTrigger>
+          <AccordionContent className="px-5 pb-5"><ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside"><li>Community media is stored on secure cloud infrastructure rather than permanently embedded in the app.</li><li>The app may keep temporary cached copies to improve speed. Cache may be cleared by the operating system or by future storage controls.</li><li>File-size and media-type limits are used to protect performance and storage capacity.</li><li>Deleted media may remain temporarily in backups before permanent expiration.</li></ul></AccordionContent>
+        </AccordionItem>
+
         <AccordionItem value="terms" className="bg-card border border-border rounded-xl overflow-hidden">
-          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <FileText className="w-4 h-4 text-primary" />
-              </div>
-              <span className="font-semibold text-foreground">{t("termsOfService")}</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-5 pb-5">
-            <ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside">
-              <li>{t("termsPersonalUse")}</li>
-              <li>{t("termsAccountResponsibility")}</li>
-              <li>{t("termsNoMisuse")}</li>
-              <li>{t("termsFaithBased")}</li>
-              <li>{t("termsNoLiability")}</li>
-              <li>{t("termsSuspension")}</li>
-              <li>{t("termsUpdates")}</li>
-            </ul>
-          </AccordionContent>
+          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"><FileText className="w-4 h-4 text-primary" /></div><span className="font-semibold text-foreground">Terms of Service</span></div></AccordionTrigger>
+          <AccordionContent className="px-5 pb-5"><ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside"><li>You are responsible for protecting your account and for activity performed through it.</li><li>You may only upload or share content you have the legal right to use.</li><li>Prayer & Fire may moderate or remove user-generated content and may suspend accounts that violate these standards.</li><li>Community conversations are not professional medical, legal, financial or emergency services.</li><li>Features may change as the app is improved, secured or updated to meet platform requirements.</li></ul></AccordionContent>
         </AccordionItem>
 
-        {/* Support & Contact */}
+        <AccordionItem value="deletion" className="bg-card border border-border rounded-xl overflow-hidden">
+          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"><Trash2 className="w-4 h-4 text-primary" /></div><span className="font-semibold text-foreground">Account & Content Deletion</span></div></AccordionTrigger>
+          <AccordionContent className="px-5 pb-5"><div className="space-y-3 text-muted-foreground text-sm leading-relaxed"><p>You can request account deletion from Settings inside the app. Where available, you can also delete messages you sent. Some records may be retained when required for abuse prevention, security, legal compliance or backups.</p><p>For assistance, contact <a href={`mailto:${supportEmail}`} className="text-primary hover:underline">{supportEmail}</a>.</p></div></AccordionContent>
+        </AccordionItem>
+
         <AccordionItem value="support" className="bg-card border border-border rounded-xl overflow-hidden">
-          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <Mail className="w-4 h-4 text-primary" />
-              </div>
-              <span className="font-semibold text-foreground">{t("supportContact")}</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-5 pb-5">
-            <div className="space-y-3 text-muted-foreground text-sm leading-relaxed">
-              <p>{t("supportHelpIntro")}</p>
-              <p><strong className="text-foreground">{t("supportEmailLabel")}:</strong> <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></p>
-              <p><strong className="text-foreground">{t("website")}:</strong> <a href="https://prayerandfire.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://prayerandfire.org</a></p>
-              <p><strong className="text-foreground">{t("responseTime")}:</strong> {t("responseTimeValue")}</p>
-            </div>
-          </AccordionContent>
+          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center"><Mail className="w-4 h-4 text-primary" /></div><span className="font-semibold text-foreground">Support & Privacy Contact</span></div></AccordionTrigger>
+          <AccordionContent className="px-5 pb-5"><div className="space-y-3 text-muted-foreground text-sm leading-relaxed"><p>Email: <a href={`mailto:${supportEmail}`} className="text-primary hover:underline">{supportEmail}</a></p><p>Website: <a href="https://prayerandfire.org" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">prayerandfire.org</a></p></div></AccordionContent>
         </AccordionItem>
       </Accordion>
     </div>
