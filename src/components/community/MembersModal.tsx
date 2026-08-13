@@ -14,6 +14,7 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [confirmRemove, setConfirmRemove] = useState<P | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,16 +45,13 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
       profs = res.data || [];
     }
     if (!profs.length && eligible.length) {
-      // profile rows unreadable/missing: still allow adding by user id
       profs = eligible.map((id) => ({ id, username: null, email: null, avatar_url: null }));
     }
     setList(profs.map((p: any) => ({ id: p.id, name: p.username || p.email?.split("@")[0] || "Member", email: p.email, avatar: p.avatar_url })));
     setLoading(false);
   }, [groupId, mode]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -77,9 +75,11 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     await load();
     onChanged();
   };
+
   const remove = async (userId: string) => {
     if (!canManage) return;
     await db.from("community_group_members").delete().eq("group_id", groupId).eq("user_id", userId);
+    setConfirmRemove(null);
     await load();
     onChanged();
   };
@@ -87,76 +87,27 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
   return (
     <div className="fixed inset-0 z-[120] bg-[#080808] text-white flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
       <header className="shrink-0 h-16 px-3 flex items-center gap-3 border-b border-white/10 bg-black/95">
-        <button onClick={onClose} aria-label={t.back} className="w-10 h-10 rounded-full bg-zinc-900 grid place-items-center">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <b className="flex-1 truncate">{mode === "add" ? t.addMembers : t.admins}</b>
+        <button onClick={onClose} aria-label={t.back} className="w-10 h-10 rounded-full bg-zinc-900 grid place-items-center"><ArrowLeft className="w-5 h-5" /></button>
+        <b className="flex-1 truncate">{mode === "add" ? t.addMembers : `${t.members} & ${t.admins}`}</b>
       </header>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-28">
-        <div className="sticky top-0 bg-[#080808] py-3">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.search} className="w-full h-11 rounded-xl bg-zinc-900 border border-white/10 pl-9 pr-3 outline-none text-sm" />
-          </div>
-        </div>
+        <div className="sticky top-0 bg-[#080808] py-3"><div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.search} className="w-full h-11 rounded-xl bg-zinc-900 border border-white/10 pl-9 pr-3 outline-none text-sm" /></div></div>
         {loading && <div className="py-10 text-center text-zinc-500 text-sm">…</div>}
-        {!loading && !filtered.length && <div className="py-10 text-center text-zinc-500 text-sm">{mode === "add" ? t.noResults : t.noResults}</div>}
+        {!loading && !filtered.length && <div className="py-10 text-center text-zinc-500 text-sm">{t.noResults}</div>}
         {filtered.map((p) => {
           const active = chosen.includes(p.id);
-          return (
-            <div key={p.id} className="flex items-center gap-3 py-3 border-b border-white/10">
-              <div className="w-11 h-11 rounded-full overflow-hidden bg-zinc-900 grid place-items-center text-orange-400 shrink-0">
-                {p.avatar ? <img src={p.avatar} alt="" className="w-full h-full object-cover" /> : p.name ? <span className="font-black">{p.name[0]?.toUpperCase()}</span> : <User className="w-5 h-5" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold truncate">{p.name}</div>
-                {mode === "admins" ? (
-                  <div className="text-xs text-zinc-400 flex items-center gap-1">
-                    {p.role === "owner" ? <Crown className="w-3 h-3 text-orange-400" /> : p.role === "admin" ? <ShieldCheck className="w-3 h-3 text-orange-400" /> : null}
-                    {p.role === "owner" ? t.owner : p.role === "admin" ? t.admin : t.member}
-                  </div>
-                ) : (
-                  p.email && <div className="text-xs text-zinc-500 truncate">{p.email}</div>
-                )}
-              </div>
-
-              {mode === "add" ? (
-                <button
-                  onClick={() => setChosen((v) => (active ? v.filter((x) => x !== p.id) : [...v, p.id]))}
-                  className={`w-7 h-7 rounded-full border grid place-items-center ${active ? "bg-orange-500 border-orange-500 text-black" : "border-zinc-600"}`}
-                  aria-label={p.name}
-                >
-                  {active && <Check className="w-4 h-4" />}
-                </button>
-              ) : (
-                canManage &&
-                p.role !== "owner" && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setRole(p.id, p.role === "admin" ? "member" : "admin")}
-                      className="px-3 h-9 rounded-full bg-orange-500/15 text-orange-300 text-xs font-bold border border-orange-500/30"
-                    >
-                      {p.role === "admin" ? t.removeAdmin : t.makeAdmin}
-                    </button>
-                    <button onClick={() => remove(p.id)} aria-label={t.delete} className="w-9 h-9 rounded-full bg-zinc-900 text-red-400 grid place-items-center">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )
-              )}
-            </div>
-          );
+          return <div key={p.id} className="flex items-center gap-3 py-3 border-b border-white/10">
+            <div className="w-11 h-11 rounded-full overflow-hidden bg-zinc-900 grid place-items-center text-orange-400 shrink-0">{p.avatar ? <img src={p.avatar} alt="" className="w-full h-full object-cover" /> : p.name ? <span className="font-black">{p.name[0]?.toUpperCase()}</span> : <User className="w-5 h-5" />}</div>
+            <div className="flex-1 min-w-0"><div className="font-semibold truncate">{p.name}</div>{mode === "admins" ? <div className="text-xs text-zinc-400 flex items-center gap-1">{p.role === "owner" ? <Crown className="w-3 h-3 text-orange-400" /> : p.role === "admin" ? <ShieldCheck className="w-3 h-3 text-orange-400" /> : null}{p.role === "owner" ? t.owner : p.role === "admin" ? t.admin : t.member}</div> : p.email && <div className="text-xs text-zinc-500 truncate">{p.email}</div>}</div>
+            {mode === "add" ? <button onClick={() => setChosen((v) => (active ? v.filter((x) => x !== p.id) : [...v, p.id]))} className={`w-7 h-7 rounded-full border grid place-items-center ${active ? "bg-orange-500 border-orange-500 text-black" : "border-zinc-600"}`} aria-label={p.name}>{active && <Check className="w-4 h-4" />}</button> : canManage && p.role !== "owner" && <div className="flex gap-2"><button onClick={() => setRole(p.id, p.role === "admin" ? "member" : "admin")} className="px-3 h-9 rounded-full bg-orange-500/15 text-orange-300 text-xs font-bold border border-orange-500/30">{p.role === "admin" ? t.removeAdmin : t.makeAdmin}</button><button onClick={() => setConfirmRemove(p)} aria-label={t.delete} className="w-9 h-9 rounded-full bg-zinc-900 text-red-400 grid place-items-center"><Trash2 className="w-4 h-4" /></button></div>}
+          </div>;
         })}
       </div>
 
-      {mode === "add" && (
-        <div className="shrink-0 p-4 border-t border-white/10 bg-black">
-          <button onClick={addMembers} disabled={!chosen.length || busy} className="w-full h-14 rounded-2xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">
-            {t.addMembers} {chosen.length ? `(${chosen.length})` : ""}
-          </button>
-        </div>
-      )}
+      {mode === "add" && <div className="shrink-0 p-4 border-t border-white/10 bg-black"><button onClick={addMembers} disabled={!chosen.length || busy} className="w-full h-14 rounded-2xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.addMembers} {chosen.length ? `(${chosen.length})` : ""}</button></div>}
+
+      {confirmRemove && <div className="fixed inset-0 z-[140] bg-black/80 grid place-items-center px-8" onClick={() => setConfirmRemove(null)}><div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-zinc-950 border border-white/10 p-6"><b className="text-lg">{t.delete}</b><p className="mt-2 text-sm text-zinc-400">{confirmRemove.name}</p><div className="mt-6 flex gap-3"><button onClick={() => setConfirmRemove(null)} className="flex-1 h-12 rounded-2xl bg-zinc-900">{t.cancel}</button><button onClick={() => remove(confirmRemove.id)} className="flex-1 h-12 rounded-2xl bg-red-500 text-black font-black">{t.delete}</button></div></div></div>}
     </div>
   );
 }
