@@ -164,7 +164,7 @@ export default function CommunityAdminPanel({ t, meId, isOwner, onClose, onChang
 
       {(
         <div className="shrink-0 flex gap-2 px-4 py-3 overflow-x-auto">
-          {((isOwner ? ["requests", "admins", "moderation"] : ["requests", "moderation"]) as const).map((x) => (
+          {(isOwner ? (["requests", "admins", "moderation"] as const) : (["requests", "moderation"] as const)).map((x) => (
             <button
               key={x}
               onClick={() => setTab(x)}
