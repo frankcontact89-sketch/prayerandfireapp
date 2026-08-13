@@ -7,9 +7,15 @@ const fmt = (s: number) => {
   return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 };
 
-const isWebKit =
-  typeof navigator !== "undefined" &&
-  /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent || "");
+/** True on Safari and on the iOS Capacitor WKWebView (whose UA has no "Safari" token). */
+const noWebmSupport = (() => {
+  if (typeof document === "undefined") return false;
+  try {
+    return document.createElement("audio").canPlayType("audio/webm") === "";
+  } catch {
+    return false;
+  }
+})();
 
 /** Historic recordings were stored as *.webm even though the bytes are MP4/AAC. */
 const looksWebm = (u: string) => /\.webm$/i.test(u.split("?")[0]);
@@ -63,7 +69,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   // legacy ".webm" objects (real bytes are MP4/AAC) we pre-load a typed blob.
   useEffect(() => {
     let alive = true;
-    if (!isWebKit || !looksWebm(url)) return;
+    if (!noWebmSupport || !looksWebm(url)) return;
     (async () => {
       try {
         const o = await blobUrlWithRealMime(url);
