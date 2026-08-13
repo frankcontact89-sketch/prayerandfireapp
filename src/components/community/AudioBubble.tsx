@@ -12,7 +12,7 @@ const isWebKit =
   /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent || "");
 
 /** Historic recordings were stored as *.webm even though the bytes are MP4/AAC. */
-const extMismatch = (u: string) => /\.webm(\?|$)/i.test(u.split("?")[0] + (u.includes("?") ? "?" : ""));
+const looksWebm = (u: string) => /\.webm$/i.test(u.split("?")[0]);
 
 /** Fetch the file and hand it to <audio> as a blob with the *real* MIME type. */
 async function blobUrlWithRealMime(u: string): Promise<string | undefined> {
@@ -63,7 +63,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   // legacy ".webm" objects (real bytes are MP4/AAC) we pre-load a typed blob.
   useEffect(() => {
     let alive = true;
-    if (!isWebKit || !extMismatch(url)) return;
+    if (!isWebKit || !looksWebm(url)) return;
     (async () => {
       try {
         const o = await blobUrlWithRealMime(url);
@@ -140,7 +140,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   const bars = 26;
 
   return (
-    <div className="flex items-center gap-3 min-w-[220px]">
+    <div className="relative flex items-center gap-3 min-w-[220px]">
       <div className={`w-10 h-10 rounded-full overflow-hidden shrink-0 grid place-items-center ${mine ? "bg-black/20 text-black" : "bg-zinc-800 text-orange-400"}`}>
         {avatar ? (
           <img src={avatar} alt={name || ""} className="w-full h-full object-cover" />
