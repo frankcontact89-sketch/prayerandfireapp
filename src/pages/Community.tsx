@@ -47,6 +47,14 @@ export default function Community(){
   useEffect(()=>{(async()=>{const p=await loadProfile();if(p)await loadGroups(p.id);})();},[loadProfile,loadGroups]);
   useEffect(()=>{if(!selected)return;loadMessages(selected.id);const channel=supabase.channel(`community:${selected.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_messages",filter:`group_id=eq.${selected.id}`},()=>loadMessages(selected.id)).on("postgres_changes",{event:"*",schema:"public",table:"community_reactions"},()=>loadMessages(selected.id)).subscribe();return()=>{supabase.removeChannel(channel);};},[selected?.id,loadMessages]);
 
+  // Live chat list: new groups, membership changes and incoming messages reorder/refresh the list on every device
+  useEffect(()=>{if(!me?.id)return;const uid=me.id;const refresh=()=>loadGroups(uid);const channel=supabase.channel(`community-list:${uid}`)
+    .on("postgres_changes",{event:"*",schema:"public",table:"community_group_members",filter:`user_id=eq.${uid}`},refresh)
+    .on("postgres_changes",{event:"*",schema:"public",table:"community_groups"},refresh)
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"community_messages"},refresh)
+    .subscribe();
+    return()=>{supabase.removeChannel(channel);};},[me?.id,loadGroups]);
+
   const visible=useMemo(()=>groups.filter(g=>{if(g.archived)return false;if(filter==="unread"&&g.unread<1)return false;return(g.name+" "+g.subtitle).toLowerCase().includes(query.toLowerCase());}),[groups,query,filter]);
 
   const createGroup=async(g:CreatedGroup)=>{ if(!me)return; if(!backendReady){setGroups(v=>[g,...v]);setSelected(g);return;} try{let avatarPath:string|undefined; if(g.avatar?.startsWith("blob:")){const blob=await fetch(g.avatar).then(r=>r.blob());avatarPath=`${me.id}/groups/${crypto.randomUUID()}.jpg`;await supabase.storage.from("community-media").upload(avatarPath,blob,{contentType:blob.type||"image/jpeg"});} const {data:created,error}=await db.from("community_groups").insert({name:g.name,description:g.subtitle,avatar_url:avatarPath||null,created_by:me.id}).select("id,name,description,avatar_url,updated_at").single(); if(error)throw error; const membership=[{group_id:created.id,user_id:me.id,role:"owner"},...(g.memberIds||[]).map(id=>({group_id:created.id,user_id:id,role:"member"}))]; await db.from("community_group_members").insert(membership); await loadGroups(me.id); setSelected({id:created.id,name:created.name,subtitle:created.description||"",unread:0,lastTime:"Now",avatar:g.avatar,memberCount:membership.length,role:"owner"});}catch(e){console.error(e);setBackendReady(false);setGroups(v=>[g,...v]);setSelected(g);} };
