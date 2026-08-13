@@ -1,42 +1,203 @@
-import React,{useEffect,useMemo,useRef,useState}from"react";
-import{ArrowLeft,Bell,BellOff,Camera,ChevronRight,Heart,LogOut,Mic,MoreHorizontal,Paperclip,Plus,Search,Send,Settings,Users,Video,Phone,X,Image as ImageIcon,Link2,FileText,ShieldCheck,UserPlus}from"lucide-react";
+import React,{useCallback,useEffect,useMemo,useRef,useState}from"react";
+import{ArrowLeft,Bell,BellOff,Camera,ChevronRight,Heart,LogOut,Mic,MoreHorizontal,Paperclip,Plus,Search,Send,Settings,ShieldCheck,Trash2,UserPlus,Users,Video,Phone,X,Image as ImageIcon}from"lucide-react";
 import{supabase}from"@/integrations/supabase/client";
 import CreateGroupModal,{type CreatedGroup}from"@/components/community/CreateGroupModal";
+import AccessGate from"@/components/community/AccessGate";
+import CommunityAdminPanel from"@/components/community/CommunityAdminPanel";
+import MembersModal from"@/components/community/MembersModal";
+import AudioBubble from"@/components/community/AudioBubble";
+import VoiceRecorder from"@/components/community/VoiceRecorder";
+import{dict,getLang}from"@/components/community/i18n";
 import entryLogo from"@/assets/prayer-fire-entry-logo.png";
 
 type Group=CreatedGroup&{role?:string;muted?:boolean;favorite?:boolean;archived?:boolean;memberCount?:number;description?:string};
 type Msg={id:string;sender_id:string;body?:string|null;media_url?:string|null;media_type?:string|null;created_at:string;mine?:boolean;url?:string};
+type Sender={name:string;avatar?:string|null};
 const db:any=supabase;
-const L=()=>{const x=(localStorage.getItem("pf_lang")||localStorage.getItem("language")||"en").slice(0,2);return x==="es"||x==="pt"?x:"en"};
-const words={
- en:{title:"Community",search:"Search chats",all:"All",unread:"Unread",groups:"Groups",empty:"No chats yet",sub:"Your conversations will appear here.",new:"New group",members:"members",info:"Group info",mute:"Mute notifications",unmute:"Unmute notifications",fav:"Favorite group",exit:"Exit group",edit:"Edit group",desc:"Description",save:"Save",type:"Message Prayer & Fire",media:"Media, links and documents",searchMsg:"Search messages",permissions:"Group permissions",addMembers:"Add members",admins:"Group admins"},
- es:{title:"Comunidad",search:"Buscar chats",all:"Todos",unread:"No leídos",groups:"Grupos",empty:"Todavía no hay chats",sub:"Tus conversaciones aparecerán aquí.",new:"Nuevo grupo",members:"miembros",info:"Información del grupo",mute:"Silenciar notificaciones",unmute:"Activar notificaciones",fav:"Grupo favorito",exit:"Salir del grupo",edit:"Editar grupo",desc:"Descripción",save:"Guardar",type:"Mensaje Prayer & Fire",media:"Multimedia, enlaces y documentos",searchMsg:"Buscar mensajes",permissions:"Permisos del grupo",addMembers:"Agregar miembros",admins:"Administradores del grupo"},
- pt:{title:"Comunidade",search:"Buscar chats",all:"Todos",unread:"Não lidos",groups:"Grupos",empty:"Ainda não há conversas",sub:"Suas conversas aparecerão aqui.",new:"Novo grupo",members:"membros",info:"Informações do grupo",mute:"Silenciar notificações",unmute:"Ativar notificações",fav:"Grupo favorito",exit:"Sair do grupo",edit:"Editar grupo",desc:"Descrição",save:"Salvar",type:"Mensagem Prayer & Fire",media:"Mídia, links e documentos",searchMsg:"Buscar mensagens",permissions:"Permissões do grupo",addMembers:"Adicionar membros",admins:"Administradores do grupo"}
-}as const;
 
 export default function CommunityV2(){
- const t=words[L()];
- const[me,setMe]=useState<any>(null),[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState("");
- const file=useRef<HTMLInputElement>(null),photo=useRef<HTMLInputElement>(null),mr=useRef<MediaRecorder|null>(null),chunks=useRef<Blob[]>([]),timer=useRef<number|null>(null),end=useRef<HTMLDivElement>(null);
+ const lang=getLang();
+ const t=dict[lang];
+ const[me,setMe]=useState<any>(null);
+ const[access,setAccess]=useState<"loading"|"none"|"pending"|"rejected"|"approved">("loading");
+ const[staffRole,setStaffRole]=useState<"owner"|"admin"|null>(null);
+ const[requesting,setRequesting]=useState(false);
+ const[panel,setPanel]=useState(false);
+ const[pendingCount,setPendingCount]=useState(0);
+ const[membersModal,setMembersModal]=useState<null|"add"|"admins">(null);
+ const[showPerms,setShowPerms]=useState(false);
+ const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null);
+ const file=useRef<HTMLInputElement>(null),photo=useRef<HTMLInputElement>(null),end=useRef<HTMLDivElement>(null);
+
+ const isStaff=!!staffRole;
+ const isOwner=staffRole==="owner";
+ const canManageGroup=(g:Group|null)=>!!g&&(isStaff||g.role==="owner"||g.role==="admin");
+
  const signed=async(path?:string|null)=>{if(!path)return undefined;const{data}=await supabase.storage.from("community-media").createSignedUrl(path,3600);return data?.signedUrl};
- const loadGroups=async(uid:string)=>{const{data:m}=await db.from("community_group_members").select("group_id,role,muted,archived,favorite").eq("user_id",uid);const ids=(m||[]).map((x:any)=>x.group_id);if(!ids.length){setGroups([]);return}const{data:g}=await db.from("community_groups").select("id,name,description,avatar_url,updated_at").in("id",ids).order("updated_at",{ascending:false});const mm=new Map((m||[]).map((x:any)=>[x.group_id,x]));setGroups(await Promise.all((g||[]).map(async(x:any)=>{const z:any=mm.get(x.id)||{};const{count}=await db.from("community_group_members").select("*",{count:"exact",head:true}).eq("group_id",x.id);return{id:x.id,name:x.name,subtitle:x.description||`${count||0} ${t.members}`,description:x.description||"",unread:0,lastTime:new Date(x.updated_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:x.avatar_url?await signed(x.avatar_url):undefined,role:z.role,muted:z.muted,archived:z.archived,favorite:z.favorite,memberCount:count||0}})))};
- const loadMsgs=async(id:string)=>{const{data}=await db.from("community_messages").select("id,sender_id,body,media_url,media_type,created_at,deleted_at").eq("group_id",id).is("deleted_at",null).order("created_at");setMsgs(await Promise.all((data||[]).map(async(x:any)=>({...x,mine:x.sender_id===me?.id,url:x.media_url?await signed(x.media_url):undefined}))));setTimeout(()=>end.current?.scrollIntoView({behavior:"smooth"}),20)};
- useEffect(()=>{(async()=>{const{data:{user}}=await supabase.auth.getUser();if(!user)return;const{data:p}=await db.from("profiles").select("username,avatar_url").eq("id",user.id).maybeSingle();const x={id:user.id,name:p?.username||user.email?.split("@")[0]||"Prayer & Fire Member",avatar:p?.avatar_url};setMe(x);loadGroups(user.id)})()},[]);
- useEffect(()=>{if(!selected)return;loadMsgs(selected.id);const c=supabase.channel(`chat:${selected.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_messages",filter:`group_id=eq.${selected.id}`},()=>loadMsgs(selected.id)).subscribe();return()=>{supabase.removeChannel(c)}},[selected?.id,me?.id]);
- useEffect(()=>{if(!me)return;const c=supabase.channel(`list:${me.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_group_members",filter:`user_id=eq.${me.id}`},()=>loadGroups(me.id)).on("postgres_changes",{event:"*",schema:"public",table:"community_groups"},()=>loadGroups(me.id)).subscribe();return()=>{supabase.removeChannel(c)}},[me?.id]);
+
+ const loadAccess=useCallback(async(uid:string)=>{
+  const{data:adm}=await db.from("community_admins").select("role").eq("user_id",uid).maybeSingle();
+  if(adm){setStaffRole(adm.role==="owner"?"owner":"admin");setAccess("approved");return true}
+  setStaffRole(null);
+  const{data:req}=await db.from("community_access_requests").select("status").eq("user_id",uid).maybeSingle();
+  if(!req){setAccess("none");return false}
+  setAccess(req.status==="approved"?"approved":req.status==="rejected"?"rejected":"pending");
+  return req.status==="approved";
+ },[]);
+
+ const loadGroups=useCallback(async(uid:string)=>{
+  const{data:m}=await db.from("community_group_members").select("group_id,role,muted,archived,favorite").eq("user_id",uid);
+  const ids=(m||[]).map((x:any)=>x.group_id);
+  if(!ids.length){setGroups([]);return}
+  const{data:g}=await db.from("community_groups").select("id,name,description,avatar_url,updated_at").in("id",ids).order("updated_at",{ascending:false});
+  const mm=new Map((m||[]).map((x:any)=>[x.group_id,x]));
+  setGroups(await Promise.all((g||[]).map(async(x:any)=>{
+   const z:any=mm.get(x.id)||{};
+   const{count}=await db.from("community_group_members").select("*",{count:"exact",head:true}).eq("group_id",x.id);
+   return{id:x.id,name:x.name,subtitle:x.description||`${count||0} ${t.members}`,description:x.description||"",unread:0,lastTime:new Date(x.updated_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:x.avatar_url?await signed(x.avatar_url):undefined,role:z.role,muted:z.muted,archived:z.archived,favorite:z.favorite,memberCount:count||0};
+  })));
+ },[t.members]);
+
+ const loadSenders=useCallback(async(ids:string[])=>{
+  if(!ids.length)return;
+  const{data}=await db.from("profiles").select("id,username,email,avatar_url").in("id",ids);
+  setSenders(prev=>{const next={...prev};(data||[]).forEach((p:any)=>{next[p.id]={name:p.username||p.email?.split("@")[0]||"Member",avatar:p.avatar_url}});return next});
+ },[]);
+
+ const loadMsgs=useCallback(async(id:string,uid?:string)=>{
+  const{data}=await db.from("community_messages").select("id,sender_id,body,media_url,media_type,created_at,deleted_at").eq("group_id",id).is("deleted_at",null).order("created_at");
+  const rows=await Promise.all((data||[]).map(async(x:any)=>({...x,mine:x.sender_id===(uid||me?.id),url:x.media_url?await signed(x.media_url):undefined})));
+  setMsgs(rows);
+  loadSenders(Array.from(new Set(rows.map((r:any)=>r.sender_id))));
+  setTimeout(()=>end.current?.scrollIntoView({behavior:"smooth"}),30);
+ },[me?.id,loadSenders]);
+
+ useEffect(()=>{(async()=>{
+  const{data:{user}}=await supabase.auth.getUser();
+  if(!user){setAccess("none");return}
+  const{data:p}=await db.from("profiles").select("username,avatar_url").eq("id",user.id).maybeSingle();
+  setMe({id:user.id,name:p?.username||user.email?.split("@")[0]||"Prayer & Fire Member",avatar:p?.avatar_url});
+  const ok=await loadAccess(user.id);
+  if(ok)await loadGroups(user.id);
+ })()},[loadAccess,loadGroups]);
+
+ // pending requests badge for staff
+ const loadPending=useCallback(async()=>{
+  const{count}=await db.from("community_access_requests").select("*",{count:"exact",head:true}).eq("status","pending");
+  setPendingCount(count||0);
+ },[]);
+ useEffect(()=>{if(!isStaff)return;loadPending();
+  const c=supabase.channel("community-requests").on("postgres_changes",{event:"*",schema:"public",table:"community_access_requests"},()=>loadPending()).subscribe();
+  return()=>{supabase.removeChannel(c)};
+ },[isStaff,loadPending]);
+
+ // my access status realtime
+ useEffect(()=>{if(!me)return;
+  const c=supabase.channel(`access:${me.id}`)
+   .on("postgres_changes",{event:"*",schema:"public",table:"community_access_requests",filter:`user_id=eq.${me.id}`},async()=>{const ok=await loadAccess(me.id);if(ok)await loadGroups(me.id)})
+   .subscribe();
+  return()=>{supabase.removeChannel(c)};
+ },[me?.id,loadAccess,loadGroups]);
+
+ useEffect(()=>{if(!selected||!me)return;loadMsgs(selected.id,me.id);
+  const c=supabase.channel(`chat:${selected.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_messages",filter:`group_id=eq.${selected.id}`},()=>loadMsgs(selected.id,me.id)).subscribe();
+  return()=>{supabase.removeChannel(c)};
+ },[selected?.id,me?.id,loadMsgs]);
+
+ useEffect(()=>{if(!me||access!=="approved")return;
+  const c=supabase.channel(`list:${me.id}`)
+   .on("postgres_changes",{event:"*",schema:"public",table:"community_group_members",filter:`user_id=eq.${me.id}`},()=>loadGroups(me.id))
+   .on("postgres_changes",{event:"*",schema:"public",table:"community_groups"},()=>loadGroups(me.id))
+   .subscribe();
+  return()=>{supabase.removeChannel(c)};
+ },[me?.id,access,loadGroups]);
+
  const visible=useMemo(()=>groups.filter(g=>!g.archived&&(filter!=="unread"||g.unread>0)&&(g.name+" "+g.subtitle).toLowerCase().includes(q.toLowerCase())),[groups,q,filter]);
- const createGroup=async(g:CreatedGroup)=>{if(!me)return;let path:string|undefined;if(g.avatar?.startsWith("blob:")){const b=await fetch(g.avatar).then(r=>r.blob());path=`${me.id}/groups/${crypto.randomUUID()}.jpg`;await supabase.storage.from("community-media").upload(path,b,{contentType:b.type||"image/jpeg"})}const{data:x,error}=await db.from("community_groups").insert({name:g.name,description:g.subtitle,avatar_url:path||null,created_by:me.id}).select().single();if(error)return;await db.from("community_group_members").insert([{group_id:x.id,user_id:me.id,role:"owner"},...(g.memberIds||[]).map(id=>({group_id:x.id,user_id:id,role:"member"}))]);await loadGroups(me.id);setCreate(false)};
- const send=async()=>{if(!draft.trim()||!selected||!me)return;await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,body:draft.trim().slice(0,10000)});setDraft("")};
- const upload=async(f?:File)=>{if(!f||!selected||!me||f.size>25*1024*1024)return;const kind=f.type.startsWith("image/")?"image":f.type.startsWith("video/")?"video":f.type.startsWith("audio/")?"audio":"document";const path=`${me.id}/${selected.id}/${Date.now()}-${f.name}`;const{error}=await supabase.storage.from("community-media").upload(path,f,{contentType:f.type});if(!error)await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,media_url:path,media_type:kind})};
- const record=async()=>{if(rec){mr.current?.stop();return}const s=await navigator.mediaDevices.getUserMedia({audio:true});const r=new MediaRecorder(s);chunks.current=[];r.ondataavailable=e=>e.data.size&&chunks.current.push(e.data);r.onstop=async()=>{s.getTracks().forEach(x=>x.stop());setRec(false);if(timer.current)clearTimeout(timer.current);await upload(new File([new Blob(chunks.current,{type:r.mimeType||"audio/webm"})],`voice-${Date.now()}.webm`,{type:r.mimeType||"audio/webm"}))};mr.current=r;r.start();setRec(true);timer.current=window.setTimeout(()=>r.state!=="inactive"&&r.stop(),20*60*1000)};
+
+ const requestAccess=async()=>{
+  if(!me)return;setRequesting(true);
+  await db.from("community_access_requests").insert({user_id:me.id,status:"pending"});
+  await loadAccess(me.id);setRequesting(false);
+ };
+
+ const createGroup=async(g:CreatedGroup)=>{
+  if(!me||!isStaff)return;
+  let path:string|undefined;
+  if(g.avatar?.startsWith("blob:")){const b=await fetch(g.avatar).then(r=>r.blob());path=`${me.id}/groups/${crypto.randomUUID()}.jpg`;await supabase.storage.from("community-media").upload(path,b,{contentType:b.type||"image/jpeg"})}
+  const{data:x,error}=await db.from("community_groups").insert({name:g.name,description:g.subtitle,avatar_url:path||null,created_by:me.id}).select().single();
+  if(error||!x)return;
+  await db.from("community_group_members").insert([{group_id:x.id,user_id:me.id,role:"owner"},...(g.memberIds||[]).map(id=>({group_id:x.id,user_id:id,role:"member"}))]);
+  await loadGroups(me.id);setCreate(false);
+ };
+
+ const send=async()=>{if(!draft.trim()||!selected||!me)return;const body=draft.trim().slice(0,10000);setDraft("");await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,body})};
+
+ const upload=async(f?:File)=>{
+  if(!f||!selected||!me||f.size>50*1024*1024)return;
+  const kind=f.type.startsWith("image/")?"image":f.type.startsWith("video/")?"video":f.type.startsWith("audio/")?"audio":"document";
+  const safe=f.name.replace(/[^\w.\-]+/g,"_");
+  const path=`${me.id}/${selected.id}/${Date.now()}-${safe}`;
+  const{error}=await supabase.storage.from("community-media").upload(path,f,{contentType:f.type||"application/octet-stream",upsert:false});
+  if(error)return;
+  await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,media_url:path,media_type:kind});
+ };
+
+ const deleteMsg=async(m:Msg)=>{
+  if(!me||!selected)return;
+  if(!(m.sender_id===me.id||canManageGroup(selected)))return;
+  await db.from("community_messages").update({deleted_at:new Date().toISOString()}).eq("id",m.id);
+  setConfirmDel(null);
+  setMsgs(v=>v.filter(x=>x.id!==m.id));
+ };
+
  const memberUpdate=async(ch:any)=>{if(!selected||!me)return;await db.from("community_group_members").update(ch).eq("group_id",selected.id).eq("user_id",me.id);setSelected(s=>s?{...s,...ch}:s);setGroups(v=>v.map(g=>g.id===selected.id?{...g,...ch}:g))};
- const saveGroup=async()=>{if(!selected||!(selected.role==="owner"||selected.role==="admin"))return;await db.from("community_groups").update({name:name.trim()||selected.name,description:desc.trim(),updated_at:new Date().toISOString()}).eq("id",selected.id);setSelected(s=>s?{...s,name:name.trim()||s.name,description:desc.trim(),subtitle:desc.trim()||s.subtitle}:s);setEdit(false)};
- const changePhoto=async(f?:File)=>{if(!f||!selected||!me||!(selected.role==="owner"||selected.role==="admin"))return;const path=`${me.id}/groups/${selected.id}-${Date.now()}.jpg`;await supabase.storage.from("community-media").upload(path,f,{contentType:f.type,upsert:true});await db.from("community_groups").update({avatar_url:path}).eq("id",selected.id);const url=await signed(path);setSelected(s=>s?{...s,avatar:url}:s)};
+ const saveGroup=async()=>{if(!selected||!canManageGroup(selected))return;await db.from("community_groups").update({name:name.trim()||selected.name,description:desc.trim(),updated_at:new Date().toISOString()}).eq("id",selected.id);setSelected(s=>s?{...s,name:name.trim()||s.name,description:desc.trim(),subtitle:desc.trim()||s.subtitle}:s);setEdit(false)};
+ const changePhoto=async(f?:File)=>{if(!f||!selected||!me||!canManageGroup(selected))return;const path=`${me.id}/groups/${selected.id}-${Date.now()}.jpg`;await supabase.storage.from("community-media").upload(path,f,{contentType:f.type,upsert:true});await db.from("community_groups").update({avatar_url:path}).eq("id",selected.id);const url=await signed(path);setSelected(s=>s?{...s,avatar:url}:s)};
  const leave=async()=>{if(!selected||!me)return;await db.from("community_group_members").delete().eq("group_id",selected.id).eq("user_id",me.id);setSelected(null);setInfo(false);loadGroups(me.id)};
 
- if(selected&&info)return <div className="fixed inset-0 bg-[#080808] text-white overflow-y-auto" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}><header className="sticky top-0 z-20 h-16 bg-black/95 border-b border-white/10 px-3 flex items-center gap-3"><button onClick={()=>setInfo(false)} className="w-10 h-10 grid place-items-center"><ArrowLeft/></button><b className="flex-1">{t.info}</b>{(selected.role==="owner"||selected.role==="admin")&&<button onClick={()=>{setName(selected.name);setDesc(selected.description||"");setEdit(true)}} className="w-10 h-10 grid place-items-center"><Settings/></button>}</header><div className="p-6 text-center border-b border-white/10"><button onClick={()=>photo.current?.click()} className="relative w-28 h-28 rounded-full overflow-hidden bg-zinc-900"><img src={selected.avatar||entryLogo} className="w-full h-full object-cover"/><span className="absolute bottom-0 inset-x-0 bg-black/70 py-2 flex justify-center"><Camera className="w-5 h-5"/></span></button><input ref={photo} type="file" accept="image/*" className="hidden" onChange={e=>changePhoto(e.target.files?.[0])}/><h2 className="text-2xl font-black mt-4">{selected.name}</h2><p className="text-zinc-400 text-sm">{selected.memberCount||0} {t.members}</p>{selected.description&&<p className="mt-3 text-zinc-300">{selected.description}</p>}</div><div className="m-4 rounded-2xl overflow-hidden border border-white/10 bg-zinc-950"><button onClick={()=>memberUpdate({muted:!selected.muted})} className="w-full h-14 px-4 flex items-center gap-3 border-b border-white/5">{selected.muted?<Bell/>:<BellOff/>}<span className="flex-1 text-left">{selected.muted?t.unmute:t.mute}</span><ChevronRight/></button><button className="w-full h-14 px-4 flex items-center gap-3 border-b border-white/5"><Search/><span className="flex-1 text-left">{t.searchMsg}</span><ChevronRight/></button><button className="w-full h-14 px-4 flex items-center gap-3 border-b border-white/5"><ImageIcon/><span className="flex-1 text-left">{t.media}</span><ChevronRight/></button><button onClick={()=>memberUpdate({favorite:!selected.favorite})} className="w-full h-14 px-4 flex items-center gap-3"><Heart className={selected.favorite?"fill-current text-orange-500":""}/><span className="flex-1 text-left">{t.fav}</span></button></div>{(selected.role==="owner"||selected.role==="admin")&&<div className="m-4 rounded-2xl overflow-hidden border border-white/10 bg-zinc-950"><button className="w-full h-14 px-4 flex items-center gap-3 border-b border-white/5"><UserPlus/><span className="flex-1 text-left">{t.addMembers}</span><ChevronRight/></button><button className="w-full h-14 px-4 flex items-center gap-3 border-b border-white/5"><ShieldCheck/><span className="flex-1 text-left">{t.admins}</span><ChevronRight/></button><button className="w-full h-14 px-4 flex items-center gap-3"><Settings/><span className="flex-1 text-left">{t.permissions}</span><ChevronRight/></button></div>}<div className="m-4 rounded-2xl border border-white/10 bg-zinc-950"><button onClick={leave} className="w-full h-14 px-4 flex items-center gap-3 text-red-400"><LogOut/><span>{t.exit}</span></button></div>{edit&&<div className="fixed inset-0 z-50 bg-black/70 flex items-end"><div className="w-full rounded-t-3xl bg-zinc-950 p-5 pb-[max(20px,env(safe-area-inset-bottom))]"><div className="flex justify-between"><b>{t.edit}</b><button onClick={()=>setEdit(false)}><X/></button></div><input value={name} onChange={e=>setName(e.target.value)} className="mt-5 w-full h-12 bg-zinc-900 rounded-xl px-3"/><textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder={t.desc} className="mt-3 w-full bg-zinc-900 rounded-xl p-3" rows={4}/><button onClick={saveGroup} className="mt-4 w-full h-12 rounded-xl bg-orange-500 text-black font-black">{t.save}</button></div></div>}</div>;
+ if(access==="loading")return <div className="fixed inset-0 bg-black" />;
+ if(access!=="approved")return <AccessGate t={t} status={access} busy={requesting} onRequest={requestAccess} onBack={()=>window.history.back()} />;
+ if(panel&&isStaff)return <CommunityAdminPanel t={t} meId={me.id} isOwner={isOwner} onClose={()=>setPanel(false)} onChanged={()=>me&&loadGroups(me.id)} />;
+ if(membersModal&&selected)return <MembersModal t={t} groupId={selected.id} mode={membersModal} canManage={canManageGroup(selected)} onClose={()=>setMembersModal(null)} onChanged={()=>me&&loadGroups(me.id)} />;
 
- if(selected)return <div className="fixed inset-0 bg-[#080808] text-white flex flex-col" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}><header className="shrink-0 min-h-16 px-2 bg-black/95 border-b border-white/10 flex items-center gap-2"><button onClick={()=>setSelected(null)} className="w-10 h-10 grid place-items-center"><ArrowLeft/></button><button onClick={()=>setInfo(true)} className="flex-1 min-w-0 flex items-center gap-2 text-left"><img src={selected.avatar||entryLogo} className="w-11 h-11 rounded-full object-cover"/><div className="min-w-0"><b className="block truncate">{selected.name}</b><span className="text-xs text-zinc-400">{selected.memberCount||0} {t.members}</span></div></button><button className="w-9 h-9 grid place-items-center"><Video className="w-5 h-5"/></button><button className="w-9 h-9 grid place-items-center"><Phone className="w-5 h-5"/></button><button onClick={()=>setInfo(true)} className="w-9 h-9 grid place-items-center"><MoreHorizontal className="w-5 h-5"/></button></header><main className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">{msgs.map(m=><div key={m.id} className={`flex ${m.mine?"justify-end":"justify-start"}`}><div className={`max-w-[82%] rounded-2xl px-3 py-2 ${m.mine?"bg-orange-500 text-black":"bg-zinc-900"}`}>{m.body&&<p className="whitespace-pre-wrap">{m.body}</p>}{m.media_type==="image"&&m.url&&<img src={m.url} className="rounded-xl max-h-80"/>}{m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline className="rounded-xl max-h-80"/>}{m.media_type==="audio"&&m.url&&<audio src={m.url} controls/>}{m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">Open document</a>}<div className="text-[10px] opacity-60 text-right mt-1">{new Date(m.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div></div>)}<div ref={end}/></main><div className="shrink-0 p-2 border-t border-white/10 flex gap-2 bg-black"><button onClick={()=>file.current?.click()} className="w-11 h-11 rounded-full bg-zinc-900 grid place-items-center"><Paperclip/></button><input ref={file} type="file" className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" onChange={e=>{upload(e.target.files?.[0]);e.target.value=""}}/><div className="flex-1 bg-zinc-900 rounded-full px-4 flex"><input maxLength={10000} value={draft} onChange={e=>setDraft(e.target.value)} placeholder={t.type} className="flex-1 bg-transparent outline-none min-w-0"/><button onClick={()=>file.current?.click()}><Camera/></button></div>{draft.trim()?<button onClick={send} className="w-11 h-11 rounded-full bg-orange-500 text-black grid place-items-center"><Send/></button>:<button onClick={record} className={`w-11 h-11 rounded-full grid place-items-center ${rec?"bg-red-500":"bg-orange-500 text-black"}`}><Mic/></button>}</div></div>;
+ if(selected&&info)return <div className="fixed inset-0 bg-[#080808] text-white overflow-y-auto" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}><header className="sticky top-0 z-20 h-16 bg-black/95 border-b border-white/10 px-3 flex items-center gap-3"><button onClick={()=>setInfo(false)} className="w-10 h-10 grid place-items-center"><ArrowLeft/></button><b className="flex-1">{t.info}</b>{canManageGroup(selected)&&<button onClick={()=>{setName(selected.name);setDesc(selected.description||"");setEdit(true)}} className="w-10 h-10 grid place-items-center"><Settings/></button>}</header><div className="p-6 text-center border-b border-white/10"><button onClick={()=>canManageGroup(selected)&&photo.current?.click()} className="relative w-28 h-28 rounded-full overflow-hidden bg-zinc-900"><img src={selected.avatar||entryLogo} alt="" className="w-full h-full object-cover"/>{canManageGroup(selected)&&<span className="absolute bottom-0 inset-x-0 bg-black/70 py-2 flex justify-center"><Camera className="w-5 h-5"/></span>}</button><input ref={photo} type="file" accept="image/*" className="hidden" onChange={e=>{changePhoto(e.target.files?.[0]);e.target.value=""}}/><h2 className="text-2xl font-black mt-4">{selected.name}</h2><p className="text-zinc-400 text-sm">{selected.memberCount||0} {t.members}</p>{selected.description&&<p className="mt-3 text-zinc-300">{selected.description}</p>}</div><div className="m-4 rounded-2xl overflow-hidden border border-white/10 bg-zinc-950"><button onClick={()=>memberUpdate({muted:!selected.muted})} className="w-full h-14 px-4 flex items-center gap-3 border-b border-white/5">{selected.muted?<Bell/>:<BellOff/>}<span className="flex-1 text-left">{selected.muted?t.unmute:t.mute}</span><ChevronRight/></button><button onClick={()=>memberUpdate({favorite:!selected.favorite})} className="w-full h-14 px-4 flex items-center gap-3"><Heart className={selected.favorite?"fill-current text-orange-500":""}/><span className="flex-1 text-left">{t.fav}</span></button></div>{canManageGroup(selected)&&<div className="m-4 rounded-2xl overflow-hidden border border-white/10 bg-zinc-950"><button onClick={()=>setMembersModal("add")} className="w-full h-14 px-4 flex items-center gap-3 border-b border-white/5"><UserPlus/><span className="flex-1 text-left">{t.addMembers}</span><ChevronRight/></button><button onClick={()=>setMembersModal("admins")} className="w-full h-14 px-4 flex items-center gap-3 border-b border-white/5"><ShieldCheck/><span className="flex-1 text-left">{t.admins}</span><ChevronRight/></button><button onClick={()=>setShowPerms(true)} className="w-full h-14 px-4 flex items-center gap-3"><Settings/><span className="flex-1 text-left">{t.permissions}</span><ChevronRight/></button></div>}<div className="m-4 rounded-2xl border border-white/10 bg-zinc-950"><button onClick={leave} className="w-full h-14 px-4 flex items-center gap-3 text-red-400"><LogOut/><span>{t.exit}</span></button></div>{showPerms&&<div className="fixed inset-0 z-50 bg-black/80 flex items-end" onClick={()=>setShowPerms(false)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 p-6 pb-[max(24px,env(safe-area-inset-bottom))]"><div className="flex justify-between items-center"><b>{t.permissions}</b><button onClick={()=>setShowPerms(false)}><X/></button></div><p className="mt-4 text-sm text-zinc-400 leading-relaxed">{t.permissionsBody}</p></div></div>}{edit&&<div className="fixed inset-0 z-50 bg-black/70 flex items-end"><div className="w-full rounded-t-3xl bg-zinc-950 p-5 pb-[max(20px,env(safe-area-inset-bottom))]"><div className="flex justify-between"><b>{t.edit}</b><button onClick={()=>setEdit(false)}><X/></button></div><input value={name} onChange={e=>setName(e.target.value)} className="mt-5 w-full h-12 bg-zinc-900 rounded-xl px-3"/><textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder={t.desc} className="mt-3 w-full bg-zinc-900 rounded-xl p-3" rows={4}/><button onClick={saveGroup} className="mt-4 w-full h-12 rounded-xl bg-orange-500 text-black font-black">{t.save}</button></div></div>}</div>;
 
- return <div className="fixed inset-0 bg-black text-white overflow-hidden" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}><div className="max-w-xl mx-auto h-full bg-[#080808] flex flex-col"><header className="shrink-0 px-4 pt-3 pb-3 border-b border-white/5"><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-3 min-w-0"><button onClick={()=>window.history.back()} className="w-10 h-10 rounded-full bg-zinc-900 grid place-items-center shrink-0"><ArrowLeft className="w-5 h-5"/></button>{me?.avatar?<img src={me.avatar} className="w-11 h-11 rounded-full object-cover shrink-0"/>:<div className="w-11 h-11 rounded-full bg-zinc-900 grid place-items-center shrink-0"><Users className="w-5 h-5 text-orange-500"/></div>}<div className="min-w-0"><div className="text-[10px] tracking-[.2em] text-orange-400 font-bold">PRAYER & FIRE</div><h1 className="text-xl font-black truncate">{t.title}</h1>{me&&<div className="text-xs text-zinc-500 truncate">{me.name}</div>}</div></div><button onClick={()=>setCreate(true)} className="w-11 h-11 rounded-full bg-orange-500 text-black grid place-items-center shrink-0" aria-label={t.new}><Plus className="w-5 h-5"/></button></div></header><div className="shrink-0 px-4 py-3"><div className="bg-zinc-900 border border-white/10 rounded-2xl h-12 px-4 flex items-center gap-2"><Search className="w-5 h-5 text-zinc-500"/><input value={q} onChange={e=>setQ(e.target.value)} placeholder={t.search} className="bg-transparent outline-none flex-1 min-w-0"/></div><div className="flex gap-2 mt-3">{(["all","unread","groups"] as const).map(f=><button key={f} onClick={()=>setFilter(f)} className={`px-4 py-2 rounded-full text-sm font-semibold border ${filter===f?"bg-orange-500 text-black border-orange-400":"bg-zinc-950 border-white/10 text-zinc-300"}`}>{t[f]}</button>)}</div></div><div className="flex-1 min-h-0 overflow-y-auto px-3 pb-8">{visible.length===0?<div className="py-20 text-center px-8"><div className="w-16 h-16 rounded-full bg-orange-500/10 text-orange-500 grid place-items-center mx-auto mb-4"><Users className="w-7 h-7"/></div><h2 className="font-bold text-lg">{t.empty}</h2><p className="text-sm text-zinc-500 mt-2">{t.sub}</p></div>:visible.map(g=><button key={g.id} onClick={()=>setSelected(g)} className="w-full text-left flex gap-3 px-2 py-3.5 border-b border-white/10 active:bg-white/5 rounded-xl"><img src={g.avatar||entryLogo} className="w-14 h-14 rounded-full object-cover"/><div className="min-w-0 flex-1"><div className="flex justify-between gap-2"><div className="font-extrabold truncate">{g.name}</div><span className="text-[11px] text-zinc-500">{g.lastTime}</span></div><div className="text-sm text-zinc-400 truncate mt-1">{g.subtitle}</div></div></button>)}</div><CreateGroupModal open={create} onClose={()=>setCreate(false)} onCreate={createGroup} language={L()}/></div></div>;
+ if(selected)return <div className="fixed inset-0 bg-[#080808] text-white flex flex-col" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
+  <header className="shrink-0 min-h-16 px-2 bg-black/95 border-b border-white/10 flex items-center gap-2"><button onClick={()=>setSelected(null)} className="w-10 h-10 grid place-items-center"><ArrowLeft/></button><button onClick={()=>setInfo(true)} className="flex-1 min-w-0 flex items-center gap-2 text-left"><img src={selected.avatar||entryLogo} alt="" className="w-11 h-11 rounded-full object-cover"/><div className="min-w-0"><b className="block truncate">{selected.name}</b><span className="text-xs text-zinc-400">{selected.memberCount||0} {t.members}</span></div></button><button className="w-9 h-9 grid place-items-center"><Video className="w-5 h-5"/></button><button className="w-9 h-9 grid place-items-center"><Phone className="w-5 h-5"/></button><button onClick={()=>setInfo(true)} className="w-9 h-9 grid place-items-center"><MoreHorizontal className="w-5 h-5"/></button></header>
+  <main className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
+   {msgs.map(m=>{
+    const s=senders[m.sender_id];
+    const time=new Date(m.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+    const canDelete=m.sender_id===me?.id||canManageGroup(selected);
+    return <div key={m.id} className={`flex ${m.mine?"justify-end":"justify-start"}`}>
+     <div
+      onContextMenu={e=>{if(canDelete){e.preventDefault();setConfirmDel(m)}}}
+      className={`group relative max-w-[86%] rounded-2xl px-3 py-2 ${m.mine?"bg-orange-500 text-black":"bg-zinc-900"}`}
+     >
+      {!m.mine&&s&&<div className="text-[11px] font-bold text-orange-400 mb-0.5">{s.name}</div>}
+      {m.body&&<p className="whitespace-pre-wrap break-words">{m.body}</p>}
+      {m.media_type==="image"&&m.url&&<img src={m.url} alt="" className="rounded-xl max-h-80"/>}
+      {m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline preload="metadata" className="rounded-xl max-h-80"/>}
+      {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar} name={s?.name} time={time} errorLabel={t.audioError}/>}
+      {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
+      {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{canDelete&&<button onClick={()=>setConfirmDel(m)} aria-label={t.deleteMsg} className="opacity-70"><Trash2 className="w-3.5 h-3.5"/></button>}{time}</div>}
+      {m.media_type==="audio"&&canDelete&&<button onClick={()=>setConfirmDel(m)} aria-label={t.deleteMsg} className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-zinc-800 text-red-400 grid place-items-center border border-white/10"><Trash2 className="w-3.5 h-3.5"/></button>}
+     </div>
+    </div>;
+   })}
+   <div ref={end}/>
+  </main>
+  <div className="shrink-0 p-2 border-t border-white/10 bg-black">
+   {rec?<VoiceRecorder t={t} onSend={upload} onClose={()=>setRec(false)}/>:
+   <div className="flex gap-2">
+    <button onClick={()=>file.current?.click()} className="w-11 h-11 rounded-full bg-zinc-900 grid place-items-center"><Paperclip/></button>
+    <input ref={file} type="file" className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" onChange={e=>{upload(e.target.files?.[0]);e.target.value=""}}/>
+    <div className="flex-1 bg-zinc-900 rounded-full px-4 flex items-center gap-2 min-w-0"><input maxLength={10000} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();send()}}} placeholder={t.type} className="flex-1 bg-transparent outline-none min-w-0"/><button onClick={()=>file.current?.click()} aria-label={t.media}><Camera className="w-5 h-5"/></button></div>
+    {draft.trim()?<button onClick={send} aria-label={t.send} className="w-11 h-11 rounded-full bg-orange-500 text-black grid place-items-center"><Send/></button>:<button onClick={()=>setRec(true)} aria-label={t.voiceMessage} className="w-11 h-11 rounded-full bg-orange-500 text-black grid place-items-center"><Mic/></button>}
+   </div>}
+  </div>
+  {confirmDel&&<div className="fixed inset-0 z-50 bg-black/80 grid place-items-center px-8" onClick={()=>setConfirmDel(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-zinc-950 border border-white/10 p-6"><b className="text-lg">{t.deleteMsg}</b><div className="mt-6 flex gap-3"><button onClick={()=>setConfirmDel(null)} className="flex-1 h-12 rounded-2xl bg-zinc-900">{t.cancel}</button><button onClick={()=>deleteMsg(confirmDel)} className="flex-1 h-12 rounded-2xl bg-red-500 text-black font-black">{t.delete}</button></div></div></div>}
+ </div>;
+
+ return <div className="fixed inset-0 bg-black text-white overflow-hidden" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}><div className="max-w-xl mx-auto h-full bg-[#080808] flex flex-col"><header className="shrink-0 px-4 pt-3 pb-3 border-b border-white/5"><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-3 min-w-0"><button onClick={()=>window.history.back()} aria-label={t.back} className="w-10 h-10 rounded-full bg-zinc-900 grid place-items-center shrink-0"><ArrowLeft className="w-5 h-5"/></button>{me?.avatar?<img src={me.avatar} alt="" className="w-11 h-11 rounded-full object-cover shrink-0"/>:<div className="w-11 h-11 rounded-full bg-zinc-900 grid place-items-center shrink-0"><Users className="w-5 h-5 text-orange-500"/></div>}<div className="min-w-0"><div className="text-[10px] tracking-[.2em] text-orange-400 font-bold">PRAYER &amp; FIRE</div><h1 className="text-xl font-black truncate">{t.title}</h1>{me&&<div className="text-xs text-zinc-500 truncate">{me.name}</div>}</div></div><div className="flex items-center gap-2 shrink-0">{isStaff&&<button onClick={()=>setPanel(true)} aria-label={t.requestsPanel} className="relative w-11 h-11 rounded-full bg-zinc-900 text-orange-400 grid place-items-center"><ShieldCheck className="w-5 h-5"/>{pendingCount>0&&<span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-orange-500 text-black text-[11px] font-black grid place-items-center">{pendingCount}</span>}</button>}{isStaff&&<button onClick={()=>setCreate(true)} className="w-11 h-11 rounded-full bg-orange-500 text-black grid place-items-center" aria-label={t.new}><Plus className="w-5 h-5"/></button>}</div></div></header><div className="shrink-0 px-4 py-3"><div className="bg-zinc-900 border border-white/10 rounded-2xl h-12 px-4 flex items-center gap-2"><Search className="w-5 h-5 text-zinc-500"/><input value={q} onChange={e=>setQ(e.target.value)} placeholder={t.search} className="bg-transparent outline-none flex-1 min-w-0"/></div><div className="flex gap-2 mt-3">{(["all","unread","groups"] as const).map(f=><button key={f} onClick={()=>setFilter(f)} className={`px-4 py-2 rounded-full text-sm font-semibold border ${filter===f?"bg-orange-500 text-black border-orange-400":"bg-zinc-950 border-white/10 text-zinc-300"}`}>{t[f]}</button>)}</div></div><div className="flex-1 min-h-0 overflow-y-auto px-3 pb-8">{visible.length===0?<div className="py-20 text-center px-8"><div className="w-16 h-16 rounded-full bg-orange-500/10 text-orange-500 grid place-items-center mx-auto mb-4"><Users className="w-7 h-7"/></div><h2 className="font-bold text-lg">{t.empty}</h2><p className="text-sm text-zinc-500 mt-2">{isStaff?t.sub:`${t.sub} ${t.onlyAdminsCreate}`}</p></div>:visible.map(g=><button key={g.id} onClick={()=>setSelected(g)} className="w-full text-left flex gap-3 px-2 py-3.5 border-b border-white/10 active:bg-white/5 rounded-xl"><img src={g.avatar||entryLogo} alt="" className="w-14 h-14 rounded-full object-cover"/><div className="min-w-0 flex-1"><div className="flex justify-between gap-2"><div className="font-extrabold truncate">{g.name}</div><span className="text-[11px] text-zinc-500">{g.lastTime}</span></div><div className="text-sm text-zinc-400 truncate mt-1">{g.subtitle}</div></div></button>)}</div>{isStaff&&<CreateGroupModal open={create} onClose={()=>setCreate(false)} onCreate={createGroup} language={lang}/>}</div></div>;
 }
