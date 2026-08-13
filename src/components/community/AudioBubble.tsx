@@ -7,6 +7,32 @@ const fmt = (s: number) => {
   return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 };
 
+/** True on Safari and on the iOS Capacitor WKWebView (whose UA has no "Safari" token). */
+const noWebmSupport = (() => {
+  if (typeof document === "undefined") return false;
+  try {
+    return document.createElement("audio").canPlayType("audio/webm") === "";
+  } catch {
+    return false;
+  }
+})();
+
+/** Historic recordings were stored as *.webm even though the bytes are MP4/AAC. */
+const looksWebm = (u: string) => /\.webm$/i.test(u.split("?")[0]);
+
+/** Fetch the file and hand it to <audio> as a blob with the *real* MIME type. */
+async function blobUrlWithRealMime(u: string): Promise<string | undefined> {
+  const r = await fetch(u);
+  if (!r.ok) return undefined;
+  const buf = await r.arrayBuffer();
+  const head = new Uint8Array(buf.slice(0, 12));
+  const ftyp = String.fromCharCode(...head.slice(4, 8)) === "ftyp";
+  const ebml = head[0] === 0x1a && head[1] === 0x45 && head[2] === 0xdf && head[3] === 0xa3;
+  const header = (r.headers.get("content-type") || "").split(";")[0].trim();
+  const type = ftyp ? "audio/mp4" : ebml ? "audio/webm" : header || "audio/mp4";
+  return URL.createObjectURL(new Blob([buf], { type }));
+}
+
 type Props = {
   url: string;
   mine?: boolean;
@@ -39,6 +65,29 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
     setDur(0);
   }, [url]);
 
+  // WebKit refuses files whose URL extension contradicts the container, so for
+  // legacy ".webm" objects (real bytes are MP4/AAC) we pre-load a typed blob.
+  useEffect(() => {
+    let alive = true;
+    if (!noWebmSupport || !looksWebm(url)) return;
+    (async () => {
+      try {
+        const o = await blobUrlWithRealMime(url);
+        if (!alive || !o) return;
+        if (objUrl.current) URL.revokeObjectURL(objUrl.current);
+        objUrl.current = o;
+        stage.current = 2;
+        setSrc(o);
+        setFailed(false);
+      } catch {
+        /* the onError recovery chain still applies */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [url]);
+
   useEffect(
     () => () => {
       if (objUrl.current) URL.revokeObjectURL(objUrl.current);
@@ -59,13 +108,14 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
     if (stage.current < 2) {
       stage.current = 2;
       try {
-        const r = await fetch(src);
-        if (!r.ok) throw new Error("fetch failed");
-        const b = await r.blob();
-        const o = URL.createObjectURL(b);
-        objUrl.current = o;
-        setSrc(o);
-        return;
+        const o = await blobUrlWithRealMime(src);
+        if (o) {
+          if (objUrl.current) URL.revokeObjectURL(objUrl.current);
+          objUrl.current = o;
+          setSrc(o);
+          setFailed(false);
+          return;
+        }
       } catch {
         /* fall through */
       }
@@ -96,7 +146,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   const bars = 26;
 
   return (
-    <div className="flex items-center gap-3 min-w-[220px]">
+    <div className="relative flex items-center gap-3 min-w-[220px]">
       <div className={`w-10 h-10 rounded-full overflow-hidden shrink-0 grid place-items-center ${mine ? "bg-black/20 text-black" : "bg-zinc-800 text-orange-400"}`}>
         {avatar ? (
           <img src={avatar} alt={name || ""} className="w-full h-full object-cover" />
@@ -191,7 +241,8 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
           setCur(0);
         }}
         onError={() => recover()}
-        className="hidden"
+        // display:none can stop playback in some WKWebView builds — hide visually instead.
+        style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
       />
     </div>
   );

@@ -192,8 +192,9 @@ export default function CommunityV2(){
  if(selected)return <div className="fixed inset-0 bg-[#080808] text-white flex flex-col" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
   <header className="shrink-0 min-h-16 px-2 bg-black/95 border-b border-white/10 flex items-center gap-2"><button onClick={()=>setSelected(null)} aria-label={t.back} className="w-10 h-10 grid place-items-center"><ArrowLeft/></button><button onClick={()=>setInfo(true)} className="flex-1 min-w-0 flex items-center gap-2 text-left"><img src={selected.avatar||entryLogo} alt="" className="w-11 h-11 rounded-full object-cover"/><div className="min-w-0"><b className="block truncate">{selected.name}</b><span className="text-xs text-zinc-400">{selected.memberCount||0} {t.members}</span></div></button><button onClick={()=>setInfo(true)} aria-label={t.info} className="w-9 h-9 grid place-items-center"><MoreHorizontal className="w-5 h-5"/></button></header>
   <main className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
-   {msgs.map(m=>{
-    const s=senders[m.sender_id];
+    {msgs.map(m=>{
+     // Fall back to my own profile: the sender map may not include me.
+     const s=senders[m.sender_id]||(m.sender_id===me?.id?{name:me?.name,avatar:me?.avatar}:undefined);
     const time=new Date(m.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
     const canDelete=m.sender_id===me?.id||canManageGroup(selected);
     const parent=m.reply_to?msgs.find(x=>x.id===m.reply_to):undefined;
@@ -213,7 +214,7 @@ export default function CommunityV2(){
       {m.body&&<p className="whitespace-pre-wrap break-words">{m.body}</p>}
       {m.media_type==="image"&&m.url&&<img src={m.url} alt="" className="rounded-xl max-h-80"/>}
       {m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline preload="metadata" className="rounded-xl max-h-80"/>}
-      {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar} name={s?.name} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)}/>}
+      {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)}/>}
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
       {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{m.starred&&<Star className="w-3 h-3 fill-current"/>}{time}</div>}
       {reactions[m.id]?.length>0&&<div className={`absolute -bottom-2 ${m.mine?"left-2":"right-2"} rounded-full px-1.5 py-0.5 text-[11px] bg-zinc-800 border border-white/10`}>{Array.from(new Set(reactions[m.id])).slice(0,3).join("")}{reactions[m.id].length>1?` ${reactions[m.id].length}`:""}</div>}
@@ -240,7 +241,7 @@ export default function CommunityV2(){
    <div className="flex gap-2 pb-3 overflow-x-auto">{EMOJIS.map(e=><button key={e} onClick={()=>react(menu,e)} className="w-11 h-11 shrink-0 rounded-full bg-zinc-900 border border-white/10 text-xl grid place-items-center">{e}</button>)}</div>
    <button onClick={()=>{setReplyTo(menu);setMenu(null)}} className="w-full h-13 py-3 px-2 flex items-center gap-3 border-t border-white/5"><CornerUpLeft className="w-5 h-5 text-orange-400"/><span>{t.reply}</span></button>
    <button onClick={()=>star(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Star className={`w-5 h-5 text-orange-400 ${menu.starred?"fill-current":""}`}/><span>{menu.starred?t.unstar:t.star}</span></button>
-   {(menu.body||menu.url)&&<button onClick={()=>copyMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Copy className="w-5 h-5 text-orange-400"/><span>{t.copy}</span></button>}
+   {!!menu.body&&<button onClick={()=>copyMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Copy className="w-5 h-5 text-orange-400"/><span>{t.copy}</span></button>}
    {(menu.sender_id===me?.id||canManageGroup(selected))&&<button onClick={()=>{setConfirmDel(menu);setMenu(null)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Trash2 className="w-5 h-5"/><span>{t.deleteMsg}</span></button>}
   </div></div>}
   {confirmDel&&<div className="fixed inset-0 z-50 bg-black/80 grid place-items-center px-8" onClick={()=>setConfirmDel(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-zinc-950 border border-white/10 p-6"><b className="text-lg">{t.deleteMsg}</b><div className="mt-6 flex gap-3"><button onClick={()=>setConfirmDel(null)} className="flex-1 h-12 rounded-2xl bg-zinc-900">{t.cancel}</button><button onClick={()=>deleteMsg(confirmDel)} className="flex-1 h-12 rounded-2xl bg-red-500 text-black font-black">{t.delete}</button></div></div></div>}

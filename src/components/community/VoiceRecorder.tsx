@@ -17,6 +17,16 @@ export function pickAudioMime(): { mime: string; ext: string } {
   return { mime: "", ext: "m4a" };
 }
 
+/** Extension that always matches the real container the recorder produced. */
+export function extForMime(type?: string | null): string {
+  const m = (type || "").toLowerCase();
+  if (m.includes("mp4") || m.includes("aac") || m.includes("m4a")) return "m4a";
+  if (m.includes("mpeg") || m.includes("mp3")) return "mp3";
+  if (m.includes("ogg")) return "ogg";
+  if (m.includes("webm")) return "webm";
+  return "m4a";
+}
+
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 const MAX_SECONDS = 20 * 60;
 
@@ -63,6 +73,9 @@ export default function VoiceRecorder({ t, onSend, onClose }: Props) {
             return;
           }
           const type = r.mimeType || picked.mime || "audio/mp4";
+          // Never trust the pre-flight guess: the real container wins so the
+          // filename extension and the Content-Type always agree.
+          ext.current = extForMime(type);
           const blob = new Blob(chunks.current, { type });
           const file = new File([blob], `voice-${Date.now()}.${ext.current}`, { type });
           setBusy(true);
