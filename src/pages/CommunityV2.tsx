@@ -14,7 +14,8 @@ type Group=CreatedGroup&{role?:string;muted?:boolean;favorite?:boolean;archived?
 type Msg={id:string;sender_id:string;body?:string|null;media_url?:string|null;media_type?:string|null;created_at:string;deleted_at?:string|null;starred?:boolean;reply_to?:string|null;mine?:boolean;url?:string};
 type Sender={name:string;avatar?:string|null};
 const db:any=supabase;
-const EMOJIS=["🙏","🔥","❤️","🙌","😂","👍"];
+const EMOJIS=["👍","❤️","😂","😮","😢","🙏","🔥"];
+type Rx={user_id:string;emoji:string};
 
 export default function CommunityV2(){
  const lang=getLang();
@@ -28,7 +29,7 @@ export default function CommunityV2(){
  const[pendingCount,setPendingCount]=useState(0);
  const[membersModal,setMembersModal]=useState<null|"add"|"admins">(null);
  const[showPerms,setShowPerms]=useState(false);
- const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,string[]>>({}),[flash,setFlash]=useState("");
+ const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[flash,setFlash]=useState("");
  const file=useRef<HTMLInputElement>(null),photo=useRef<HTMLInputElement>(null),end=useRef<HTMLDivElement>(null);
  const press=useRef<number|null>(null);
 
@@ -67,19 +68,22 @@ export default function CommunityV2(){
   setSenders(prev=>{const next={...prev};(data||[]).forEach((p:any)=>{next[p.id]={name:p.username||p.email?.split("@")[0]||"Member",avatar:p.avatar_url}});return next});
  },[]);
 
+ const loadReactions=useCallback(async(ids:string[])=>{
+  if(!ids.length)return;
+  const{data:rx}=await db.from("community_reactions").select("message_id,user_id,emoji").in("message_id",ids);
+  const map:Record<string,Rx[]>={};(rx||[]).forEach((r:any)=>{(map[r.message_id]=map[r.message_id]||[]).push({user_id:r.user_id,emoji:r.emoji})});
+  setReactions(map);
+  loadSenders(Array.from(new Set((rx||[]).map((r:any)=>r.user_id))));
+ },[loadSenders]);
  const loadMsgs=useCallback(async(id:string,uid?:string)=>{
   const{data}=await db.from("community_messages").select("id,sender_id,body,media_url,media_type,created_at,deleted_at,starred,reply_to").eq("group_id",id).order("created_at");
   const rows=await Promise.all((data||[]).map(async(x:any)=>({...x,mine:x.sender_id===(uid||me?.id),url:x.media_url&&!x.deleted_at?await signed(x.media_url):undefined})));
   setMsgs(rows);
   loadSenders(Array.from(new Set(rows.map((r:any)=>r.sender_id))));
   const ids=rows.map((r:any)=>r.id);
-  if(ids.length){
-   const{data:rx}=await db.from("community_reactions").select("message_id,emoji").in("message_id",ids);
-   const map:Record<string,string[]>={};(rx||[]).forEach((r:any)=>{(map[r.message_id]=map[r.message_id]||[]).push(r.emoji)});
-   setReactions(map);
-  }else setReactions({});
+  if(ids.length)await loadReactions(ids);else setReactions({});
   setTimeout(()=>end.current?.scrollIntoView({behavior:"smooth"}),30);
- },[me?.id,loadSenders]);
+ },[me?.id,loadSenders,loadReactions]);
 
  useEffect(()=>{(async()=>{
   const{data:{user}}=await supabase.auth.getUser();
@@ -110,8 +114,9 @@ export default function CommunityV2(){
 
  useEffect(()=>{if(!selected||!me)return;loadMsgs(selected.id,me.id);
   const c=supabase.channel(`chat:${selected.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_messages",filter:`group_id=eq.${selected.id}`},()=>loadMsgs(selected.id,me.id)).subscribe();
-  return()=>{supabase.removeChannel(c)};
- },[selected?.id,me?.id,loadMsgs]);
+  const rc=supabase.channel(`rx:${selected.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_reactions"},()=>{setMsgs(cur=>{loadReactions(cur.map(x=>x.id));return cur})}).subscribe();
+  return()=>{supabase.removeChannel(c);supabase.removeChannel(rc)};
+ },[selected?.id,me?.id,loadMsgs,loadReactions]);
 
  useEffect(()=>{if(!me||access!=="approved")return;
   const c=supabase.channel(`list:${me.id}`)
@@ -162,9 +167,12 @@ export default function CommunityV2(){
 
  const toast=(s:string)=>{setFlash(s);window.setTimeout(()=>setFlash(""),1600)};
  const react=async(m:Msg,emoji:string)=>{
-  if(!me)return;setMenu(null);
-  setReactions(v=>({...v,[m.id]:[...(v[m.id]||[]),emoji]}));
-  await db.from("community_reactions").insert({message_id:m.id,user_id:me.id,emoji});
+  if(!me)return;setMenu(null);setReactBar(null);
+  const mine=(reactions[m.id]||[]).find(r=>r.user_id===me.id);
+  const remove=mine?.emoji===emoji;
+  setReactions(v=>{const list=(v[m.id]||[]).filter(r=>r.user_id!==me.id);return{...v,[m.id]:remove?list:[...list,{user_id:me.id,emoji}]}});
+  if(remove){await db.from("community_reactions").delete().eq("message_id",m.id).eq("user_id",me.id);return}
+  await db.from("community_reactions").upsert({message_id:m.id,user_id:me.id,emoji},{onConflict:"message_id,user_id"});
  };
  const star=async(m:Msg)=>{
   setMenu(null);
@@ -203,12 +211,17 @@ export default function CommunityV2(){
     </div>;
     return <div key={m.id} className={`flex ${m.mine?"justify-end":"justify-start"}`}>
      <div
-      onContextMenu={e=>{e.preventDefault();setMenu(m)}}
-      onTouchStart={()=>{press.current=window.setTimeout(()=>setMenu(m),450)}}
+      onContextMenu={e=>{e.preventDefault();setReactBar(m)}}
+      onTouchStart={()=>{press.current=window.setTimeout(()=>setReactBar(m),400)}}
       onTouchEnd={()=>{if(press.current)window.clearTimeout(press.current)}}
       onTouchMove={()=>{if(press.current)window.clearTimeout(press.current)}}
-      className={`group relative max-w-[86%] rounded-2xl px-3 py-2 ${m.mine?"bg-orange-500 text-black":"bg-zinc-900"}`}
+      style={{WebkitTouchCallout:"none",WebkitUserSelect:reactBar?.id===m.id?"none":undefined}}
+      className={`group relative max-w-[86%] rounded-2xl px-3 py-2 select-none ${(reactions[m.id]||[]).length?"mb-4":""} ${m.mine?"bg-orange-500 text-black":"bg-zinc-900"}`}
      >
+      {reactBar?.id===m.id&&<div className={`absolute -top-14 z-40 ${m.mine?"right-0":"left-0"} flex items-center gap-1 rounded-full bg-zinc-950 border border-orange-500/40 shadow-xl shadow-black/60 px-2 py-1.5`}>
+       {EMOJIS.map(e=><button key={e} onClick={ev=>{ev.stopPropagation();react(m,e)}} className={`w-9 h-9 shrink-0 rounded-full text-xl grid place-items-center ${(reactions[m.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-orange-500/25":""}`}>{e}</button>)}
+       <button onClick={ev=>{ev.stopPropagation();setReactBar(null);setMenu(m)}} aria-label={t.options} className="w-9 h-9 rounded-full bg-zinc-900 border border-white/10 grid place-items-center text-orange-400"><Plus className="w-4 h-4"/></button>
+      </div>}
       {!m.mine&&s&&<div className="text-[11px] font-bold text-orange-400 mb-0.5">{s.name}</div>}
       {parent&&<div className={`mb-1 rounded-lg px-2 py-1 text-[11px] border-l-2 ${m.mine?"bg-black/10 border-black/40 text-black/70":"bg-black/40 border-orange-500 text-zinc-400"}`}><b>{senders[parent.sender_id]?.name||t.member}</b><div className="truncate">{parent.deleted_at?t.messageDeleted:parent.body||t.media}</div></div>}
       {m.body&&<p className="whitespace-pre-wrap break-words">{m.body}</p>}
@@ -217,7 +230,10 @@ export default function CommunityV2(){
       {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)}/>}
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
       {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{m.starred&&<Star className="w-3 h-3 fill-current"/>}{time}</div>}
-      {reactions[m.id]?.length>0&&<div className={`absolute -bottom-2 ${m.mine?"left-2":"right-2"} rounded-full px-1.5 py-0.5 text-[11px] bg-zinc-800 border border-white/10`}>{Array.from(new Set(reactions[m.id])).slice(0,3).join("")}{reactions[m.id].length>1?` ${reactions[m.id].length}`:""}</div>}
+      {(reactions[m.id]||[]).length>0&&<button onClick={ev=>{ev.stopPropagation();setRxDetail(m)}} className={`absolute -bottom-3.5 ${m.mine?"left-2":"right-2"} flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] bg-zinc-800 border border-white/10 text-white`}>
+       {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
+       {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
+      </button>}
       <button onClick={()=>setMenu(m)} aria-label={t.options} className={`absolute top-1 ${m.mine?"-left-8":"-right-8"} w-7 h-7 rounded-full bg-zinc-900/90 border border-white/10 text-zinc-300 grid place-items-center`}><MoreHorizontal className="w-4 h-4"/></button>
       {canDelete&&m.media_type==="audio"&&m.starred&&<Star className="absolute -top-2 -right-2 w-3 h-3 text-orange-400 fill-current"/>}
      </div>
@@ -239,10 +255,20 @@ export default function CommunityV2(){
   {menu&&<div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={()=>setMenu(null)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-4 pb-[max(20px,env(safe-area-inset-bottom))]">
    <div className="flex justify-between items-center mb-3"><b>{t.options}</b><button onClick={()=>setMenu(null)} aria-label={t.cancel}><X/></button></div>
    <div className="flex gap-2 pb-3 overflow-x-auto">{EMOJIS.map(e=><button key={e} onClick={()=>react(menu,e)} className="w-11 h-11 shrink-0 rounded-full bg-zinc-900 border border-white/10 text-xl grid place-items-center">{e}</button>)}</div>
+   <button onClick={()=>{const mm=menu;setMenu(null);setReactBar(mm)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Heart className="w-5 h-5 text-orange-400"/><span>{t.react}</span></button>
    <button onClick={()=>{setReplyTo(menu);setMenu(null)}} className="w-full h-13 py-3 px-2 flex items-center gap-3 border-t border-white/5"><CornerUpLeft className="w-5 h-5 text-orange-400"/><span>{t.reply}</span></button>
    <button onClick={()=>star(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Star className={`w-5 h-5 text-orange-400 ${menu.starred?"fill-current":""}`}/><span>{menu.starred?t.unstar:t.star}</span></button>
    {!!menu.body&&<button onClick={()=>copyMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Copy className="w-5 h-5 text-orange-400"/><span>{t.copy}</span></button>}
    {(menu.sender_id===me?.id||canManageGroup(selected))&&<button onClick={()=>{setConfirmDel(menu);setMenu(null)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Trash2 className="w-5 h-5"/><span>{t.deleteMsg}</span></button>}
+  </div></div>}
+  {reactBar&&<div className="fixed inset-0 z-30" onClick={()=>setReactBar(null)}/>}
+  {rxDetail&&<div className="fixed inset-0 z-50 bg-black/80 flex items-end" onClick={()=>setRxDetail(null)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-4 pb-[max(20px,env(safe-area-inset-bottom))] max-h-[70vh] overflow-y-auto">
+   <div className="flex justify-between items-center mb-3"><b>{t.reactions}</b><button onClick={()=>setRxDetail(null)} aria-label={t.cancel}><X/></button></div>
+   {(reactions[rxDetail.id]||[]).map(r=><div key={r.user_id+r.emoji} className="flex items-center gap-3 py-2.5 border-t border-white/5">
+    <img src={(senders[r.user_id]?.avatar)||entryLogo} alt="" className="w-9 h-9 rounded-full object-cover"/>
+    <span className="flex-1 truncate">{r.user_id===me?.id?t.you:senders[r.user_id]?.name||t.member}</span>
+    <span className="text-xl">{r.emoji}</span>
+   </div>)}
   </div></div>}
   {confirmDel&&<div className="fixed inset-0 z-50 bg-black/80 grid place-items-center px-8" onClick={()=>setConfirmDel(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-zinc-950 border border-white/10 p-6"><b className="text-lg">{t.deleteMsg}</b><div className="mt-6 flex gap-3"><button onClick={()=>setConfirmDel(null)} className="flex-1 h-12 rounded-2xl bg-zinc-900">{t.cancel}</button><button onClick={()=>deleteMsg(confirmDel)} className="flex-1 h-12 rounded-2xl bg-red-500 text-black font-black">{t.delete}</button></div></div></div>}
  </div>;
