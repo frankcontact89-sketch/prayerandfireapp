@@ -2,7 +2,7 @@ import React from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   Home, BookOpen, Library,
-  ShoppingBag, Share2, Info, HandHeart, Settings as SettingsIcon, Link2,
+  ShoppingBag, Share2, Info, HandHeart, Settings as SettingsIcon, Link2, MessageCircle,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Capacitor } from "@capacitor/core";
@@ -28,13 +28,16 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
     onOpenChange(false);
   };
 
+  const openCommunity = () => {
+    onOpenChange(false);
+    window.location.assign("/community");
+  };
+
   const share = async () => {
     const title = "Prayer & Fire";
     const message = "Download Prayer & Fire and join a global movement of prayer and faith.";
     const appStoreUrl = "https://apps.apple.com/us/app/prayerandfire-mobile/id6757282653";
 
-    // Close the drawer synchronously, then open sharing while the original tap
-    // still counts as an active user gesture (required by iOS and browsers).
     onOpenChange(false);
 
     const copyFallback = async () => {
@@ -65,7 +68,7 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
       await copyFallback();
     } catch (error: any) {
       const msg = String(error?.message || error || "");
-      if (/abort|cancel/i.test(msg)) return; // user dismissed the share sheet
+      if (/abort|cancel/i.test(msg)) return;
       await copyFallback();
     }
   };
@@ -94,6 +97,7 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
           {item(<Home className="w-5 h-5" />, L(language, "Home", "Inicio", "Início"), () => go("home"))}
+          {item(<MessageCircle className="w-5 h-5" />, L(language, "Community", "Comunidad", "Comunidade"), openCommunity)}
           {item(<BookOpen className="w-5 h-5" />, L(language, "Bible", "Biblia", "Bíblia"), () => go("bible"))}
           {item(<Library className="w-5 h-5" />, L(language, "Christian Library", "Biblioteca Cristiana", "Biblioteca Cristã"), () => go("library"))}
           {item(<ShoppingBag className="w-5 h-5" />, L(language, "Store", "Tienda", "Loja"), () => go("shopping"))}
