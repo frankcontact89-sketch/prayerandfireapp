@@ -26,7 +26,7 @@ export const dict = {
     addedMembers: "Members added", audioError: "Audio unavailable", voiceMessage: "Voice message",
     reply: "Reply", react: "React", star: "Star", unstar: "Unstar", copy: "Copy", copied: "Copied",
     messageDeleted: "Message deleted", options: "Message options", pause: "Pause", resume: "Resume",
-    download: "Open file", replying: "Replying to", createGroupsPerm: "Can create groups", you: "You",
+    download: "Open file", replying: "Replying to", createGroupsPerm: "Can create groups", you: "You", reactions: "Reactions",
   },
   es: {
     title: "Comunidad", search: "Buscar chats", all: "Todos", unread: "No leídos", groups: "Grupos",
@@ -48,7 +48,7 @@ export const dict = {
     addedMembers: "Miembros agregados", audioError: "Audio no disponible", voiceMessage: "Mensaje de voz",
     reply: "Responder", react: "Reaccionar", star: "Destacar", unstar: "Quitar destacado", copy: "Copiar", copied: "Copiado",
     messageDeleted: "Mensaje eliminado", options: "Opciones del mensaje", pause: "Pausar", resume: "Reanudar",
-    download: "Abrir archivo", replying: "Respondiendo a", createGroupsPerm: "Puede crear grupos", you: "Tú",
+    download: "Abrir archivo", replying: "Respondiendo a", createGroupsPerm: "Puede crear grupos", you: "Tú", reactions: "Reacciones",
   },
   pt: {
     title: "Comunidade", search: "Buscar chats", all: "Todos", unread: "Não lidos", groups: "Grupos",
@@ -70,7 +70,7 @@ export const dict = {
     addedMembers: "Membros adicionados", audioError: "Áudio indisponível", voiceMessage: "Mensagem de voz",
     reply: "Responder", react: "Reagir", star: "Destacar", unstar: "Remover destaque", copy: "Copiar", copied: "Copiado",
     messageDeleted: "Mensagem apagada", options: "Opções da mensagem", pause: "Pausar", resume: "Retomar",
-    download: "Abrir arquivo", replying: "Respondendo a", createGroupsPerm: "Pode criar grupos", you: "Você",
+    download: "Abrir arquivo", replying: "Respondendo a", createGroupsPerm: "Pode criar grupos", you: "Você", reactions: "Reações",
   },
 } as const;
 
