@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState}from"react";
-import{ArrowLeft,Bell,BellOff,Camera,ChevronRight,Copy,CornerUpLeft,Heart,LogOut,Mic,MoreHorizontal,Paperclip,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
+import{ArrowLeft,Bell,BellOff,Camera,ChevronRight,CornerUpLeft,Heart,LogOut,Mic,MoreHorizontal,Paperclip,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
 import{supabase}from"@/integrations/supabase/client";
 import CreateGroupModal,{type CreatedGroup}from"@/components/community/CreateGroupModal";
 import AccessGate from"@/components/community/AccessGate";
@@ -20,6 +20,9 @@ type Rx={user_id:string;emoji:string};
 export default function CommunityV2(){
  const lang=getLang();
  const t=dict[lang];
+ const moreEmojiLabel=lang==="es"?"Más emojis":lang==="pt"?"Mais emojis":"More emojis";
+ const forwardLabel=lang==="es"?"Enviar / Reenviar":lang==="pt"?"Enviar / Encaminhar":"Send / Forward";
+ const sharedLabel=lang==="es"?"Listo para enviar":lang==="pt"?"Pronto para enviar":"Ready to send";
  const[me,setMe]=useState<any>(null);
  const[access,setAccess]=useState<"loading"|"none"|"pending"|"rejected"|"approved">("loading");
  const[staffRole,setStaffRole]=useState<"owner"|"admin"|null>(null);
@@ -94,7 +97,6 @@ export default function CommunityV2(){
   if(ok)await loadGroups(user.id);
  })()},[loadAccess,loadGroups]);
 
- // pending requests badge for staff
  const loadPending=useCallback(async()=>{
   const{count}=await db.from("community_access_requests").select("*",{count:"exact",head:true}).eq("status","pending");
   setPendingCount(count||0);
@@ -104,7 +106,6 @@ export default function CommunityV2(){
   return()=>{supabase.removeChannel(c)};
  },[isStaff,loadPending]);
 
- // my access status realtime
  useEffect(()=>{if(!me)return;
   const c=supabase.channel(`access:${me.id}`)
    .on("postgres_changes",{event:"*",schema:"public",table:"community_access_requests",filter:`user_id=eq.${me.id}`},async()=>{const ok=await loadAccess(me.id);if(ok)await loadGroups(me.id)})
@@ -174,15 +175,15 @@ export default function CommunityV2(){
   if(remove){await db.from("community_reactions").delete().eq("message_id",m.id).eq("user_id",me.id);return}
   await db.from("community_reactions").upsert({message_id:m.id,user_id:me.id,emoji},{onConflict:"message_id,user_id"});
  };
- const star=async(m:Msg)=>{
+ const forwardMsg=async(m:Msg)=>{
   setMenu(null);
-  const next=!m.starred;
-  setMsgs(v=>v.map(x=>x.id===m.id?{...x,starred:next}:x));
-  await db.from("community_messages").update({starred:next}).eq("id",m.id);
- };
- const copyMsg=async(m:Msg)=>{
-  setMenu(null);
-  try{await navigator.clipboard.writeText(m.body||m.url||"");toast(t.copied)}catch{/* ignore */}
+  const text=m.body||"";
+  const url=m.url||"";
+  try{
+   if(navigator.share){await navigator.share({text:text||undefined,url:url||undefined});return}
+   await navigator.clipboard.writeText([text,url].filter(Boolean).join("\n"));
+   toast(sharedLabel);
+  }catch{/* cancelled or unavailable */}
  };
 
  const memberUpdate=async(ch:any)=>{if(!selected||!me)return;await db.from("community_group_members").update(ch).eq("group_id",selected.id).eq("user_id",me.id);setSelected(s=>s?{...s,...ch}:s);setGroups(v=>v.map(g=>g.id===selected.id?{...g,...ch}:g))};
@@ -201,7 +202,6 @@ export default function CommunityV2(){
   <header className="shrink-0 min-h-16 px-2 bg-black/95 border-b border-white/10 flex items-center gap-2"><button onClick={()=>setSelected(null)} aria-label={t.back} className="w-10 h-10 grid place-items-center"><ArrowLeft/></button><button onClick={()=>setInfo(true)} className="flex-1 min-w-0 flex items-center gap-2 text-left"><img src={selected.avatar||entryLogo} alt="" className="w-11 h-11 rounded-full object-cover"/><div className="min-w-0"><b className="block truncate">{selected.name}</b><span className="text-xs text-zinc-400">{selected.memberCount||0} {t.members}</span></div></button><button onClick={()=>setInfo(true)} aria-label={t.info} className="w-9 h-9 grid place-items-center"><MoreHorizontal className="w-5 h-5"/></button></header>
   <main className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
     {msgs.map(m=>{
-     // Fall back to my own profile: the sender map may not include me.
      const s=senders[m.sender_id]||(m.sender_id===me?.id?{name:me?.name,avatar:me?.avatar}:undefined);
     const time=new Date(m.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
     const canDelete=m.sender_id===me?.id||canManageGroup(selected);
@@ -230,7 +230,7 @@ export default function CommunityV2(){
       {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)}/>}
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
       {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{m.starred&&<Star className="w-3 h-3 fill-current"/>}{time}</div>}
-      {(reactions[m.id]||[]).length>0&&<button onClick={ev=>{ev.stopPropagation();setRxDetail(m)}} className={`absolute -bottom-3.5 ${m.mine?"left-2":"right-2"} flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] bg-zinc-800 border border-white/10 text-white`}>
+      {(reactions[m.id]||[]).length>0&&<button onClick={ev=>{ev.stopPropagation();const mineRx=(reactions[m.id]||[]).find(r=>r.user_id===me?.id);if(mineRx)react(m,mineRx.emoji);else setRxDetail(m)}} className={`absolute -bottom-3.5 ${m.mine?"left-2":"right-2"} flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] bg-zinc-800 border border-white/10 text-white`}>
        {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
        {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
       </button>}
@@ -254,14 +254,13 @@ export default function CommunityV2(){
   {flash&&<div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[60] rounded-full bg-zinc-900 border border-white/10 px-4 py-2 text-sm">{flash}</div>}
   {menu&&<div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={()=>setMenu(null)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-4 pb-[max(20px,env(safe-area-inset-bottom))]">
    <div className="flex justify-between items-center mb-3"><b>{t.options}</b><button onClick={()=>setMenu(null)} aria-label={t.cancel}><X/></button></div>
-   <div className="flex gap-2 pb-3 overflow-x-auto">{EMOJIS.map(e=><button key={e} onClick={()=>react(menu,e)} className="w-11 h-11 shrink-0 rounded-full bg-zinc-900 border border-white/10 text-xl grid place-items-center">{e}</button>)}</div>
-   <button onClick={()=>{const mm=menu;setMenu(null);setReactBar(mm)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Heart className="w-5 h-5 text-orange-400"/><span>{t.react}</span></button>
+   <div className="flex gap-2 pb-3 overflow-x-auto">{EMOJIS.map(e=><button key={e} onClick={()=>react(menu,e)} className={`w-11 h-11 shrink-0 rounded-full border text-xl grid place-items-center ${(reactions[menu.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-orange-500/20 border-orange-500/60":"bg-zinc-900 border-white/10"}`}>{e}</button>)}</div>
    <button onClick={()=>{setReplyTo(menu);setMenu(null)}} className="w-full h-13 py-3 px-2 flex items-center gap-3 border-t border-white/5"><CornerUpLeft className="w-5 h-5 text-orange-400"/><span>{t.reply}</span></button>
-   <button onClick={()=>star(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Star className={`w-5 h-5 text-orange-400 ${menu.starred?"fill-current":""}`}/><span>{menu.starred?t.unstar:t.star}</span></button>
-   {!!menu.body&&<button onClick={()=>copyMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Copy className="w-5 h-5 text-orange-400"/><span>{t.copy}</span></button>}
+   <button onClick={()=>forwardMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Send className="w-5 h-5 text-orange-400"/><span>{forwardLabel}</span></button>
+   <button onClick={()=>{const mm=menu;setMenu(null);setReactBar(mm)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Plus className="w-5 h-5 text-orange-400"/><span>{moreEmojiLabel}</span></button>
    {(menu.sender_id===me?.id||canManageGroup(selected))&&<button onClick={()=>{setConfirmDel(menu);setMenu(null)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Trash2 className="w-5 h-5"/><span>{t.deleteMsg}</span></button>}
   </div></div>}
-  {reactBar&&<div className="fixed inset-0 z-30" onClick={()=>setReactBar(null)}/>}
+  {reactBar&&<div className="fixed inset-0 z-30" onClick={()=>setReactBar(null)}/>} 
   {rxDetail&&<div className="fixed inset-0 z-50 bg-black/80 flex items-end" onClick={()=>setRxDetail(null)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-4 pb-[max(20px,env(safe-area-inset-bottom))] max-h-[70vh] overflow-y-auto">
    <div className="flex justify-between items-center mb-3"><b>{t.reactions}</b><button onClick={()=>setRxDetail(null)} aria-label={t.cancel}><X/></button></div>
    {(reactions[rxDetail.id]||[]).map(r=><div key={r.user_id+r.emoji} className="flex items-center gap-3 py-2.5 border-t border-white/5">
