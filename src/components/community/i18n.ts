@@ -65,4 +65,4 @@ export const dict = {
   },
 } as const;
 
-export type Words = typeof dict["en"];
+export type Words = { [K in keyof typeof dict["en"]]: string };
