@@ -3,7 +3,7 @@
 // this only gives faster, localized feedback before a network round-trip.
 
 const PATTERNS: RegExp[] = [
-  /\b(fuck|fuk|motherfucker|cunt|whore|slut|bitch|bastard|nigger|nigga|faggot|fag|kike|spic|chink|tranny|retard|puta|puto|pendejo|cabron|maricon|marica|verga|cono|chinga|mierda|hijueputa|vadia|vagabunda|viado|caralho|porra|buceta|foda se|filho da puta)\b/,
+  /\b(fuck|fuk|fck|phuck|motherfucker|cunt|whore|slut|bitch|btch|bastard|nigger|nigga|nigg|faggot|fag|kike|spic|chink|tranny|retard|puta|puto|pendejo|cabron|maricon|marica|verga|cono|chinga|mierda|hijueputa|vadia|vagabunda|viado|caralho|porra|buceta|foda se|filho da puta)\b/,
   /\b(child porn|childporn|cp porn|porn|porno|pornhub|xxx|nudes|sexo explicito|sexting|onlyfans)\b/,
   /(i will kill you|im going to kill you|kill yourself|kys|te voy a matar|te vou matar|vou te matar|matate|se mate|rape you)/,
   /(free crypto|bitcoin giveaway|make money fast|click this link to earn|whatsapp \+?[0-9]{8,}|telegram me for money|forex profit|investment guaranteed profit)/,
