@@ -68,19 +68,22 @@ export default function CommunityV2(){
   setSenders(prev=>{const next={...prev};(data||[]).forEach((p:any)=>{next[p.id]={name:p.username||p.email?.split("@")[0]||"Member",avatar:p.avatar_url}});return next});
  },[]);
 
+ const loadReactions=useCallback(async(ids:string[])=>{
+  if(!ids.length)return;
+  const{data:rx}=await db.from("community_reactions").select("message_id,user_id,emoji").in("message_id",ids);
+  const map:Record<string,Rx[]>={};(rx||[]).forEach((r:any)=>{(map[r.message_id]=map[r.message_id]||[]).push({user_id:r.user_id,emoji:r.emoji})});
+  setReactions(map);
+  loadSenders(Array.from(new Set((rx||[]).map((r:any)=>r.user_id))));
+ },[loadSenders]);
  const loadMsgs=useCallback(async(id:string,uid?:string)=>{
   const{data}=await db.from("community_messages").select("id,sender_id,body,media_url,media_type,created_at,deleted_at,starred,reply_to").eq("group_id",id).order("created_at");
   const rows=await Promise.all((data||[]).map(async(x:any)=>({...x,mine:x.sender_id===(uid||me?.id),url:x.media_url&&!x.deleted_at?await signed(x.media_url):undefined})));
   setMsgs(rows);
   loadSenders(Array.from(new Set(rows.map((r:any)=>r.sender_id))));
   const ids=rows.map((r:any)=>r.id);
-  if(ids.length){
-   const{data:rx}=await db.from("community_reactions").select("message_id,emoji").in("message_id",ids);
-   const map:Record<string,string[]>={};(rx||[]).forEach((r:any)=>{(map[r.message_id]=map[r.message_id]||[]).push(r.emoji)});
-   setReactions(map);
-  }else setReactions({});
+  if(ids.length)await loadReactions(ids);else setReactions({});
   setTimeout(()=>end.current?.scrollIntoView({behavior:"smooth"}),30);
- },[me?.id,loadSenders]);
+ },[me?.id,loadSenders,loadReactions]);
 
  useEffect(()=>{(async()=>{
   const{data:{user}}=await supabase.auth.getUser();
@@ -163,13 +166,6 @@ export default function CommunityV2(){
  };
 
  const toast=(s:string)=>{setFlash(s);window.setTimeout(()=>setFlash(""),1600)};
- const loadReactions=useCallback(async(ids:string[])=>{
-  if(!ids.length)return;
-  const{data:rx}=await db.from("community_reactions").select("message_id,user_id,emoji").in("message_id",ids);
-  const map:Record<string,Rx[]>={};(rx||[]).forEach((r:any)=>{(map[r.message_id]=map[r.message_id]||[]).push({user_id:r.user_id,emoji:r.emoji})});
-  setReactions(map);
-  loadSenders(Array.from(new Set((rx||[]).map((r:any)=>r.user_id))));
- },[loadSenders]);
  const react=async(m:Msg,emoji:string)=>{
   if(!me)return;setMenu(null);setReactBar(null);
   const mine=(reactions[m.id]||[]).find(r=>r.user_id===me.id);
