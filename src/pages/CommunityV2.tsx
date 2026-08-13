@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState}from"react";
-import{ArrowLeft,Bell,BellOff,Camera,ChevronRight,CornerUpLeft,Heart,LogOut,Mic,MoreHorizontal,Paperclip,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
+import{ArrowLeft,Bell,BellOff,Camera,ChevronRight,CornerUpLeft,LogOut,Mic,MoreHorizontal,Paperclip,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
 import{supabase}from"@/integrations/supabase/client";
 import CreateGroupModal,{type CreatedGroup}from"@/components/community/CreateGroupModal";
 import AccessGate from"@/components/community/AccessGate";
