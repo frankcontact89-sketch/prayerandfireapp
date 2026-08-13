@@ -329,13 +329,13 @@ export function SettingsScreen({
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("profiles").delete().eq("id", user.id);
-        await supabase.from("purchases").delete().eq("user_id", user.id);
-        await supabase.from("event_rsvps").delete().eq("user_id", user.id);
-        await supabase.from("notifications").delete().eq("user_id", user.id);
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error(t("couldNotDeleteAccount"));
+      const { data, error } = await supabase.functions.invoke("delete-account", {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || t("couldNotDeleteAccount"));
       await supabase.auth.signOut();
       toast({ title: t("accountDeleted"), description: t("accountDataDeleted") });
       onSignOut();
