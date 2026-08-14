@@ -12,20 +12,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
       - name: Build production app
         run: npm run build
+
       - name: Lint (advisory while legacy issues are cleaned up)
         continue-on-error: true
         run: npm run lint
+
       - name: Verify production Capacitor config
         run: |
-          grep -q "com.frankcontact89.prayerandfiremobile" capacitor.config.ts
+          grep -q "appId: 'com.frankcontact89.prayerandfiremobile'" capacitor.config.ts
+          grep -q "appName: 'Prayer & Fire'" capacitor.config.ts
           grep -q "webDir: 'dist'" capacitor.config.ts
           grep -q "const useDevServer = process.env.CAP_DEV_SERVER === '1'" capacitor.config.ts
+
+      - name: Verify iOS App Store metadata
+        run: |
+          grep -q '<string>Prayer &amp; Fire</string>' ios/App/App/Info.plist
+          grep -q '<key>NSCameraUsageDescription</key>' ios/App/App/Info.plist
+          grep -q '<key>NSPhotoLibraryUsageDescription</key>' ios/App/App/Info.plist
+          grep -q '<key>NSMicrophoneUsageDescription</key>' ios/App/App/Info.plist
+          grep -q 'PRODUCT_BUNDLE_IDENTIFIER = com.frankcontact89.prayerandfiremobile;' ios/App/App.xcodeproj/project.pbxproj
