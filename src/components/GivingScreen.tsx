@@ -1,5 +1,5 @@
 import React from "react";
-import Community from "@/pages/Community";
+import Community from "@/pages/CommunityV2";
 
 interface GivingScreenProps {
   t: (key: string) => string;

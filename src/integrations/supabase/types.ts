@@ -1383,6 +1383,16 @@ export type Database = {
         Returns: boolean
       }
       community_text_blocked: { Args: { _t: string }; Returns: boolean }
+      discover_community_groups: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          description: string
+          id: string
+          member_count: number
+          name: string
+        }[]
+      }
       get_username_by_email: { Args: { _email: string }; Returns: string }
       has_blocked: {
         Args: { _blocked: string; _blocker: string }
