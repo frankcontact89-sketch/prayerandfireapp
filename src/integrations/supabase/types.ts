@@ -203,6 +203,47 @@ export type Database = {
         }
         Relationships: []
       }
+      community_group_invites: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          group_id: string
+          id: string
+          invited_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          group_id: string
+          id?: string
+          invited_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          group_id?: string
+          id?: string
+          invited_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_group_invites_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "community_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_group_members: {
         Row: {
           archived: boolean
@@ -1404,6 +1445,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      invite_group_member_by_email: {
+        Args: { _email: string; _full_name?: string; _group_id: string }
+        Returns: string
       }
       is_community_approved: { Args: { _user_id: string }; Returns: boolean }
       is_community_boss: { Args: { _user_id: string }; Returns: boolean }
