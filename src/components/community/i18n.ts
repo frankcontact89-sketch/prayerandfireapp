@@ -7,6 +7,7 @@ export const getLang = (): Lang => {
 
 export const dict = {
   en: {
+    inviteByEmail: "Invite by email", inviteHint: "Use this if the person is not listed yet.", fullName: "Full name", emailLabel: "Email address", sendInvite: "Send invitation", pendingInvites: "Pending invitations", pendingInvitation: "Pending invitation", inviteSent: "Invitation saved. They will join this group when they sign up.", memberAdded: "Member added to the group", alreadyMemberMsg: "That person is already in this group", invalidEmail: "Enter a valid email address", cancelInvite: "Cancel invitation", availablePeople: "Approved people not in this group", selectedCount: "selected",
     report: "Report content", block: "Block user", unblock: "Unblock user", blocked: "Blocked",
     reportTitle: "Report this content", reportSent: "Report sent to Prayer & Fire leaders", reportReason: "Reason",
     reportDetails: "Additional details (optional)", submit: "Submit",
@@ -48,6 +49,7 @@ export const dict = {
     download: "Open file", replying: "Replying to", createGroupsPerm: "Can create groups", you: "You", reactions: "Reactions",
   },
   es: {
+    inviteByEmail: "Invitar por correo", inviteHint: "Usa esto si la persona todavía no aparece.", fullName: "Nombre completo", emailLabel: "Correo electrónico", sendInvite: "Enviar invitación", pendingInvites: "Invitaciones pendientes", pendingInvitation: "Invitación pendiente", inviteSent: "Invitación guardada. Se unirá a este grupo cuando se registre.", memberAdded: "Miembro agregado al grupo", alreadyMemberMsg: "Esa persona ya está en este grupo", invalidEmail: "Escribe un correo válido", cancelInvite: "Cancelar invitación", availablePeople: "Personas aprobadas que no están en este grupo", selectedCount: "seleccionados",
     report: "Reportar contenido", block: "Bloquear usuario", unblock: "Desbloquear usuario", blocked: "Bloqueado",
     reportTitle: "Reportar este contenido", reportSent: "Reporte enviado a los líderes de Prayer & Fire", reportReason: "Motivo",
     reportDetails: "Detalles adicionales (opcional)", submit: "Enviar",
@@ -89,6 +91,7 @@ export const dict = {
     download: "Abrir archivo", replying: "Respondiendo a", createGroupsPerm: "Puede crear grupos", you: "Tú", reactions: "Reacciones",
   },
   pt: {
+    inviteByEmail: "Convidar por e-mail", inviteHint: "Use isto se a pessoa ainda não aparecer.", fullName: "Nome completo", emailLabel: "E-mail", sendInvite: "Enviar convite", pendingInvites: "Convites pendentes", pendingInvitation: "Convite pendente", inviteSent: "Convite salvo. Ela entrará neste grupo ao se cadastrar.", memberAdded: "Membro adicionado ao grupo", alreadyMemberMsg: "Essa pessoa já está neste grupo", invalidEmail: "Digite um e-mail válido", cancelInvite: "Cancelar convite", availablePeople: "Pessoas aprovadas que não estão neste grupo", selectedCount: "selecionados",
     report: "Denunciar conteúdo", block: "Bloquear usuário", unblock: "Desbloquear usuário", blocked: "Bloqueado",
     reportTitle: "Denunciar este conteúdo", reportSent: "Denúncia enviada aos líderes do Prayer & Fire", reportReason: "Motivo",
     reportDetails: "Detalhes adicionais (opcional)", submit: "Enviar",
