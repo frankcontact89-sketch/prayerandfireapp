@@ -43,9 +43,15 @@ export default function CreateGroupModal({ open, onClose, onCreate, language }: 
       try {
         const { data: { user } } = await supabase.auth.getUser();
         const db:any = supabase;
-        const { data } = await db.from("profiles").select("id, username, avatar_url, email").order("username", { ascending:true }).limit(500);
+        const { data: reqs } = await db.from("community_access_requests").select("user_id").eq("status","approved");
+        const { data: ads } = await db.from("community_admins").select("user_id");
+        const eligible = Array.from(new Set([...(reqs||[]).map((r:any)=>r.user_id), ...(ads||[]).map((a:any)=>a.user_id)])).filter((id)=>id!==user?.id);
         if(cancelled) return;
-        const mapped:Person[]=(data||[]).filter((p:any)=>p.id!==user?.id).map((p:any)=>({
+        if(!eligible.length){ setPeople([]); return; }
+        const { data } = await db.from("profiles").select("id, username, avatar_url, email").in("id", eligible).order("username", { ascending:true });
+        if(cancelled) return;
+        const source:any[] = (data && data.length) ? data : eligible.map((id)=>({ id, username:null, avatar_url:null, email:null }));
+        const mapped:Person[]=source.map((p:any)=>({
           id:p.id,
           name:p.username || p.email?.split("@")[0] || "Prayer & Fire Member",
           avatar:p.avatar_url,
