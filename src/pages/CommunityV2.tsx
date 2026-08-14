@@ -12,7 +12,8 @@ import{dict,getLang}from"@/components/community/i18n";
 import{isBlockedContent}from"@/lib/content-filter";
 import entryLogo from"@/assets/prayer-fire-entry-logo.png";
 
-type Group=CreatedGroup&{role?:string;muted?:boolean;favorite?:boolean;archived?:boolean;memberCount?:number;description?:string};
+type Group=CreatedGroup&{role?:string;muted?:boolean;archived?:boolean;memberCount?:number;description?:string};
+type DiscoverGroup={id:string;name:string;description?:string|null;avatar?:string;memberCount:number};
 type Msg={id:string;sender_id:string;body?:string|null;media_url?:string|null;media_type?:string|null;created_at:string;deleted_at?:string|null;starred?:boolean;reply_to?:string|null;mine?:boolean;url?:string};
 type Sender={name:string;avatar?:string|null};
 const db:any=supabase;
@@ -56,7 +57,7 @@ export default function CommunityV2(){
  },[]);
 
  const loadGroups=useCallback(async(uid:string)=>{
-  const{data:m}=await db.from("community_group_members").select("group_id,role,muted,archived,favorite").eq("user_id",uid);
+  const{data:m}=await db.from("community_group_members").select("group_id,role,muted,archived").eq("user_id",uid);
   const ids=(m||[]).map((x:any)=>x.group_id);
   if(!ids.length){setGroups([]);return}
   const{data:g}=await db.from("community_groups").select("id,name,description,avatar_url,updated_at").in("id",ids).order("updated_at",{ascending:false});
@@ -64,7 +65,7 @@ export default function CommunityV2(){
   setGroups(await Promise.all((g||[]).map(async(x:any)=>{
    const z:any=mm.get(x.id)||{};
    const{count}=await db.from("community_group_members").select("*",{count:"exact",head:true}).eq("group_id",x.id);
-   return{id:x.id,name:x.name,subtitle:x.description||`${count||0} ${t.members}`,description:x.description||"",unread:0,lastTime:new Date(x.updated_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:x.avatar_url?await signed(x.avatar_url):undefined,role:z.role,muted:z.muted,archived:z.archived,favorite:z.favorite,memberCount:count||0};
+   return{id:x.id,name:x.name,subtitle:x.description||`${count||0} ${t.members}`,description:x.description||"",unread:0,lastTime:new Date(x.updated_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:x.avatar_url?await signed(x.avatar_url):undefined,role:z.role,muted:z.muted,archived:z.archived,memberCount:count||0};
   })));
  },[t.members]);
 
