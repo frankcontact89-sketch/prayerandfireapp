@@ -34,13 +34,13 @@ jobs:
           BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
         run: |
           set -euo pipefail
-          for v in BUILD_CERTIFICATE_BASE64 P12_PASSWORD BUILD_PROVISION_PROFILE_BASE64 KEYCHAIN_PASSWORD APPLE_TEAM_ID APP_STORE_CONNECT_API_KEY_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_API_KEY_BASE64 APPLE_ID; do
+          for v in BUILD_CERTIFICATE_BASE64 P12_PASSWORD BUILD_PROVISION_PROFILE_BASE64 KEYCHAIN_PASSWORD APPLE_TEAM_ID APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_PRIVATE_KEY APPLE_ID; do
             if [ -z "${!v:-}" ]; then
               echo "Missing required GitHub secret: $v"
               exit 1
@@ -101,13 +101,16 @@ jobs:
 
       - name: Prepare App Store Connect API key
         env:
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
         run: |
           set -euo pipefail
           mkdir -p "$HOME/.appstoreconnect/private_keys"
-          echo -n "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode > "$HOME/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
-          chmod 600 "$HOME/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
+          printf '%s\n' "$APP_STORE_CONNECT_PRIVATE_KEY" > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+          grep -q "BEGIN PRIVATE KEY" "$KEY_PATH"
+          grep -q "END PRIVATE KEY" "$KEY_PATH"
 
       - name: Compute unique TestFlight build number
         run: |
@@ -181,7 +184,7 @@ jobs:
       - name: Validate with App Store Connect
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           set -euo pipefail
@@ -189,13 +192,13 @@ jobs:
             --type ios \
             --file "$IPA_PATH" \
             --username "$APPLE_ID" \
-            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
             --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
 
       - name: Upload to TestFlight
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           set -euo pipefail
@@ -203,7 +206,7 @@ jobs:
             --type ios \
             --file "$IPA_PATH" \
             --username "$APPLE_ID" \
-            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
             --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
 
       - name: Summary
