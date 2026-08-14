@@ -2,16 +2,14 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 // IMPORTANT: For production builds submitted to the App Store, the app MUST
 // load from the bundled `dist/` folder — never from a remote Lovable dev URL.
-// Apple rejects apps that fetch their entire UI from an external server.
 // The `server.url` below is enabled ONLY for local development hot-reload
 // when the env var `CAP_DEV_SERVER=1` is set. In every other build (including
-// TestFlight and the App Store) the app runs fully offline-capable from the
-// packaged web assets.
+// TestFlight and the App Store) the app runs from the packaged web assets.
 const useDevServer = process.env.CAP_DEV_SERVER === '1';
 
 const config: CapacitorConfig = {
   appId: 'com.frankcontact89.prayerandfiremobile',
-  appName: 'prayerandfire',
+  appName: 'Prayer & Fire',
   webDir: 'dist',
   backgroundColor: '#000000',
   ...(useDevServer
@@ -29,7 +27,6 @@ const config: CapacitorConfig = {
   },
   plugins: {
     Camera: {
-      // iOS Info.plist permission strings — required to avoid TestFlight crash
       iosImagePickerPresentationStyle: 'fullscreen',
     },
   },
