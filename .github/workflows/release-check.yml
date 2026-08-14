@@ -15,10 +15,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
       - name: Build production app
         run: npm run build
       - name: Lint
@@ -27,6 +27,4 @@ jobs:
         run: |
           grep -q "com.frankcontact89.prayerandfiremobile" capacitor.config.ts
           grep -q "webDir: 'dist'" capacitor.config.ts
-          if grep -q "server:.*lovableproject" capacitor.config.ts; then
-            echo "Dev server definition is present but must stay gated by CAP_DEV_SERVER."
-          fi
+          grep -q "const useDevServer = process.env.CAP_DEV_SERVER === '1'" capacitor.config.ts
