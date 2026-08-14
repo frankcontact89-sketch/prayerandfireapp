@@ -70,6 +70,14 @@ export default function CommunityV2(){
   })));
  },[t.members]);
 
+ const loadDiscover=useCallback(async()=>{
+  setDiscoverLoading(true);
+  const{data,error}=await db.rpc("discover_community_groups");
+  if(error){setDiscoverList([]);setDiscoverLoading(false);return}
+  const rows=await Promise.all((data||[]).map(async(x:any)=>({id:x.id,name:x.name,description:x.description,avatar:x.avatar_url?await signed(x.avatar_url):undefined,memberCount:Number(x.member_count)||0})));
+  setDiscoverList(rows);setDiscoverLoading(false);
+ },[]);
+
  const loadSenders=useCallback(async(ids:string[])=>{
   if(!ids.length)return;
   const{data}=await db.from("profiles").select("id,username,email,avatar_url").in("id",ids);
@@ -133,6 +141,8 @@ export default function CommunityV2(){
    .subscribe();
   return()=>{supabase.removeChannel(c)};
  },[me?.id,access,loadGroups]);
+
+ useEffect(()=>{if(filter==="discover"&&access==="approved")loadDiscover()},[filter,access,loadDiscover]);
 
  const visible=useMemo(()=>groups.filter(g=>!g.archived&&(filter!=="unread"||g.unread>0)&&(g.name+" "+g.subtitle).toLowerCase().includes(q.toLowerCase())),[groups,q,filter]);
 
@@ -215,6 +225,7 @@ export default function CommunityV2(){
  const memberUpdate=async(ch:any)=>{if(!selected||!me)return;await db.from("community_group_members").update(ch).eq("group_id",selected.id).eq("user_id",me.id);setSelected(s=>s?{...s,...ch}:s);setGroups(v=>v.map(g=>g.id===selected.id?{...g,...ch}:g))};
  const saveGroup=async()=>{if(!selected||!canManageGroup(selected))return;await db.from("community_groups").update({name:name.trim()||selected.name,description:desc.trim(),updated_at:new Date().toISOString()}).eq("id",selected.id);setSelected(s=>s?{...s,name:name.trim()||s.name,description:desc.trim(),subtitle:desc.trim()||s.subtitle}:s);setEdit(false)};
  const changePhoto=async(f?:File)=>{if(!f||!selected||!me||!canManageGroup(selected))return;const path=`${me.id}/groups/${selected.id}-${Date.now()}.jpg`;await supabase.storage.from("community-media").upload(path,f,{contentType:f.type,upsert:true});await db.from("community_groups").update({avatar_url:path}).eq("id",selected.id);const url=await signed(path);setSelected(s=>s?{...s,avatar:url}:s)};
+ const deleteGroupNow=async()=>{if(!selected||!me||!canManageGroup(selected))return;await db.from("community_group_members").delete().eq("group_id",selected.id);await db.from("community_groups").delete().eq("id",selected.id);setConfirmDelGroup(false);setSelected(null);setInfo(false);loadGroups(me.id);loadDiscover()};
  const leave=async()=>{if(!selected||!me)return;await db.from("community_group_members").delete().eq("group_id",selected.id).eq("user_id",me.id);setSelected(null);setInfo(false);loadGroups(me.id)};
 
  if(access==="loading")return <div className="fixed inset-0 bg-black" />;
@@ -232,9 +243,7 @@ export default function CommunityV2(){
     const time=new Date(m.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
     const canDelete=m.sender_id===me?.id||canManageGroup(selected);
     const parent=m.reply_to?msgs.find(x=>x.id===m.reply_to):undefined;
-    if(m.deleted_at)return <div key={m.id} className={`flex ${m.mine?"justify-end":"justify-start"}`}>
-     <div className="max-w-[86%] rounded-2xl px-3 py-2 bg-zinc-900/60 border border-white/5 text-zinc-500 italic text-sm flex items-center gap-2"><Trash2 className="w-3.5 h-3.5"/>{t.messageDeleted}<span className="text-[10px] not-italic">{time}</span></div>
-    </div>;
+    if(m.deleted_at)return null;
     return <div key={m.id} className={`flex ${m.mine?"justify-end":"justify-start"}`}>
      <div
       onContextMenu={e=>{e.preventDefault();setReactBar(m)}}
