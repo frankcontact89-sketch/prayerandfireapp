@@ -214,16 +214,6 @@ All colors MUST be HSL.
   }
 }
 
-/* Make the signed-in profile photo easier to see without changing the fixed header behavior. */
-.relative.z-30.shrink-0.bg-black.border-b button[aria-label] > span {
-  width: 44px !important;
-  height: 44px !important;
-}
-.relative.z-30.shrink-0.bg-black.border-b button[aria-label] {
-  width: 48px !important;
-  height: 48px !important;
-}
-
 /* Tablet / iPad adaptation: scale up the mobile-first UI so it fits larger screens */
 @media (min-width: 768px) {
   html {
