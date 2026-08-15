@@ -3,6 +3,7 @@ import { Home, MessageCircle, BookOpen, Library, ShoppingBag, Share2, Link2, Inf
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { toast } from "@/hooks/use-toast";
+import { APP_CONFIG } from "@/config/constants";
 
 type Page = string;
 
@@ -32,9 +33,14 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
   };
 
   const share = async () => {
-    const title = "Prayer & Fire";
-    const text = "Download Prayer & Fire and join a global movement of prayer and faith.";
-    const url = "https://apps.apple.com/us/app/prayerandfire-mobile/id6757282653";
+    const title = APP_CONFIG.APP_NAME;
+    const text = L(
+      language,
+      "Download Prayer & Fire and join a global movement of prayer and faith.",
+      "Descarga Prayer & Fire y únete a un movimiento global de oración y fe.",
+      "Baixe o Prayer & Fire e junte-se a um movimento global de oração e fé.",
+    );
+    const url = APP_CONFIG.APP_STORE_URL;
     onOpenChange(false);
     try {
       if (Capacitor.isNativePlatform()) {
@@ -42,12 +48,21 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
       } else if (navigator.share) {
         await navigator.share({ title, text, url });
       } else {
-        await navigator.clipboard.writeText(url);
-        toast({ title: "App Store link copied.", duration: 2000 });
+        await navigator.clipboard.writeText(`${text} ${url}`);
+        toast({
+          title: L(language, "App link copied.", "Enlace de la app copiado.", "Link do app copiado."),
+          duration: 2000,
+        });
       }
     } catch (error: any) {
       if (!/abort|cancel/i.test(String(error?.message || error || ""))) {
-        try { await navigator.clipboard.writeText(url); } catch {}
+        try {
+          await navigator.clipboard.writeText(`${text} ${url}`);
+          toast({
+            title: L(language, "App link copied.", "Enlace de la app copiado.", "Link do app copiado."),
+            duration: 2000,
+          });
+        } catch {}
       }
     }
   };
