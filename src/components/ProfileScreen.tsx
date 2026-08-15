@@ -339,7 +339,7 @@ export function ProfileScreen({ t, language, setLanguage, signOut, onBack, onOpe
 
   return (
     <>
-      <div className="max-w-xl mx-auto p-6 space-y-8 pb-32">
+      <div className="max-w-xl mx-auto p-6 space-y-8 pb-10">
         <div className="flex items-center gap-4">
           {onBack && <button onClick={onBack} className="text-primary hover:text-primary/80 transition-colors"><ArrowLeft className="w-6 h-6" /></button>}
           <h2 className="text-3xl font-extrabold text-foreground">{t("profile")}</h2>

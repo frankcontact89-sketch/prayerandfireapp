@@ -575,18 +575,18 @@ export default function Index() {
         className="relative z-30 shrink-0 bg-black border-b border-zinc-800"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="flex justify-between items-center px-4 h-11">
+        <div className="flex justify-between items-center px-4 h-14">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPage("settings")}
               aria-label={t("profile")}
-              className="w-10 h-10 -ml-1 flex items-center justify-center"
+              className="w-12 h-12 -ml-1 flex items-center justify-center"
             >
-              <span className="h-9 w-9 rounded-full border border-orange-500/40 bg-zinc-900 overflow-hidden flex items-center justify-center">
+              <span className="h-11 w-11 rounded-full border-2 border-orange-500/50 bg-zinc-900 overflow-hidden flex items-center justify-center">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={t("profile")} className="h-full w-full object-cover" crossOrigin="anonymous" />
                 ) : (
-                  <UserIcon className="w-5 h-5 text-orange-500" />
+                  <UserIcon className="w-6 h-6 text-orange-500" />
                 )}
               </span>
             </button>

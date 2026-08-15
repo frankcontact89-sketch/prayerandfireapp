@@ -19,7 +19,7 @@ export const APP_CONFIG = {
   // App Store / Play Store download links.
   // Set these to the real store URLs when the listings are live. The Share
   // Prayer & Fire button uses these — never the marketing website.
-  APP_STORE_URL: "",
+  APP_STORE_URL: "https://apps.apple.com/us/app/prayerandfire-mobile/id6757282653",
   PLAY_STORE_URL: "",
   
   // Stripe URLs (LIVE — never use test_ links in production builds)
