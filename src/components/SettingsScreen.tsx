@@ -348,7 +348,7 @@ export function SettingsScreen({
   };
 
   return (
-    <div className="max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto px-4 py-3 pb-24 space-y-3">
+    <div className="max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto px-4 py-3 pb-8 space-y-3">
       <h2 className="text-2xl font-bold text-white">{t("settings")}</h2>
 
       {!isGuest && (
