@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Flame, Bell, Quote, Sparkles, HandHeart, BookOpen, User as UserIcon, Menu, Library as LibraryIcon } from "lucide-react";
+import { Flame, Bell, Quote, Sparkles, HandHeart, BookOpen, User as UserIcon, Menu, Library as LibraryIcon, MessageCircle } from "lucide-react";
 
 import { SignInScreen } from "@/components/SignInScreen";
 import { EventsScreen } from "@/components/EventsScreen";
@@ -763,6 +763,9 @@ export default function Index() {
         <nav className="flex justify-around items-center h-[64px] px-4 max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto">
           <button aria-label={t("home")} onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
             <Flame className="w-6 h-6" />
+          </button>
+          <button aria-label={language === "es" ? "Comunidad" : language === "pt" ? "Comunidade" : "Community"} onClick={() => window.location.assign("/community")} className="text-zinc-500">
+            <MessageCircle className="w-6 h-6" />
           </button>
           <button aria-label={t("holy_bible")} onClick={() => { setBibleReturnTo(null); setPage("bible"); }} className={page === "bible" ? "text-orange-500" : "text-zinc-500"}>
             <BookOpen className="w-6 h-6" />
