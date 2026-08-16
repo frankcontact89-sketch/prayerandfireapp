@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState}from"react";
-import{ArrowLeft,Ban,Bell,BellOff,Camera,Flag,ChevronRight,CornerUpLeft,LogOut,Mic,MoreHorizontal,Paperclip,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
+import{ArrowLeft,Ban,Bell,BellOff,Camera,CheckCheck,Copy,FileText,Flag,ChevronRight,CornerUpLeft,Link2,LogOut,Mic,MoreHorizontal,Paperclip,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
 import{supabase}from"@/integrations/supabase/client";
 import CreateGroupModal,{type CreatedGroup}from"@/components/community/CreateGroupModal";
 import AccessGate from"@/components/community/AccessGate";
@@ -25,6 +25,12 @@ export default function CommunityV2(){
  const t=dict[lang];
  const emojiTitle=lang==="es"?"Elige una reacción":lang==="pt"?"Escolha uma reação":"Choose a reaction";
  const forwardLabel=lang==="es"?"Enviar / Reenviar":lang==="pt"?"Enviar / Encaminhar":"Send / Forward";
+ const copyLabel=lang==="es"?"Copiar":lang==="pt"?"Copiar":"Copy";
+ const copiedLabel=lang==="es"?"Copiado":lang==="pt"?"Copiado":"Copied";
+ const mediaSectionLabel=lang==="es"?"Multimedia, enlaces y documentos":lang==="pt"?"Mídia, links e documentos":"Media, links and docs";
+ const searchMessagesLabel=lang==="es"?"Buscar mensajes":lang==="pt"?"Buscar mensagens":"Search messages";
+ const todayLabel=lang==="es"?"Hoy":lang==="pt"?"Hoje":"Today";
+ const yesterdayLabel=lang==="es"?"Ayer":lang==="pt"?"Ontem":"Yesterday";
  const sharedLabel=lang==="es"?"Listo para enviar":lang==="pt"?"Pronto para enviar":"Ready to send";
  const[me,setMe]=useState<any>(null);
  const[access,setAccess]=useState<"loading"|"none"|"pending"|"rejected"|"approved">("loading");
@@ -35,6 +41,7 @@ export default function CommunityV2(){
  const[pendingCount,setPendingCount]=useState(0);
  const[membersModal,setMembersModal]=useState<null|"add"|"admins">(null);
  const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups"|"discover">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[emojiPicker,setEmojiPicker]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[flash,setFlash]=useState("");
+ const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[readCounts,setReadCounts]=useState<Record<string,number>>({});
  const[discoverList,setDiscoverList]=useState<DiscoverGroup[]>([]),[discoverLoading,setDiscoverLoading]=useState(false),[noAccessGroup,setNoAccessGroup]=useState<DiscoverGroup|null>(null),[confirmDelGroup,setConfirmDelGroup]=useState(false);
  const file=useRef<HTMLInputElement>(null),photo=useRef<HTMLInputElement>(null),end=useRef<HTMLDivElement>(null);
  const press=useRef<number|null>(null);
