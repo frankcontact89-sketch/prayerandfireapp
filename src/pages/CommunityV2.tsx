@@ -105,6 +105,17 @@ export default function CommunityV2(){
   loadSenders(Array.from(new Set(rows.map((r:any)=>r.sender_id))));
   const ids=rows.map((r:any)=>r.id);
   if(ids.length)await loadReactions(ids);else setReactions({});
+  const myId=uid||me?.id;
+  if(ids.length&&myId){
+   const unreadOthers=rows.filter((r:any)=>r.sender_id!==myId&&!r.deleted_at).map((r:any)=>({message_id:r.id,user_id:myId}));
+   if(unreadOthers.length)await db.from("community_message_reads").upsert(unreadOthers,{onConflict:"message_id,user_id",ignoreDuplicates:true});
+   const mineIds=rows.filter((r:any)=>r.sender_id===myId).map((r:any)=>r.id);
+   if(mineIds.length){
+    const{data:rd}=await db.from("community_message_reads").select("message_id,user_id").in("message_id",mineIds);
+    const counts:Record<string,number>={};(rd||[]).forEach((r:any)=>{if(r.user_id!==myId)counts[r.message_id]=(counts[r.message_id]||0)+1});
+    setReadCounts(counts);
+   }else setReadCounts({});
+  }
   setTimeout(()=>end.current?.scrollIntoView({behavior:"smooth"}),30);
  },[me?.id,loadSenders,loadReactions]);
 
@@ -202,6 +213,10 @@ export default function CommunityV2(){
   setReactions(v=>{const list=(v[m.id]||[]).filter(r=>r.user_id!==me.id);return{...v,[m.id]:remove?list:[...list,{user_id:me.id,emoji}]}});
   if(remove){await db.from("community_reactions").delete().eq("message_id",m.id).eq("user_id",me.id);return}
   await db.from("community_reactions").upsert({message_id:m.id,user_id:me.id,emoji},{onConflict:"message_id,user_id"});
+ };
+ const copyMsg=async(m:Msg)=>{
+  setMenu(null);
+  try{await navigator.clipboard.writeText(m.body||m.url||"");toast(copiedLabel)}catch{/* unavailable */}
  };
  const forwardMsg=async(m:Msg)=>{
   setMenu(null);
