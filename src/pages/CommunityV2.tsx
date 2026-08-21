@@ -15,6 +15,7 @@ import entryLogo from"@/assets/prayer-fire-entry-logo.png";
 type Group=CreatedGroup&{role?:string;muted?:boolean;archived?:boolean;memberCount?:number;description?:string};
 type DiscoverGroup={id:string;name:string;description?:string|null;avatar?:string;memberCount:number};
 type Msg={id:string;sender_id:string;body?:string|null;media_url?:string|null;media_type?:string|null;created_at:string;deleted_at?:string|null;starred?:boolean;reply_to?:string|null;mine?:boolean;url?:string};
+type GroupListMessage={id:string;group_id:string;sender_id:string;body?:string|null;media_type?:string|null;created_at:string;deleted_at?:string|null};
 type Sender={name:string;avatar?:string|null};
 const db:any=supabase;
 const EMOJIS=["👍","❤️","😂","😮","😢","🙏","🔥"];
@@ -69,11 +70,31 @@ export default function CommunityV2(){
   const ids=(m||[]).map((x:any)=>x.group_id);
   if(!ids.length){setGroups([]);return}
   const{data:g}=await db.from("community_groups").select("id,name,description,avatar_url,updated_at").in("id",ids).order("updated_at",{ascending:false});
+  const{data:groupMessages}=await db.from("community_messages").select("id,group_id,sender_id,body,media_type,created_at,deleted_at").in("group_id",ids).order("created_at",{ascending:false});
+  const liveMessages=((groupMessages||[]) as GroupListMessage[]).filter(x=>!x.deleted_at);
+  const messageIds=liveMessages.map(x=>x.id);
+  const{data:myReads}=messageIds.length
+   ?await db.from("community_message_reads").select("message_id").eq("user_id",uid).in("message_id",messageIds)
+   :{data:[]};
+  const readIds=new Set(((myReads||[]) as {message_id:string}[]).map(x=>x.message_id));
+  const latestByGroup=new Map<string,GroupListMessage>();
+  const unreadByGroup=new Map<string,number>();
+  liveMessages.forEach(x=>{
+   if(!latestByGroup.has(x.group_id))latestByGroup.set(x.group_id,x);
+   if(x.sender_id!==uid&&!readIds.has(x.id))unreadByGroup.set(x.group_id,(unreadByGroup.get(x.group_id)||0)+1);
+  });
   const mm=new Map((m||[]).map((x:any)=>[x.group_id,x]));
   setGroups(await Promise.all((g||[]).map(async(x:any)=>{
    const z:any=mm.get(x.id)||{};
    const{count}=await db.from("community_group_members").select("*",{count:"exact",head:true}).eq("group_id",x.id);
-   return{id:x.id,name:x.name,subtitle:x.description||`${count||0} ${t.members}`,description:x.description||"",unread:0,lastTime:new Date(x.updated_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:x.avatar_url?await signed(x.avatar_url):undefined,role:z.role,muted:z.muted,archived:z.archived,memberCount:count||0};
+   const latest=latestByGroup.get(x.id);
+   const latestLabel=latest?.body?.trim()||(
+    latest?.media_type==="image"?"Photo":
+    latest?.media_type==="video"?"Video":
+    latest?.media_type==="audio"?"Voice message":
+    latest?.media_type==="document"?"Document":""
+   );
+   return{id:x.id,name:x.name,subtitle:latestLabel||x.description||`${count||0} ${t.members}`,description:x.description||"",unread:unreadByGroup.get(x.id)||0,lastTime:new Date(latest?.created_at||x.updated_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:x.avatar_url?await signed(x.avatar_url):undefined,role:z.role,muted:z.muted,archived:z.archived,memberCount:count||0};
   })));
  },[t.members]);
 
@@ -115,9 +136,10 @@ export default function CommunityV2(){
     const counts:Record<string,number>={};(rd||[]).forEach((r:any)=>{if(r.user_id!==myId)counts[r.message_id]=(counts[r.message_id]||0)+1});
     setReadCounts(counts);
    }else setReadCounts({});
+   await loadGroups(myId);
   }
   setTimeout(()=>end.current?.scrollIntoView({behavior:"smooth"}),30);
- },[me?.id,loadSenders,loadReactions]);
+ },[me?.id,loadSenders,loadReactions,loadGroups]);
 
  useEffect(()=>{(async()=>{
   const{data:{user}}=await supabase.auth.getUser();
@@ -156,6 +178,7 @@ export default function CommunityV2(){
   const c=supabase.channel(`list:${me.id}`)
    .on("postgres_changes",{event:"*",schema:"public",table:"community_group_members",filter:`user_id=eq.${me.id}`},()=>loadGroups(me.id))
    .on("postgres_changes",{event:"*",schema:"public",table:"community_groups"},()=>loadGroups(me.id))
+   .on("postgres_changes",{event:"*",schema:"public",table:"community_messages"},()=>loadGroups(me.id))
    .subscribe();
   return()=>{supabase.removeChannel(c)};
  },[me?.id,access,loadGroups]);
