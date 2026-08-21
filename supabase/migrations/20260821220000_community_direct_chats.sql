@@ -11,7 +11,18 @@ CREATE UNIQUE INDEX IF NOT EXISTS community_groups_direct_key_unique
   ON public.community_groups(direct_key)
   WHERE direct_key IS NOT NULL;
 
--- Preserve the existing function contract exactly while excluding direct chats from Discover.
+-- Lovable/Supabase deployments may install pgcrypto in public or extensions. The direct-chat
+-- function resolves it explicitly at runtime; this preflight fails safely if neither contract exists.
+DO $$
+BEGIN
+  IF to_regprocedure('extensions.digest(text,text)') IS NULL
+     AND to_regprocedure('public.digest(text,text)') IS NULL THEN
+    RAISE EXCEPTION 'PGCRYPTO_DIGEST_NOT_FOUND';
+  END IF;
+END;
+$$;
+
+-- Preserve the existing Discover contract while excluding direct chats.
 CREATE OR REPLACE FUNCTION public.discover_community_groups()
 RETURNS TABLE(id uuid, name text, description text, avatar_url text, member_count bigint)
 LANGUAGE sql
@@ -30,6 +41,9 @@ AS $$
   ORDER BY g.updated_at DESC
 $$;
 
+-- Existing production baseline explicitly reserves Discover for authenticated users.
+-- CREATE OR REPLACE retains the function owner; these statements retain the verified grant contract.
+REVOKE EXECUTE ON FUNCTION public.discover_community_groups() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.discover_community_groups() TO authenticated;
 
 -- Direct chats are created only for two approved, non-blocked users. The advisory lock
@@ -42,6 +56,7 @@ SET search_path = public
 AS $$
 DECLARE
   caller uuid := auth.uid();
+  pair_input text;
   chat_key text;
   chat_id uuid;
 BEGIN
@@ -59,17 +74,23 @@ BEGIN
     RAISE EXCEPTION 'DIRECT_CHAT_BLOCKED';
   END IF;
 
-  chat_key := encode(
-    digest(
-      'community-direct:' ||
-      CASE WHEN caller::text < other_user::text
-        THEN caller::text || ':' || other_user::text
-        ELSE other_user::text || ':' || caller::text
-      END,
-      'sha256'
-    ),
-    'hex'
-  );
+  pair_input := 'community-direct:' ||
+    CASE WHEN caller::text < other_user::text
+      THEN caller::text || ':' || other_user::text
+      ELSE other_user::text || ':' || caller::text
+    END;
+
+  -- Resolve pgcrypto explicitly so SECURITY DEFINER search_path=public never accidentally
+  -- binds an attacker-controlled digest function. The migration preflight verifies one branch.
+  IF to_regprocedure('extensions.digest(text,text)') IS NOT NULL THEN
+    EXECUTE 'SELECT encode(extensions.digest($1, ''sha256''), ''hex'')'
+      INTO chat_key USING pair_input;
+  ELSIF to_regprocedure('public.digest(text,text)') IS NOT NULL THEN
+    EXECUTE 'SELECT encode(public.digest($1, ''sha256''), ''hex'')'
+      INTO chat_key USING pair_input;
+  ELSE
+    RAISE EXCEPTION 'PGCRYPTO_DIGEST_NOT_FOUND';
+  END IF;
 
   PERFORM pg_advisory_xact_lock(hashtextextended(chat_key, 0));
 
@@ -90,7 +111,7 @@ BEGIN
     END IF;
   END IF;
 
-  -- The SECURITY DEFINER function establishes or restores exactly the two participants.
+  -- This SECURITY DEFINER function is the sole direct-chat membership creation path.
   INSERT INTO public.community_group_members(group_id, user_id, role)
   VALUES (chat_id, caller, 'owner'), (chat_id, other_user, 'member')
   ON CONFLICT (group_id, user_id) DO NOTHING;
@@ -102,13 +123,68 @@ $$;
 REVOKE ALL ON FUNCTION public.start_direct_community_chat(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.start_direct_community_chat(uuid) TO authenticated;
 
--- Preserve normal-group policy behavior while preventing user-managed direct-chat
--- membership changes. The SECURITY DEFINER function above is the direct-chat creation path.
+-- Existing direct chats stay safe after either participant blocks the other. The direct-chat
+-- branch applies the bilateral block check; normal-group message behavior remains unchanged.
+DROP POLICY IF EXISTS "Approved members send messages" ON public.community_messages;
+CREATE POLICY "Approved members send messages"
+ON public.community_messages FOR INSERT TO authenticated
+WITH CHECK (
+  sender_id = auth.uid()
+  AND public.is_community_member(group_id, auth.uid())
+  AND public.is_community_approved(auth.uid())
+  AND (
+    NOT EXISTS (
+      SELECT 1 FROM public.community_groups g
+      WHERE g.id = group_id AND g.is_direct
+    )
+    OR NOT EXISTS (
+      SELECT 1
+      FROM public.community_group_members peer
+      WHERE peer.group_id = group_id
+        AND peer.user_id <> auth.uid()
+        AND (
+          public.has_blocked(auth.uid(), peer.user_id)
+          OR public.has_blocked(peer.user_id, auth.uid())
+        )
+    )
+  )
+);
+
+-- Read behavior is bilateral for direct chats. Once either party blocks the other, neither can
+-- read existing or new direct-chat messages through the member message policy. Normal groups keep
+-- the pre-existing one-way blocked-sender filter.
+DROP POLICY IF EXISTS "Members read messages" ON public.community_messages;
+CREATE POLICY "Members read messages"
+ON public.community_messages FOR SELECT TO authenticated
+USING (
+  public.is_community_member(group_id, auth.uid())
+  AND NOT public.has_blocked(auth.uid(), sender_id)
+  AND (
+    NOT EXISTS (
+      SELECT 1 FROM public.community_groups g
+      WHERE g.id = group_id AND g.is_direct
+    )
+    OR NOT EXISTS (
+      SELECT 1
+      FROM public.community_group_members peer
+      WHERE peer.group_id = group_id
+        AND peer.user_id <> auth.uid()
+        AND (
+          public.has_blocked(auth.uid(), peer.user_id)
+          OR public.has_blocked(peer.user_id, auth.uid())
+        )
+    )
+  )
+);
+
+-- Preserve normal-group management while making direct-chat membership and group records immutable
+-- to user-managed policies. Direct membership rows can be inserted only by start_direct_community_chat.
 DROP POLICY IF EXISTS "Group admins add membership" ON public.community_group_members;
-CREATE POLICY "Group admins add membership" ON public.community_group_members
+DROP POLICY IF EXISTS "Group admins add approved membership" ON public.community_group_members;
+CREATE POLICY "Group admins add approved membership" ON public.community_group_members
 FOR INSERT TO authenticated
 WITH CHECK (
-  public.is_community_approved(auth.uid())
+  public.is_community_approved(user_id)
   AND COALESCE((
     SELECT NOT g.is_direct
     FROM public.community_groups g
@@ -119,46 +195,36 @@ WITH CHECK (
     OR (
       user_id = auth.uid()
       AND EXISTS (
-        SELECT 1
-        FROM public.community_groups g
+        SELECT 1 FROM public.community_groups g
         WHERE g.id = group_id AND g.created_by = auth.uid()
       )
     )
   )
 );
 
-DROP POLICY IF EXISTS "Group admins update groups" ON public.community_groups;
-CREATE POLICY "Group admins update groups" ON public.community_groups
-FOR UPDATE TO authenticated
-USING (public.is_group_admin(id, auth.uid()))
-WITH CHECK (
-  public.is_group_admin(id, auth.uid())
-  AND is_direct = false
-);
-
 DROP POLICY IF EXISTS "Own membership settings" ON public.community_group_members;
 CREATE POLICY "Own membership settings" ON public.community_group_members
 FOR UPDATE TO authenticated
 USING (
-  user_id = auth.uid()
-  OR (
-    COALESCE((
-      SELECT NOT g.is_direct
-      FROM public.community_groups g
-      WHERE g.id = group_id
-    ), false)
-    AND public.is_group_admin(group_id, auth.uid())
+  COALESCE((
+    SELECT NOT g.is_direct
+    FROM public.community_groups g
+    WHERE g.id = group_id
+  ), false)
+  AND (
+    user_id = auth.uid()
+    OR public.is_group_admin(group_id, auth.uid())
   )
 )
 WITH CHECK (
-  user_id = auth.uid()
-  OR (
-    COALESCE((
-      SELECT NOT g.is_direct
-      FROM public.community_groups g
-      WHERE g.id = group_id
-    ), false)
-    AND public.is_group_admin(group_id, auth.uid())
+  COALESCE((
+    SELECT NOT g.is_direct
+    FROM public.community_groups g
+    WHERE g.id = group_id
+  ), false)
+  AND (
+    user_id = auth.uid()
+    OR public.is_group_admin(group_id, auth.uid())
   )
 );
 
@@ -166,39 +232,93 @@ DROP POLICY IF EXISTS "Leave or remove membership" ON public.community_group_mem
 CREATE POLICY "Leave or remove membership" ON public.community_group_members
 FOR DELETE TO authenticated
 USING (
-  user_id = auth.uid()
-  OR (
-    COALESCE((
-      SELECT NOT g.is_direct
-      FROM public.community_groups g
-      WHERE g.id = group_id
-    ), false)
-    AND public.is_group_admin(group_id, auth.uid())
+  COALESCE((
+    SELECT NOT g.is_direct
+    FROM public.community_groups g
+    WHERE g.id = group_id
+  ), false)
+  AND (
+    user_id = auth.uid()
+    OR public.is_group_admin(group_id, auth.uid())
   )
 );
 
+DROP POLICY IF EXISTS "Group admins update groups" ON public.community_groups;
+CREATE POLICY "Group admins update groups" ON public.community_groups
+FOR UPDATE TO authenticated
+USING (
+  is_direct = false
+  AND public.is_group_admin(id, auth.uid())
+)
+WITH CHECK (
+  is_direct = false
+  AND public.is_group_admin(id, auth.uid())
+);
+
+DROP POLICY IF EXISTS "Group admins delete groups" ON public.community_groups;
+CREATE POLICY "Group admins delete groups" ON public.community_groups
+FOR DELETE TO authenticated
+USING (
+  is_direct = false
+  AND public.is_group_admin(id, auth.uid())
+);
+
 -- Non-destructive migration-time contract checks. These validate the guards that enforce:
--- 1) direct chats are excluded from Discover; 2) pair creation has advisory-lock and
--- unique-key guards; 3) callers use approval and mutual-block helpers; and 4) normal groups
+-- 1) direct chats are excluded from Discover; 2) pair creation has extension-resolution,
+-- advisory-lock, and unique-key guards; 3) callers use approval and mutual-block helpers;
+-- 4) existing direct chats block read/send after either block direction; and 5) normal groups
 -- retain an is_direct=false path through the existing membership policies.
 DO $$
 DECLARE
   discover_definition text;
   direct_definition text;
+  send_check text;
+  read_qual text;
+  membership_update_qual text;
+  membership_delete_qual text;
 BEGIN
   SELECT pg_get_functiondef('public.discover_community_groups()'::regprocedure)
     INTO discover_definition;
   SELECT pg_get_functiondef('public.start_direct_community_chat(uuid)'::regprocedure)
     INTO direct_definition;
+  SELECT with_check INTO send_check
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'community_messages'
+      AND policyname = 'Approved members send messages';
+  SELECT qual INTO read_qual
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'community_messages'
+      AND policyname = 'Members read messages';
+  SELECT qual INTO membership_update_qual
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'community_group_members'
+      AND policyname = 'Own membership settings';
+  SELECT qual INTO membership_delete_qual
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'community_group_members'
+      AND policyname = 'Leave or remove membership';
 
   IF position('g.is_direct = false' IN discover_definition) = 0 THEN
     RAISE EXCEPTION 'DIRECT_CHAT_DISCOVER_FILTER_MISSING';
   END IF;
 
-  IF position('public.is_community_approved' IN direct_definition) = 0
+  IF position('extensions.digest' IN direct_definition) = 0
+     OR position('public.digest' IN direct_definition) = 0
+     OR position('public.is_community_approved' IN direct_definition) = 0
      OR position('public.has_blocked' IN direct_definition) = 0
      OR position('pg_advisory_xact_lock' IN direct_definition) = 0 THEN
     RAISE EXCEPTION 'DIRECT_CHAT_SECURITY_GUARD_MISSING';
+  END IF;
+
+  IF COALESCE(send_check, '') NOT LIKE '%has_blocked%'
+     OR COALESCE(read_qual, '') NOT LIKE '%has_blocked%'
+     OR COALESCE(membership_update_qual, '') NOT LIKE '%is_direct%'
+     OR COALESCE(membership_delete_qual, '') NOT LIKE '%is_direct%' THEN
+    RAISE EXCEPTION 'DIRECT_CHAT_POLICY_GUARD_MISSING';
   END IF;
 
   IF NOT EXISTS (
@@ -221,12 +341,20 @@ approved non-production test accounts):
    participant and assert the direct chat ID is absent; assert an existing is_direct=false group
    remains present when the caller is not already a member.
 2. Participant access: as both participants, read the chat group and its messages successfully;
-   as a third approved user, assert Community RLS returns no direct-chat group or messages and
-   assert direct membership insertion is rejected.
-3. Blocking: create blocks in each direction and assert start_direct_community_chat(other_user)
+   as a third approved user, assert Community RLS returns no direct-chat group, membership data,
+   or messages and assert direct membership insertion is rejected.
+3. Blocking at creation: create blocks in each direction and assert start_direct_community_chat()
    raises DIRECT_CHAT_BLOCKED for either direction.
-4. Concurrency: issue two simultaneous starts for the same pair and assert both return the same
+4. Blocking after creation: create the direct chat first, then create each block direction in turn.
+   Assert both participants cannot send a new message, and neither participant can read direct-chat
+   messages through RLS while the block exists. Remove the block and assert normal access returns.
+5. Membership immutability: as either participant and as a third approved user, assert direct-chat
+   INSERT, UPDATE (including role/group_id/user_id), DELETE, group UPDATE, and group DELETE are all
+   rejected. Confirm normal-group member self-settings, departure, admin membership management, and
+   group management still work for is_direct=false groups.
+6. Concurrency: issue two simultaneous starts for the same pair and assert both return the same
    group ID, with one direct_key row and exactly the two intended membership rows.
-5. Normal groups: confirm group creation, discovery, membership updates, and group-admin removal
-   continue to work for is_direct=false groups.
+7. Extension location: run `SELECT to_regprocedure('extensions.digest(text,text)'),
+   to_regprocedure('public.digest(text,text)');` in Lovable staging and record which non-null
+   schema branch was used before production approval.
 */
