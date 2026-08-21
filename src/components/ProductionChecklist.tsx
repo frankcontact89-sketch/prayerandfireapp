@@ -48,23 +48,12 @@ const checklist: ChecklistItem[] = [
     ],
   },
   {
-    category: "Payments (Stripe)",
-    items: [
-      { name: "Monthly subscription ($6.99/month)", completed: true, notes: "Stripe test mode" },
-      { name: "One-time donation", completed: true },
-      { name: "Project donation", completed: true },
-      { name: "Course/product purchase", completed: true },
-      { name: "Cancel subscription in-app", completed: true },
-      { name: "Stripe checkout integration", completed: true },
-    ],
-  },
-  {
     category: "Store & Products",
     items: [
       { name: "Product listing page", completed: true },
       { name: "Product detail modal", completed: true },
       { name: "Shopping cart", completed: true },
-      { name: "Checkout redirect to Stripe", completed: true },
+      { name: "External Store destinations", completed: true },
       { name: "Purchased items visible in My Courses", completed: true },
     ],
   },
@@ -103,8 +92,6 @@ const checklist: ChecklistItem[] = [
     category: "Legal & Compliance",
     items: [
       { name: "About Prayer & Fire", completed: true },
-      { name: "Payments & Subscriptions", completed: true },
-      { name: "Refund & Cancellation Policy", completed: true },
       { name: "Privacy Policy", completed: true },
       { name: "Terms of Service", completed: true },
       { name: "Support & Contact", completed: true },

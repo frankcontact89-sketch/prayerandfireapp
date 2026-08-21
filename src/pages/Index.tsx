@@ -3,7 +3,6 @@ import { Flame, Bell, Quote, Sparkles, HandHeart, BookOpen, User as UserIcon, Me
 
 import { SignInScreen } from "@/components/SignInScreen";
 import { EventsScreen } from "@/components/EventsScreen";
-import { GivingScreen } from "@/components/GivingScreen";
 import { ShoppingScreen } from "@/components/ShoppingScreen";
 import { SettingsScreen } from "@/components/SettingsScreen";
 import { AdminPanel } from "@/components/AdminPanel";
@@ -630,7 +629,6 @@ export default function Index() {
         style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
       >
         {page === "home" && <HomeScreen t={t} language={language} />}
-        {page === "giving" && <GivingScreen t={t} language={language} />}
         {page === "shopping" && <ShoppingScreen t={t} />}
         {page === "bible" && (
           <BibleScreen
