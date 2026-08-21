@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 type Person = {
   id: string;
-  name: string;
+  displayName: string;
+  username?: string | null;
   avatar?: string | null;
-  email?: string | null;
 };
 
 type Props = {
@@ -86,19 +86,16 @@ export default function NewConversationModal({
       }
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id,username,avatar_url,email")
+        .select("id,username,avatar_url")
         .in("id", ids)
         .order("username");
       if (!cancelled) {
         setPeople(
           (profiles ?? []).map((profile) => ({
             id: profile.id,
-            name:
-              profile.username ||
-              profile.email?.split("@")[0] ||
-              "Prayer & Fire Member",
+            displayName: profile.username || "Prayer & Fire Member",
+            username: profile.username,
             avatar: profile.avatar_url,
-            email: profile.email,
           })),
         );
         setLoading(false);
@@ -112,7 +109,7 @@ export default function NewConversationModal({
   const filtered = useMemo(
     () =>
       people.filter((person) =>
-        `${person.name} ${person.email ?? ""}`
+        `${person.displayName} ${person.username ?? ""}`
           .toLowerCase()
           .includes(query.toLowerCase()),
       ),
@@ -181,14 +178,14 @@ export default function NewConversationModal({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  person.name[0]?.toUpperCase()
+                  person.displayName[0]?.toUpperCase()
                 )}
               </span>
               <span className="min-w-0 flex-1">
-                <b className="block truncate">{person.name}</b>
-                {person.email && (
+                <b className="block truncate">{person.displayName}</b>
+                {person.username && (
                   <small className="block truncate text-zinc-500">
-                    {person.email}
+                    @{person.username}
                   </small>
                 )}
               </span>

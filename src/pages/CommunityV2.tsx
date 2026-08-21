@@ -324,7 +324,7 @@ export default function CommunityV2() {
       const { data: otherProfiles } = otherIds.length
         ? await db
             .from("profiles")
-            .select("id,username,email,avatar_url")
+            .select("id,username,avatar_url")
             .in("id", otherIds)
         : { data: [] };
       const profileById = new Map(
@@ -360,10 +360,7 @@ export default function CommunityV2() {
             : undefined;
           return {
             id: x.id,
-            name:
-              directPerson?.username ||
-              directPerson?.email?.split("@")[0] ||
-              x.name,
+            name: directPerson?.username || x.name,
             subtitle:
               latestLabel || x.description || `${count || 0} ${t.members}`,
             description: x.description || "",
@@ -415,13 +412,13 @@ export default function CommunityV2() {
     if (!ids.length) return;
     const { data } = await db
       .from("profiles")
-      .select("id,username,email,avatar_url")
+      .select("id,username,avatar_url")
       .in("id", ids);
     setSenders((prev) => {
       const next = { ...prev };
       (data || []).forEach((p: any) => {
         next[p.id] = {
-          name: p.username || p.email?.split("@")[0] || "Member",
+          name: p.username || "Member",
           avatar: p.avatar_url,
         };
       });
@@ -521,7 +518,7 @@ export default function CommunityV2() {
       setMe({
         id: user.id,
         name:
-          p?.username || user.email?.split("@")[0] || "Prayer & Fire Member",
+          p?.username || "Prayer & Fire Member",
         avatar: p?.avatar_url,
       });
       const { data: bl } = await db
