@@ -1,0 +1,40 @@
+name: Lint Remediation Workspace
+
+on:
+  push:
+    branches: [fix/eslint-release-gate]
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Apply safe ESLint autofixes locally
+        run: npx eslint . --fix || true
+
+      - name: Capture post-fix lint report
+        run: npx eslint . > lint-report.txt 2>&1 || true
+
+      - name: Package remediated workspace
+        run: tar --exclude=.git --exclude=node_modules -czf lint-workspace.tgz .
+
+      - name: Upload workspace
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-remediation-workspace
+          path: lint-workspace.tgz
+          retention-days: 1
