@@ -5,7 +5,7 @@ on:
     branches: [fix/eslint-release-gate]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   prepare:
@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
+        with:
+          ref: fix/eslint-release-gate
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -23,18 +25,53 @@ jobs:
       - name: Install dependencies and refresh lockfile
         run: npm install --ignore-scripts --no-audit --no-fund
 
-      - name: Apply safe ESLint autofixes locally
+      - name: Apply targeted safe lint fixes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          for name in ["src/components/MeetingsScreen.tsx", "src/components/VideoCallScreen.tsx"]:
+              p = Path(name)
+              s = p.read_text()
+              s = s.replace(", Infinity } from \"lucide-react\";", ", Infinity as InfinityIcon } from \"lucide-react\";")
+              s = s.replace("<Infinity ", "<InfinityIcon ")
+              p.write_text(s)
+
+          p = Path("src/components/ui/command.tsx")
+          s = p.read_text().replace("interface CommandDialogProps extends DialogProps {}", "type CommandDialogProps = DialogProps;")
+          p.write_text(s)
+
+          p = Path("src/components/ui/textarea.tsx")
+          s = p.read_text().replace(
+              "export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}",
+              "export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;",
+          )
+          p.write_text(s)
+
+          p = Path("src/pages/CommunityV2.tsx")
+          s = p.read_text().replace(r"[^\w.\-]+", r"[^\w.-]+")
+          p.write_text(s)
+          PY
+
+      - name: Apply safe ESLint autofixes
         run: npx eslint . --fix || true
 
-      - name: Capture post-fix lint report
-        run: npx eslint . > lint-report.txt 2>&1 || true
+      - name: Verify lint has no errors
+        run: npx eslint . --quiet
 
-      - name: Package remediated workspace
-        run: tar --exclude=.git --exclude=node_modules -czf lint-workspace.tgz .
+      - name: Verify TypeScript and production build
+        run: |
+          npx tsc --noEmit
+          npm run build
 
-      - name: Upload workspace
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-remediation-workspace
-          path: lint-workspace.tgz
-          retention-days: 1
+      - name: Persist remediation changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json src/components/MeetingsScreen.tsx src/components/VideoCallScreen.tsx src/components/ui/command.tsx src/components/ui/textarea.tsx src/pages/CommunityV2.tsx
+          if git diff --cached --quiet; then
+            echo "No remediation changes to commit"
+          else
+            git commit -m "fix(lint): clear release-blocking lint errors"
+            git push origin HEAD:fix/eslint-release-gate
+          fi
