@@ -8,8 +8,9 @@ export default tseslint.config(
   {
     ignores: [
       "dist",
-      // Auto-generated bundle from src/lib/mcp; lint the source files instead.
+      // Auto-generated artifacts; lint their source templates instead of generated output.
       "supabase/functions/mcp/index.ts",
+      "src/integrations/supabase/previewAuthStorage.ts",
     ],
   },
   {
