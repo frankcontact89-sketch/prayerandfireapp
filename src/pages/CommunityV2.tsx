@@ -189,7 +189,7 @@ export default function CommunityV2(){
  const upload=async(f?:File)=>{
   if(!f||!selected||!me||f.size>50*1024*1024)return;
   const kind=f.type.startsWith("image/")?"image":f.type.startsWith("video/")?"video":f.type.startsWith("audio/")?"audio":"document";
-  const safe=f.name.replace(/[^\w.\-]+/g,"_");
+  const safe=f.name.replace(/[^\w.-]+/g,"_");
   const path=`${me.id}/${selected.id}/${Date.now()}-${safe}`;
   const{error}=await supabase.storage.from("community-media").upload(path,f,{contentType:f.type||"application/octet-stream",upsert:false});
   if(error)return;
