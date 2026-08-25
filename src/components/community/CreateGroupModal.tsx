@@ -13,7 +13,7 @@ export type CreatedGroup = {
   memberIds?: string[];
 };
 
-type Person = { id: string; name: string; avatar?: string | null; email?: string | null };
+type Person = { id: string; name: string; username?: string | null; avatar?: string | null };
 type Props = { open: boolean; onClose: () => void; onCreate: (group: CreatedGroup) => void | Promise<void>; language: "en" | "es" | "pt" };
 
 const words = {
@@ -48,14 +48,14 @@ export default function CreateGroupModal({ open, onClose, onCreate, language }: 
         const eligible = Array.from(new Set([...(reqs||[]).map((r:any)=>r.user_id), ...(ads||[]).map((a:any)=>a.user_id)])).filter((id)=>id!==user?.id);
         if(cancelled) return;
         if(!eligible.length){ setPeople([]); return; }
-        const { data } = await db.from("profiles").select("id, username, avatar_url, email").in("id", eligible).order("username", { ascending:true });
+        const { data } = await db.from("profiles").select("id, username, avatar_url").in("id", eligible).order("username", { ascending:true });
         if(cancelled) return;
-        const source:any[] = (data && data.length) ? data : eligible.map((id)=>({ id, username:null, avatar_url:null, email:null }));
+        const source:any[] = (data && data.length) ? data : eligible.map((id)=>({ id, username:null, avatar_url:null }));
         const mapped:Person[]=source.map((p:any)=>({
           id:p.id,
-          name:p.username || p.email?.split("@")[0] || "Prayer & Fire Member",
+          name:p.username || "Prayer & Fire Member",
+          username:p.username,
           avatar:p.avatar_url,
-          email:p.email,
         }));
         setPeople(mapped);
       } finally { if(!cancelled) setLoading(false); }
@@ -63,7 +63,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, language }: 
     return ()=>{cancelled=true};
   },[open]);
 
-  const filtered=useMemo(()=>people.filter(p=>(p.name+" "+(p.email||"")).toLowerCase().includes(query.toLowerCase())),[people,query]);
+  const filtered=useMemo(()=>people.filter(p=>(p.name+" "+(p.username||"")).toLowerCase().includes(query.toLowerCase())),[people,query]);
   const chosenPeople=people.filter(p=>chosen.includes(p.id));
   if(!open) return null;
 
@@ -93,7 +93,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, language }: 
     <main className="flex-1 min-h-0 overflow-y-auto px-4 max-w-xl w-full mx-auto">
       {loading ? <div className="text-zinc-500 py-10 text-center text-sm">{t.loading}</div> : filtered.length===0 ? <div className="text-zinc-500 py-10 text-center text-sm">{t.noPeople}</div> : filtered.map(p=>{const active=chosen.includes(p.id);return <button key={p.id} onClick={()=>setChosen(v=>active?v.filter(x=>x!==p.id):[...v,p.id])} className="w-full flex items-center gap-3 py-2.5 border-b border-white/5">
         <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-orange-500/30 to-zinc-800 grid place-items-center font-black text-sm shrink-0">{p.avatar?<img src={p.avatar} className="w-full h-full object-cover" alt=""/>:p.name[0]?.toUpperCase()}</div>
-        <div className="flex-1 text-left min-w-0"><div className="font-semibold text-sm truncate">{p.name}</div>{p.email&&<div className="text-[11px] text-zinc-500 truncate">{p.email}</div>}</div>
+        <div className="flex-1 text-left min-w-0"><div className="font-semibold text-sm truncate">{p.name}</div>{p.username&&<div className="text-[11px] text-zinc-500 truncate">@{p.username}</div>}</div>
         <div className={`w-6 h-6 rounded-full border grid place-items-center shrink-0 ${active?"bg-orange-500 border-orange-500 text-black":"border-zinc-600"}`}>{active&&<Check className="w-4 h-4"/>}</div>
       </button>})}
     </main>
