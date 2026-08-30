@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Video, Users, MessageSquare, Link2, PhoneOff, Mic, MicOff, Camera, CameraOff, SwitchCamera, Hand, Copy, Flame, Crown, Infinity } from "lucide-react";
+import { ArrowLeft, Video, Users, MessageSquare, Link2, PhoneOff, Mic, MicOff, Camera, CameraOff, SwitchCamera, Hand, Copy, Flame, Crown, Infinity as InfinityIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDonorStatus } from "@/hooks/useDonorStatus";
 

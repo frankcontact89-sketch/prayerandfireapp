@@ -65,9 +65,9 @@ jobs:
           npm run build
           npx cap sync ios
 
-      - name: Compute unique TestFlight build number
+      - name: Compute TestFlight build number newer than build 24
         run: |
-          BUILD_NUMBER=$((200 + GITHUB_RUN_NUMBER))
+          BUILD_NUMBER=$((24 + GITHUB_RUN_NUMBER))
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
           echo "Uploading Prayer & Fire ${APP_VERSION} (${BUILD_NUMBER})"
 

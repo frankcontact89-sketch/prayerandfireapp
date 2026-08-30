@@ -29,8 +29,7 @@ jobs:
       - name: Build production app
         run: npm run build
 
-      - name: Lint (advisory while legacy issues are cleaned up)
-        continue-on-error: true
+      - name: Lint
         run: npm run lint
 
       - name: Verify production Capacitor config
@@ -47,5 +46,5 @@ jobs:
           grep -q '<key>NSPhotoLibraryUsageDescription</key>' ios/App/App/Info.plist
           grep -q '<key>NSMicrophoneUsageDescription</key>' ios/App/App/Info.plist
           grep -q 'PRODUCT_BUNDLE_IDENTIFIER = com.frankcontact89.prayerandfiremobile;' ios/App/App.xcodeproj/project.pbxproj
-          test "$(grep -c 'CURRENT_PROJECT_VERSION = 24;' ios/App/App.xcodeproj/project.pbxproj)" -eq 2
+          test "$(grep -c 'CURRENT_PROJECT_VERSION = 25;' ios/App/App.xcodeproj/project.pbxproj)" -eq 2
           test "$(grep -c 'MARKETING_VERSION = 1.1;' ios/App/App.xcodeproj/project.pbxproj)" -eq 2

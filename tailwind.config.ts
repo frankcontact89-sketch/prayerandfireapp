@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -65,17 +66,17 @@ export default {
       },
       keyframes: {
         "fire-pulse": {
-          "0%": { 
-            opacity: "0.6", 
-            transform: "scale(0.9) translateX(-50%)" 
+          "0%": {
+            opacity: "0.6",
+            transform: "scale(0.9) translateX(-50%)"
           },
-          "50%": { 
-            opacity: "1", 
-            transform: "scale(1.1) translateX(-50%)" 
+          "50%": {
+            opacity: "1",
+            transform: "scale(1.1) translateX(-50%)"
           },
-          "100%": { 
-            opacity: "0.6", 
-            transform: "scale(0.9) translateX(-50%)" 
+          "100%": {
+            opacity: "0.6",
+            transform: "scale(0.9) translateX(-50%)"
           },
         },
         "vibrate": {
@@ -108,5 +109,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;
