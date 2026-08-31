@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowLeft, Flame, Info, CreditCard, RefreshCw, Shield, FileText, Mail } from "lucide-react";
+import { ArrowLeft, Flame, Info, Shield, FileText, Mail } from "lucide-react";
 import alineRamiro from "@/assets/aline-ramiro.jpg";
 import franciscoRivera from "@/assets/francisco-rivera.jpg";
 import {
@@ -80,47 +80,6 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
             </AccordionContent>
           </AccordionItem>
 
-          {/* Payments & Subscriptions */}
-          <AccordionItem value="payments" className="bg-card border border-border rounded-xl overflow-hidden">
-            <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                  <CreditCard className="w-4 h-4 text-primary" />
-                </div>
-                <span className="font-semibold text-foreground">Payments & Subscriptions</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-5 pb-5">
-              <ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside">
-                <li>Payments are processed securely through Stripe.</li>
-                <li>Prayer & Fire does NOT store credit card or banking information.</li>
-                <li>Donations are voluntary.</li>
-                <li>Subscriptions renew automatically unless canceled.</li>
-                <li>Users can cancel subscriptions at any time.</li>
-                <li>If Apple In-App Purchases are used in the future, users must manage subscriptions through Apple.</li>
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Refund & Cancellation Policy */}
-          <AccordionItem value="refunds" className="bg-card border border-border rounded-xl overflow-hidden">
-            <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-secondary/50">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                  <RefreshCw className="w-4 h-4 text-primary" />
-                </div>
-                <span className="font-semibold text-foreground">Refund & Cancellation Policy</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-5 pb-5">
-              <ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside">
-                <li>Donations are non-refundable.</li>
-                <li>Subscriptions can be canceled at any time to stop future charges.</li>
-                <li>Refund requests are reviewed case-by-case if required by law.</li>
-                <li>Support contact: <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></li>
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
 
           {/* Privacy Policy */}
           <AccordionItem value="privacy" className="bg-card border border-border rounded-xl overflow-hidden">
@@ -134,8 +93,7 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
             </AccordionTrigger>
             <AccordionContent className="px-5 pb-5">
               <ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside">
-                <li><strong className="text-foreground">Data collected:</strong> Name, email, username, optional profile photo, subscription status.</li>
-                <li>Payments are handled by Stripe only.</li>
+                <li><strong className="text-foreground">Data collected:</strong> Name, email, username, and optional profile photo.</li>
                 <li>We do not sell personal data.</li>
                 <li>Data is used only to operate and improve the app.</li>
                 <li>Users may request data deletion.</li>
