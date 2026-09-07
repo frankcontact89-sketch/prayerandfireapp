@@ -2,6 +2,11 @@ name: TestFlight Upload
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/testflight-upload.yml'
 
 permissions:
   contents: read
