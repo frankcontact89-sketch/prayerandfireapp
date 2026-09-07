@@ -2,11 +2,6 @@ name: TestFlight Upload
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/workflows/testflight-upload.yml'
 
 permissions:
   contents: read
@@ -18,6 +13,7 @@ jobs:
     env:
       APP_BUNDLE_ID: com.frankcontact89.prayerandfiremobile
       APP_VERSION: '1.1'
+      BUILD_NUMBER: '25'
       APPLE_TEAM_ID: 2UU7S882KZ
 
     steps:
@@ -65,10 +61,8 @@ jobs:
           npm run build
           npx cap sync ios
 
-      - name: Compute TestFlight build number newer than build 24
+      - name: Confirm TestFlight build number
         run: |
-          BUILD_NUMBER=$((24 + GITHUB_RUN_NUMBER))
-          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
           echo "Uploading Prayer & Fire ${APP_VERSION} (${BUILD_NUMBER})"
 
       - name: Archive iOS app unsigned
@@ -81,6 +75,7 @@ jobs:
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/PrayerAndFire.xcarchive" \
             PRODUCT_BUNDLE_IDENTIFIER="$APP_BUNDLE_ID" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             MARKETING_VERSION="$APP_VERSION" \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             CODE_SIGNING_ALLOWED=NO \
