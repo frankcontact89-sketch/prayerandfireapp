@@ -94,7 +94,6 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
               <ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside">
                 <li>Payments are processed securely through Stripe.</li>
                 <li>Prayer & Fire does NOT store credit card or banking information.</li>
-                <li>Donations are voluntary.</li>
                 <li>Subscriptions renew automatically unless canceled.</li>
                 <li>Users can cancel subscriptions at any time.</li>
                 <li>If Apple In-App Purchases are used in the future, users must manage subscriptions through Apple.</li>
@@ -114,7 +113,6 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
             </AccordionTrigger>
             <AccordionContent className="px-5 pb-5">
               <ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside">
-                <li>Donations are non-refundable.</li>
                 <li>Subscriptions can be canceled at any time to stop future charges.</li>
                 <li>Refund requests are reviewed case-by-case if required by law.</li>
                 <li>Support contact: <a href="mailto:prayerandfireglobal@gmail.com" className="text-primary hover:underline">prayerandfireglobal@gmail.com</a></li>

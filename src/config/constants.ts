@@ -22,12 +22,6 @@ export const APP_CONFIG = {
   APP_STORE_URL: "https://apps.apple.com/us/app/prayerandfire-mobile/id6757282653",
   PLAY_STORE_URL: "",
   
-  // Stripe URLs (LIVE — never use test_ links in production builds)
-  STRIPE_SUBSCRIPTION: "https://buy.stripe.com/9B6cN5fAc0c29GTfij7bW03",
-  STRIPE_ONETIME: "https://buy.stripe.com/28E5kDbjWe2S4mz1rt7bW04",
-
-  // Stripe billing portal for managing/canceling subscriptions
-  STRIPE_CUSTOMER_PORTAL: "https://billing.stripe.com/p/login/cNi00j3Ru6Aq5qD1rt7bW00",
   
   // External Links
   BOOK_AMAZON_LINK: "https://a.co/d/dfgHEvM",
