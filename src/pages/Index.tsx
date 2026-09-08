@@ -316,6 +316,7 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
 }
 
 export default function Index() {
+  const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [page, setPageState] = useState<string>(() => {
     try {
@@ -763,7 +764,7 @@ export default function Index() {
           <button aria-label={t("home")} onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
             <Flame className="w-6 h-6" />
           </button>
-          <button aria-label={language === "es" ? "Comunidad" : language === "pt" ? "Comunidade" : "Community"} onClick={() => window.location.assign("/community")} className="text-zinc-500">
+          <button aria-label={language === "es" ? "Comunidad" : language === "pt" ? "Comunidade" : "Community"} onClick={() => navigate("/community")} className="text-zinc-500">
             <MessageCircle className="w-6 h-6" />
           </button>
           <button aria-label={t("holy_bible")} onClick={() => { setBibleReturnTo(null); setPage("bible"); }} className={page === "bible" ? "text-orange-500" : "text-zinc-500"}>
