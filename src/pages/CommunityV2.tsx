@@ -65,17 +65,39 @@ export default function CommunityV2(){
  },[]);
 
  const loadGroups=useCallback(async(uid:string)=>{
-  const{data:m}=await db.from("community_group_members").select("group_id,role,muted,archived").eq("user_id",uid);
+  setListLoading(true);setListError(false);
+  const{data:m,error:me1}=await db.from("community_group_members").select("group_id,role,muted,archived").eq("user_id",uid);
+  if(me1){setListError(true);setListLoading(false);return}
   const ids=(m||[]).map((x:any)=>x.group_id);
-  if(!ids.length){setGroups([]);return}
-  const{data:g}=await db.from("community_groups").select("id,name,description,avatar_url,updated_at").in("id",ids).order("updated_at",{ascending:false});
+  if(!ids.length){setGroups([]);setListLoading(false);return}
+  const{data:g,error:ge}=await db.from("community_groups").select("id,name,description,avatar_url,updated_at").in("id",ids).order("updated_at",{ascending:false});
+  if(ge){setListError(true);setListLoading(false);return}
   const mm=new Map((m||[]).map((x:any)=>[x.group_id,x]));
-  setGroups(await Promise.all((g||[]).map(async(x:any)=>{
+  // real unread counts: messages from others that I have not read yet
+  const{data:allMsgs}=await db.from("community_messages").select("id,group_id,sender_id,body,media_type,created_at,deleted_at").in("group_id",ids).is("deleted_at",null).order("created_at");
+  const otherIds=(allMsgs||[]).filter((x:any)=>x.sender_id!==uid).map((x:any)=>x.id);
+  let readSet=new Set<string>();
+  if(otherIds.length){
+   const{data:rd}=await db.from("community_message_reads").select("message_id").eq("user_id",uid).in("message_id",otherIds);
+   readSet=new Set((rd||[]).map((r:any)=>r.message_id));
+  }
+  const unreadBy:Record<string,number>={};const lastBy:Record<string,any>={};
+  (allMsgs||[]).forEach((x:any)=>{
+   lastBy[x.group_id]=x;
+   if(x.sender_id!==uid&&!readSet.has(x.id))unreadBy[x.group_id]=(unreadBy[x.group_id]||0)+1;
+  });
+  const rows=await Promise.all((g||[]).map(async(x:any)=>{
    const z:any=mm.get(x.id)||{};
    const{count}=await db.from("community_group_members").select("*",{count:"exact",head:true}).eq("group_id",x.id);
-   return{id:x.id,name:x.name,subtitle:x.description||`${count||0} ${t.members}`,description:x.description||"",unread:0,lastTime:new Date(x.updated_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:x.avatar_url?await signed(x.avatar_url):undefined,role:z.role,muted:z.muted,archived:z.archived,memberCount:count||0};
-  })));
- },[t.members]);
+   const last=lastBy[x.id];
+   const preview=last?(last.body||(last.media_type?t.media:"")):"";
+   const stamp=last?last.created_at:x.updated_at;
+   return{id:x.id,name:x.name,subtitle:preview||x.description||`${count||0} ${t.members}`,description:x.description||"",unread:unreadBy[x.id]||0,lastTime:new Date(stamp).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:x.avatar_url?await signed(x.avatar_url):undefined,role:z.role,muted:z.muted,archived:z.archived,memberCount:count||0};
+  }));
+  rows.sort((a:any,b:any)=>(b.unread||0)-(a.unread||0));
+  setGroups(rows);setListLoading(false);
+ },[t.members,t.media]);
+
 
  const loadDiscover=useCallback(async()=>{
   setDiscoverLoading(true);
