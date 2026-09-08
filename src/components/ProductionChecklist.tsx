@@ -53,7 +53,7 @@ const checklist: ChecklistItem[] = [
       { name: "Product listing page", completed: true },
       { name: "Product detail modal", completed: true },
       { name: "Shopping cart", completed: true },
-      { name: "Checkout redirect to Stripe", completed: true },
+      { name: "Checkout redirect to external store", completed: true },
       { name: "Purchased items visible in My Courses", completed: true },
     ],
   },
