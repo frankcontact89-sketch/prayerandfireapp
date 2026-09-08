@@ -6,6 +6,7 @@ on:
     branches:
       - main
     paths:
+      # Trigger a new TestFlight run when this workflow definition is updated.
       - '.github/workflows/testflight-upload.yml'
 
 permissions:
