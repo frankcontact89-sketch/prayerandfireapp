@@ -20,7 +20,7 @@ jobs:
     env:
       APP_BUNDLE_ID: com.frankcontact89.prayerandfiremobile
       APP_VERSION: '1.1'
-      BUILD_NUMBER: '25'
+      BUILD_NUMBER: '26'
       APPLE_TEAM_ID: 2UU7S882KZ
       APP_STORE_CONNECT_KEY_ID: NGM28WWYM2
 
@@ -77,7 +77,6 @@ jobs:
           end = '-----END PRIVATE KEY-----'
 
           if begin not in key or end not in key:
-              # Accept a base64-encoded .p8 as a fallback.
               compact = re.sub(r'\s+', '', raw)
               try:
                   decoded = base64.b64decode(compact, validate=True).decode('utf-8')
@@ -175,17 +174,24 @@ jobs:
           test -n "$IPA_PATH"
           echo "IPA_PATH=$IPA_PATH" >> "$GITHUB_ENV"
 
-
       - name: Validate with App Store Connect
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
-          set -euo pipefail
-          xcrun altool --validate-app \
+          set -uo pipefail
+          set +e
+          VALIDATION_OUTPUT=$(xcrun altool --validate-app \
             --type ios \
             --file "$IPA_PATH" \
             --apiKey "$APP_STORE_CONNECT_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" 2>&1)
+          VALIDATION_STATUS=$?
+          printf '%s\n' "$VALIDATION_OUTPUT"
+          if [ "$VALIDATION_STATUS" -ne 0 ]; then
+            echo "Apple validation failed with exit code $VALIDATION_STATUS"
+            exit "$VALIDATION_STATUS"
+          fi
+          echo "Apple validation succeeded"
 
       - name: Upload to TestFlight
         env:
