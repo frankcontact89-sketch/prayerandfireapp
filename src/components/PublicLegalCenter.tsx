@@ -133,6 +133,7 @@ export function PublicLegalCenter({ onBack, defaultOpen }: PublicLegalCenterProp
             <AccordionContent className="px-5 pb-5">
               <ul className="space-y-3 text-muted-foreground text-sm leading-relaxed list-disc list-inside">
                 <li><strong className="text-foreground">Data collected:</strong> Name, email, username, optional profile photo, subscription status.</li>
+                <li><strong className="text-foreground">Optional phone number:</strong> Private by default, never shown to other members, and used only for exact-match discovery when someone invites you to a group, if you enable that setting. It can be removed at any time.</li>
                 <li>Payments are handled by Stripe only.</li>
                 <li>We do not sell personal data.</li>
                 <li>Data is used only to operate and improve the app.</li>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Ban, Check, Crown, Flag, Mail, RefreshCw, Search, ShieldCheck, Trash2, User, X } from "lucide-react";
+import { ArrowLeft, Ban, Check, Crown, Flag, Mail, Phone, RefreshCw, Search, ShieldCheck, Trash2, User, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Words } from "./i18n";
 
@@ -23,6 +23,8 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [meId, setMeId] = useState<string | null>(null);
   const [confirmBlock, setConfirmBlock] = useState<P | null>(null);
+  const [inviteMode, setInviteMode] = useState<"email" | "phone">("email");
+  const [invitePhone, setInvitePhone] = useState("");
 
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setMeId(data.user?.id || null)); }, []);
 
@@ -99,6 +101,30 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     onChanged();
   };
 
+  const invitePhoneMember = async () => {
+    if (!canManage || busy) return;
+    const digits = invitePhone.replace(/[^0-9]/g, "");
+    if (digits.length < 8 || digits.length > 15) { setMsg({ kind: "err", text: t.noEligibleMember }); return; }
+    setBusy(true);
+    const { data, error } = await db.rpc("invite_group_member_by_phone", { _group_id: groupId, _phone: `+${digits}` });
+    setBusy(false);
+    if (error) {
+      const m = String(error.message || "");
+      setMsg({ kind: "err", text: m.includes("NO_PERMISSION") ? t.noPermission : m.includes("RATE_LIMITED") ? t.tooManyLookups : t.noEligibleMember });
+      return;
+    }
+    const status = (data as any)?.status;
+    if (status === "added") {
+      setInvitePhone(""); setShowInvite(false);
+      setMsg({ kind: "ok", text: t.memberAdded });
+      await load();
+      onChanged();
+      return;
+    }
+    if (status === "already_member") { setMsg({ kind: "err", text: t.alreadyMemberMsg }); return; }
+    setMsg({ kind: "err", text: t.noEligibleMember });
+  };
+
   const resendInvite = async (i: Invite) => {
     if (!canManage || busy) return;
     setBusy(true);
@@ -155,12 +181,22 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
 
       <div className="shrink-0 px-4 pt-3 pb-2 bg-[#080808]">
         <div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.searchPeople} className="w-full h-11 rounded-xl bg-zinc-900 border border-white/10 pl-9 pr-3 outline-none text-sm" /></div>
-        {mode === "add" && <button onClick={() => setShowInvite((v) => !v)} className="mt-3 w-full h-11 rounded-xl bg-zinc-900 border border-orange-500/30 text-orange-300 text-sm font-bold flex items-center justify-center gap-2"><Mail className="w-4 h-4" />{t.inviteByEmail}</button>}
+        {mode === "add" && <button onClick={() => setShowInvite((v) => !v)} className="mt-3 w-full h-11 rounded-xl bg-zinc-900 border border-orange-500/30 text-orange-300 text-sm font-bold flex items-center justify-center gap-2"><Mail className="w-4 h-4" />{t.inviteByEmailOrPhone}</button>}
         {mode === "add" && showInvite && <div className="mt-3 rounded-2xl bg-zinc-950 border border-white/10 p-3">
-          <p className="text-xs text-zinc-500">{t.inviteHint}</p>
-          <input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder={t.fullName} className="mt-2 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
-          <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} inputMode="email" autoCapitalize="none" placeholder={t.emailLabel} className="mt-2 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
-          <button onClick={sendInvite} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.sendInvite}</button>
+          <div className="flex gap-2">
+            <button onClick={() => setInviteMode("email")} className={`flex-1 h-10 rounded-xl text-xs font-black flex items-center justify-center gap-2 border ${inviteMode === "email" ? "bg-orange-500 text-black border-orange-500" : "bg-zinc-900 text-zinc-300 border-white/10"}`}><Mail className="w-4 h-4" />{t.emailLabel}</button>
+            <button onClick={() => setInviteMode("phone")} className={`flex-1 h-10 rounded-xl text-xs font-black flex items-center justify-center gap-2 border ${inviteMode === "phone" ? "bg-orange-500 text-black border-orange-500" : "bg-zinc-900 text-zinc-300 border-white/10"}`}><Phone className="w-4 h-4" />{t.phoneLabel}</button>
+          </div>
+          {inviteMode === "email" ? <>
+            <p className="mt-3 text-xs text-zinc-500">{t.inviteHint}</p>
+            <input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder={t.fullName} className="mt-2 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
+            <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} inputMode="email" autoCapitalize="none" placeholder={t.emailLabel} className="mt-2 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
+            <button onClick={sendInvite} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.sendInvite}</button>
+          </> : <>
+            <p className="mt-3 text-xs text-zinc-500">{t.phoneInviteHint}</p>
+            <input value={invitePhone} onChange={(e) => setInvitePhone(e.target.value)} inputMode="tel" placeholder="+1 555 000 0000" className="mt-2 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
+            <button onClick={invitePhoneMember} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.addMembers}</button>
+          </>}
         </div>}
         {msg && <div className={`mt-3 flex items-start gap-2 rounded-xl px-3 py-2 text-xs ${msg.kind === "ok" ? "bg-orange-500/10 text-orange-300" : "bg-red-500/10 text-red-300"}`}><span className="flex-1">{msg.text}</span><button onClick={() => setMsg(null)} aria-label={t.cancel}><X className="w-3.5 h-3.5" /></button></div>}
       </div>
