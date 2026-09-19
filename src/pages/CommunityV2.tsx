@@ -80,6 +80,7 @@ export default function CommunityV2(){
  const playedByLabel=L("Played","Reproducido","Reproduzido");
  const deliveredToLabel=L("Delivered","Entregado","Entregue");
  const noOtherRecipientsLabel=L("No other recipients in this group","No hay otros destinatarios en este grupo","Não há outros destinatários neste grupo");
+ const audioPositionLabel=L("Audio position","Posición del audio","Posição do áudio");
  const pushSettingsLabel=L("Notifications","Notificaciones","Notificações");
 
  const[me,setMe]=useState<any>(null);
@@ -426,13 +427,15 @@ export default function CommunityV2(){
 
  const beginMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
   if((event.target as HTMLElement).closest("[data-message-gesture-ignore],button,a,video,input"))return;
-  if(m.mine)swipe.current={id:m.id,x:event.clientX,y:event.clientY,pointerId:event.pointerId,locked:false,offset:0};
+  swipe.current={id:m.id,x:event.clientX,y:event.clientY,pointerId:event.pointerId,locked:false,offset:0};
   press.current=window.setTimeout(()=>setReactBar(m),400);
  };
  const moveMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
   const active=swipe.current;
-  if(!m.mine||!active||active.id!==m.id||active.pointerId!==event.pointerId)return;
+  if(!active||active.id!==m.id||active.pointerId!==event.pointerId)return;
   const dx=event.clientX-active.x,dy=event.clientY-active.y;
+  if((Math.abs(dx)>6||Math.abs(dy)>6)&&press.current)window.clearTimeout(press.current);
+  if(!m.mine)return;
   if(!active.locked){
    if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){swipe.current=null;setSwipeVisual(null);return}
    if(dx>-8||Math.abs(dx)<=Math.abs(dy)+4)return;
@@ -453,6 +456,12 @@ export default function CommunityV2(){
   swipe.current=null;
   setSwipeVisual(null);
   if(active?.id===m.id&&active.locked&&Math.abs(active.offset)>=58)openMessageInfo(m);
+  if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
+ };
+ const cancelMessageGesture=(event:React.PointerEvent<HTMLDivElement>)=>{
+  if(press.current)window.clearTimeout(press.current);
+  swipe.current=null;
+  setSwipeVisual(null);
   if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
  };
 
@@ -638,7 +647,7 @@ export default function CommunityV2(){
        onPointerDown={event=>beginMessageGesture(event,m)}
        onPointerMove={event=>moveMessageGesture(event,m)}
        onPointerUp={event=>endMessageGesture(event,m)}
-       onPointerCancel={event=>endMessageGesture(event,m)}
+       onPointerCancel={cancelMessageGesture}
        style={{WebkitTouchCallout:"none",WebkitUserSelect:reactBar?.id===m.id?"none":undefined,touchAction:"pan-y",transform:swipeVisual?.id===m.id?`translateX(${swipeVisual.offset}px)`:"translateX(0)",transition:swipeVisual?.id===m.id?"none":"transform 180ms ease-out"}}
       className={`group relative max-w-[86%] rounded-2xl px-3 py-2 select-none ${(reactions[m.id]||[]).length?"mb-4":""} ${m.mine?"bg-orange-500 text-black":"bg-zinc-900"}`}
      >
@@ -653,7 +662,7 @@ export default function CommunityV2(){
       {m.media_type==="image"&&m.url&&<img src={m.url} alt="" className="rounded-xl max-h-80"/>}
       {m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline preload="metadata" className="rounded-xl max-h-80"/>}
       {m.media_type==="audio"&&m.url&&(starredIds.has(m.id)||m.starred)&&<div className="flex justify-end -mt-1 mb-1"><Star className="w-3 h-3 fill-current text-orange-500"/></div>}
-       {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)} status={m.mine?messageStatus(m):undefined}/>} 
+       {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)} status={m.mine?messageStatus(m):undefined} seekLabel={audioPositionLabel}/>} 
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
        {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{(starredIds.has(m.id)||m.starred)&&<Star className="w-3 h-3 fill-current text-orange-500"/>}{time}{m.mine&&messageStatusIcon(m)}</div>}
       {(reactions[m.id]||[]).length>0&&<button onClick={ev=>{ev.stopPropagation();const mineRx=(reactions[m.id]||[]).find(r=>r.user_id===me?.id);if(mineRx)react(m,mineRx.emoji);else setRxDetail(m)}} className={`absolute -bottom-3.5 ${m.mine?"left-2":"right-2"} flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] bg-zinc-800 border border-white/10 text-white`}>
@@ -701,7 +710,7 @@ export default function CommunityV2(){
        {messageInfo.media_type==="image"&&messageInfo.url&&<img src={messageInfo.url} alt="" className="rounded-xl max-h-64"/>}
        {messageInfo.media_type==="video"&&messageInfo.url&&<video src={messageInfo.url} controls playsInline preload="metadata" className="rounded-xl max-h-64"/>}
        {messageInfo.media_type==="document"&&messageInfo.url&&<a href={messageInfo.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 py-2"><FileText className="w-5 h-5"/><span>{t.document}</span></a>}
-       {messageInfo.media_type==="audio"&&messageInfo.url&&<AudioBubble url={messageInfo.url} mine avatar={me?.avatar} name={me?.name} time={new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(messageInfo.media_url)} status={messageStatus(messageInfo)}/>} 
+       {messageInfo.media_type==="audio"&&messageInfo.url&&<AudioBubble url={messageInfo.url} mine avatar={me?.avatar} name={me?.name} time={new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(messageInfo.media_url)} status={messageStatus(messageInfo)} seekLabel={audioPositionLabel}/>} 
        {messageInfo.media_type!=="audio"&&<div className="mt-1 flex justify-end items-center gap-1 text-[10px] opacity-70"><time>{new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</time>{messageStatusIcon(messageInfo)}</div>}
       </div>
      </div>

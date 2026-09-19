@@ -45,9 +45,10 @@ type Props = {
   downloadLabel?: string;
   onPlayed?: () => void | Promise<void>;
   status?: "sent" | "delivered" | "read";
+  seekLabel?: string;
 };
 
-export default function AudioBubble({ url, mine, avatar, name, time, errorLabel, resolve, downloadLabel, onPlayed, status }: Props) {
+export default function AudioBubble({ url, mine, avatar, name, time, errorLabel, resolve, downloadLabel, onPlayed, status, seekLabel = "Audio position" }: Props) {
   const ref = useRef<HTMLAudioElement | null>(null);
   const [src, setSrc] = useState(url);
   const [playing, setPlaying] = useState(false);
@@ -197,7 +198,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
             data-message-gesture-ignore
             role="slider"
             tabIndex={0}
-            aria-label="Audio position"
+            aria-label={seekLabel}
             aria-valuemin={0}
             aria-valuemax={Math.max(0, Math.floor(dur))}
             aria-valuenow={Math.max(0, Math.floor(cur))}
