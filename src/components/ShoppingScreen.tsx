@@ -29,20 +29,27 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
   const fetchProducts = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("products")
       .select("*")
       .eq("is_active", true)
       .order("is_featured", { ascending: false })
       .order("created_at", { ascending: false });
 
-    setProducts((data as Product[]) || []);
+    if (error) {
+      console.error("Products could not be loaded", error);
+      setLoadError(true);
+    } else {
+      setLoadError(false);
+      setProducts((data as Product[]) || []);
+    }
     setLoading(false);
   };
 
@@ -69,13 +76,31 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
       </div>
 
       <div style={styles.content}>
-        {products.length === 0 && (
+        {loadError && (
+          <div style={{ textAlign: "center", padding: "40px 16px", color: "#fb923c", fontSize: 15 }}>
+            {t("errorLoading") || "We could not load the store. Check your connection."}
+          </div>
+        )}
+        {!loadError && products.length === 0 && (
           <div style={{ textAlign: "center", padding: "40px 16px", opacity: 0.7, fontSize: 15 }}>
             {t("noResourcesAvailable")}
           </div>
         )}
         {products.map((product) => (
-          <div key={product.id} style={{ ...styles.card, marginBottom: 12 }} onClick={() => setSelectedProduct(product)}>
+          <div
+            key={product.id}
+            role="button"
+            tabIndex={0}
+            aria-label={product.name}
+            style={{ ...styles.card, marginBottom: 12 }}
+            onClick={() => setSelectedProduct(product)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setSelectedProduct(product);
+              }
+            }}
+          >
             <div style={styles.compactRow}>
               <div style={styles.imageBox}>
                 {product.image_url ? (
