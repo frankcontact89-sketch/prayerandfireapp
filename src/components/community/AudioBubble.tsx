@@ -46,9 +46,11 @@ type Props = {
   onPlayed?: () => void | Promise<void>;
   status?: "sent" | "delivered" | "read";
   seekLabel?: string;
+  playLabel?: string;
+  pauseLabel?: string;
 };
 
-export default function AudioBubble({ url, mine, avatar, name, time, errorLabel, resolve, downloadLabel, onPlayed, status, seekLabel = "Audio position" }: Props) {
+export default function AudioBubble({ url, mine, avatar, name, time, errorLabel, resolve, downloadLabel, onPlayed, status, seekLabel = "Audio position", playLabel = "Play", pauseLabel = "Pause" }: Props) {
   const ref = useRef<HTMLAudioElement | null>(null);
   const [src, setSrc] = useState(url);
   const [playing, setPlaying] = useState(false);
@@ -163,8 +165,8 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   };
 
   return (
-    <div className="relative flex items-center gap-3 min-w-[220px]">
-      <div className={`w-10 h-10 rounded-full overflow-hidden shrink-0 grid place-items-center ${mine ? "bg-black/20 text-black" : "bg-zinc-800 text-orange-400"}`}>
+    <div className="relative grid min-w-[236px] grid-cols-[44px_40px_minmax(0,1fr)] items-center gap-2.5">
+      <div className={`h-11 w-11 overflow-hidden rounded-full shrink-0 grid place-items-center ring-1 ${mine ? "bg-foreground/10 text-foreground ring-foreground/10" : "bg-muted text-primary ring-border"}`}>
         {avatar ? (
           <img src={avatar} alt={name || ""} className="w-full h-full object-cover" />
         ) : name ? (
@@ -178,10 +180,10 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
         type="button"
         onClick={toggle}
         onPointerDown={(event) => event.stopPropagation()}
-        aria-label={playing ? "Pause" : "Play"}
-        className={`w-9 h-9 rounded-full grid place-items-center shrink-0 ${mine ? "bg-black/20 text-black" : "bg-orange-500 text-black"}`}
+        aria-label={playing ? pauseLabel : playLabel}
+        className={`h-10 w-10 rounded-full grid place-items-center shrink-0 transition-transform active:scale-95 ${mine ? "bg-foreground/15 text-foreground" : "bg-primary text-primary-foreground"}`}
       >
-        {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-[2px]" />}
+        {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
       </button>
 
       <div className="flex-1 min-w-0">
@@ -202,7 +204,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
             aria-valuemin={0}
             aria-valuemax={Math.max(0, Math.floor(dur))}
             aria-valuenow={Math.max(0, Math.floor(cur))}
-            className="flex items-end gap-[2px] h-8 py-1 cursor-pointer touch-none"
+            className="flex h-9 touch-none cursor-pointer items-center gap-[2px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
             onPointerDown={(event) => {
               event.stopPropagation();
               seeking.current = true;
@@ -240,21 +242,21 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
                 <span
                   key={i}
                   style={{ height: h }}
-                  className={`w-[3px] rounded-full transition-colors ${
-                    active ? (mine ? "bg-black" : "bg-orange-500") : mine ? "bg-black/25" : "bg-zinc-600"
+                    className={`w-[3px] rounded-full transition-colors ${
+                    active ? (mine ? "bg-foreground" : "bg-primary") : mine ? "bg-foreground/25" : "bg-muted-foreground/50"
                   }`}
                 />
               );
             })}
           </div>
         )}
-        <div className={`flex justify-between text-[10px] mt-1 ${mine ? "text-black/70" : "text-zinc-400"}`}>
-          <span>{fmt(playing || cur > 0 ? cur : dur)}</span>
-          <span className="flex items-center gap-1">
+        <div className={`mt-0.5 flex items-center justify-between gap-3 text-xs leading-none ${mine ? "text-foreground/65" : "text-muted-foreground"}`}>
+          <span className="tabular-nums">{fmt(cur)} / {fmt(dur)}</span>
+          <span className="flex shrink-0 items-center gap-0.5 tabular-nums">
             {time}
-            {mine && status === "read" && <CheckCheck className="w-3.5 h-3.5 text-sky-600" />}
-            {mine && status === "delivered" && <CheckCheck className="w-3.5 h-3.5 text-black/50" />}
-            {mine && (!status || status === "sent") && <Check className="w-3.5 h-3.5 text-black/50" />}
+            {mine && status === "read" && <CheckCheck className="h-4 w-4 text-sky-700" />}
+            {mine && status === "delivered" && <CheckCheck className="h-4 w-4 text-foreground/50" />}
+            {mine && (!status || status === "sent") && <Check className="h-4 w-4 text-foreground/50" />}
           </span>
         </div>
       </div>
