@@ -398,17 +398,62 @@ export default function CommunityV2(){
 
 
  const openMessageInfo=async(m:Msg)=>{
-  if(!me||!m.mine)return;
-  setMenu(null);setMessageInfo(m);setMessageInfoReads([]);setMessageInfoPlays([]);setMessageInfoDeliveries([]);setMessageInfoBusy(true);
+   if(!me||!m.mine||!selected)return;
+   setMenu(null);setMessageInfo(m);setMessageInfoReads([]);setMessageInfoPlays([]);setMessageInfoDeliveries([]);setMessageInfoMembers([]);setMessageInfoBusy(true);
+   const membersPromise=db.from("community_group_members").select("user_id,role").eq("group_id",selected.id);
   const readsPromise=db.from("community_message_reads").select("user_id,read_at").eq("message_id",m.id).order("read_at",{ascending:true});
   const deliveriesPromise=db.from("community_message_deliveries").select("user_id,delivered_at").eq("message_id",m.id).order("delivered_at",{ascending:true});
   const playsPromise=m.media_type==="audio"?db.from("community_audio_plays").select("user_id,played_at").eq("message_id",m.id).order("played_at",{ascending:true}):Promise.resolve({data:[],error:null});
-  const [{data:reads,error:readError},{data:deliveries,error:deliveryError},{data:plays,error:playError}]=await Promise.all([readsPromise,deliveriesPromise,playsPromise]);
+   const [{data:memberRows,error:memberError},{data:reads,error:readError},{data:deliveries,error:deliveryError},{data:plays,error:playError}]=await Promise.all([membersPromise,readsPromise,deliveriesPromise,playsPromise]);
+   const recipientRows=(memberRows||[]).filter((row:any)=>row.user_id!==m.sender_id);
+   const recipientIds=recipientRows.map((row:any)=>row.user_id);
+   const{data:profiles,error:profileError}=recipientIds.length?await db.from("profiles").select("id,username,avatar_url").in("id",recipientIds):{data:[],error:null};
   setMessageInfoBusy(false);
-  if(readError||playError||deliveryError){toast(readError?.message||deliveryError?.message||playError?.message||actionFailedLabel);return}
-  setMessageInfoReads((reads||[]).filter((r:any)=>r.user_id!==me.id));
-  setMessageInfoDeliveries((deliveries||[]).filter((r:any)=>r.user_id!==me.id));
-  setMessageInfoPlays((plays||[]).filter((r:any)=>r.user_id!==me.id));
+   if(memberError||profileError||readError||playError||deliveryError){toast(memberError?.message||profileError?.message||readError?.message||deliveryError?.message||playError?.message||actionFailedLabel);return}
+   const currentIds=new Set(recipientIds);
+   const profileMap=new Map((profiles||[]).map((profile:any)=>[profile.id,profile]));
+   const currentMembers=recipientRows.map((row:any)=>{const profile:any=profileMap.get(row.user_id)||{};return{id:row.user_id,name:profile.username||t.member,role:row.role,avatar:profile.avatar_url}});
+   setMessageInfoMembers(currentMembers);
+   setMembers(previous=>{
+    const currentMap=new Map(currentMembers.map(member=>[member.id,member]));
+    if(m.sender_id===me.id)currentMap.set(me.id,{id:me.id,name:me.name||t.member,avatar:me.avatar});
+    return Array.from(currentMap.values());
+   });
+   setMessageInfoReads((reads||[]).filter((receipt:any)=>currentIds.has(receipt.user_id)));
+   setMessageInfoDeliveries((deliveries||[]).filter((receipt:any)=>currentIds.has(receipt.user_id)));
+   setMessageInfoPlays((plays||[]).filter((receipt:any)=>currentIds.has(receipt.user_id)));
+ };
+
+ const beginMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
+  if((event.target as HTMLElement).closest("[data-message-gesture-ignore],button,a,video,input"))return;
+  if(m.mine)swipe.current={id:m.id,x:event.clientX,y:event.clientY,pointerId:event.pointerId,locked:false,offset:0};
+  press.current=window.setTimeout(()=>setReactBar(m),400);
+ };
+ const moveMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
+  const active=swipe.current;
+  if(!m.mine||!active||active.id!==m.id||active.pointerId!==event.pointerId)return;
+  const dx=event.clientX-active.x,dy=event.clientY-active.y;
+  if(!active.locked){
+   if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){swipe.current=null;setSwipeVisual(null);return}
+   if(dx>-8||Math.abs(dx)<=Math.abs(dy)+4)return;
+   active.locked=true;
+   if(press.current)window.clearTimeout(press.current);
+   event.currentTarget.setPointerCapture(event.pointerId);
+  }
+  if(dx>=0)return;
+  event.preventDefault();
+  const distance=Math.min(88,Math.abs(dx));
+  const offset=-(distance<=64?distance:64+(distance-64)*0.35);
+  active.offset=offset;
+  setSwipeVisual({id:m.id,offset});
+ };
+ const endMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
+  if(press.current)window.clearTimeout(press.current);
+  const active=swipe.current;
+  swipe.current=null;
+  setSwipeVisual(null);
+  if(active?.id===m.id&&active.locked&&Math.abs(active.offset)>=58)openMessageInfo(m);
+  if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
  };
 
  const reportAudioPlayed=async(m:Msg)=>{
