@@ -21,8 +21,11 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
       setNote(L("Notifications off on this device", "Notificaciones desactivadas en este dispositivo", "Notificações desativadas neste dispositivo"));
       return;
     }
+    setBusy(true);
     const status = await enablePush();
+    setBusy(false);
     setOn(status === "granted");
+    setFailed(status === "error");
     setNote(
       status === "granted"
         ? L("Notifications on for this device", "Notificaciones activadas en este dispositivo", "Notificações ativadas neste dispositivo")
@@ -30,7 +33,11 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
           ? L("Allow notifications for Prayer & Fire in your phone settings.", "Permite las notificaciones de Prayer & Fire en los ajustes del teléfono.", "Permita as notificações do Prayer & Fire nas configurações do telefone.")
           : status === "unsupported"
             ? L("Available in the Prayer & Fire phone app.", "Disponible en la app de Prayer & Fire para teléfono.", "Disponível no aplicativo Prayer & Fire para celular.")
-            : L("Could not complete the action", "No se pudo completar la acción", "Não foi possível concluir a ação"),
+            : L(
+                "This phone could not register for notifications. Check your internet connection and try again.",
+                "Este teléfono no pudo registrarse para las notificaciones. Revisa tu conexión a internet e inténtalo de nuevo.",
+                "Este telefone não conseguiu se registrar para notificações. Verifique sua conexão com a internet e tente novamente.",
+              ),
     );
   };
 
