@@ -7,7 +7,7 @@ const db: any = supabase;
 
 type P = { id: string; name: string; email?: string | null; avatar?: string | null; role?: string };
 type Invite = { id: string; email: string; full_name: string | null };
-type Props = { t: Words; groupId: string; mode: "add" | "admins"; canManage: boolean; onClose: () => void; onChanged: () => void };
+type Props = { t: Words; groupId: string; mode: "add" | "admins" | "members"; canManage: boolean; onClose: () => void; onChanged: () => void };
 
 export default function MembersModal({ t, groupId, mode, canManage, onClose, onChanged }: Props) {
   const [list, setList] = useState<P[]>([]);
@@ -27,7 +27,7 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     const { data: mems } = await db.from("community_group_members").select("user_id,role").eq("group_id", groupId);
     const memberIds = (mems || []).map((m: any) => m.user_id);
 
-    if (mode === "admins") {
+    if (mode === "admins" || mode === "members") {
       const { data: profs } = memberIds.length ? await db.from("profiles").select("id,username,email,avatar_url").in("id", memberIds) : { data: [] };
       const pm = new Map((profs || []).map((p: any) => [p.id, p]));
       setList(
@@ -121,7 +121,7 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     <div className="fixed inset-0 z-[120] bg-[#080808] text-white flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       <header className="shrink-0 h-14 px-3 flex items-center gap-3 border-b border-white/10 bg-black">
         <button onClick={onClose} aria-label={t.back} className="w-10 h-10 rounded-full bg-zinc-900 grid place-items-center"><ArrowLeft className="w-5 h-5" /></button>
-        <b className="flex-1 truncate">{mode === "add" ? t.addMembers : `${t.members} & ${t.admins}`}</b>
+        <b className="flex-1 truncate">{mode === "add" ? t.addMembers : mode === "members" ? t.currentMembers : `${t.members} & ${t.admins}`}</b>
       </header>
 
       <div className="shrink-0 px-4 pt-3 pb-2 bg-[#080808]">
@@ -144,8 +144,8 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
           const active = chosen.includes(p.id);
           return <div key={p.id} className="flex items-center gap-3 py-2.5 border-b border-white/5">
             <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-900 grid place-items-center text-orange-400 shrink-0">{p.avatar ? <img src={p.avatar} alt="" className="w-full h-full object-cover" /> : p.name ? <span className="font-black text-sm">{p.name[0]?.toUpperCase()}</span> : <User className="w-5 h-5" />}</div>
-            <div className="flex-1 min-w-0"><div className="font-semibold text-sm truncate">{p.name}</div>{mode === "admins" ? <div className="text-[11px] text-zinc-400 flex items-center gap-1">{p.role === "owner" ? <Crown className="w-3 h-3 text-orange-400" /> : p.role === "admin" ? <ShieldCheck className="w-3 h-3 text-orange-400" /> : null}{p.role === "owner" ? t.owner : p.role === "admin" ? t.admin : t.member}</div> : p.email && <div className="text-[11px] text-zinc-500 truncate">{p.email}</div>}</div>
-            {mode === "add" ? <button onClick={() => setChosen((v) => (active ? v.filter((x) => x !== p.id) : [...v, p.id]))} className={`w-7 h-7 rounded-full border grid place-items-center shrink-0 ${active ? "bg-orange-500 border-orange-500 text-black" : "border-zinc-600"}`} aria-label={p.name}>{active && <Check className="w-4 h-4" />}</button> : canManage && p.role !== "owner" && <div className="flex gap-2 shrink-0"><button onClick={() => setRole(p.id, p.role === "admin" ? "member" : "admin")} className="px-3 h-9 rounded-full bg-orange-500/15 text-orange-300 text-xs font-bold border border-orange-500/30">{p.role === "admin" ? t.removeAdmin : t.makeAdmin}</button><button onClick={() => setConfirmRemove(p)} aria-label={t.delete} className="w-9 h-9 rounded-full bg-zinc-900 text-red-400 grid place-items-center"><Trash2 className="w-4 h-4" /></button></div>}
+            <div className="flex-1 min-w-0"><div className="font-semibold text-sm truncate">{p.name}</div>{mode !== "add" ? <div className="text-[11px] text-zinc-400 flex items-center gap-1">{p.role === "owner" ? <Crown className="w-3 h-3 text-orange-400" /> : p.role === "admin" ? <ShieldCheck className="w-3 h-3 text-orange-400" /> : null}{p.role === "owner" ? t.owner : p.role === "admin" ? t.admin : t.member}</div> : p.email && <div className="text-[11px] text-zinc-500 truncate">{p.email}</div>}</div>
+            {mode === "add" ? <button onClick={() => setChosen((v) => (active ? v.filter((x) => x !== p.id) : [...v, p.id]))} className={`w-7 h-7 rounded-full border grid place-items-center shrink-0 ${active ? "bg-orange-500 border-orange-500 text-black" : "border-zinc-600"}`} aria-label={p.name}>{active && <Check className="w-4 h-4" />}</button> : mode === "admins" && canManage && p.role !== "owner" && <div className="flex gap-2 shrink-0"><button onClick={() => setRole(p.id, p.role === "admin" ? "member" : "admin")} className="px-3 h-9 rounded-full bg-orange-500/15 text-orange-300 text-xs font-bold border border-orange-500/30">{p.role === "admin" ? t.removeAdmin : t.makeAdmin}</button><button onClick={() => setConfirmRemove(p)} aria-label={t.delete} className="w-9 h-9 rounded-full bg-zinc-900 text-red-400 grid place-items-center"><Trash2 className="w-4 h-4" /></button></div>}
           </div>;
         })}
 
