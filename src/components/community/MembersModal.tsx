@@ -196,7 +196,13 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
             <button onClick={sendInvite} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.sendInvite}</button>
           </> : <>
             <p className="mt-3 text-xs text-zinc-500">{t.phoneInviteHint}</p>
-            <input value={invitePhone} onChange={(e) => setInvitePhone(e.target.value)} inputMode="tel" placeholder="+1 555 000 0000" className="mt-2 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
+            <div className="mt-2 flex gap-2">
+              <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} aria-label={t.phoneLabel} className="h-11 rounded-xl bg-zinc-900 border border-white/10 px-2 outline-none text-sm text-white">
+                {COUNTRY_CODES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+              </select>
+              <input value={invitePhone} onChange={(e) => setInvitePhone(e.target.value)} inputMode="tel" placeholder="857 261 2862" className="flex-1 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-600">{toE164(invitePhone, countryCode) || ""}</p>
             <button onClick={invitePhoneMember} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.addMembers}</button>
           </>}
         </div>}
