@@ -7,7 +7,7 @@ on:
       - main
     paths:
       # Trigger a new TestFlight run when this workflow definition is updated.
-      # Re-run marker: Build 32 release-mode simulator launch verification.
+      # Re-run marker: Build 33 with corrected simulator process verification.
       - '.github/workflows/testflight-upload.yml'
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
     env:
       APP_BUNDLE_ID: com.frankcontact89.prayerandfiremobile
       APP_VERSION: '1.1'
-      BUILD_NUMBER: '32'
+      BUILD_NUMBER: '33'
       APPLE_TEAM_ID: 2UU7S882KZ
       APP_STORE_CONNECT_KEY_ID: NGM28WWYM2
 
@@ -158,14 +158,14 @@ jobs:
           fi
 
           sleep 10
-          if ! xcrun simctl spawn "$UDID" kill -0 "$PID" 2>/dev/null; then
+          if ! xcrun simctl spawn "$UDID" ps -A 2>/dev/null | grep -E "[[:space:]]${PID}[[:space:]].*App$" >/dev/null; then
             echo "Prayer & Fire exited during startup"
             echo "--- Recent simulator logs ---"
             xcrun simctl spawn "$UDID" log show --last 2m --style compact \
               --predicate 'process == "App" OR eventMessage CONTAINS[c] "prayerandfire"' || true
             exit 1
           fi
-          echo "Prayer & Fire remained running after launch"
+          echo "Prayer & Fire remained running after launch for 10 seconds"
 
       - name: Confirm TestFlight build number
         run: |
