@@ -76,11 +76,11 @@ export default function CommunityV2(){
  const typingManyLabel=L("are typing…","están escribiendo…","estão digitando…");
  const messageInfoLabel=L("Message info","Información del mensaje","Informações da mensagem");
  const readByLabel=L("Read by","Leído por","Lido por");
- const notReadLabel=L("Not read yet","Aún no leído","Ainda não lido");
  const sentLabel=L("Sent","Enviado","Enviado");
- const playedByLabel=L("Played by","Reproducido por","Reproduzido por");
- const deliveredToLabel=L("Delivered to","Entregado a","Entregue a");
- const notDeliveredLabel=L("Not delivered yet","Aún no entregado","Ainda não entregue");
+ const playedByLabel=L("Played","Reproducido","Reproduzido");
+ const deliveredToLabel=L("Delivered","Entregado","Entregue");
+ const noOtherRecipientsLabel=L("No other recipients in this group","No hay otros destinatarios en este grupo","Não há outros destinatários neste grupo");
+ const audioPositionLabel=L("Audio position","Posición del audio","Posição do áudio");
  const pushSettingsLabel=L("Notifications","Notificaciones","Notificações");
 
  const[me,setMe]=useState<any>(null);
@@ -100,7 +100,8 @@ export default function CommunityV2(){
  const[discoverList,setDiscoverList]=useState<DiscoverGroup[]>([]),[discoverLoading,setDiscoverLoading]=useState(false),[noAccessGroup,setNoAccessGroup]=useState<DiscoverGroup|null>(null),[confirmDelGroup,setConfirmDelGroup]=useState(false),[confirmLeave,setConfirmLeave]=useState(false),[showArchived,setShowArchived]=useState(false);
  const file=useRef<HTMLInputElement>(null),photo=useRef<HTMLInputElement>(null),end=useRef<HTMLDivElement>(null);
  const press=useRef<number|null>(null);
- const swipe=useRef<{id:string;x:number;y:number}|null>(null);
+ const swipe=useRef<{id:string;x:number;y:number;pointerId:number;locked:boolean;offset:number}|null>(null);
+ const[swipeVisual,setSwipeVisual]=useState<{id:string;offset:number}|null>(null);
  const msgRefs=useRef<Record<string,HTMLDivElement|null>>({});
  const typingChannel=useRef<any>(null),lastTypingSent=useRef(0);
  const[members,setMembers]=useState<GroupMember[]>([]);
@@ -111,7 +112,7 @@ export default function CommunityV2(){
  const[highlightMsg,setHighlightMsg]=useState<string|null>(null);
  const[blocks,setBlocks]=useState<string[]>([]),[reportFor,setReportFor]=useState<Msg|null>(null),[reportReason,setReportReason]=useState("harassment"),[reportNote,setReportNote]=useState(""),[blockFor,setBlockFor]=useState<Msg|null>(null),[busyMod,setBusyMod]=useState(false);
  const[safety,setSafety]=useState(false);
- const[messageInfo,setMessageInfo]=useState<Msg|null>(null),[messageInfoReads,setMessageInfoReads]=useState<ReadReceipt[]>([]),[messageInfoPlays,setMessageInfoPlays]=useState<PlayReceipt[]>([]),[messageInfoDeliveries,setMessageInfoDeliveries]=useState<DeliveryReceipt[]>([]),[messageInfoBusy,setMessageInfoBusy]=useState(false);
+ const[messageInfo,setMessageInfo]=useState<Msg|null>(null),[messageInfoReads,setMessageInfoReads]=useState<ReadReceipt[]>([]),[messageInfoPlays,setMessageInfoPlays]=useState<PlayReceipt[]>([]),[messageInfoDeliveries,setMessageInfoDeliveries]=useState<DeliveryReceipt[]>([]),[messageInfoMembers,setMessageInfoMembers]=useState<GroupMember[]>([]),[messageInfoBusy,setMessageInfoBusy]=useState(false);
  const REASONS:[string,string][]=[["harassment",t.reasonHarassment],["hate",t.reasonHate],["sexual",t.reasonSexual],["violence",t.reasonViolence],["spam",t.reasonSpam],["privacy",t.reasonPrivacy],["other",t.reasonOther]];
 
  const goBack=()=>{if(window.history.length>1)window.history.back();else window.location.assign("/")};
@@ -398,17 +399,70 @@ export default function CommunityV2(){
 
 
  const openMessageInfo=async(m:Msg)=>{
-  if(!me||!m.mine)return;
-  setMenu(null);setMessageInfo(m);setMessageInfoReads([]);setMessageInfoPlays([]);setMessageInfoDeliveries([]);setMessageInfoBusy(true);
+   if(!me||!m.mine||!selected)return;
+   setMenu(null);setMessageInfo(m);setMessageInfoReads([]);setMessageInfoPlays([]);setMessageInfoDeliveries([]);setMessageInfoMembers([]);setMessageInfoBusy(true);
+   const membersPromise=db.from("community_group_members").select("user_id,role").eq("group_id",selected.id);
   const readsPromise=db.from("community_message_reads").select("user_id,read_at").eq("message_id",m.id).order("read_at",{ascending:true});
   const deliveriesPromise=db.from("community_message_deliveries").select("user_id,delivered_at").eq("message_id",m.id).order("delivered_at",{ascending:true});
   const playsPromise=m.media_type==="audio"?db.from("community_audio_plays").select("user_id,played_at").eq("message_id",m.id).order("played_at",{ascending:true}):Promise.resolve({data:[],error:null});
-  const [{data:reads,error:readError},{data:deliveries,error:deliveryError},{data:plays,error:playError}]=await Promise.all([readsPromise,deliveriesPromise,playsPromise]);
+   const [{data:memberRows,error:memberError},{data:reads,error:readError},{data:deliveries,error:deliveryError},{data:plays,error:playError}]=await Promise.all([membersPromise,readsPromise,deliveriesPromise,playsPromise]);
+   const recipientRows=(memberRows||[]).filter((row:any)=>row.user_id!==m.sender_id);
+   const recipientIds=recipientRows.map((row:any)=>row.user_id);
+   const{data:profiles,error:profileError}=recipientIds.length?await db.from("profiles").select("id,username,avatar_url").in("id",recipientIds):{data:[],error:null};
   setMessageInfoBusy(false);
-  if(readError||playError||deliveryError){toast(readError?.message||deliveryError?.message||playError?.message||actionFailedLabel);return}
-  setMessageInfoReads((reads||[]).filter((r:any)=>r.user_id!==me.id));
-  setMessageInfoDeliveries((deliveries||[]).filter((r:any)=>r.user_id!==me.id));
-  setMessageInfoPlays((plays||[]).filter((r:any)=>r.user_id!==me.id));
+   if(memberError||profileError||readError||playError||deliveryError){toast(memberError?.message||profileError?.message||readError?.message||deliveryError?.message||playError?.message||actionFailedLabel);return}
+   const currentIds=new Set(recipientIds);
+   const profileMap=new Map((profiles||[]).map((profile:any)=>[profile.id,profile]));
+   const currentMembers=recipientRows.map((row:any)=>{const profile:any=profileMap.get(row.user_id)||{};return{id:row.user_id,name:profile.username||t.member,role:row.role,avatar:profile.avatar_url}});
+   setMessageInfoMembers(currentMembers);
+   setMembers(previous=>{
+    const currentMap=new Map(currentMembers.map(member=>[member.id,member]));
+    if(m.sender_id===me.id)currentMap.set(me.id,{id:me.id,name:me.name||t.member,avatar:me.avatar});
+    return Array.from(currentMap.values());
+   });
+   setMessageInfoReads((reads||[]).filter((receipt:any)=>currentIds.has(receipt.user_id)));
+   setMessageInfoDeliveries((deliveries||[]).filter((receipt:any)=>currentIds.has(receipt.user_id)));
+   setMessageInfoPlays((plays||[]).filter((receipt:any)=>currentIds.has(receipt.user_id)));
+ };
+
+ const beginMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
+  if((event.target as HTMLElement).closest("[data-message-gesture-ignore],button,a,video,input"))return;
+  swipe.current={id:m.id,x:event.clientX,y:event.clientY,pointerId:event.pointerId,locked:false,offset:0};
+  press.current=window.setTimeout(()=>setReactBar(m),400);
+ };
+ const moveMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
+  const active=swipe.current;
+  if(!active||active.id!==m.id||active.pointerId!==event.pointerId)return;
+  const dx=event.clientX-active.x,dy=event.clientY-active.y;
+  if((Math.abs(dx)>6||Math.abs(dy)>6)&&press.current)window.clearTimeout(press.current);
+  if(!m.mine)return;
+  if(!active.locked){
+   if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){swipe.current=null;setSwipeVisual(null);return}
+   if(dx>-8||Math.abs(dx)<=Math.abs(dy)+4)return;
+   active.locked=true;
+   if(press.current)window.clearTimeout(press.current);
+   event.currentTarget.setPointerCapture(event.pointerId);
+  }
+  if(dx>=0)return;
+  event.preventDefault();
+  const distance=Math.min(88,Math.abs(dx));
+  const offset=-(distance<=64?distance:64+(distance-64)*0.35);
+  active.offset=offset;
+  setSwipeVisual({id:m.id,offset});
+ };
+ const endMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
+  if(press.current)window.clearTimeout(press.current);
+  const active=swipe.current;
+  swipe.current=null;
+  setSwipeVisual(null);
+  if(active?.id===m.id&&active.locked&&Math.abs(active.offset)>=58)openMessageInfo(m);
+  if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
+ };
+ const cancelMessageGesture=(event:React.PointerEvent<HTMLDivElement>)=>{
+  if(press.current)window.clearTimeout(press.current);
+  swipe.current=null;
+  setSwipeVisual(null);
+  if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
  };
 
  const reportAudioPlayed=async(m:Msg)=>{
@@ -556,6 +610,9 @@ export default function CommunityV2(){
   setMentionQuery(null);
  };
  const renderBody=(text:string)=>text.split(/(@[\p{L}\w.]+)/u).map((part,i)=>part.startsWith("@")?<span key={i} className="font-bold text-orange-300 bg-orange-500/10 rounded px-0.5">{part}</span>:<React.Fragment key={i}>{part}</React.Fragment>);
+ const messageStatus=(m:Msg):"sent"|"delivered"|"read"=>readCounts[m.id]?"read":deliveredCounts[m.id]?"delivered":"sent";
+ const messageStatusIcon=(m:Msg)=>messageStatus(m)==="read"?<CheckCheck className="w-3.5 h-3.5 text-sky-600"/>:messageStatus(m)==="delivered"?<CheckCheck className="w-3.5 h-3.5 text-black/50"/>:<Check className="w-3.5 h-3.5 text-black/50"/>;
+ const receiptRows=(receipts:Array<ReadReceipt|DeliveryReceipt|PlayReceipt>,timeKey:"read_at"|"delivered_at"|"played_at")=>receipts.length===0?<div className="px-4 py-3 text-sm text-zinc-500">—</div>:receipts.map(receipt=>{const person=messageInfoMembers.find(member=>member.id===receipt.user_id);if(!person)return null;const timestamp=String((receipt as any)[timeKey]);return <div key={receipt.user_id} className="px-4 py-3 border-t border-white/5 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden grid place-items-center font-bold text-orange-400 shrink-0">{person.avatar?<img src={person.avatar} alt="" className="w-full h-full object-cover"/>:person.name[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{person.name}</div><div className="text-xs text-zinc-500">{new Date(timestamp).toLocaleDateString()}</div></div><time className="text-sm text-zinc-400">{new Date(timestamp).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</time></div>});
 
  if(access==="loading")return <div className="fixed inset-0 bg-black" />;
  if(access!=="approved")return <AccessGate t={t} status={access} busy={requesting} onRequest={requestAccess} onBack={goBack} />;
@@ -583,13 +640,15 @@ export default function CommunityV2(){
     const dayLabel=dayOf(m.created_at)===today?todayLabel:dayOf(m.created_at)===yest?yesterdayLabel:new Date(m.created_at).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
     return <React.Fragment key={m.id}>
     {showDay&&<div className="flex justify-center py-2"><span className="px-3 py-1 rounded-full bg-zinc-900 border border-white/10 text-[11px] text-zinc-400">{dayLabel}</span></div>}
-    <div ref={el=>{msgRefs.current[m.id]=el}} className={`flex ${m.mine?"justify-end":"justify-start"} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-orange-400/70":""}`}>
+    <div ref={el=>{msgRefs.current[m.id]=el}} className={`relative flex ${m.mine?"justify-end":"justify-start"} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-orange-400/70":""}`}>
+     {m.mine&&<div aria-hidden="true" className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-zinc-900 border border-white/10 grid place-items-center text-orange-400 transition-opacity" style={{opacity:swipeVisual?.id===m.id?Math.min(1,Math.abs(swipeVisual.offset)/45):0}}><Info className="w-4 h-4"/></div>}
      <div
       onContextMenu={e=>{e.preventDefault();setReactBar(m)}}
-      onTouchStart={e=>{const t=e.touches[0];if(m.mine)swipe.current={id:m.id,x:t.clientX,y:t.clientY};press.current=window.setTimeout(()=>setReactBar(m),400)}}
-      onTouchEnd={e=>{if(press.current)window.clearTimeout(press.current);const s=swipe.current;swipe.current=null;if(m.mine&&s?.id===m.id){const t=e.changedTouches[0];const dx=t.clientX-s.x,dy=t.clientY-s.y;if(dx<-55&&Math.abs(dy)<45)openMessageInfo(m)}}}
-      onTouchMove={()=>{if(press.current)window.clearTimeout(press.current)}}
-      style={{WebkitTouchCallout:"none",WebkitUserSelect:reactBar?.id===m.id?"none":undefined}}
+       onPointerDown={event=>beginMessageGesture(event,m)}
+       onPointerMove={event=>moveMessageGesture(event,m)}
+       onPointerUp={event=>endMessageGesture(event,m)}
+       onPointerCancel={cancelMessageGesture}
+       style={{WebkitTouchCallout:"none",WebkitUserSelect:reactBar?.id===m.id?"none":undefined,touchAction:"pan-y",transform:swipeVisual?.id===m.id?`translateX(${swipeVisual.offset}px)`:"translateX(0)",transition:swipeVisual?.id===m.id?"none":"transform 180ms ease-out"}}
       className={`group relative max-w-[86%] rounded-2xl px-3 py-2 select-none ${(reactions[m.id]||[]).length?"mb-4":""} ${m.mine?"bg-orange-500 text-black":"bg-zinc-900"}`}
      >
       {reactBar?.id===m.id&&<div className={`absolute -top-14 z-40 ${m.mine?"right-0":"left-0"} flex items-center gap-1 rounded-full bg-zinc-950 border border-orange-500/40 shadow-xl shadow-black/60 px-2 py-1.5`}>
@@ -603,9 +662,9 @@ export default function CommunityV2(){
       {m.media_type==="image"&&m.url&&<img src={m.url} alt="" className="rounded-xl max-h-80"/>}
       {m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline preload="metadata" className="rounded-xl max-h-80"/>}
       {m.media_type==="audio"&&m.url&&(starredIds.has(m.id)||m.starred)&&<div className="flex justify-end -mt-1 mb-1"><Star className="w-3 h-3 fill-current text-orange-500"/></div>}
-      {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)}/>} 
+       {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)} status={m.mine?messageStatus(m):undefined} seekLabel={audioPositionLabel}/>} 
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
-      {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{(starredIds.has(m.id)||m.starred)&&<Star className="w-3 h-3 fill-current text-orange-500"/>}{time}{m.mine&&(readCounts[m.id]?<CheckCheck className="w-3.5 h-3.5 text-sky-600"/>:deliveredCounts[m.id]?<CheckCheck className="w-3.5 h-3.5 text-black/50"/>:<Check className="w-3.5 h-3.5 text-black/50"/>)}</div>}
+       {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{(starredIds.has(m.id)||m.starred)&&<Star className="w-3 h-3 fill-current text-orange-500"/>}{time}{m.mine&&messageStatusIcon(m)}</div>}
       {(reactions[m.id]||[]).length>0&&<button onClick={ev=>{ev.stopPropagation();const mineRx=(reactions[m.id]||[]).find(r=>r.user_id===me?.id);if(mineRx)react(m,mineRx.emoji);else setRxDetail(m)}} className={`absolute -bottom-3.5 ${m.mine?"left-2":"right-2"} flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] bg-zinc-800 border border-white/10 text-white`}>
        {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
        {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
@@ -642,29 +701,29 @@ export default function CommunityV2(){
    {menu.sender_id!==me?.id&&<button onClick={()=>{const mm=menu;setMenu(null);setBlockFor(mm)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Ban className="w-5 h-5"/><span>{t.block}</span></button>}
    {(menu.sender_id===me?.id||canManageGroup(selected))&&<button onClick={()=>{setConfirmDel(menu);setMenu(null)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Trash2 className="w-5 h-5"/><span>{t.deleteMsg}</span></button>}
   </div></div>}
-  {messageInfo&&<div className="fixed inset-0 z-[70] bg-[#f3f4f6] text-black overflow-y-auto" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
-   <header className="sticky top-0 z-20 h-16 bg-white/95 border-b border-black/10 px-3 flex items-center gap-3"><button onClick={()=>setMessageInfo(null)} className="w-10 h-10 grid place-items-center"><ArrowLeft/></button><b className="flex-1 text-center pr-10">{messageInfoLabel}</b></header>
-   <div className="max-w-xl mx-auto p-4">
-    <div className="rounded-2xl bg-white border border-black/10 p-4">
-     <div className="text-xs text-zinc-500 mb-2">{sentLabel}</div>
-     <div className="flex items-center justify-between gap-3"><span className="font-semibold">{new Date(messageInfo.created_at).toLocaleDateString()}</span><span className="text-zinc-500">{new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</span></div>
+   {messageInfo&&<div className="fixed inset-0 z-[70] bg-background text-foreground overflow-y-auto" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
+    <header className="sticky top-0 z-20 h-16 bg-background/95 border-b border-border px-3 flex items-center gap-3"><button onClick={()=>setMessageInfo(null)} aria-label={t.back} className="w-10 h-10 grid place-items-center"><ArrowLeft/></button><b className="flex-1 text-center pr-10">{messageInfoLabel}</b></header>
+    <div className="max-w-xl mx-auto px-4 py-5">
+     <div className="flex justify-end pb-5">
+      <div className="max-w-[88%] rounded-2xl bg-primary text-primary-foreground px-3 py-2">
+       {messageInfo.body&&<p className="whitespace-pre-wrap break-words">{renderBody(messageInfo.body)}</p>}
+       {messageInfo.media_type==="image"&&messageInfo.url&&<img src={messageInfo.url} alt="" className="rounded-xl max-h-64"/>}
+       {messageInfo.media_type==="video"&&messageInfo.url&&<video src={messageInfo.url} controls playsInline preload="metadata" className="rounded-xl max-h-64"/>}
+       {messageInfo.media_type==="document"&&messageInfo.url&&<a href={messageInfo.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 py-2"><FileText className="w-5 h-5"/><span>{t.document}</span></a>}
+       {messageInfo.media_type==="audio"&&messageInfo.url&&<AudioBubble url={messageInfo.url} mine avatar={me?.avatar} name={me?.name} time={new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(messageInfo.media_url)} status={messageStatus(messageInfo)} seekLabel={audioPositionLabel}/>} 
+       {messageInfo.media_type!=="audio"&&<div className="mt-1 flex justify-end items-center gap-1 text-[10px] opacity-70"><time>{new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</time>{messageStatusIcon(messageInfo)}</div>}
+      </div>
+     </div>
+     <div className="border-y border-border bg-card">
+      <div className="px-4 py-3 flex items-center gap-3"><Check className="w-5 h-5 text-muted-foreground"/><span className="font-semibold flex-1">{sentLabel}</span><div className="text-right text-sm text-muted-foreground"><div>{new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div><div className="text-xs">{new Date(messageInfo.created_at).toLocaleDateString()}</div></div></div>
+      {messageInfoBusy?<div className="px-4 py-5 text-sm text-muted-foreground border-t border-border">{t.loading}</div>:messageInfoMembers.length===0?<div className="px-4 py-5 text-sm text-muted-foreground border-t border-border">{noOtherRecipientsLabel}</div>:<>
+       <section className="border-t border-border"><div className="px-4 py-3 flex items-center gap-3"><CheckCheck className="w-5 h-5 text-sky-500"/><span className="font-semibold">{readByLabel}</span></div>{receiptRows(messageInfoReads,"read_at")}</section>
+       <section className="border-t border-border"><div className="px-4 py-3 flex items-center gap-3"><CheckCheck className="w-5 h-5 text-muted-foreground"/><span className="font-semibold">{deliveredToLabel}</span></div>{receiptRows(messageInfoDeliveries,"delivered_at")}</section>
+       {messageInfo.media_type==="audio"&&<section className="border-t border-border"><div className="px-4 py-3 flex items-center gap-3"><Mic className="w-5 h-5 text-primary"/><span className="font-semibold">{playedByLabel}</span></div>{receiptRows(messageInfoPlays,"played_at")}</section>}
+      </>}
+     </div>
     </div>
-    {messageInfo.media_type==="audio"&&<div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
-     <div className="px-4 py-3 border-b border-black/10 font-bold flex items-center gap-2"><Mic className="w-5 h-5 text-sky-500"/>{playedByLabel}</div>
-     {messageInfoBusy?<div className="p-4 text-sm text-zinc-500">{t.loading}</div>:messageInfoPlays.length===0?<div className="p-4 text-sm text-zinc-500">{notReadLabel}</div>:messageInfoPlays.map(r=>{const p=members.find(x=>x.id===r.user_id);return <div key={r.user_id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p?.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:(p?.name||t.member)[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{p?.name||t.member}</div><div className="text-xs text-zinc-500">{new Date(r.played_at).toLocaleDateString()}</div></div><div className="text-sm text-zinc-600">{new Date(r.played_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div>})}
-    </div>}
-    <div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
-     <div className="px-4 py-3 border-b border-black/10 font-bold flex items-center gap-2"><CheckCheck className="w-5 h-5 text-zinc-500"/>{deliveredToLabel}</div>
-     {messageInfoBusy?<div className="p-4 text-sm text-zinc-500">{t.loading}</div>:messageInfoDeliveries.length===0?<div className="p-4 text-sm text-zinc-500">{notDeliveredLabel}</div>:messageInfoDeliveries.map(r=>{const p=members.find(x=>x.id===r.user_id);return <div key={r.user_id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p?.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:(p?.name||t.member)[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{p?.name||t.member}</div><div className="text-xs text-zinc-500">{new Date(r.delivered_at).toLocaleDateString()}</div></div><div className="text-sm text-zinc-600">{new Date(r.delivered_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div>})}
-    </div>
-    <div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
-     <div className="px-4 py-3 border-b border-black/10 font-bold flex items-center gap-2"><CheckCheck className="w-5 h-5 text-sky-500"/>{readByLabel}</div>
-
-     {messageInfoBusy?<div className="p-4 text-sm text-zinc-500">{t.loading}</div>:messageInfoReads.length===0?<div className="p-4 text-sm text-zinc-500">{notReadLabel}</div>:messageInfoReads.map(r=>{const p=members.find(x=>x.id===r.user_id);return <div key={r.user_id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p?.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:(p?.name||t.member)[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{p?.name||t.member}</div><div className="text-xs text-zinc-500">{new Date(r.read_at).toLocaleDateString()}</div></div><div className="text-sm text-zinc-600">{new Date(r.read_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div>})}
-    </div>
-    {!messageInfoBusy&&<div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden"><div className="px-4 py-3 border-b border-black/10 font-bold">{notReadLabel}</div>{members.filter(p=>p.id!==me?.id&&!messageInfoReads.some(r=>r.user_id===p.id)).length===0?<div className="p-4 text-sm text-zinc-500">—</div>:members.filter(p=>p.id!==me?.id&&!messageInfoReads.some(r=>r.user_id===p.id)).map(p=><div key={p.id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:p.name[0]?.toUpperCase()}</div><span className="font-semibold truncate">{p.name}</span></div>)}</div>}
-   </div>
-  </div>}
+   </div>}
   <ReactionEmojiPicker open={!!emojiPicker} title={emojiTitle} selected={emojiPicker?(reactions[emojiPicker.id]||[]).find(r=>r.user_id===me?.id)?.emoji:undefined} onClose={()=>setEmojiPicker(null)} onPick={emoji=>emojiPicker&&react(emojiPicker,emoji)}/>
   {reactBar&&<div className="fixed inset-0 z-30" onClick={()=>setReactBar(null)}/>} 
   {rxDetail&&<div className="fixed inset-0 z-50 bg-black/80 flex items-end" onClick={()=>setRxDetail(null)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-4 pb-[max(20px,env(safe-area-inset-bottom))] max-h-[70vh] overflow-y-auto">

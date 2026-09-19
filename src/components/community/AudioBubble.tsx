@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Pause, Play, User } from "lucide-react";
+import { Check, CheckCheck, Pause, Play, User } from "lucide-react";
 
 const fmt = (s: number) => {
   if (!isFinite(s) || s < 0) s = 0;
@@ -44,9 +44,11 @@ type Props = {
   resolve?: () => Promise<string | undefined>;
   downloadLabel?: string;
   onPlayed?: () => void | Promise<void>;
+  status?: "sent" | "delivered" | "read";
+  seekLabel?: string;
 };
 
-export default function AudioBubble({ url, mine, avatar, name, time, errorLabel, resolve, downloadLabel, onPlayed }: Props) {
+export default function AudioBubble({ url, mine, avatar, name, time, errorLabel, resolve, downloadLabel, onPlayed, status, seekLabel = "Audio position" }: Props) {
   const ref = useRef<HTMLAudioElement | null>(null);
   const [src, setSrc] = useState(url);
   const [playing, setPlaying] = useState(false);
@@ -58,6 +60,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   const objUrl = useRef<string | null>(null);
   const wantPlay = useRef(false);
   const playedReported = useRef(false);
+  const seeking = useRef(false);
 
   useEffect(() => {
     stage.current = 0;
@@ -148,6 +151,17 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   const pct = dur > 0 ? Math.min(100, (cur / dur) * 100) : 0;
   const bars = 26;
 
+  const seekAt = (element: HTMLDivElement, clientX: number) => {
+    const audio = ref.current;
+    if (!audio || !isFinite(audio.duration) || audio.duration <= 0) return;
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    audio.currentTime = ratio * audio.duration;
+    setCur(audio.currentTime);
+    setDur(audio.duration);
+  };
+
   return (
     <div className="relative flex items-center gap-3 min-w-[220px]">
       <div className={`w-10 h-10 rounded-full overflow-hidden shrink-0 grid place-items-center ${mine ? "bg-black/20 text-black" : "bg-zinc-800 text-orange-400"}`}>
@@ -163,6 +177,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
       <button
         type="button"
         onClick={toggle}
+        onPointerDown={(event) => event.stopPropagation()}
         aria-label={playing ? "Pause" : "Play"}
         className={`w-9 h-9 rounded-full grid place-items-center shrink-0 ${mine ? "bg-black/20 text-black" : "bg-orange-500 text-black"}`}
       >
@@ -179,7 +194,45 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
             </a>
           </div>
         ) : (
-          <div className="flex items-end gap-[2px] h-6">
+          <div
+            data-message-gesture-ignore
+            role="slider"
+            tabIndex={0}
+            aria-label={seekLabel}
+            aria-valuemin={0}
+            aria-valuemax={Math.max(0, Math.floor(dur))}
+            aria-valuenow={Math.max(0, Math.floor(cur))}
+            className="flex items-end gap-[2px] h-8 py-1 cursor-pointer touch-none"
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              seeking.current = true;
+              event.currentTarget.setPointerCapture(event.pointerId);
+              seekAt(event.currentTarget, event.clientX);
+            }}
+            onPointerMove={(event) => {
+              if (!seeking.current) return;
+              event.stopPropagation();
+              seekAt(event.currentTarget, event.clientX);
+            }}
+            onPointerUp={(event) => {
+              event.stopPropagation();
+              seeking.current = false;
+              if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+            }}
+            onPointerCancel={(event) => {
+              event.stopPropagation();
+              seeking.current = false;
+            }}
+            onKeyDown={(event) => {
+              const audio = ref.current;
+              if (!audio || !isFinite(audio.duration) || audio.duration <= 0) return;
+              if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+              event.preventDefault();
+              const next = Math.max(0, Math.min(audio.duration, audio.currentTime + (event.key === "ArrowRight" ? 5 : -5)));
+              audio.currentTime = next;
+              setCur(next);
+            }}
+          >
             {Array.from({ length: bars }).map((_, i) => {
               const active = (i / bars) * 100 <= pct;
               const h = 6 + ((i * 7) % 16);
@@ -197,7 +250,12 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
         )}
         <div className={`flex justify-between text-[10px] mt-1 ${mine ? "text-black/70" : "text-zinc-400"}`}>
           <span>{fmt(playing || cur > 0 ? cur : dur)}</span>
-          <span>{time}</span>
+          <span className="flex items-center gap-1">
+            {time}
+            {mine && status === "read" && <CheckCheck className="w-3.5 h-3.5 text-sky-600" />}
+            {mine && status === "delivered" && <CheckCheck className="w-3.5 h-3.5 text-black/50" />}
+            {mine && (!status || status === "sent") && <Check className="w-3.5 h-3.5 text-black/50" />}
+          </span>
         </div>
       </div>
 
