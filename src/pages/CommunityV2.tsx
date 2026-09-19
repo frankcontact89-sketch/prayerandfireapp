@@ -74,6 +74,10 @@ export default function CommunityV2(){
  const notReadLabel=L("Not read yet","Aún no leído","Ainda não lido");
  const sentLabel=L("Sent","Enviado","Enviado");
  const playedByLabel=L("Played by","Reproducido por","Reproduzido por");
+ const deliveredToLabel=L("Delivered to","Entregado a","Entregue a");
+ const notDeliveredLabel=L("Not delivered yet","Aún no entregado","Ainda não entregue");
+ const pushSettingsLabel=L("Notifications","Notificaciones","Notificações");
+
  const[me,setMe]=useState<any>(null);
  const[access,setAccess]=useState<"loading"|"none"|"pending"|"rejected"|"approved">("loading");
  const[staffRole,setStaffRole]=useState<"owner"|"admin"|null>(null);
@@ -83,7 +87,10 @@ export default function CommunityV2(){
  const[pendingCount,setPendingCount]=useState(0);
  const[membersModal,setMembersModal]=useState<null|"add"|"admins"|"members">(null);
  const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups"|"discover">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[emojiPicker,setEmojiPicker]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[flash,setFlash]=useState("");
- const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[readCounts,setReadCounts]=useState<Record<string,number>>({});
+ const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[readCounts,setReadCounts]=useState<Record<string,number>>({}),[deliveredCounts,setDeliveredCounts]=useState<Record<string,number>>({});
+ const[pushSheet,setPushSheet]=useState(false);
+ const pendingDeepLink=useRef<{groupId:string;messageId?:string}|null>(null);
+
  const[listLoading,setListLoading]=useState(true),[listError,setListError]=useState(false);
  const[discoverList,setDiscoverList]=useState<DiscoverGroup[]>([]),[discoverLoading,setDiscoverLoading]=useState(false),[noAccessGroup,setNoAccessGroup]=useState<DiscoverGroup|null>(null),[confirmDelGroup,setConfirmDelGroup]=useState(false),[confirmLeave,setConfirmLeave]=useState(false),[showArchived,setShowArchived]=useState(false);
  const file=useRef<HTMLInputElement>(null),photo=useRef<HTMLInputElement>(null),end=useRef<HTMLDivElement>(null);
