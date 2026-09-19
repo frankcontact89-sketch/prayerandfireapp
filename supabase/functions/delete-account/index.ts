@@ -116,6 +116,9 @@ Deno.serve(async (req) => {
     }
     await admin.from("community_messages").delete().eq("sender_id", uid);
 
+    await admin.from("user_phone_numbers").delete().eq("user_id", uid);
+    await admin.from("phone_lookup_attempts").delete().eq("user_id", uid);
+    await admin.from("community_message_stars").delete().eq("user_id", uid);
     await admin.from("community_blocks").delete().eq("blocker_id", uid);
     await admin.from("community_blocks").delete().eq("blocked_id", uid);
     await admin.from("community_group_members").delete().eq("user_id", uid);
