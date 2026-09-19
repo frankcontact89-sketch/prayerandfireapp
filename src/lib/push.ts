@@ -14,6 +14,12 @@ export type PushStatus = "unsupported" | "granted" | "denied" | "error";
 let listenersReady = false;
 let currentToken: string | null = null;
 
+// Resolved when APNs/FCM actually hands us a device token (or reports an error).
+type RegistrationWaiter = { resolve: (token: string) => void; reject: (err: Error) => void };
+let waiters: RegistrationWaiter[] = [];
+const settleToken = (token: string) => { waiters.forEach((w) => w.resolve(token)); waiters = []; };
+const settleError = (message: string) => { waiters.forEach((w) => w.reject(new Error(message))); waiters = []; };
+
 const core = async () => (await import("@capacitor/core")).Capacitor;
 const plugin = async () => (await import("@capacitor/push-notifications")).PushNotifications;
 
