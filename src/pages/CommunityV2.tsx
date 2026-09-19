@@ -11,14 +11,19 @@ import ReactionEmojiPicker from"@/components/community/ReactionEmojiPicker";
 import{dict,getLang}from"@/components/community/i18n";
 import{isBlockedContent}from"@/lib/content-filter";
 import SafetyRulesModal from"@/components/community/SafetyRulesModal";
+import PushToggle from"@/components/community/PushToggle";
+import{ackDelivered,enablePush,pushPreferred,resumePush,takePushOpen}from"@/lib/push";
 import entryLogo from"@/assets/prayer-fire-entry-logo.png";
+
 
 type Group=CreatedGroup&{role?:string;createdBy?:string;muted?:boolean;mutedUntil?:string|null;archived?:boolean;favorite?:boolean;memberCount?:number;description?:string};
 type DiscoverGroup={id:string;name:string;description?:string|null;avatar?:string;memberCount:number};
 type Msg={id:string;sender_id:string;body?:string|null;media_url?:string|null;media_type?:string|null;created_at:string;deleted_at?:string|null;starred?:boolean;reply_to?:string|null;pinned_at?:string|null;mine?:boolean;url?:string};
 type GroupMember={id:string;name:string;role?:string;avatar?:string|null};
 type ReadReceipt={user_id:string;read_at:string};
+type DeliveryReceipt={user_id:string;delivered_at:string};
 type PlayReceipt={user_id:string;played_at:string};
+
 type Sender={name:string;avatar?:string|null};
 const db:any=supabase;
 const EMOJIS=["👍","❤️","😂","😮","😢","🙏","🔥"];
@@ -179,15 +184,22 @@ export default function CommunityV2(){
   if(ids.length)await loadReactions(ids);else setReactions({});
   const myId=uid||me?.id;
   if(ids.length&&myId){
-   const unreadOthers=rows.filter((r:any)=>r.sender_id!==myId&&!r.deleted_at).map((r:any)=>({message_id:r.id,user_id:myId}));
+   const fromOthers=rows.filter((r:any)=>r.sender_id!==myId&&!r.deleted_at).map((r:any)=>r.id);
+   // Real device acknowledgement: these messages actually reached this device.
+   if(fromOthers.length)await ackDelivered(fromOthers);
+   const unreadOthers=fromOthers.map((id:string)=>({message_id:id,user_id:myId}));
    if(unreadOthers.length)await db.from("community_message_reads").upsert(unreadOthers,{onConflict:"message_id,user_id",ignoreDuplicates:true});
    const mineIds=rows.filter((r:any)=>r.sender_id===myId).map((r:any)=>r.id);
    if(mineIds.length){
     const{data:rd}=await db.from("community_message_reads").select("message_id,user_id").in("message_id",mineIds);
     const counts:Record<string,number>={};(rd||[]).forEach((r:any)=>{if(r.user_id!==myId)counts[r.message_id]=(counts[r.message_id]||0)+1});
     setReadCounts(counts);
-   }else setReadCounts({});
+    const{data:dd}=await db.from("community_message_deliveries").select("message_id,user_id").in("message_id",mineIds);
+    const dc:Record<string,number>={};(dd||[]).forEach((r:any)=>{if(r.user_id!==myId)dc[r.message_id]=(dc[r.message_id]||0)+1});
+    setDeliveredCounts(dc);
+   }else{setReadCounts({});setDeliveredCounts({})}
   }
+
   setTimeout(()=>end.current?.scrollIntoView({behavior:"smooth"}),30);
  },[me?.id,loadSenders,loadReactions]);
 
