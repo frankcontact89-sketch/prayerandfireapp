@@ -80,9 +80,9 @@ export default function CreateGroupModal({ open, onClose, onCreate, language }: 
 
   return <div className="fixed inset-0 z-[100] bg-[#080808] text-white flex flex-col" style={{paddingTop:"env(safe-area-inset-top)"}}>
     <header className="shrink-0 h-14 px-3 flex items-center gap-3 border-b border-white/10 bg-black">
-      <button onClick={step===2?()=>setStep(1):close} className="w-10 h-10 grid place-items-center rounded-full bg-zinc-900"><ArrowLeft/></button>
+      <button onClick={step===2?()=>setStep(1):close} aria-label="Back" className="w-11 h-11 grid place-items-center rounded-full bg-zinc-900"><ArrowLeft/></button>
       <div className="flex-1 min-w-0"><h2 className="font-black text-base truncate">{t.newGroup}</h2><p className="text-[11px] text-zinc-400 truncate">{step===1?t.choose:t.subject}</p></div>
-      <button onClick={close} className="w-9 h-9 grid place-items-center text-zinc-400"><X/></button>
+      <button onClick={close} aria-label="Close" className="w-11 h-11 grid place-items-center text-zinc-400"><X/></button>
     </header>
 
     {step===1 ? <><div className="shrink-0 px-4 pt-3 pb-2 max-w-xl w-full mx-auto">

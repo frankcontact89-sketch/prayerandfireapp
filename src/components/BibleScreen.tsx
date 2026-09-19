@@ -796,7 +796,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
       <div className="flex items-center justify-between px-4 py-2 gap-3 min-h-[48px]">
         <div className="flex items-center gap-3 min-w-0">
           {onBack && (
-            <button onClick={onBack} className="text-orange-500 shrink-0">
+            <button onClick={onBack} aria-label={tr("back", "Back")} className="text-orange-500 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -ml-2">
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
