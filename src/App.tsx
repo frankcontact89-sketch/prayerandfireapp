@@ -2,21 +2,20 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, HashRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/IndexWithCommunity";
 import ResetPassword from "./pages/ResetPassword";
 import OAuthConsent from "./pages/OAuthConsent";
 import Community from "./pages/CommunityV2";
 
 const queryClient = new QueryClient();
-const Router = window.location.protocol === "capacitor:" ? HashRouter : BrowserRouter;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <Router>
+      <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/community" element={<Community />} />
@@ -24,7 +23,7 @@ const App = () => (
           <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="*" element={<Index />} />
         </Routes>
-      </Router>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
