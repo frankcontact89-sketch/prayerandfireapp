@@ -187,7 +187,8 @@ export default function CommunityV2(){
 
  useEffect(()=>{if(filter==="discover"&&access==="approved")loadDiscover()},[filter,access,loadDiscover]);
 
- const visible=useMemo(()=>groups.filter(g=>!g.archived&&(filter!=="unread"||g.unread>0)&&(g.name+" "+g.subtitle).toLowerCase().includes(q.toLowerCase())),[groups,q,filter]);
+ const visible=useMemo(()=>groups.filter(g=>(showArchived?!!g.archived:!g.archived)&&(filter!=="unread"||g.unread>0)&&(g.name+" "+g.subtitle).toLowerCase().includes(q.toLowerCase())),[groups,q,filter,showArchived]);
+ const archivedCount=useMemo(()=>groups.filter(g=>g.archived).length,[groups]);
 
  const requestAccess=async()=>{
   if(!me)return;setRequesting(true);
