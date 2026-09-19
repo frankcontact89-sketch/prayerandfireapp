@@ -49,5 +49,5 @@ jobs:
           grep -q 'PRODUCT_BUNDLE_IDENTIFIER = com.frankcontact89.prayerandfiremobile;' ios/App/App.xcodeproj/project.pbxproj
           grep -q 'capacitor.config.json in Resources' ios/App/App.xcodeproj/project.pbxproj
           grep -q 'public in Resources' ios/App/App.xcodeproj/project.pbxproj
-          test "$(grep -c 'CURRENT_PROJECT_VERSION = 37;' ios/App/App.xcodeproj/project.pbxproj)" -eq 2
+          test "$(grep -c 'CURRENT_PROJECT_VERSION = 38;' ios/App/App.xcodeproj/project.pbxproj)" -eq 2
           test "$(grep -c 'MARKETING_VERSION = 1.1;' ios/App/App.xcodeproj/project.pbxproj)" -eq 2

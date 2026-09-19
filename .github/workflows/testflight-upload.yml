@@ -7,7 +7,7 @@ on:
       - main
     paths:
       # Trigger a new TestFlight run when this workflow definition is updated.
-      # Re-run marker: Build 37 with latest Community fixes and exact Prayer & Fire icon.
+      # Re-run marker: Build 38 with latest Community/profile/privacy fixes and exact Prayer & Fire icon.
       - '.github/workflows/testflight-upload.yml'
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
     env:
       APP_BUNDLE_ID: com.frankcontact89.prayerandfiremobile
       APP_VERSION: '1.1'
-      BUILD_NUMBER: '37'
+      BUILD_NUMBER: '38'
       APPLE_TEAM_ID: 2UU7S882KZ
       APP_STORE_CONNECT_KEY_ID: NGM28WWYM2
 
