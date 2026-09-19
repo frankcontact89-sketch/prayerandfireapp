@@ -7,7 +7,7 @@ on:
       - main
     paths:
       # Trigger a new TestFlight run when this workflow definition is updated.
-      # Re-run marker: Community permissions update published.
+      # Re-run marker: Fix bundle identifier collision for embedded dependencies.
       - '.github/workflows/testflight-upload.yml'
 
 permissions:
