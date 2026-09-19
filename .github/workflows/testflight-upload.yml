@@ -7,7 +7,7 @@ on:
       - main
     paths:
       # Trigger a new TestFlight run when this workflow definition is updated.
-      # Re-run marker: Fix bundle identifier collision for embedded dependencies.
+      # Re-run marker: Remove global PRODUCT_BUNDLE_IDENTIFIER override.
       - '.github/workflows/testflight-upload.yml'
 
 permissions:
@@ -125,7 +125,6 @@ jobs:
             -authenticationKeyPath "$KEY_PATH" \
             -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
-            PRODUCT_BUNDLE_IDENTIFIER="$APP_BUNDLE_ID" \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             MARKETING_VERSION="$APP_VERSION" \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
