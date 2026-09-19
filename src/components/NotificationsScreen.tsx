@@ -21,7 +21,6 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log("[NotificationsScreen] Mounting...");
     
     fetchNotifications();
 
@@ -32,15 +31,12 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     const channel = supabase
       .channel('notifications-screen-changes')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
-        console.log("[NotificationsScreen] New notification received via realtime:", payload.new);
         fetchNotifications();
       })
       .subscribe((status) => {
-        console.log("[NotificationsScreen] Realtime subscription status:", status);
       });
 
     return () => {
-      console.log("[NotificationsScreen] Unmounting...");
       supabase.removeChannel(channel);
     };
   }, []);
@@ -48,12 +44,10 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   const fetchNotifications = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.log("[NotificationsScreen] No user, skipping fetch");
       setLoading(false);
       return;
     }
 
-    console.log("[NotificationsScreen] Fetching notifications for user:", user.id);
 
     const { data, error } = await supabase
       .from("notifications")
@@ -65,7 +59,6 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
       console.error("[NotificationsScreen] Fetch error:", error);
       toast({ title: t("error"), description: t("failedToLoadNotifications"), variant: "destructive" });
     } else {
-      console.log("[NotificationsScreen] Fetched notifications:", data?.length || 0, data);
       setNotifications((data || []) as Notification[]);
     }
 
@@ -73,7 +66,6 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
   };
 
   const markAsRead = async (id: string) => {
-    console.log("[NotificationsScreen] Marking as read:", id);
     const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
     if (error) {
       console.error("[NotificationsScreen] markAsRead error:", error);
@@ -86,23 +78,32 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    console.log("[NotificationsScreen] Marking all as read");
 
     // Mark user-specific notifications as read in the backend
-    await supabase
+    const { error } = await supabase
       .from("notifications")
       .update({ is_read: true })
       .eq("user_id", user.id)
       .eq("is_read", false);
 
-    // Update local state
+    if (error) {
+      console.error("Marking notifications as read failed", error);
+      toast({ title: t("error"), description: t("contentLoadError"), variant: "destructive" });
+      return;
+    }
+
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     toast({ title: t("success"), description: t("allMarkedAsRead") });
   };
   const deleteAllRead = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    await supabase.from("notifications").delete().or(`user_id.eq.${user.id},user_id.is.null`).eq("is_read", true);
+    const { error } = await supabase.from("notifications").delete().or(`user_id.eq.${user.id},user_id.is.null`).eq("is_read", true);
+    if (error) {
+      console.error("Deleting read notifications failed", error);
+      toast({ title: t("error"), description: t("contentLoadError"), variant: "destructive" });
+      return;
+    }
     toast({ title: t("success"), description: t("readNotificationsDeleted") });
     fetchNotifications();
   };
