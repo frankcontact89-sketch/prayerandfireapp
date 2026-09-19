@@ -7,7 +7,7 @@ on:
       - main
     paths:
       # Trigger a new TestFlight run when this workflow definition is updated.
-      # Re-run marker: Remove global PRODUCT_BUNDLE_IDENTIFIER override.
+      # Re-run marker: Build 27 native startup and branded icon fixes.
       - '.github/workflows/testflight-upload.yml'
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
     env:
       APP_BUNDLE_ID: com.frankcontact89.prayerandfiremobile
       APP_VERSION: '1.1'
-      BUILD_NUMBER: '26'
+      BUILD_NUMBER: '27'
       APPLE_TEAM_ID: 2UU7S882KZ
       APP_STORE_CONNECT_KEY_ID: NGM28WWYM2
 
@@ -103,8 +103,22 @@ jobs:
         run: |
           set -euo pipefail
           npm install --no-audit --no-fund
-          npm run build
+          VITE_NATIVE_BUILD=1 npm run build
           npx cap sync ios
+
+      - name: Prepare branded iOS app icon
+        run: |
+          set -euo pipefail
+          ICON_SRC="public/pwa-512x512.png"
+          ICON_OUT="ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
+          test -f "$ICON_SRC"
+          sips -s format png "$ICON_SRC" --out "$RUNNER_TEMP/pf-icon.png" >/dev/null
+          sips -z 1024 1024 "$RUNNER_TEMP/pf-icon.png" --out "$ICON_OUT" >/dev/null
+          WIDTH=$(sips -g pixelWidth "$ICON_OUT" | awk '/pixelWidth/{print $2}')
+          HEIGHT=$(sips -g pixelHeight "$ICON_OUT" | awk '/pixelHeight/{print $2}')
+          test "$WIDTH" = "1024"
+          test "$HEIGHT" = "1024"
+          echo "Branded Prayer & Fire app icon prepared: ${WIDTH}x${HEIGHT}"
 
       - name: Confirm TestFlight build number
         run: |
