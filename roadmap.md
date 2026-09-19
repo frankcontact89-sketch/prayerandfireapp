@@ -8,3 +8,6 @@
 - [x] Add English, Spanish, and Portuguese copy.
 - [x] Run typecheck, lint, build, and confirm build number remains unchanged.
 - [x] Report the exact current commit SHA and remaining limitations; do not trigger TestFlight.
+- [x] Polish Community chat, audio, swipe affordance, and Message Info to the approved visual direction.
+- [x] Validate EN/ES/PT labels and iPhone-safe spacing after the polish pass.
+- [x] Run typecheck, lint, and production build; confirm build/version remains unchanged and do not trigger TestFlight.
