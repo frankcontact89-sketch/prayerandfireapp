@@ -403,6 +403,7 @@ export function SettingsScreen({
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
                 placeholder={t("name")}
+                maxLength={40}
                 disabled={savingProfile}
                 className="mt-2 h-10"
               />
