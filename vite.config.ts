@@ -6,7 +6,11 @@ import { VitePWA } from "vite-plugin-pwa";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  const nativeBuild = process.env.VITE_NATIVE_BUILD === "1";
+
+  return {
+    base: nativeBuild ? "./" : "/",
   server: {
     host: "::",
     port: 8080,
@@ -15,7 +19,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     mcpPlugin(),
-    VitePWA({
+    !nativeBuild && VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.png", "logo-prayer-fire.png", "logo.png"],
       manifest: {
@@ -96,4 +100,5 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-}));
+  };
+});
