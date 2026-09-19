@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Check, Crown, Mail, Search, ShieldCheck, Trash2, User, X } from "lucide-react";
+import { ArrowLeft, Ban, Check, Crown, Flag, Mail, RefreshCw, Search, ShieldCheck, Trash2, User, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Words } from "./i18n";
 
@@ -21,6 +21,10 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
   const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [meId, setMeId] = useState<string | null>(null);
+  const [confirmBlock, setConfirmBlock] = useState<P | null>(null);
+
+  useEffect(() => { supabase.auth.getUser().then(({ data }) => setMeId(data.user?.id || null)); }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -95,6 +99,31 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     onChanged();
   };
 
+  const resendInvite = async (i: Invite) => {
+    if (!canManage || busy) return;
+    setBusy(true);
+    const { error } = await db.rpc("invite_group_member_by_email", { _group_id: groupId, _email: i.email, _full_name: i.full_name });
+    setBusy(false);
+    if (error) { setMsg({ kind: "err", text: error.message.includes("NO_PERMISSION") ? t.noPermission : error.message }); return; }
+    setMsg({ kind: "ok", text: t.inviteSent });
+    await load();
+  };
+
+  const blockUser = async (p: P) => {
+    setConfirmBlock(null);
+    if (!meId) return;
+    const { error } = await db.from("community_blocks").insert({ blocker_id: meId, blocked_id: p.id });
+    if (error) { setMsg({ kind: "err", text: error.message }); return; }
+    setMsg({ kind: "ok", text: t.blockedDone });
+  };
+
+  const reportUser = async (p: P) => {
+    if (!meId) return;
+    const { error } = await db.from("community_reports").insert({ reporter_id: meId, reported_user_id: p.id, group_id: groupId, reason: "member_report", status: "pending" });
+    if (error) { setMsg({ kind: "err", text: error.message }); return; }
+    setMsg({ kind: "ok", text: t.reportSent });
+  };
+
   const cancelInvite = async (id: string) => {
     await db.from("community_group_invites").delete().eq("id", id);
     await load();
@@ -145,7 +174,7 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
           return <div key={p.id} className="flex items-center gap-3 py-2.5 border-b border-white/5">
             <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-900 grid place-items-center text-orange-400 shrink-0">{p.avatar ? <img src={p.avatar} alt="" className="w-full h-full object-cover" /> : p.name ? <span className="font-black text-sm">{p.name[0]?.toUpperCase()}</span> : <User className="w-5 h-5" />}</div>
             <div className="flex-1 min-w-0"><div className="font-semibold text-sm truncate">{p.name}</div>{mode !== "add" ? <div className="text-[11px] text-zinc-400 flex items-center gap-1">{p.role === "owner" ? <Crown className="w-3 h-3 text-orange-400" /> : p.role === "admin" ? <ShieldCheck className="w-3 h-3 text-orange-400" /> : null}{p.role === "owner" ? t.owner : p.role === "admin" ? t.admin : t.member}</div> : p.email && <div className="text-[11px] text-zinc-500 truncate">{p.email}</div>}</div>
-            {mode === "add" ? <button onClick={() => setChosen((v) => (active ? v.filter((x) => x !== p.id) : [...v, p.id]))} className={`w-7 h-7 rounded-full border grid place-items-center shrink-0 ${active ? "bg-orange-500 border-orange-500 text-black" : "border-zinc-600"}`} aria-label={p.name}>{active && <Check className="w-4 h-4" />}</button> : mode === "admins" && canManage && p.role !== "owner" && <div className="flex gap-2 shrink-0"><button onClick={() => setRole(p.id, p.role === "admin" ? "member" : "admin")} className="px-3 h-9 rounded-full bg-orange-500/15 text-orange-300 text-xs font-bold border border-orange-500/30">{p.role === "admin" ? t.removeAdmin : t.makeAdmin}</button><button onClick={() => setConfirmRemove(p)} aria-label={t.delete} className="w-9 h-9 rounded-full bg-zinc-900 text-red-400 grid place-items-center"><Trash2 className="w-4 h-4" /></button></div>}
+            {mode === "add" ? <button onClick={() => setChosen((v) => (active ? v.filter((x) => x !== p.id) : [...v, p.id]))} className={`w-7 h-7 rounded-full border grid place-items-center shrink-0 ${active ? "bg-orange-500 border-orange-500 text-black" : "border-zinc-600"}`} aria-label={p.name}>{active && <Check className="w-4 h-4" />}</button> : mode === "members" ? <div className="flex gap-2 shrink-0">{canManage && p.role !== "owner" && p.id !== meId && <button onClick={() => setRole(p.id, p.role === "admin" ? "member" : "admin")} className="px-3 h-9 rounded-full bg-orange-500/15 text-orange-300 text-xs font-bold border border-orange-500/30">{p.role === "admin" ? t.removeAdmin : t.makeAdmin}</button>}{canManage && p.role !== "owner" && p.id !== meId && <button onClick={() => setConfirmRemove(p)} aria-label={t.delete} className="w-9 h-9 rounded-full bg-zinc-900 text-red-400 grid place-items-center"><Trash2 className="w-4 h-4" /></button>}{p.id !== meId && <button onClick={() => reportUser(p)} aria-label={t.report} className="w-9 h-9 rounded-full bg-zinc-900 text-orange-300 grid place-items-center"><Flag className="w-4 h-4" /></button>}{p.id !== meId && <button onClick={() => setConfirmBlock(p)} aria-label={t.block} className="w-9 h-9 rounded-full bg-zinc-900 text-red-400 grid place-items-center"><Ban className="w-4 h-4" /></button>}</div> : mode === "admins" && canManage && p.role !== "owner" && <div className="flex gap-2 shrink-0"><button onClick={() => setRole(p.id, p.role === "admin" ? "member" : "admin")} className="px-3 h-9 rounded-full bg-orange-500/15 text-orange-300 text-xs font-bold border border-orange-500/30">{p.role === "admin" ? t.removeAdmin : t.makeAdmin}</button><button onClick={() => setConfirmRemove(p)} aria-label={t.delete} className="w-9 h-9 rounded-full bg-zinc-900 text-red-400 grid place-items-center"><Trash2 className="w-4 h-4" /></button></div>}
           </div>;
         })}
 
@@ -154,12 +183,14 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
           {invites.map((i) => <div key={i.id} className="flex items-center gap-3 py-2.5 border-b border-white/5">
             <div className="w-10 h-10 rounded-full bg-zinc-900 grid place-items-center text-orange-400 shrink-0"><Mail className="w-4 h-4" /></div>
             <div className="flex-1 min-w-0"><div className="font-semibold text-sm truncate">{i.full_name || i.email}</div><div className="text-[11px] text-zinc-500 truncate">{i.email} · {t.pendingInvitation}</div></div>
-            {canManage && <button onClick={() => cancelInvite(i.id)} aria-label={t.cancelInvite} className="w-9 h-9 rounded-full bg-zinc-900 text-red-400 grid place-items-center shrink-0"><Trash2 className="w-4 h-4" /></button>}
+            {canManage && <button onClick={() => resendInvite(i)} disabled={busy} aria-label={t.sendInvite} className="w-9 h-9 rounded-full bg-zinc-900 text-orange-300 grid place-items-center shrink-0"><RefreshCw className="w-4 h-4" /></button>}{canManage && <button onClick={() => cancelInvite(i.id)} aria-label={t.cancelInvite} className="w-9 h-9 rounded-full bg-zinc-900 text-red-400 grid place-items-center shrink-0"><Trash2 className="w-4 h-4" /></button>}
           </div>)}
         </>}
       </div>
 
       {mode === "add" && <div className="shrink-0 px-4 pt-3 border-t border-white/10 bg-black" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom))" }}><button onClick={addMembers} disabled={!chosen.length || busy} className="w-full h-13 py-4 rounded-2xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.addMembers}{chosen.length ? ` (${chosen.length})` : ""}</button></div>}
+
+      {confirmBlock && <div className="fixed inset-0 z-[140] bg-black/80 grid place-items-center px-8" onClick={() => setConfirmBlock(null)}><div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-zinc-950 border border-white/10 p-6"><b className="text-lg">{t.block}</b><p className="mt-2 text-sm text-zinc-400">{confirmBlock.name}</p><div className="mt-6 flex gap-3"><button onClick={() => setConfirmBlock(null)} className="flex-1 h-12 rounded-2xl bg-zinc-900">{t.cancel}</button><button onClick={() => blockUser(confirmBlock)} className="flex-1 h-12 rounded-2xl bg-red-500 text-black font-black">{t.block}</button></div></div></div>}
 
       {confirmRemove && <div className="fixed inset-0 z-[140] bg-black/80 grid place-items-center px-8" onClick={() => setConfirmRemove(null)}><div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-zinc-950 border border-white/10 p-6"><b className="text-lg">{t.removeMember}</b><p className="mt-2 text-sm text-zinc-400">{confirmRemove.name}</p><div className="mt-6 flex gap-3"><button onClick={() => setConfirmRemove(null)} className="flex-1 h-12 rounded-2xl bg-zinc-900">{t.cancel}</button><button onClick={() => remove(confirmRemove.id)} className="flex-1 h-12 rounded-2xl bg-red-500 text-black font-black">{t.delete}</button></div></div></div>}
     </div>

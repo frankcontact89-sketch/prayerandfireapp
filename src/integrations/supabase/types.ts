@@ -203,6 +203,53 @@ export type Database = {
         }
         Relationships: []
       }
+      community_group_invite_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          group_id: string
+          id: string
+          max_uses: number | null
+          revoked: boolean
+          token: string
+          updated_at: string
+          uses: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string
+          group_id: string
+          id?: string
+          max_uses?: number | null
+          revoked?: boolean
+          token: string
+          updated_at?: string
+          uses?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          group_id?: string
+          id?: string
+          max_uses?: number | null
+          revoked?: boolean
+          token?: string
+          updated_at?: string
+          uses?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_group_invite_links_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "community_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_group_invites: {
         Row: {
           created_at: string
@@ -252,6 +299,7 @@ export type Database = {
           group_id: string
           id: string
           muted: boolean
+          muted_until: string | null
           role: string
           user_id: string
         }
@@ -262,6 +310,7 @@ export type Database = {
           group_id: string
           id?: string
           muted?: boolean
+          muted_until?: string | null
           role?: string
           user_id: string
         }
@@ -272,6 +321,7 @@ export type Database = {
           group_id?: string
           id?: string
           muted?: boolean
+          muted_until?: string | null
           role?: string
           user_id?: string
         }
@@ -353,6 +403,8 @@ export type Database = {
           id: string
           media_type: string | null
           media_url: string | null
+          pinned_at: string | null
+          pinned_by: string | null
           reply_to: string | null
           sender_id: string
           starred: boolean
@@ -366,6 +418,8 @@ export type Database = {
           id?: string
           media_type?: string | null
           media_url?: string | null
+          pinned_at?: string | null
+          pinned_by?: string | null
           reply_to?: string | null
           sender_id: string
           starred?: boolean
@@ -379,6 +433,8 @@ export type Database = {
           id?: string
           media_type?: string | null
           media_url?: string | null
+          pinned_at?: string | null
+          pinned_by?: string | null
           reply_to?: string | null
           sender_id?: string
           starred?: boolean
@@ -1424,6 +1480,7 @@ export type Database = {
         Returns: boolean
       }
       community_text_blocked: { Args: { _t: string }; Returns: boolean }
+      create_group_invite_link: { Args: { _group_id: string }; Returns: string }
       discover_community_groups: {
         Args: never
         Returns: {
@@ -1464,6 +1521,11 @@ export type Database = {
       is_group_admin: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
+      }
+      join_group_by_invite_token: { Args: { _token: string }; Returns: Json }
+      revoke_group_invite_links: {
+        Args: { _group_id: string }
+        Returns: undefined
       }
       shares_community_group: {
         Args: { _a: string; _b: string }
