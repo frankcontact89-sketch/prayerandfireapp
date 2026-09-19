@@ -672,9 +672,15 @@ export default function Index() {
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
             onSignOut={async () => {
-              await supabase.auth.signOut();
-              setUser(null);
-              setPage("home");
+              try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+              } catch (err) {
+                console.error("Sign out failed", err);
+              } finally {
+                setUser(null);
+                setPage("home");
+              }
             }}
             isGuest={false}
           />
