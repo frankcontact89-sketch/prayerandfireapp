@@ -1,36 +1,29 @@
-# Community swipe and Message Info improvements
+# Community visual polish
 
 ## Goal
-Make outgoing-message swipe and Message Info feel natural on iPhone, add audio seeking and ticks, and keep all receipt details accurate and compact.
+Bring the existing Community chat and Message Info screens closer to the approved mockup while preserving all current gestures, receipts, localization, privacy, and release settings.
 
 ## Implementation
-1. **Smooth outgoing swipe**
-   - Replace end-only swipe detection with a directional drag that visibly moves the entire outgoing message row.
-   - Lock only after clear horizontal intent, preserve vertical chat scrolling, add resistance, reveal a subtle Info indicator, and snap back after release.
-   - Open Message Info around a 60px left-swipe threshold. Keep this behavior sender-only; incoming message actions remain unchanged.
-   - Keep long-press/reaction behavior, but cancel it as soon as a drag begins.
+1. **Chat surface and message rhythm**
+   - Refine the black chat canvas, header, day markers, message spacing, bubble widths, corner shapes, text hierarchy, and metadata alignment for iPhone.
+   - Keep outgoing messages Prayer & Fire orange and incoming messages dark, with stronger contrast and consistent media rounding.
 
-2. **Audio interaction and ticks**
-   - Make the waveform a dedicated seek surface supporting tap and drag to update playback time.
-   - Isolate waveform gestures from row swipe so seeking never opens Message Info; play/pause remains unchanged.
-   - Add the same sent/delivered/read ticks used by other outgoing messages to outgoing audio bubbles.
+2. **Outgoing audio presentation**
+   - Tighten avatar, play/pause button, waveform, elapsed/total time, timestamp, and receipt ticks into one stable layout.
+   - Preserve the dedicated waveform seek gesture and keep it isolated from row swiping.
 
-3. **Message Info redesign**
-   - Show the actual outgoing message first: text, media/document preview, or compact playable audio with its time and tick state.
-   - Replace separate cards with compact Prayer & Fire status sections for Read, Delivered, and Played for audio, plus the server-accepted Sent timestamp.
-   - Show current recipient avatar, current name, date, and time beneath each relevant status.
-   - When the sender is the only current group member, show one neutral translated line: “No other recipients in this group,” without empty warning cards.
+3. **Swipe affordance**
+   - Polish the existing left-drag motion, resistance, snap-back, and compact Info reveal without adding destructive swipe actions.
+   - Preserve long-press and the existing options sheet.
 
-4. **Receipt accuracy**
-   - Refresh current group membership when Message Info opens.
-   - Exclude the sender and filter delivery, read, and played receipts to current members only, so removed or departed members are not shown.
-   - Keep the meanings unchanged: Sent is server acceptance; Delivered is device acknowledgement; Read is opened/read; Played is audio playback.
+4. **Message Info sheet**
+   - Refine the light full-screen sheet with a centered title, clearer message preview, compact Sent/Read/Delivered/Played hierarchy, and polished recipient rows.
+   - Preserve current-member filtering, sender exclusion, exact receipt semantics, and the neutral one-member state.
 
-5. **Localization and validation**
-   - Add all new labels and neutral states in English, Spanish, and Portuguese.
-   - Run typecheck, lint, and production build; verify the release build number remains unchanged and do not start TestFlight.
+5. **Validation**
+   - Confirm EN/ES/PT labels remain correct, check iPhone-sized rendering where authentication permits, and run typecheck, lint, and production build.
+   - Keep build/version 38 unchanged and do not start TestFlight.
 
 ## Technical notes
-- The drag will use pointer/touch-safe state on the message row with vertical-intent cancellation and a bounded negative transform.
-- The waveform will own its pointer sequence and stop propagation so it seeks independently from row swiping.
-- No database schema or iOS/TestFlight workflow changes are required.
+- Changes are limited to Community presentation code and semantic design tokens where needed.
+- No database, push, phone lookup, signing, workflow, or release changes.
