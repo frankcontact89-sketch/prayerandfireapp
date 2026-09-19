@@ -176,8 +176,8 @@ export default function CommunityV2(){
 
  const loadSenders=useCallback(async(ids:string[])=>{
   if(!ids.length)return;
-  const{data}=await db.from("profiles").select("id,username,email,avatar_url").in("id",ids);
-  setSenders(prev=>{const next={...prev};(data||[]).forEach((p:any)=>{next[p.id]={name:p.username||p.email?.split("@")[0]||"Member",avatar:p.avatar_url}});return next});
+  const{data}=await db.from("profiles").select("id,username,avatar_url").in("id",ids);
+  setSenders(prev=>{const next={...prev};(data||[]).forEach((p:any)=>{next[p.id]={name:p.username||"Member",avatar:p.avatar_url}});return next});
  },[]);
 
  const loadReactions=useCallback(async(ids:string[])=>{
@@ -257,9 +257,9 @@ export default function CommunityV2(){
   const{data:mm}=await db.from("community_group_members").select("user_id,role").eq("group_id",selected.id);
   const ids=(mm||[]).map((x:any)=>x.user_id);
   if(!ids.length){if(alive)setMembers([]);return}
-  const{data:profs}=await db.from("profiles").select("id,username,email,avatar_url").in("id",ids);
+  const{data:profs}=await db.from("profiles").select("id,username,avatar_url").in("id",ids);
   const pm=new Map((profs||[]).map((p:any)=>[p.id,p]));
-  if(alive)setMembers((mm||[]).map((x:any)=>{const p:any=pm.get(x.user_id)||{};return{id:x.user_id,name:p.username||p.email?.split("@")[0]||"Member",role:x.role,avatar:p.avatar_url}}));
+  if(alive)setMembers((mm||[]).map((x:any)=>{const p:any=pm.get(x.user_id)||{};return{id:x.user_id,name:p.username||"Member",role:x.role,avatar:p.avatar_url}}));
  })();return()=>{alive=false}},[selected?.id]);
 
  // typing indicator (realtime broadcast only, nothing stored)
