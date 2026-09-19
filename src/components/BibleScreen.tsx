@@ -871,6 +871,14 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
   return (
     <div className={`${pageBg}`}>
+      {audioUnavailable && (
+        <div className="mx-4 mt-3 rounded-2xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-sm text-orange-300 flex items-start gap-3">
+          <span className="flex-1">{tr("bible_audio_unavailable", "Audio reading is not available on this device.")}</span>
+          <button onClick={() => setAudioUnavailable(false)} aria-label={tr("close", "Close")} className="shrink-0">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
       <div>
         {view === "books" && (
           <>
