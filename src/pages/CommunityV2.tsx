@@ -303,11 +303,15 @@ export default function CommunityV2(){
   await loadGroups(me.id);setCreate(false);
  };
 
+ // Server-side push dispatch. Credentials stay on the server; failures never block chat.
+ const dispatchPush=async(payload:any)=>{try{await supabase.functions.invoke("community-push",{body:payload})}catch{/* push is best-effort */}};
+
  const send=async()=>{if(!draft.trim()||!selected||!me)return;const body=draft.trim().slice(0,10000);
   if(isBlockedContent(body)){toast(t.contentBlocked);return}
   const r=replyTo?.id||null;setDraft("");setReplyTo(null);
-  const{error}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,body,reply_to:r});
-  if(error){setDraft(body);toast(/CONTENT_BLOCKED/.test(error.message||"")?t.contentBlocked:error.message||"")}};
+  const{data:inserted,error}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,body,reply_to:r}).select("id").single();
+  if(error){setDraft(body);toast(/CONTENT_BLOCKED/.test(error.message||"")?t.contentBlocked:error.message||"");return}
+  if(inserted?.id)dispatchPush({kind:"message",message_id:inserted.id})};
 
  const upload=async(f?:File)=>{
   if(!f||!selected||!me||f.size>50*1024*1024)return;
@@ -317,8 +321,10 @@ export default function CommunityV2(){
   const{error}=await supabase.storage.from("community-media").upload(path,f,{contentType:f.type||"application/octet-stream",upsert:false});
   if(error)return;
   const r=replyTo?.id||null;setReplyTo(null);
-  await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,media_url:path,media_type:kind,reply_to:r});
+  const{data:inserted}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,media_url:path,media_type:kind,reply_to:r}).select("id").single();
+  if(inserted?.id)dispatchPush({kind:"message",message_id:inserted.id});
  };
+
 
  const deleteMsg=async(m:Msg)=>{
   if(!me||!selected)return;
