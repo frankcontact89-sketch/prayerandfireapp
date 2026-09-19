@@ -102,6 +102,7 @@ Deno.serve(async (req) => {
     const msgIds = (myMsgs ?? []).map((m: any) => m.id);
 
     await admin.from("community_reactions").delete().eq("user_id", uid);
+    await admin.from("community_audio_plays").delete().eq("user_id", uid);
     await admin.from("community_message_reads").delete().eq("user_id", uid);
     if (msgIds.length) {
       await admin.from("community_reactions").delete().in("message_id", msgIds);
