@@ -16,9 +16,22 @@ export function GreekWordsListScreen({ onBack, onOpen, language }: Props) {
   const [rows, setRows] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<Tab>("greek");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    supabase.from("greek_words").select("*").order("order_index").then(({ data }) => setRows(data || []));
+    let cancelled = false;
+    supabase.from("greek_words").select("*").order("order_index").then(({ data, error }) => {
+      if (cancelled) return;
+      if (error) {
+        console.error("Word studies could not be loaded", error);
+        setLoadError(true);
+      } else {
+        setRows(data || []);
+      }
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   const pick = (r: any, f: string) => r[`${f}_${language}`] || r[`${f}_en`];
