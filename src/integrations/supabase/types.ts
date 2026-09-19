@@ -394,6 +394,35 @@ export type Database = {
         }
         Relationships: []
       }
+      community_message_deliveries: {
+        Row: {
+          delivered_at: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          delivered_at?: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          delivered_at?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_message_deliveries_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "community_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_message_reads: {
         Row: {
           id: string
@@ -1432,6 +1461,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_push_tokens: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          last_seen_at: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_seen_at?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1500,6 +1562,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ack_message_delivery: {
+        Args: { _message_ids: string[] }
+        Returns: number
+      }
       can_create_community_group: {
         Args: { _user_id: string }
         Returns: boolean
@@ -1507,6 +1573,12 @@ export type Database = {
       can_see_community_message: {
         Args: { _message_id: string; _user_id: string }
         Returns: boolean
+      }
+      community_push_targets: {
+        Args: { _message_id: string }
+        Returns: {
+          user_id: string
+        }[]
       }
       community_text_blocked: { Args: { _t: string }; Returns: boolean }
       create_group_invite_link: { Args: { _group_id: string }; Returns: string }
