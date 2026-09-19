@@ -102,7 +102,7 @@ export default function OAuthConsent() {
   }
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center p-4">
+    <main className="min-h-dvh bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 space-y-4">
         <div className="flex items-center gap-2">
           <span className="text-2xl">🔥</span>

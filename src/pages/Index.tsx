@@ -584,7 +584,7 @@ export default function Index() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-dvh bg-background">
         <div className="text-primary text-lg">{t("loading")}</div>
       </div>
     );

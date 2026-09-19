@@ -11,7 +11,7 @@ interface LandingPageProps {
 
 export function LandingPage({ t, onOpenApp, onSignIn, onOpenLegal }: LandingPageProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-[hsl(20,40%,6%)] to-black flex flex-col">
+    <div className="min-h-dvh bg-gradient-to-b from-black via-[hsl(20,40%,6%)] to-black flex flex-col">
       {/* Hero Section - Centered */}
       <main className="flex-1 flex flex-col justify-center items-center text-center px-6 py-16">
         {/* Logo */}
