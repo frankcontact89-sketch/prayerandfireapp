@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A11F0A012F00000100000001 /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = A11F0A022F00000100000001 /* capacitor.config.json */; };
+		A11F0A032F00000100000001 /* public in Resources */ = {isa = PBXBuildFile; fileRef = A11F0A042F00000100000001 /* public */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		504EC2F51FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC2F41FED79650016851F /* AppDelegate.swift */; };
 		504EC2F81FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC2F61FED79650016851F /* Main.storyboard */; };
@@ -16,6 +18,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A11F0A022F00000100000001 /* capacitor.config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
+		A11F0A042F00000100000001 /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		504EC2F11FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC2F41FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -57,6 +61,8 @@
 		504EC2F31FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				A11F0A022F00000100000001 /* capacitor.config.json */,
+				A11F0A042F00000100000001 /* public */,
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC2F41FED79650016851F /* AppDelegate.swift */,
 				504EC2F61FED79650016851F /* Main.storyboard */,
@@ -133,6 +139,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A11F0A032F00000100000001 /* public in Resources */,
+				A11F0A012F00000100000001 /* capacitor.config.json in Resources */,
 				504EC2FA1FED79650016851F /* Assets.xcassets in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
 				504EC2F81FED79650016851F /* Main.storyboard in Resources */,
