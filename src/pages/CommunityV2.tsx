@@ -262,6 +262,18 @@ export default function CommunityV2(){
   if(alive)setMembers((mm||[]).map((x:any)=>{const p:any=pm.get(x.user_id)||{};return{id:x.user_id,name:p.username||"Member",role:x.role,avatar:p.avatar_url}}));
  })();return()=>{alive=false}},[selected?.id]);
 
+ // live profile identity: names/avatars always come from the user's own profile
+ useEffect(()=>{
+  const c=supabase.channel("profile-identity").on("postgres_changes",{event:"UPDATE",schema:"public",table:"profiles"},(payload:any)=>{
+   const p:any=payload.new;if(!p?.id)return;
+   const name=p.username||"Member";
+   setSenders(prev=>prev[p.id]?{...prev,[p.id]:{name,avatar:p.avatar_url}}:prev);
+   setMembers(prev=>prev.some(m=>m.id===p.id)?prev.map(m=>m.id===p.id?{...m,name,avatar:p.avatar_url}:m):prev);
+   setMe(prev=>prev&&prev.id===p.id?{...prev,name,avatar:p.avatar_url}:prev);
+  }).subscribe();
+  return()=>{supabase.removeChannel(c)};
+ },[]);
+
  // typing indicator (realtime broadcast only, nothing stored)
  useEffect(()=>{if(!selected||!me){typingChannel.current=null;setTyping({});return}
   setTyping({});
