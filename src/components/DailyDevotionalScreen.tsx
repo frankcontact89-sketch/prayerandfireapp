@@ -50,7 +50,15 @@ export function DailyDevotionalScreen({ onBack, language }: Props) {
     );
   }
 
-  if (!row) return null; // hidden if no content
+  if (!row) {
+    return (
+      <SimpleScreen title={title} icon={<Sunrise className="w-6 h-6" />} onBack={onBack}>
+        <div className="text-zinc-400 text-center py-10">
+          {L(language, "No devotional published yet. Check back soon.", "Aún no hay devocional publicado. Vuelve pronto.", "Ainda não há devocional publicado. Volte em breve.")}
+        </div>
+      </SimpleScreen>
+    );
+  }
 
   const dateStr = new Date(row.date).toLocaleDateString(
     language === "es" ? "es" : language === "pt" ? "pt-BR" : "en-US",
