@@ -54,6 +54,9 @@ export function SettingsScreen({
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [profileName, setProfileName] = useState(userName || "");
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [phone, setPhone] = useState("");
+  const [phonePrivate, setPhonePrivate] = useState(true);
+  const [phoneDiscoverable, setPhoneDiscoverable] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -90,6 +93,16 @@ export function SettingsScreen({
         const nextAvatar = currentProfile.avatar_url ? `${currentProfile.avatar_url}?t=${Date.now()}` : null;
         setProfileImage(nextAvatar);
         onProfileUpdated?.(nextAvatar);
+        const { data: phoneRow } = await supabase
+          .from("user_phone_numbers")
+          .select("phone, phone_private, discoverable")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (!cancelled && phoneRow) {
+          setPhone(phoneRow.phone || "");
+          setPhonePrivate(phoneRow.phone_private !== false);
+          setPhoneDiscoverable(phoneRow.discoverable === true);
+        }
       } catch (error) {
         console.error("Error loading profile:", error);
       }
@@ -318,6 +331,20 @@ export function SettingsScreen({
       setSavingProfile(true);
       const { error } = await supabase.from("profiles").update({ username: profileName }).eq("id", userId);
       if (error) throw error;
+      const raw = phone.trim();
+      if (!raw) {
+        const { error: delError } = await supabase.from("user_phone_numbers").delete().eq("user_id", userId);
+        if (delError) throw delError;
+      } else {
+        const digits = raw.replace(/[^0-9]/g, "");
+        if (digits.length < 8 || digits.length > 15) throw new Error(L(language, "Enter a valid phone number with country code.", "Introduce un número de teléfono válido con código de país.", "Digite um número de telefone válido com código do país."));
+        const e164 = `+${digits}`;
+        setPhone(e164);
+        const { error: phoneError } = await supabase
+          .from("user_phone_numbers")
+          .upsert({ user_id: userId, phone: e164, phone_private: phonePrivate, discoverable: phoneDiscoverable }, { onConflict: "user_id" });
+        if (phoneError) throw phoneError;
+      }
       toast({ title: t("success"), description: t("profileUpdated") });
     } catch (error: any) {
       toast({ title: t("error"), description: error?.message || t("couldNotSaveChanges"), variant: "destructive" });
@@ -377,6 +404,29 @@ export function SettingsScreen({
                 className="mt-2 h-10"
               />
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card/60 p-4 space-y-3">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-zinc-500">{L(language, "Phone number (optional)", "Número de teléfono (opcional)", "Número de telefone (opcional)")}</p>
+              <Input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                inputMode="tel"
+                placeholder="+1 555 000 0000"
+                disabled={savingProfile}
+                className="mt-2 h-10"
+              />
+              <p className="mt-2 text-xs text-zinc-500">{L(language, "Include your country code. Your number is never shown to other members.", "Incluye el código de país. Tu número nunca se muestra a otros miembros.", "Inclua o código do país. Seu número nunca é mostrado a outros membros.")}</p>
+            </div>
+            <label className="flex items-center justify-between gap-3 text-sm text-white">
+              <span>{L(language, "Keep my phone number private", "Mantener mi número de teléfono privado", "Manter meu número de telefone privado")}</span>
+              <input type="checkbox" checked={phonePrivate} onChange={(e) => setPhonePrivate(e.target.checked)} className="h-5 w-5 accent-orange-500" aria-label={L(language, "Keep my phone number private", "Mantener mi número de teléfono privado", "Manter meu número de telefone privado")} />
+            </label>
+            <label className="flex items-center justify-between gap-3 text-sm text-white">
+              <span>{L(language, "Allow people to find me by phone number", "Permitir que me encuentren por número de teléfono", "Permitir que me encontrem pelo número de telefone")}</span>
+              <input type="checkbox" checked={phoneDiscoverable} onChange={(e) => setPhoneDiscoverable(e.target.checked)} className="h-5 w-5 accent-orange-500" aria-label={L(language, "Allow people to find me by phone number", "Permitir que me encuentren por número de teléfono", "Permitir que me encontrem pelo número de telefone")} />
+            </label>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
