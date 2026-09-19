@@ -78,7 +78,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
       <div style={styles.content}>
         {loadError && (
           <div style={{ textAlign: "center", padding: "40px 16px", color: "#fb923c", fontSize: 15 }}>
-            {t("errorLoading") || "We could not load the store. Check your connection."}
+            {t("contentLoadError")}
           </div>
         )}
         {!loadError && products.length === 0 && (
