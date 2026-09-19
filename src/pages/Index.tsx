@@ -457,12 +457,19 @@ export default function Index() {
       prevUserId = nextUser?.id ?? null;
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      prevUserId = session?.user?.id ?? null;
-      // Do NOT reset to Home on resume — keep the last visited page.
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setUser(session?.user ?? null);
+        prevUserId = session?.user?.id ?? null;
+        // Do NOT reset to Home on resume — keep the last visited page.
+      })
+      .catch(() => {
+        // Never leave the native app stuck on startup if session restore fails.
+        setUser(null);
+        prevUserId = null;
+      })
+      .finally(() => setLoading(false));
 
     return () => subscription.unsubscribe();
   }, []);
