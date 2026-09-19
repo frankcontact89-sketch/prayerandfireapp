@@ -76,11 +76,10 @@ export default function CommunityV2(){
  const typingManyLabel=L("are typing…","están escribiendo…","estão digitando…");
  const messageInfoLabel=L("Message info","Información del mensaje","Informações da mensagem");
  const readByLabel=L("Read by","Leído por","Lido por");
- const notReadLabel=L("Not read yet","Aún no leído","Ainda não lido");
  const sentLabel=L("Sent","Enviado","Enviado");
- const playedByLabel=L("Played by","Reproducido por","Reproduzido por");
- const deliveredToLabel=L("Delivered to","Entregado a","Entregue a");
- const notDeliveredLabel=L("Not delivered yet","Aún no entregado","Ainda não entregue");
+ const playedByLabel=L("Played","Reproducido","Reproduzido");
+ const deliveredToLabel=L("Delivered","Entregado","Entregue");
+ const noOtherRecipientsLabel=L("No other recipients in this group","No hay otros destinatarios en este grupo","Não há outros destinatários neste grupo");
  const pushSettingsLabel=L("Notifications","Notificaciones","Notificações");
 
  const[me,setMe]=useState<any>(null);
@@ -100,7 +99,8 @@ export default function CommunityV2(){
  const[discoverList,setDiscoverList]=useState<DiscoverGroup[]>([]),[discoverLoading,setDiscoverLoading]=useState(false),[noAccessGroup,setNoAccessGroup]=useState<DiscoverGroup|null>(null),[confirmDelGroup,setConfirmDelGroup]=useState(false),[confirmLeave,setConfirmLeave]=useState(false),[showArchived,setShowArchived]=useState(false);
  const file=useRef<HTMLInputElement>(null),photo=useRef<HTMLInputElement>(null),end=useRef<HTMLDivElement>(null);
  const press=useRef<number|null>(null);
- const swipe=useRef<{id:string;x:number;y:number}|null>(null);
+ const swipe=useRef<{id:string;x:number;y:number;pointerId:number;locked:boolean;offset:number}|null>(null);
+ const[swipeVisual,setSwipeVisual]=useState<{id:string;offset:number}|null>(null);
  const msgRefs=useRef<Record<string,HTMLDivElement|null>>({});
  const typingChannel=useRef<any>(null),lastTypingSent=useRef(0);
  const[members,setMembers]=useState<GroupMember[]>([]);
@@ -111,7 +111,7 @@ export default function CommunityV2(){
  const[highlightMsg,setHighlightMsg]=useState<string|null>(null);
  const[blocks,setBlocks]=useState<string[]>([]),[reportFor,setReportFor]=useState<Msg|null>(null),[reportReason,setReportReason]=useState("harassment"),[reportNote,setReportNote]=useState(""),[blockFor,setBlockFor]=useState<Msg|null>(null),[busyMod,setBusyMod]=useState(false);
  const[safety,setSafety]=useState(false);
- const[messageInfo,setMessageInfo]=useState<Msg|null>(null),[messageInfoReads,setMessageInfoReads]=useState<ReadReceipt[]>([]),[messageInfoPlays,setMessageInfoPlays]=useState<PlayReceipt[]>([]),[messageInfoDeliveries,setMessageInfoDeliveries]=useState<DeliveryReceipt[]>([]),[messageInfoBusy,setMessageInfoBusy]=useState(false);
+ const[messageInfo,setMessageInfo]=useState<Msg|null>(null),[messageInfoReads,setMessageInfoReads]=useState<ReadReceipt[]>([]),[messageInfoPlays,setMessageInfoPlays]=useState<PlayReceipt[]>([]),[messageInfoDeliveries,setMessageInfoDeliveries]=useState<DeliveryReceipt[]>([]),[messageInfoMembers,setMessageInfoMembers]=useState<GroupMember[]>([]),[messageInfoBusy,setMessageInfoBusy]=useState(false);
  const REASONS:[string,string][]=[["harassment",t.reasonHarassment],["hate",t.reasonHate],["sexual",t.reasonSexual],["violence",t.reasonViolence],["spam",t.reasonSpam],["privacy",t.reasonPrivacy],["other",t.reasonOther]];
 
  const goBack=()=>{if(window.history.length>1)window.history.back();else window.location.assign("/")};
