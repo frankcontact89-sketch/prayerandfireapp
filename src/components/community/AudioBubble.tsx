@@ -43,9 +43,10 @@ type Props = {
   /** Re-signs the private storage path and returns a fresh URL (expired links). */
   resolve?: () => Promise<string | undefined>;
   downloadLabel?: string;
+  onPlayed?: () => void | Promise<void>;
 };
 
-export default function AudioBubble({ url, mine, avatar, name, time, errorLabel, resolve, downloadLabel }: Props) {
+export default function AudioBubble({ url, mine, avatar, name, time, errorLabel, resolve, downloadLabel, onPlayed }: Props) {
   const ref = useRef<HTMLAudioElement | null>(null);
   const [src, setSrc] = useState(url);
   const [playing, setPlaying] = useState(false);
@@ -56,6 +57,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   const stage = useRef(0);
   const objUrl = useRef<string | null>(null);
   const wantPlay = useRef(false);
+  const playedReported = useRef(false);
 
   useEffect(() => {
     stage.current = 0;
@@ -63,6 +65,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
     setFailed(false);
     setCur(0);
     setDur(0);
+    playedReported.current = false;
   }, [url]);
 
   // WebKit refuses files whose URL extension contradicts the container, so for
@@ -206,7 +209,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
         onCanPlay={() => {
           if (wantPlay.current && ref.current?.paused) ref.current.play().then(() => setPlaying(true)).catch(() => {});
         }}
-        onPlay={() => setPlaying(true)}
+        onPlay={() => { setPlaying(true); if (!playedReported.current) { playedReported.current = true; Promise.resolve(onPlayed?.()).catch(() => {}); } }}
         onPause={() => setPlaying(false)}
         onLoadedMetadata={(e) => {
           const d = (e.target as HTMLAudioElement).duration;
