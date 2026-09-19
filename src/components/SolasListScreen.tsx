@@ -19,11 +19,22 @@ interface Sola {
 
 export function SolasListScreen({ onBack, onOpen, language }: Props) {
   const [rows, setRows] = useState<Sola[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    supabase.from("solas").select("*").order("order_index").then(({ data }) => {
-      setRows((data as Sola[]) || []);
+    let cancelled = false;
+    supabase.from("solas").select("*").order("order_index").then(({ data, error }) => {
+      if (cancelled) return;
+      if (error) {
+        console.error("Solas could not be loaded", error);
+        setLoadError(true);
+      } else {
+        setRows((data as Sola[]) || []);
+      }
+      setLoading(false);
     });
+    return () => { cancelled = true; };
   }, []);
 
   const pick = (row: any, field: string) => row[`${field}_${language}`] || row[`${field}_en`];
@@ -36,6 +47,17 @@ export function SolasListScreen({ onBack, onOpen, language }: Props) {
       onBack={onBack}
     >
       <div className="space-y-3">
+        {loading && <p className="text-zinc-400 text-center py-10">…</p>}
+        {!loading && loadError && (
+          <p className="text-orange-400 text-center py-10">
+            {language === "es" ? "No pudimos cargar este contenido. Revisa tu conexión." : language === "pt" ? "Não foi possível carregar este conteúdo. Verifique sua conexão." : "We could not load this content. Check your connection."}
+          </p>
+        )}
+        {!loading && !loadError && rows.length === 0 && (
+          <p className="text-zinc-400 text-center py-10">
+            {language === "es" ? "Aún no hay contenido." : language === "pt" ? "Ainda não há conteúdo." : "No entries yet."}
+          </p>
+        )}
         {rows.map((r) => (
           <button
             key={r.id}

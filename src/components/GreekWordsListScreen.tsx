@@ -16,9 +16,22 @@ export function GreekWordsListScreen({ onBack, onOpen, language }: Props) {
   const [rows, setRows] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<Tab>("greek");
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    supabase.from("greek_words").select("*").order("order_index").then(({ data }) => setRows(data || []));
+    let cancelled = false;
+    supabase.from("greek_words").select("*").order("order_index").then(({ data, error }) => {
+      if (cancelled) return;
+      if (error) {
+        console.error("Word studies could not be loaded", error);
+        setLoadError(true);
+      } else {
+        setRows(data || []);
+      }
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   const pick = (r: any, f: string) => r[`${f}_${language}`] || r[`${f}_en`];
@@ -84,11 +97,18 @@ export function GreekWordsListScreen({ onBack, onOpen, language }: Props) {
         className="w-full h-11 rounded-xl bg-zinc-900 border border-zinc-800 px-4 text-white mb-4 focus:outline-none focus:border-orange-500"
       />
       <div className="space-y-2">
-        {filtered.length === 0 && (
+        {loading && <div className="text-center text-zinc-500 p-6">…</div>}
+        {!loading && loadError && (
+          <div className="text-center text-orange-400 p-6">
+            {L(language, "We could not load this content. Check your connection.", "No pudimos cargar este contenido. Revisa tu conexión.", "Não foi possível carregar este conteúdo. Verifique sua conexão.")}
+          </div>
+        )}
+        {!loading && !loadError && filtered.length === 0 && (
           <div className="text-center text-zinc-500 p-6">
             {L(language, "No entries yet.", "Aún no hay entradas.", "Ainda não há entradas.")}
           </div>
         )}
+
         {filtered.map((r) => (
           <button
             key={r.id}

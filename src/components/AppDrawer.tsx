@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, MessageCircle, BookOpen, Library, ShoppingBag, Share2, Link2, Info, Settings as SettingsIcon, X } from "lucide-react";
+import { Home, MessageCircle, BookOpen, Library, ShoppingBag, Share2, Link2, Info, Settings as SettingsIcon, X, Sunrise, CalendarCheck, Star } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { toast } from "@/hooks/use-toast";
@@ -73,6 +73,9 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
     { id: "bible", icon: BookOpen, label: L(language, "Bible", "Biblia", "Bíblia"), action: () => go("bible") },
     { id: "library", icon: Library, label: L(language, "Christian Library", "Biblioteca Cristiana", "Biblioteca Cristã"), action: () => go("library") },
     { id: "store", icon: ShoppingBag, label: L(language, "Store", "Tienda", "Loja"), action: () => go("shopping") },
+    { id: "devotional", icon: Sunrise, label: L(language, "Daily Devotional", "Devocional Diario", "Devocional Diário"), action: () => go("devotional") },
+    { id: "reading-plans", icon: CalendarCheck, label: L(language, "Reading Plans", "Planes de Lectura", "Planos de Leitura"), action: () => go("reading-plans") },
+    { id: "favorites", icon: Star, label: L(language, "Favorites", "Favoritos", "Favoritos"), action: () => go("favorites") },
     { id: "share", icon: Share2, label: L(language, "Share Prayer & Fire", "Compartir Prayer & Fire", "Compartilhar Prayer & Fire"), action: share },
     { id: "connect", icon: Link2, label: L(language, "Connect", "Conectar", "Conectar"), action: () => go("social") },
     { id: "about", icon: Info, label: L(language, "About", "Acerca de", "Sobre"), action: () => go("about") },
@@ -88,7 +91,7 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
       >
         <div className="px-6 py-5 flex items-center justify-between border-b border-zinc-800 shrink-0">
           <h2 className="text-orange-500 text-xl font-black tracking-wide">PRAYER &amp; FIRE</h2>
-          <button onClick={() => onOpenChange(false)} className="w-10 h-10 grid place-items-center rounded-full hover:bg-zinc-900"><X className="w-5 h-5" /></button>
+          <button onClick={() => onOpenChange(false)} aria-label={L(language, "Close menu", "Cerrar menú", "Fechar menu")} className="w-11 h-11 grid place-items-center rounded-full hover:bg-zinc-900"><X className="w-5 h-5" /></button>
         </div>
         <nav className="p-4 space-y-1 overflow-y-auto">
           {items.map(({ id, icon: Icon, label, action }) => (

@@ -207,7 +207,37 @@ function getFreshVerseIndex() {
 function HomeScreen({ t, language }: { t: (k: any) => string; language: string }) {
   const [verseIndex] = useState(() => getFreshVerseIndex());
   const safeLang = SUPPORTED_LANGUAGE_CODES.includes(language) ? language : "en";
-  const today = (dailyContent[verseIndex] as any)[safeLang] || dailyContent[verseIndex].en;
+  const fallback = (dailyContent[verseIndex] as any)[safeLang] || dailyContent[verseIndex].en;
+  // Verse of the day is managed in the admin panel (verses table); the bundled
+  // list is only a fallback when the table is empty or unreachable (offline).
+  const [dbVerse, setDbVerse] = useState<{ verse: string; ref: string } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("verses")
+          .select("text_en,ref_en,text_es,ref_es,text_pt,ref_pt")
+          .eq("is_active", true)
+          .order("order_index", { ascending: true });
+        if (error) throw error;
+        if (cancelled || !data?.length) return;
+        const dayIndex = Math.floor(Date.now() / 86400000) % data.length;
+        const row: any = data[dayIndex];
+        const text = row[`text_${safeLang}`] || row.text_en;
+        const ref = row[`ref_${safeLang}`] || row.ref_en;
+        if (text) setDbVerse({ verse: text, ref: ref || "" });
+      } catch (err) {
+        console.error("Verse of the day could not be loaded", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [safeLang]);
+
+  const today = dbVerse ? { ...fallback, verse: dbVerse.verse, ref: dbVerse.ref } : fallback;
 
   const labels: any = {
     en: {
@@ -554,7 +584,7 @@ export default function Index() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-dvh bg-background">
         <div className="text-primary text-lg">{t("loading")}</div>
       </div>
     );
@@ -672,9 +702,15 @@ export default function Index() {
             isDarkMode={isDarkMode}
             onToggleDarkMode={toggleDarkMode}
             onSignOut={async () => {
-              await supabase.auth.signOut();
-              setUser(null);
-              setPage("home");
+              try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+              } catch (err) {
+                console.error("Sign out failed", err);
+              } finally {
+                setUser(null);
+                setPage("home");
+              }
             }}
             isGuest={false}
           />

@@ -50,7 +50,15 @@ export function ReadingPlansScreen({ onBack, language, onOpenPlan }: Props) {
     );
   }
 
-  if (plans.length === 0) return null;
+  if (plans.length === 0) {
+    return (
+      <SimpleScreen title={title} icon={<CalendarDays className="w-6 h-6" />} onBack={onBack}>
+        <div className="text-zinc-400 text-center py-10">
+          {L(language, "No reading plans yet. Check back soon.", "Aún no hay planes de lectura. Vuelve pronto.", "Ainda não há planos de leitura. Volte em breve.")}
+        </div>
+      </SimpleScreen>
+    );
+  }
 
   return (
     <SimpleScreen

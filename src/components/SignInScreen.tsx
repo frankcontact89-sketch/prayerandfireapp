@@ -202,7 +202,7 @@ export function SignInScreen({ setUser, t, currentLanguage = "en" }: SignInScree
 
   return (
     <div
-      className="flex items-center justify-center min-h-screen bg-background p-6"
+      className="flex items-center justify-center min-h-dvh bg-background p-6"
       style={{
         paddingTop: "max(1.5rem, env(safe-area-inset-top))",
         paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
