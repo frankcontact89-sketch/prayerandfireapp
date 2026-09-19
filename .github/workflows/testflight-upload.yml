@@ -7,7 +7,7 @@ on:
       - main
     paths:
       # Trigger a new TestFlight run when this workflow definition is updated.
-      # Re-run marker: Build 30 with iOS simulator launch smoke test.
+      # Re-run marker: Build 31 with packaged web assets and launch verification.
       - '.github/workflows/testflight-upload.yml'
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
     env:
       APP_BUNDLE_ID: com.frankcontact89.prayerandfiremobile
       APP_VERSION: '1.1'
-      BUILD_NUMBER: '30'
+      BUILD_NUMBER: '31'
       APPLE_TEAM_ID: 2UU7S882KZ
       APP_STORE_CONNECT_KEY_ID: NGM28WWYM2
 
@@ -106,18 +106,30 @@ jobs:
           npm run build
           npx cap sync ios
 
-
-      - name: Smoke-test app launch in iOS Simulator
+      - name: Prepare Prayer & Fire iOS icon
         run: |
           set -euo pipefail
-          DEVICE_NAME=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/{print $1; exit}' | sed 's/[[:space:]]*$//')
-          if [ -z "$DEVICE_NAME" ]; then
+          ICON_SRC="public/favicon.png"
+          ICON_OUT="ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
+          test -f "$ICON_SRC"
+          sips -s format png "$ICON_SRC" --out "$RUNNER_TEMP/pf-icon.png" >/dev/null
+          sips -z 1024 1024 "$RUNNER_TEMP/pf-icon.png" --out "$ICON_OUT" >/dev/null
+          test "$(sips -g pixelWidth "$ICON_OUT" | awk '/pixelWidth/{print $2}')" = "1024"
+          test "$(sips -g pixelHeight "$ICON_OUT" | awk '/pixelHeight/{print $2}')" = "1024"
+          echo "Prayer & Fire icon prepared"
+
+
+      - name: Smoke-test packaged app in iOS Simulator
+        run: |
+          set -euo pipefail
+          UDID=$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/{print $2; exit}')
+          if [ -z "$UDID" ]; then
             echo "No available iPhone simulator found"
             exit 1
           fi
-          UDID=$(xcrun simctl list devices available | awk -F '[()]' -v name="$DEVICE_NAME" '$0 ~ name {print $2; exit}')
           xcrun simctl boot "$UDID" || true
-          open -a Simulator || true
+          xcrun simctl bootstatus "$UDID" -b
+
           xcodebuild \
             -project ios/App/App.xcodeproj \
             -scheme App \
@@ -126,24 +138,34 @@ jobs:
             -derivedDataPath "$RUNNER_TEMP/sim-derived" \
             CODE_SIGNING_ALLOWED=NO \
             build
+
           APP_PATH=$(find "$RUNNER_TEMP/sim-derived/Build/Products/Debug-iphonesimulator" -maxdepth 1 -name '*.app' -print -quit)
           test -n "$APP_PATH"
+
+          echo "Verifying packaged Capacitor resources..."
+          test -f "$APP_PATH/public/index.html"
+          test -f "$APP_PATH/capacitor.config.json"
+          test -d "$APP_PATH/public/assets"
+          echo "Packaged web assets are present"
+
           xcrun simctl install "$UDID" "$APP_PATH"
-          set +e
-          LAUNCH_OUTPUT=$(xcrun simctl launch --console-pty "$UDID" "$APP_BUNDLE_ID" 2>&1)
-          STATUS=$?
-          set -e
+          LAUNCH_OUTPUT=$(xcrun simctl launch "$UDID" "$APP_BUNDLE_ID")
           printf '%s\n' "$LAUNCH_OUTPUT"
-          if [ "$STATUS" -ne 0 ]; then
-            echo "Simulator launch failed"
-            exit "$STATUS"
-          fi
-          sleep 8
-          if ! xcrun simctl spawn "$UDID" launchctl print gui/$(id -u) 2>/dev/null | grep -q "$APP_BUNDLE_ID"; then
-            echo "App did not remain running after launch"
+          PID=$(printf '%s\n' "$LAUNCH_OUTPUT" | awk -F ': ' 'NF==2{print $2}' | tail -1)
+          if ! [[ "$PID" =~ ^[0-9]+$ ]]; then
+            echo "Could not determine launched app PID"
             exit 1
           fi
-          echo "Simulator launch smoke test passed"
+
+          sleep 10
+          if ! xcrun simctl spawn "$UDID" kill -0 "$PID" 2>/dev/null; then
+            echo "Prayer & Fire exited during startup"
+            echo "--- Recent simulator logs ---"
+            xcrun simctl spawn "$UDID" log show --last 2m --style compact \
+              --predicate 'process == "App" OR eventMessage CONTAINS[c] "prayerandfire"' || true
+            exit 1
+          fi
+          echo "Prayer & Fire remained running after launch"
 
       - name: Confirm TestFlight build number
         run: |
