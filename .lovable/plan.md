@@ -1,33 +1,39 @@
-# Why the iOS build installs but closes instantly — audit findings
+# Community audit — bugs and missing actions (no code changed)
 
-No code changed. Findings below come from reading the iOS project, the release workflow, and the app's startup code.
+## About the missing "delete group"
 
-## Most likely cause (confirmed by inspection)
+A Delete group action does exist, but only at the very bottom of the full Group info page, below Leave group, and only for the person who created the group (or a community owner). The gear icon at the top of Group info — the thing that looks like "group settings" — opens a small panel with only Name, Description and Save. That is why it looks missing.
 
-The iOS project never bundles the web app files, so there is nothing for the app to show and it quits at launch.
+Files: `src/pages/CommunityV2.tsx` (`canDeleteGroup`, `deleteGroupNow`, the Group info screen and the `edit` panel).
 
-- `ios/App/App.xcodeproj/project.pbxproj` — the Resources build phase (around lines 131-141) lists only `Assets.xcassets`, `config.xml`, `Main.storyboard`, `LaunchScreen.storyboard`.
-- Missing from the file references and from Resources: the `public` folder (the built web app) and `capacitor.config.json`. A standard Capacitor iOS project always references both.
-- `ios/.gitignore` correctly ignores `App/App/public` and `App/App/capacitor.config.json` as generated, but generated files still need a reference in the Xcode project; `npx cap sync ios` fills the folder, it does not add missing references.
+Confirmed in the database: both existing groups were created by the same account, and the rules do allow that account to delete them. So this is a visibility/placement problem, not a permissions block — unless the person testing is not the group creator.
 
-Effect: the packaged app has no `index.html` and no Capacitor config. Capacitor's view controller treats a missing web directory as a fatal error and the process terminates a fraction of a second after launch — exactly the "installs, opens, closes" symptom.
+## Priority 1 — user-visible breakage
 
-This alone explains the crash. Everything below is secondary and worth a look once assets are bundled.
+1. Delete group is hidden inside the gear "settings" panel's blind spot. Fix: put Delete group in the settings panel itself, clearly separated in red, and keep the row in Group info.
+2. Nothing tells the user when an action fails. `deleteGroupNow`, `saveGroup`, `changePhoto`, `leave` and `memberUpdate` ignore errors, so a blocked delete or save looks like a button that does nothing. Fix: check the result and show a success or failure message.
+3. The group creator can leave their own group. After that nobody can delete it, because deletion is tied to the creator still being present. Fix: block the creator from leaving unless they hand over ownership or delete the group.
+4. Leave group has no confirmation. One accidental tap removes the person from the group. Fix: confirm first, like delete does.
+5. Archived conversations vanish forever. The list hides archived groups, but there is no way to archive or un-archive anything. Fix: either add archive/un-archive, or stop hiding them.
 
-## Secondary risks to inspect
+## Priority 2 — missing or incomplete actions
 
-1. Offline caching in a packaged app — `vite.config.ts` lines 18-92 enables the PWA/offline service worker. That is a browser concept; inside the native app it is useless and the auto-injected registration code is one more thing running before the first screen. Worth disabling for native builds.
-2. Missing native dependency declaration — `src/components/AppDrawer.tsx` lines 3-4 import `@capacitor/core` and `@capacitor/share`, but `package.json` does not list `@capacitor/core` as a dependency. It currently resolves indirectly; a clean install on the build machine could break.
-3. Backend keys baked at build time — `.env` is committed and read in `src/integrations/supabase/client.ts` lines 5-11. If those values were ever missing during a CI build, the app would fail at startup with a blank screen. Verify the built files contain the real values.
-4. Startup code assuming a browser — `src/pages/Index.tsx` reads saved settings from browser storage at lines 194, 323, 384, 397 before the first screen. Safe inside the WebView, but only once the WebView actually loads; it is a follow-up check, not the cause.
-5. Large Bible data files (about 12 MB total in `src/data/bible/`) are loaded on demand in `src/components/BibleScreen.tsx` lines 43-53. Not a launch crash, but a memory risk on older iPhones when opening the Bible.
-6. The release workflow already runs a simulator launch smoke test (`.github/workflows/testflight-upload.yml`, the "Smoke-test app launch in iOS Simulator" step). Its result for the last run should be read — with the missing assets it should have failed, which tells us whether that guard is actually working.
+6. Regular members cannot see who is in the group. The member list is only reachable through the admin-only "Admins" entry. Fix: a read-only member list for everyone.
+7. Favorite/pin a conversation is supported by the data but has no button anywhere.
+8. Group avatar can only be changed from the picture on Group info, not from the settings panel where people look for it.
+9. Mute is per person and works, but there is no "mute for 8 hours / 1 week" and no visual muted marker on the conversation row.
+10. Pending email invitations can be created and cancelled in Add members (`src/components/community/MembersModal.tsx`), but there is no way to re-send one.
 
-## Proposed fix, for a later approved pass
+## Priority 3 — leftovers and cleanup
 
-1. Add the `public` folder and `capacitor.config.json` references to the Xcode project and include them in the Resources build phase, matching the standard Capacitor template.
-2. Re-run the web build and `npx cap sync ios`, then confirm the built `.app` contains `public/index.html` and `capacitor.config.json`.
-3. Turn off the offline/service-worker layer for native builds and add `@capacitor/core` as an explicit dependency.
-4. Bump the build number and let the workflow's simulator smoke test confirm the app stays open before uploading.
+11. `src/components/ChatScreen.tsx` is unused demo code with fake conversations ("24H PRAYER & FIRE") and dead phone/video buttons. Nothing imports it. Should be deleted before the next App Store build.
+12. Dead filter logic remains in `CommunityV2.tsx` after the tabs were removed: the `filter` state, the unread branch, and the Discover loading it still triggers after a delete. Harmless but confusing.
+13. Reporting and blocking work from a message only. There is no way to report or block a person from their profile or from the member list.
 
-Nothing will be changed until you approve.
+## Verified as working
+
+Sending messages, replies, reactions and the reaction detail list, voice messages, media/documents/links section, message search, copy/delete/report/block on a message, unread badges, loading/error/retry and empty states, add members and admin promotion with owner protection.
+
+## Suggested fix order
+
+Priority 1 items in one pass (delete-group placement, error messages, creator-leave protection, leave confirmation, archived state), then Priority 2, then the cleanup. No code will change until you approve.
