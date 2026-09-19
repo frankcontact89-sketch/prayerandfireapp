@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState}from"react";
-import{ArrowLeft,Ban,Bell,BellOff,Camera,CheckCheck,Clock,Copy,FileText,Flag,ChevronRight,CornerUpLeft,Link2,LogOut,Mic,MoreHorizontal,Paperclip,Pin,PinOff,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
+import{ArrowLeft,Ban,Bell,BellOff,Camera,CheckCheck,Clock,Copy,FileText,Flag,ChevronRight,CornerUpLeft,Info,Link2,LogOut,Mic,MoreHorizontal,Paperclip,Pin,PinOff,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
 import{supabase}from"@/integrations/supabase/client";
 import CreateGroupModal,{type CreatedGroup}from"@/components/community/CreateGroupModal";
 import AccessGate from"@/components/community/AccessGate";
@@ -16,6 +16,7 @@ type Group=CreatedGroup&{role?:string;createdBy?:string;muted?:boolean;mutedUnti
 type DiscoverGroup={id:string;name:string;description?:string|null;avatar?:string;memberCount:number};
 type Msg={id:string;sender_id:string;body?:string|null;media_url?:string|null;media_type?:string|null;created_at:string;deleted_at?:string|null;starred?:boolean;reply_to?:string|null;pinned_at?:string|null;mine?:boolean;url?:string};
 type GroupMember={id:string;name:string;role?:string;avatar?:string|null};
+type ReadReceipt={user_id:string;read_at:string};
 type Sender={name:string;avatar?:string|null};
 const db:any=supabase;
 const EMOJIS=["👍","❤️","😂","😮","😢","🙏","🔥"];
@@ -61,6 +62,10 @@ export default function CommunityV2(){
  const mutedUntilLabel=L("Muted until","Silenciado hasta","Silenciado até");
  const typingLabel=L("is typing…","está escribiendo…","está digitando…");
  const typingManyLabel=L("are typing…","están escribiendo…","estão digitando…");
+ const messageInfoLabel=L("Message info","Información del mensaje","Informações da mensagem");
+ const readByLabel=L("Read by","Leído por","Lido por");
+ const notReadLabel=L("Not read yet","Aún no leído","Ainda não lido");
+ const sentLabel=L("Sent","Enviado","Enviado");
  const[me,setMe]=useState<any>(null);
  const[access,setAccess]=useState<"loading"|"none"|"pending"|"rejected"|"approved">("loading");
  const[staffRole,setStaffRole]=useState<"owner"|"admin"|null>(null);
@@ -83,7 +88,7 @@ export default function CommunityV2(){
  const[inviteLink,setInviteLink]=useState<string|null>(null),[inviteBusy,setInviteBusy]=useState(false);
  const[mentionQuery,setMentionQuery]=useState<string|null>(null);
  const[highlightMsg,setHighlightMsg]=useState<string|null>(null);
- const[blocks,setBlocks]=useState<string[]>([]),[reportFor,setReportFor]=useState<Msg|null>(null),[reportReason,setReportReason]=useState("harassment"),[reportNote,setReportNote]=useState(""),[blockFor,setBlockFor]=useState<Msg|null>(null),[busyMod,setBusyMod]=useState(false);
+ const[blocks,setBlocks]=useState<string[]>([]),[reportFor,setReportFor]=useState<Msg|null>(null),[reportReason,setReportReason]=useState("harassment"),[reportNote,setReportNote]=useState(""),[blockFor,setBlockFor]=useState<Msg|null>(null),[busyMod,setBusyMod]=useState(false);\n const[messageInfo,setMessageInfo]=useState<Msg|null>(null),[messageInfoReads,setMessageInfoReads]=useState<ReadReceipt[]>([]),[messageInfoBusy,setMessageInfoBusy]=useState(false);
  const REASONS:[string,string][]=[["harassment",t.reasonHarassment],["hate",t.reasonHate],["sexual",t.reasonSexual],["violence",t.reasonViolence],["spam",t.reasonSpam],["privacy",t.reasonPrivacy],["other",t.reasonOther]];
 
  const goBack=()=>{if(window.history.length>1)window.history.back();else window.location.assign("/")};
@@ -323,6 +328,15 @@ export default function CommunityV2(){
  };
 
 
+ const openMessageInfo=async(m:Msg)=>{
+  if(!me||!m.mine)return;
+  setMenu(null);setMessageInfo(m);setMessageInfoReads([]);setMessageInfoBusy(true);
+  const{data,error}=await db.from("community_message_reads").select("user_id,read_at").eq("message_id",m.id).order("read_at",{ascending:true});
+  setMessageInfoBusy(false);
+  if(error){toast(error.message||actionFailedLabel);return}
+  setMessageInfoReads((data||[]).filter((r:any)=>r.user_id!==me.id));
+ };
+
  const submitReport=async()=>{
   if(!me||!reportFor||reportFor.sender_id===me.id)return;
   setBusyMod(true);
@@ -504,13 +518,27 @@ export default function CommunityV2(){
   {menu&&<div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={()=>setMenu(null)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-4 pb-[max(20px,env(safe-area-inset-bottom))]">
    <div className="flex justify-between items-center mb-3"><b>{t.options}</b><button onClick={()=>setMenu(null)} aria-label={t.cancel}><X/></button></div>
    <div className="flex gap-2 pb-3 overflow-x-auto">{EMOJIS.map(e=><button key={e} onClick={()=>react(menu,e)} className={`w-11 h-11 shrink-0 rounded-full border text-xl grid place-items-center ${(reactions[menu.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-orange-500/20 border-orange-500/60":"bg-zinc-900 border-white/10"}`}>{e}</button>)}<button onClick={()=>{const mm=menu;setMenu(null);setEmojiPicker(mm)}} aria-label={emojiTitle} className="w-11 h-11 shrink-0 rounded-full bg-zinc-900 border border-white/10 text-orange-400 grid place-items-center"><Plus className="w-5 h-5"/></button></div>
-   <button onClick={()=>{setReplyTo(menu);setMenu(null)}} className="w-full h-13 py-3 px-2 flex items-center gap-3 border-t border-white/5"><CornerUpLeft className="w-5 h-5 text-orange-400"/><span>{t.reply}</span></button>
+   <button onClick={()=>{setReplyTo(menu);setMenu(null)}} className="w-full h-13 py-3 px-2 flex items-center gap-3 border-t border-white/5"><CornerUpLeft className="w-5 h-5 text-orange-400"/><span>{t.reply}</span></button>\n   {menu.mine&&<button onClick={()=>openMessageInfo(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Info className="w-5 h-5 text-orange-400"/><span>{messageInfoLabel}</span></button>}
    {canManageGroup(selected)&&<button onClick={()=>togglePin(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5">{menu.pinned_at?<PinOff className="w-5 h-5 text-orange-400"/>:<Pin className="w-5 h-5 text-orange-400"/>}<span>{menu.pinned_at?unpinLabel:pinLabel}</span></button>}
    <button onClick={()=>copyMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Copy className="w-5 h-5 text-orange-400"/><span>{copyLabel}</span></button><button onClick={()=>forwardMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Send className="w-5 h-5 text-orange-400"/><span>{forwardLabel}</span></button>
    {menu.sender_id!==me?.id&&<button onClick={()=>{const mm=menu;setMenu(null);setReportFor(mm)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Flag className="w-5 h-5 text-orange-400"/><span>{t.report}</span></button>}
    {menu.sender_id!==me?.id&&<button onClick={()=>{const mm=menu;setMenu(null);setBlockFor(mm)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Ban className="w-5 h-5"/><span>{t.block}</span></button>}
    {(menu.sender_id===me?.id||canManageGroup(selected))&&<button onClick={()=>{setConfirmDel(menu);setMenu(null)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Trash2 className="w-5 h-5"/><span>{t.deleteMsg}</span></button>}
   </div></div>}
+  {messageInfo&&<div className="fixed inset-0 z-[70] bg-[#f3f4f6] text-black overflow-y-auto" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
+   <header className="sticky top-0 z-20 h-16 bg-white/95 border-b border-black/10 px-3 flex items-center gap-3"><button onClick={()=>setMessageInfo(null)} className="w-10 h-10 grid place-items-center"><ArrowLeft/></button><b className="flex-1 text-center pr-10">{messageInfoLabel}</b></header>
+   <div className="max-w-xl mx-auto p-4">
+    <div className="rounded-2xl bg-white border border-black/10 p-4">
+     <div className="text-xs text-zinc-500 mb-2">{sentLabel}</div>
+     <div className="flex items-center justify-between gap-3"><span className="font-semibold">{new Date(messageInfo.created_at).toLocaleDateString()}</span><span className="text-zinc-500">{new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</span></div>
+    </div>
+    <div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
+     <div className="px-4 py-3 border-b border-black/10 font-bold flex items-center gap-2"><CheckCheck className="w-5 h-5 text-sky-500"/>{readByLabel}</div>
+     {messageInfoBusy?<div className="p-4 text-sm text-zinc-500">{t.loading}</div>:messageInfoReads.length===0?<div className="p-4 text-sm text-zinc-500">{notReadLabel}</div>:messageInfoReads.map(r=>{const p=members.find(x=>x.id===r.user_id);return <div key={r.user_id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p?.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:(p?.name||t.member)[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{p?.name||t.member}</div><div className="text-xs text-zinc-500">{new Date(r.read_at).toLocaleDateString()}</div></div><div className="text-sm text-zinc-600">{new Date(r.read_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div>})}
+    </div>
+    {!messageInfoBusy&&<div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden"><div className="px-4 py-3 border-b border-black/10 font-bold">{notReadLabel}</div>{members.filter(p=>p.id!==me?.id&&!messageInfoReads.some(r=>r.user_id===p.id)).length===0?<div className="p-4 text-sm text-zinc-500">—</div>:members.filter(p=>p.id!==me?.id&&!messageInfoReads.some(r=>r.user_id===p.id)).map(p=><div key={p.id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:p.name[0]?.toUpperCase()}</div><span className="font-semibold truncate">{p.name}</span></div>)}</div>}
+   </div>
+  </div>}
   <ReactionEmojiPicker open={!!emojiPicker} title={emojiTitle} selected={emojiPicker?(reactions[emojiPicker.id]||[]).find(r=>r.user_id===me?.id)?.emoji:undefined} onClose={()=>setEmojiPicker(null)} onPick={emoji=>emojiPicker&&react(emojiPicker,emoji)}/>
   {reactBar&&<div className="fixed inset-0 z-30" onClick={()=>setReactBar(null)}/>} 
   {rxDetail&&<div className="fixed inset-0 z-50 bg-black/80 flex items-end" onClick={()=>setRxDetail(null)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-4 pb-[max(20px,env(safe-area-inset-bottom))] max-h-[70vh] overflow-y-auto">
