@@ -10,6 +10,8 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
   const [supported, setSupported] = useState<boolean | null>(null);
   const [on, setOn] = useState(pushPreferred());
   const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => { pushSupported().then(setSupported); }, []);
 
