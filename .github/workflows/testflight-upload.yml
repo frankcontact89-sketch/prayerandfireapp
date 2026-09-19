@@ -7,7 +7,7 @@ on:
       - main
     paths:
       # Trigger a new TestFlight run when this workflow definition is updated.
-      # Re-run marker: Restore build-24 native project for build 28.
+      # Re-run marker: Build 29 with build-24 native project and auth storage.
       - '.github/workflows/testflight-upload.yml'
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
     env:
       APP_BUNDLE_ID: com.frankcontact89.prayerandfiremobile
       APP_VERSION: '1.1'
-      BUILD_NUMBER: '28'
+      BUILD_NUMBER: '29'
       APPLE_TEAM_ID: 2UU7S882KZ
       APP_STORE_CONNECT_KEY_ID: NGM28WWYM2
 
