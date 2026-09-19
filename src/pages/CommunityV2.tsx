@@ -415,12 +415,12 @@ export default function CommunityV2(){
    if(memberError||profileError||readError||playError||deliveryError){toast(memberError?.message||profileError?.message||readError?.message||deliveryError?.message||playError?.message||actionFailedLabel);return}
    const currentIds=new Set(recipientIds);
    const profileMap=new Map((profiles||[]).map((profile:any)=>[profile.id,profile]));
-   const currentMembers=recipientRows.map((row:any)=>{const profile:any=profileMap.get(row.user_id)||{};return{id:row.user_id,name:profile.username||t.member,role:row.role,avatar:profile.avatar_url}});
+    const currentMembers:GroupMember[]=recipientRows.map((row:any)=>{const profile:any=profileMap.get(row.user_id)||{};return{id:String(row.user_id),name:String(profile.username||t.member),role:row.role?String(row.role):undefined,avatar:profile.avatar_url?String(profile.avatar_url):null}});
    setMessageInfoMembers(currentMembers);
    setMembers(previous=>{
     const currentMap=new Map(currentMembers.map(member=>[member.id,member]));
     if(m.sender_id===me.id)currentMap.set(me.id,{id:me.id,name:me.name||t.member,avatar:me.avatar});
-    return Array.from(currentMap.values());
+     return Array.from(currentMap.values()) as GroupMember[];
    });
    setMessageInfoReads((reads||[]).filter((receipt:any)=>currentIds.has(receipt.user_id)));
    setMessageInfoDeliveries((deliveries||[]).filter((receipt:any)=>currentIds.has(receipt.user_id)));
