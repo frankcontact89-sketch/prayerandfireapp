@@ -57,6 +57,7 @@ export function SettingsScreen({
   const [phone, setPhone] = useState("");
   const [phonePrivate, setPhonePrivate] = useState(true);
   const [phoneDiscoverable, setPhoneDiscoverable] = useState(false);
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE);
   const [userId, setUserId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -339,9 +340,8 @@ export function SettingsScreen({
         const { error: delError } = await supabase.from("user_phone_numbers").delete().eq("user_id", userId);
         if (delError) throw delError;
       } else {
-        const digits = raw.replace(/[^0-9]/g, "");
-        if (digits.length < 8 || digits.length > 15) throw new Error(L(language, "Enter a valid phone number with country code.", "Introduce un número de teléfono válido con código de país.", "Digite um número de telefone válido com código do país."));
-        const e164 = `+${digits}`;
+        const e164 = toE164(raw, countryCode);
+        if (!e164) throw new Error(L(language, "Enter a valid phone number with country code.", "Introduce un número de teléfono válido con código de país.", "Digite um número de telefone válido com código do país."));
         setPhone(e164);
         const { error: phoneError } = await supabase
           .from("user_phone_numbers")
@@ -413,15 +413,27 @@ export function SettingsScreen({
           <div className="rounded-2xl border border-border bg-card/60 p-4 space-y-3">
             <div>
               <p className="text-xs uppercase tracking-widest text-zinc-500">{L(language, "Phone number (optional)", "Número de teléfono (opcional)", "Número de telefone (opcional)")}</p>
-              <Input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                inputMode="tel"
-                placeholder="+1 555 000 0000"
-                disabled={savingProfile}
-                className="mt-2 h-10"
-              />
-              <p className="mt-2 text-xs text-zinc-500">{L(language, "Include your country code. Your number is never shown to other members.", "Incluye el código de país. Tu número nunca se muestra a otros miembros.", "Inclua o código do país. Seu número nunca é mostrado a outros membros.")}</p>
+              <div className="mt-2 flex gap-2">
+                <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  disabled={savingProfile}
+                  aria-label={L(language, "Country code", "Código de país", "Código do país")}
+                  className="h-10 rounded-md border border-border bg-background px-2 text-sm text-white"
+                >
+                  {COUNTRY_CODES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+                </select>
+                <Input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  inputMode="tel"
+                  placeholder="857 261 2862"
+                  disabled={savingProfile}
+                  className="h-10 flex-1"
+                />
+              </div>
+              <p className="mt-2 text-xs text-zinc-500">{L(language, "Pick your country code, or type the number with + and the country code. Your number is never shown to other members.", "Elige tu código de país, o escribe el número con + y el código de país. Tu número nunca se muestra a otros miembros.", "Escolha o código do país, ou digite o número com + e o código do país. Seu número nunca é mostrado a outros membros.")}</p>
+              {toE164(phone, countryCode) && <p className="mt-1 text-xs text-orange-300">{toE164(phone, countryCode)}</p>}
             </div>
             <label className="flex items-center justify-between gap-3 text-sm text-white">
               <span>{L(language, "Keep my phone number private", "Mantener mi número de teléfono privado", "Manter meu número de telefone privado")}</span>
