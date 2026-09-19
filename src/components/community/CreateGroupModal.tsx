@@ -50,7 +50,7 @@ export default function CreateGroupModal({ open, onClose, onCreate, language }: 
         if(!eligible.length){ setPeople([]); return; }
         const { data } = await db.from("profiles").select("id, username, avatar_url").in("id", eligible).order("username", { ascending:true });
         if(cancelled) return;
-        const source:any[] = (data && data.length) ? data : eligible.map((id)=>({ id, username:null, avatar_url:null, _x:null, email:null }));
+        const source:any[] = (data && data.length) ? data : eligible.map((id)=>({ id, username:null, avatar_url:null }));
         const mapped:Person[]=source.map((p:any)=>({
           id:p.id,
           name:p.username || "Prayer & Fire Member",
