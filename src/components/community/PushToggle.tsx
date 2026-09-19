@@ -59,9 +59,24 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
             )}
           </p>
         </div>
-        <Switch checked={on} onCheckedChange={change} disabled={supported === false && !on} />
+        <Switch checked={on} onCheckedChange={change} disabled={busy || (supported === false && !on)} />
       </div>
-      {note && <div className="px-4 pb-3 text-xs text-orange-300">{note}</div>}
+      {busy && (
+        <div className="px-4 pb-3 text-xs text-zinc-400">
+          {L("Connecting this device…", "Conectando este dispositivo…", "Conectando este dispositivo…")}
+        </div>
+      )}
+      {note && <div className={`px-4 pb-3 text-xs ${failed ? "text-red-300" : "text-orange-300"}`}>{note}</div>}
+      {failed && !busy && (
+        <div className="px-4 pb-3">
+          <button
+            onClick={() => change(true)}
+            className="h-9 px-4 rounded-xl bg-orange-500 text-black text-xs font-black"
+          >
+            {L("Try again", "Intentar de nuevo", "Tentar novamente")}
+          </button>
+        </div>
+      )}
       {supported === false && (
         <div className="px-4 pb-3 text-xs text-zinc-500">
           {L(
