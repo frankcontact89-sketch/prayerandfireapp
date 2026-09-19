@@ -156,12 +156,12 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
     <div className="max-w-2xl mx-auto p-6 space-y-4">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <button onClick={onBack} className="text-primary hover:text-primary/80 transition-colors"><ArrowLeft className="w-6 h-6" /></button>
+          <button onClick={onBack} aria-label={t("back")} className="text-primary hover:text-primary/80 transition-colors p-2 -ml-2"><ArrowLeft className="w-6 h-6" /></button>
           <h2 className="text-2xl font-bold text-foreground">🔔 {t("notifications")}</h2>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <DialogTrigger asChild><Button variant="outline" size="sm"><Settings className="w-4 h-4" /></Button></DialogTrigger>
+            <DialogTrigger asChild><Button variant="outline" size="sm" aria-label={t("notificationSettings")}><Settings className="w-4 h-4" /></Button></DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader><DialogTitle>{t("notificationSettings")}</DialogTitle></DialogHeader>
               <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
