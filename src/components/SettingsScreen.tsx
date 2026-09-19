@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE, toE164 } from "@/lib/phone";
 import {
   AlertDialog,
   AlertDialogAction,
