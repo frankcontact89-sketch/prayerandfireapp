@@ -601,6 +601,8 @@ export default function CommunityV2(){
   setMentionQuery(null);
  };
  const renderBody=(text:string)=>text.split(/(@[\p{L}\w.]+)/u).map((part,i)=>part.startsWith("@")?<span key={i} className="font-bold text-orange-300 bg-orange-500/10 rounded px-0.5">{part}</span>:<React.Fragment key={i}>{part}</React.Fragment>);
+ const messageStatus=(m:Msg):"sent"|"delivered"|"read"=>readCounts[m.id]?"read":deliveredCounts[m.id]?"delivered":"sent";
+ const messageStatusIcon=(m:Msg)=>messageStatus(m)==="read"?<CheckCheck className="w-3.5 h-3.5 text-sky-600"/>:messageStatus(m)==="delivered"?<CheckCheck className="w-3.5 h-3.5 text-black/50"/>:<Check className="w-3.5 h-3.5 text-black/50"/>;
 
  if(access==="loading")return <div className="fixed inset-0 bg-black" />;
  if(access!=="approved")return <AccessGate t={t} status={access} busy={requesting} onRequest={requestAccess} onBack={goBack} />;
@@ -628,13 +630,15 @@ export default function CommunityV2(){
     const dayLabel=dayOf(m.created_at)===today?todayLabel:dayOf(m.created_at)===yest?yesterdayLabel:new Date(m.created_at).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
     return <React.Fragment key={m.id}>
     {showDay&&<div className="flex justify-center py-2"><span className="px-3 py-1 rounded-full bg-zinc-900 border border-white/10 text-[11px] text-zinc-400">{dayLabel}</span></div>}
-    <div ref={el=>{msgRefs.current[m.id]=el}} className={`flex ${m.mine?"justify-end":"justify-start"} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-orange-400/70":""}`}>
+    <div ref={el=>{msgRefs.current[m.id]=el}} className={`relative flex ${m.mine?"justify-end":"justify-start"} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-orange-400/70":""}`}>
+     {m.mine&&<div aria-hidden="true" className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-zinc-900 border border-white/10 grid place-items-center text-orange-400 transition-opacity" style={{opacity:swipeVisual?.id===m.id?Math.min(1,Math.abs(swipeVisual.offset)/45):0}}><Info className="w-4 h-4"/></div>}
      <div
       onContextMenu={e=>{e.preventDefault();setReactBar(m)}}
-      onTouchStart={e=>{const t=e.touches[0];if(m.mine)swipe.current={id:m.id,x:t.clientX,y:t.clientY};press.current=window.setTimeout(()=>setReactBar(m),400)}}
-      onTouchEnd={e=>{if(press.current)window.clearTimeout(press.current);const s=swipe.current;swipe.current=null;if(m.mine&&s?.id===m.id){const t=e.changedTouches[0];const dx=t.clientX-s.x,dy=t.clientY-s.y;if(dx<-55&&Math.abs(dy)<45)openMessageInfo(m)}}}
-      onTouchMove={()=>{if(press.current)window.clearTimeout(press.current)}}
-      style={{WebkitTouchCallout:"none",WebkitUserSelect:reactBar?.id===m.id?"none":undefined}}
+       onPointerDown={event=>beginMessageGesture(event,m)}
+       onPointerMove={event=>moveMessageGesture(event,m)}
+       onPointerUp={event=>endMessageGesture(event,m)}
+       onPointerCancel={event=>endMessageGesture(event,m)}
+       style={{WebkitTouchCallout:"none",WebkitUserSelect:reactBar?.id===m.id?"none":undefined,touchAction:"pan-y",transform:swipeVisual?.id===m.id?`translateX(${swipeVisual.offset}px)`:"translateX(0)",transition:swipeVisual?.id===m.id?"none":"transform 180ms ease-out"}}
       className={`group relative max-w-[86%] rounded-2xl px-3 py-2 select-none ${(reactions[m.id]||[]).length?"mb-4":""} ${m.mine?"bg-orange-500 text-black":"bg-zinc-900"}`}
      >
       {reactBar?.id===m.id&&<div className={`absolute -top-14 z-40 ${m.mine?"right-0":"left-0"} flex items-center gap-1 rounded-full bg-zinc-950 border border-orange-500/40 shadow-xl shadow-black/60 px-2 py-1.5`}>
@@ -648,9 +652,9 @@ export default function CommunityV2(){
       {m.media_type==="image"&&m.url&&<img src={m.url} alt="" className="rounded-xl max-h-80"/>}
       {m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline preload="metadata" className="rounded-xl max-h-80"/>}
       {m.media_type==="audio"&&m.url&&(starredIds.has(m.id)||m.starred)&&<div className="flex justify-end -mt-1 mb-1"><Star className="w-3 h-3 fill-current text-orange-500"/></div>}
-      {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)}/>} 
+       {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)} status={m.mine?messageStatus(m):undefined}/>} 
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
-      {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{(starredIds.has(m.id)||m.starred)&&<Star className="w-3 h-3 fill-current text-orange-500"/>}{time}{m.mine&&(readCounts[m.id]?<CheckCheck className="w-3.5 h-3.5 text-sky-600"/>:deliveredCounts[m.id]?<CheckCheck className="w-3.5 h-3.5 text-black/50"/>:<Check className="w-3.5 h-3.5 text-black/50"/>)}</div>}
+       {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{(starredIds.has(m.id)||m.starred)&&<Star className="w-3 h-3 fill-current text-orange-500"/>}{time}{m.mine&&messageStatusIcon(m)}</div>}
       {(reactions[m.id]||[]).length>0&&<button onClick={ev=>{ev.stopPropagation();const mineRx=(reactions[m.id]||[]).find(r=>r.user_id===me?.id);if(mineRx)react(m,mineRx.emoji);else setRxDetail(m)}} className={`absolute -bottom-3.5 ${m.mine?"left-2":"right-2"} flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] bg-zinc-800 border border-white/10 text-white`}>
        {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
        {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
