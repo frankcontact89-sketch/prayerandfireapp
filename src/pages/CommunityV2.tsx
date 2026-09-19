@@ -439,7 +439,41 @@ export default function CommunityV2(){
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[access,me?.id]);
 
+ // ---- push notifications (never asked at app startup) ----
+ useEffect(()=>{if(access!=="approved"||!me)return;
+  (async()=>{
+   if(pushPreferred()){await resumePush();return}
+   if(localStorage.getItem("pf_push_asked")==="1")return;
+   localStorage.setItem("pf_push_asked","1");
+   await enablePush();
+  })();
+ },[access,me?.id]);
+
+ // ---- notification tap deep link ----
+ useEffect(()=>{
+  const apply=(d:{groupId:string;messageId?:string}|null)=>{if(d?.groupId)pendingDeepLink.current=d};
+  apply(takePushOpen());
+  const params=new URLSearchParams(window.location.search);
+  const g=params.get("group");
+  if(g){apply({groupId:g,messageId:params.get("message")||undefined});params.delete("group");params.delete("message");window.history.replaceState({},"",`${window.location.pathname}${params.toString()?`?${params}`:""}`)}
+  const onOpen=(e:any)=>{apply(e?.detail);const target=groups.find(x=>x.id===e?.detail?.groupId);if(target)setSelected(target)};
+  window.addEventListener("pf-push-open",onOpen as EventListener);
+  return()=>window.removeEventListener("pf-push-open",onOpen as EventListener);
+ },[groups]);
+
+ useEffect(()=>{
+  const d=pendingDeepLink.current;
+  if(!d||!groups.length)return;
+  const target=groups.find(x=>x.id===d.groupId);
+  if(!target)return;
+  pendingDeepLink.current=null;
+  setSelected(target);
+  if(d.messageId)window.setTimeout(()=>jumpToMsg(d.messageId!),900);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[groups]);
+
  // ---- pinned messages ----
+
  const pinned=useMemo(()=>msgs.filter(m=>m.pinned_at&&!m.deleted_at).sort((a,b)=>String(b.pinned_at).localeCompare(String(a.pinned_at))),[msgs]);
  const togglePin=async(m:Msg)=>{
   setMenu(null);
@@ -448,7 +482,9 @@ export default function CommunityV2(){
   const{error}=await db.from("community_messages").update({pinned_at:next}).eq("id",m.id);
   if(error){toast(/NO_PERMISSION/.test(error.message||"")?t.noPermission:(error.message||actionFailedLabel));return}
   setMsgs(v=>v.map(x=>x.id===m.id?{...x,pinned_at:next}:x));
+  if(next)dispatchPush({kind:"pinned",message_id:m.id});
   toast(next?pinnedDoneLabel:unpinnedDoneLabel);
+
  };
  const jumpToMsg=(id:string)=>{
   const el=msgRefs.current[id];
