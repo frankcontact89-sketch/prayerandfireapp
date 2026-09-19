@@ -1103,6 +1103,24 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_lookup_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           button_label: string | null
@@ -1490,6 +1508,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_phone_numbers: {
+        Row: {
+          created_at: string
+          discoverable: boolean
+          phone: string
+          phone_private: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          discoverable?: boolean
+          phone: string
+          phone_private?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          discoverable?: boolean
+          phone?: string
+          phone_private?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_push_tokens: {
         Row: {
           created_at: string
@@ -1621,6 +1666,10 @@ export type Database = {
           name: string
         }[]
       }
+      find_member_by_phone: {
+        Args: { _group_id: string; _phone: string }
+        Returns: Json
+      }
       get_username_by_email: { Args: { _email: string }; Returns: string }
       has_blocked: {
         Args: { _blocked: string; _blocker: string }
@@ -1636,6 +1685,10 @@ export type Database = {
       invite_group_member_by_email: {
         Args: { _email: string; _full_name?: string; _group_id: string }
         Returns: string
+      }
+      invite_group_member_by_phone: {
+        Args: { _group_id: string; _phone: string }
+        Returns: Json
       }
       is_community_approved: { Args: { _user_id: string }; Returns: boolean }
       is_community_boss: { Args: { _user_id: string }; Returns: boolean }
@@ -1653,6 +1706,7 @@ export type Database = {
         Returns: boolean
       }
       join_group_by_invite_token: { Args: { _token: string }; Returns: Json }
+      normalize_phone_e164: { Args: { _phone: string }; Returns: string }
       revoke_group_invite_links: {
         Args: { _group_id: string }
         Returns: undefined
