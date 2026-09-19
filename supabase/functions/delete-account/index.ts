@@ -76,6 +76,7 @@ Deno.serve(async (req) => {
         if (gMsgIds.length) {
           await admin.from("community_reactions").delete().in("message_id", gMsgIds);
           await admin.from("community_message_reads").delete().in("message_id", gMsgIds);
+          await admin.from("community_message_deliveries").delete().in("message_id", gMsgIds);
           await admin.from("community_audio_plays").delete().in("message_id", gMsgIds);
           await admin.from("community_messages").update({ reply_to: null }).in("reply_to", gMsgIds);
           await admin.from("community_reports").update({ message_id: null }).in("message_id", gMsgIds);
@@ -104,10 +105,12 @@ Deno.serve(async (req) => {
     await admin.from("community_reactions").delete().eq("user_id", uid);
     await admin.from("community_audio_plays").delete().eq("user_id", uid);
     await admin.from("community_message_reads").delete().eq("user_id", uid);
+    await admin.from("community_message_deliveries").delete().eq("user_id", uid);
     if (msgIds.length) {
       await admin.from("community_audio_plays").delete().in("message_id", msgIds);
       await admin.from("community_reactions").delete().in("message_id", msgIds);
       await admin.from("community_message_reads").delete().in("message_id", msgIds);
+      await admin.from("community_message_deliveries").delete().in("message_id", msgIds);
       await admin.from("community_messages").update({ reply_to: null }).in("reply_to", msgIds);
       await admin.from("community_reports").update({ message_id: null }).in("message_id", msgIds);
     }
@@ -137,6 +140,7 @@ Deno.serve(async (req) => {
     await admin.from("purchases").delete().eq("user_id", uid);
     await admin.from("submissions").update({ user_id: null }).eq("user_id", uid);
     await admin.from("user_roles").delete().eq("user_id", uid);
+    await admin.from("user_push_tokens").delete().eq("user_id", uid);
 
     // Storage owned by the user
     await purgeBucket(admin, "community-media", uid);

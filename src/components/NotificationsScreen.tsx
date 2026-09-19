@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { setLastReadAtNow } from "@/lib/notifications-last-seen";
+import PushToggle from "@/components/community/PushToggle";
 
 interface NotificationsScreenProps { t: (key: string) => string; onBack: () => void; }
 interface Notification { id: string; title: string; message: string; type: string; link: string | null; is_read: boolean; created_at: string; user_id?: string | null; }
@@ -172,6 +173,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
           {notifications.filter(n => n.is_read).length > 0 && <Button variant="outline" size="sm" onClick={deleteAllRead} className="text-destructive hover:text-destructive"><Trash2 className="w-4 h-4 mr-1" />{t("deleteRead")}</Button>}
         </div>
       </div>
+      <PushToggle />
       {!notificationsEnabled && <Card className="p-4 bg-muted/30 border-dashed"><div className="flex items-center gap-3"><Flame className="w-5 h-5 text-muted-foreground" /><p className="text-muted-foreground">{t("enableInSettings")}</p></div></Card>}
       {notifications.length === 0 ? <div className="text-center p-12 space-y-4"><Flame className="w-20 h-20 text-muted-foreground/30 mx-auto mb-4" /><p className="text-muted-foreground text-lg">{t("noNotificationsYet")}</p></div> : (
         <div className="space-y-3">

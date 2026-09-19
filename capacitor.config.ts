@@ -29,6 +29,9 @@ const config: CapacitorConfig = {
     Camera: {
       iosImagePickerPresentationStyle: 'fullscreen',
     },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
   },
 };
 

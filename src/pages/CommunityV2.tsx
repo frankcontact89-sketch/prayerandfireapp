@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState}from"react";
-import{ArrowLeft,Ban,Bell,BellOff,Camera,CheckCheck,Clock,Copy,FileText,Flag,ChevronRight,CornerUpLeft,Info,Link2,LogOut,Mic,MoreHorizontal,Paperclip,Pin,PinOff,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
+import{ArrowLeft,Ban,Bell,BellOff,Camera,Check,CheckCheck,Clock,Copy,FileText,Flag,ChevronRight,CornerUpLeft,Info,Link2,LogOut,Mic,MoreHorizontal,Paperclip,Pin,PinOff,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
 import{supabase}from"@/integrations/supabase/client";
 import CreateGroupModal,{type CreatedGroup}from"@/components/community/CreateGroupModal";
 import AccessGate from"@/components/community/AccessGate";
@@ -11,14 +11,19 @@ import ReactionEmojiPicker from"@/components/community/ReactionEmojiPicker";
 import{dict,getLang}from"@/components/community/i18n";
 import{isBlockedContent}from"@/lib/content-filter";
 import SafetyRulesModal from"@/components/community/SafetyRulesModal";
+import PushToggle from"@/components/community/PushToggle";
+import{ackDelivered,enablePush,pushPreferred,resumePush,takePushOpen}from"@/lib/push";
 import entryLogo from"@/assets/prayer-fire-entry-logo.png";
+
 
 type Group=CreatedGroup&{role?:string;createdBy?:string;muted?:boolean;mutedUntil?:string|null;archived?:boolean;favorite?:boolean;memberCount?:number;description?:string};
 type DiscoverGroup={id:string;name:string;description?:string|null;avatar?:string;memberCount:number};
 type Msg={id:string;sender_id:string;body?:string|null;media_url?:string|null;media_type?:string|null;created_at:string;deleted_at?:string|null;starred?:boolean;reply_to?:string|null;pinned_at?:string|null;mine?:boolean;url?:string};
 type GroupMember={id:string;name:string;role?:string;avatar?:string|null};
 type ReadReceipt={user_id:string;read_at:string};
+type DeliveryReceipt={user_id:string;delivered_at:string};
 type PlayReceipt={user_id:string;played_at:string};
+
 type Sender={name:string;avatar?:string|null};
 const db:any=supabase;
 const EMOJIS=["👍","❤️","😂","😮","😢","🙏","🔥"];
@@ -69,6 +74,10 @@ export default function CommunityV2(){
  const notReadLabel=L("Not read yet","Aún no leído","Ainda não lido");
  const sentLabel=L("Sent","Enviado","Enviado");
  const playedByLabel=L("Played by","Reproducido por","Reproduzido por");
+ const deliveredToLabel=L("Delivered to","Entregado a","Entregue a");
+ const notDeliveredLabel=L("Not delivered yet","Aún no entregado","Ainda não entregue");
+ const pushSettingsLabel=L("Notifications","Notificaciones","Notificações");
+
  const[me,setMe]=useState<any>(null);
  const[access,setAccess]=useState<"loading"|"none"|"pending"|"rejected"|"approved">("loading");
  const[staffRole,setStaffRole]=useState<"owner"|"admin"|null>(null);
@@ -78,7 +87,10 @@ export default function CommunityV2(){
  const[pendingCount,setPendingCount]=useState(0);
  const[membersModal,setMembersModal]=useState<null|"add"|"admins"|"members">(null);
  const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups"|"discover">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[emojiPicker,setEmojiPicker]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[flash,setFlash]=useState("");
- const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[readCounts,setReadCounts]=useState<Record<string,number>>({});
+ const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[readCounts,setReadCounts]=useState<Record<string,number>>({}),[deliveredCounts,setDeliveredCounts]=useState<Record<string,number>>({});
+ const[pushSheet,setPushSheet]=useState(false);
+ const pendingDeepLink=useRef<{groupId:string;messageId?:string}|null>(null);
+
  const[listLoading,setListLoading]=useState(true),[listError,setListError]=useState(false);
  const[discoverList,setDiscoverList]=useState<DiscoverGroup[]>([]),[discoverLoading,setDiscoverLoading]=useState(false),[noAccessGroup,setNoAccessGroup]=useState<DiscoverGroup|null>(null),[confirmDelGroup,setConfirmDelGroup]=useState(false),[confirmLeave,setConfirmLeave]=useState(false),[showArchived,setShowArchived]=useState(false);
  const file=useRef<HTMLInputElement>(null),photo=useRef<HTMLInputElement>(null),end=useRef<HTMLDivElement>(null);
@@ -94,7 +106,7 @@ export default function CommunityV2(){
  const[highlightMsg,setHighlightMsg]=useState<string|null>(null);
  const[blocks,setBlocks]=useState<string[]>([]),[reportFor,setReportFor]=useState<Msg|null>(null),[reportReason,setReportReason]=useState("harassment"),[reportNote,setReportNote]=useState(""),[blockFor,setBlockFor]=useState<Msg|null>(null),[busyMod,setBusyMod]=useState(false);
  const[safety,setSafety]=useState(false);
- const[messageInfo,setMessageInfo]=useState<Msg|null>(null),[messageInfoReads,setMessageInfoReads]=useState<ReadReceipt[]>([]),[messageInfoPlays,setMessageInfoPlays]=useState<PlayReceipt[]>([]),[messageInfoBusy,setMessageInfoBusy]=useState(false);
+ const[messageInfo,setMessageInfo]=useState<Msg|null>(null),[messageInfoReads,setMessageInfoReads]=useState<ReadReceipt[]>([]),[messageInfoPlays,setMessageInfoPlays]=useState<PlayReceipt[]>([]),[messageInfoDeliveries,setMessageInfoDeliveries]=useState<DeliveryReceipt[]>([]),[messageInfoBusy,setMessageInfoBusy]=useState(false);
  const REASONS:[string,string][]=[["harassment",t.reasonHarassment],["hate",t.reasonHate],["sexual",t.reasonSexual],["violence",t.reasonViolence],["spam",t.reasonSpam],["privacy",t.reasonPrivacy],["other",t.reasonOther]];
 
  const goBack=()=>{if(window.history.length>1)window.history.back();else window.location.assign("/")};
@@ -179,15 +191,22 @@ export default function CommunityV2(){
   if(ids.length)await loadReactions(ids);else setReactions({});
   const myId=uid||me?.id;
   if(ids.length&&myId){
-   const unreadOthers=rows.filter((r:any)=>r.sender_id!==myId&&!r.deleted_at).map((r:any)=>({message_id:r.id,user_id:myId}));
+   const fromOthers=rows.filter((r:any)=>r.sender_id!==myId&&!r.deleted_at).map((r:any)=>r.id);
+   // Real device acknowledgement: these messages actually reached this device.
+   if(fromOthers.length)await ackDelivered(fromOthers);
+   const unreadOthers=fromOthers.map((id:string)=>({message_id:id,user_id:myId}));
    if(unreadOthers.length)await db.from("community_message_reads").upsert(unreadOthers,{onConflict:"message_id,user_id",ignoreDuplicates:true});
    const mineIds=rows.filter((r:any)=>r.sender_id===myId).map((r:any)=>r.id);
    if(mineIds.length){
     const{data:rd}=await db.from("community_message_reads").select("message_id,user_id").in("message_id",mineIds);
     const counts:Record<string,number>={};(rd||[]).forEach((r:any)=>{if(r.user_id!==myId)counts[r.message_id]=(counts[r.message_id]||0)+1});
     setReadCounts(counts);
-   }else setReadCounts({});
+    const{data:dd}=await db.from("community_message_deliveries").select("message_id,user_id").in("message_id",mineIds);
+    const dc:Record<string,number>={};(dd||[]).forEach((r:any)=>{if(r.user_id!==myId)dc[r.message_id]=(dc[r.message_id]||0)+1});
+    setDeliveredCounts(dc);
+   }else{setReadCounts({});setDeliveredCounts({})}
   }
+
   setTimeout(()=>end.current?.scrollIntoView({behavior:"smooth"}),30);
  },[me?.id,loadSenders,loadReactions]);
 
@@ -284,11 +303,15 @@ export default function CommunityV2(){
   await loadGroups(me.id);setCreate(false);
  };
 
+ // Server-side push dispatch. Credentials stay on the server; failures never block chat.
+ const dispatchPush=async(payload:any)=>{try{await supabase.functions.invoke("community-push",{body:payload})}catch{/* push is best-effort */}};
+
  const send=async()=>{if(!draft.trim()||!selected||!me)return;const body=draft.trim().slice(0,10000);
   if(isBlockedContent(body)){toast(t.contentBlocked);return}
   const r=replyTo?.id||null;setDraft("");setReplyTo(null);
-  const{error}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,body,reply_to:r});
-  if(error){setDraft(body);toast(/CONTENT_BLOCKED/.test(error.message||"")?t.contentBlocked:error.message||"")}};
+  const{data:inserted,error}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,body,reply_to:r}).select("id").single();
+  if(error){setDraft(body);toast(/CONTENT_BLOCKED/.test(error.message||"")?t.contentBlocked:error.message||"");return}
+  if(inserted?.id)dispatchPush({kind:"message",message_id:inserted.id})};
 
  const upload=async(f?:File)=>{
   if(!f||!selected||!me||f.size>50*1024*1024)return;
@@ -298,8 +321,10 @@ export default function CommunityV2(){
   const{error}=await supabase.storage.from("community-media").upload(path,f,{contentType:f.type||"application/octet-stream",upsert:false});
   if(error)return;
   const r=replyTo?.id||null;setReplyTo(null);
-  await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,media_url:path,media_type:kind,reply_to:r});
+  const{data:inserted}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,media_url:path,media_type:kind,reply_to:r}).select("id").single();
+  if(inserted?.id)dispatchPush({kind:"message",message_id:inserted.id});
  };
+
 
  const deleteMsg=async(m:Msg)=>{
   if(!me||!selected)return;
@@ -336,15 +361,18 @@ export default function CommunityV2(){
 
  const openMessageInfo=async(m:Msg)=>{
   if(!me||!m.mine)return;
-  setMenu(null);setMessageInfo(m);setMessageInfoReads([]);setMessageInfoPlays([]);setMessageInfoBusy(true);
+  setMenu(null);setMessageInfo(m);setMessageInfoReads([]);setMessageInfoPlays([]);setMessageInfoDeliveries([]);setMessageInfoBusy(true);
   const readsPromise=db.from("community_message_reads").select("user_id,read_at").eq("message_id",m.id).order("read_at",{ascending:true});
+  const deliveriesPromise=db.from("community_message_deliveries").select("user_id,delivered_at").eq("message_id",m.id).order("delivered_at",{ascending:true});
   const playsPromise=m.media_type==="audio"?db.from("community_audio_plays").select("user_id,played_at").eq("message_id",m.id).order("played_at",{ascending:true}):Promise.resolve({data:[],error:null});
-  const [{data:reads,error:readError},{data:plays,error:playError}]=await Promise.all([readsPromise,playsPromise]);
+  const [{data:reads,error:readError},{data:deliveries,error:deliveryError},{data:plays,error:playError}]=await Promise.all([readsPromise,deliveriesPromise,playsPromise]);
   setMessageInfoBusy(false);
-  if(readError||playError){toast(readError?.message||playError?.message||actionFailedLabel);return}
+  if(readError||playError||deliveryError){toast(readError?.message||deliveryError?.message||playError?.message||actionFailedLabel);return}
   setMessageInfoReads((reads||[]).filter((r:any)=>r.user_id!==me.id));
+  setMessageInfoDeliveries((deliveries||[]).filter((r:any)=>r.user_id!==me.id));
   setMessageInfoPlays((plays||[]).filter((r:any)=>r.user_id!==me.id));
  };
+
  const reportAudioPlayed=async(m:Msg)=>{
   if(!me||m.mine||m.media_type!=="audio")return;
   await db.from("community_audio_plays").upsert({message_id:m.id,user_id:me.id,played_at:new Date().toISOString()},{onConflict:"message_id,user_id"});
@@ -411,7 +439,41 @@ export default function CommunityV2(){
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[access,me?.id]);
 
+ // ---- push notifications (never asked at app startup) ----
+ useEffect(()=>{if(access!=="approved"||!me)return;
+  (async()=>{
+   if(pushPreferred()){await resumePush();return}
+   if(localStorage.getItem("pf_push_asked")==="1")return;
+   localStorage.setItem("pf_push_asked","1");
+   await enablePush();
+  })();
+ },[access,me?.id]);
+
+ // ---- notification tap deep link ----
+ useEffect(()=>{
+  const apply=(d:{groupId:string;messageId?:string}|null)=>{if(d?.groupId)pendingDeepLink.current=d};
+  apply(takePushOpen());
+  const params=new URLSearchParams(window.location.search);
+  const g=params.get("group");
+  if(g){apply({groupId:g,messageId:params.get("message")||undefined});params.delete("group");params.delete("message");window.history.replaceState({},"",`${window.location.pathname}${params.toString()?`?${params}`:""}`)}
+  const onOpen=(e:any)=>{apply(e?.detail);const target=groups.find(x=>x.id===e?.detail?.groupId);if(target)setSelected(target)};
+  window.addEventListener("pf-push-open",onOpen as EventListener);
+  return()=>window.removeEventListener("pf-push-open",onOpen as EventListener);
+ },[groups]);
+
+ useEffect(()=>{
+  const d=pendingDeepLink.current;
+  if(!d||!groups.length)return;
+  const target=groups.find(x=>x.id===d.groupId);
+  if(!target)return;
+  pendingDeepLink.current=null;
+  setSelected(target);
+  if(d.messageId)window.setTimeout(()=>jumpToMsg(d.messageId!),900);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[groups]);
+
  // ---- pinned messages ----
+
  const pinned=useMemo(()=>msgs.filter(m=>m.pinned_at&&!m.deleted_at).sort((a,b)=>String(b.pinned_at).localeCompare(String(a.pinned_at))),[msgs]);
  const togglePin=async(m:Msg)=>{
   setMenu(null);
@@ -420,7 +482,9 @@ export default function CommunityV2(){
   const{error}=await db.from("community_messages").update({pinned_at:next}).eq("id",m.id);
   if(error){toast(/NO_PERMISSION/.test(error.message||"")?t.noPermission:(error.message||actionFailedLabel));return}
   setMsgs(v=>v.map(x=>x.id===m.id?{...x,pinned_at:next}:x));
+  if(next)dispatchPush({kind:"pinned",message_id:m.id});
   toast(next?pinnedDoneLabel:unpinnedDoneLabel);
+
  };
  const jumpToMsg=(id:string)=>{
   const el=msgRefs.current[id];
@@ -502,7 +566,7 @@ export default function CommunityV2(){
       {m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline preload="metadata" className="rounded-xl max-h-80"/>}
       {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)}/>} 
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
-      {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{m.starred&&<Star className="w-3 h-3 fill-current"/>}{time}{m.mine&&(readCounts[m.id]?<CheckCheck className="w-3.5 h-3.5 text-sky-600"/>:<span className="inline-flex items-center text-black/60">✓</span>)}</div>}
+      {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{m.starred&&<Star className="w-3 h-3 fill-current"/>}{time}{m.mine&&(readCounts[m.id]?<CheckCheck className="w-3.5 h-3.5 text-sky-600"/>:deliveredCounts[m.id]?<CheckCheck className="w-3.5 h-3.5 text-black/50"/>:<Check className="w-3.5 h-3.5 text-black/50"/>)}</div>}
       {(reactions[m.id]||[]).length>0&&<button onClick={ev=>{ev.stopPropagation();const mineRx=(reactions[m.id]||[]).find(r=>r.user_id===me?.id);if(mineRx)react(m,mineRx.emoji);else setRxDetail(m)}} className={`absolute -bottom-3.5 ${m.mine?"left-2":"right-2"} flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] bg-zinc-800 border border-white/10 text-white`}>
        {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
        {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
@@ -551,7 +615,12 @@ export default function CommunityV2(){
      {messageInfoBusy?<div className="p-4 text-sm text-zinc-500">{t.loading}</div>:messageInfoPlays.length===0?<div className="p-4 text-sm text-zinc-500">{notReadLabel}</div>:messageInfoPlays.map(r=>{const p=members.find(x=>x.id===r.user_id);return <div key={r.user_id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p?.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:(p?.name||t.member)[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{p?.name||t.member}</div><div className="text-xs text-zinc-500">{new Date(r.played_at).toLocaleDateString()}</div></div><div className="text-sm text-zinc-600">{new Date(r.played_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div>})}
     </div>}
     <div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
+     <div className="px-4 py-3 border-b border-black/10 font-bold flex items-center gap-2"><CheckCheck className="w-5 h-5 text-zinc-500"/>{deliveredToLabel}</div>
+     {messageInfoBusy?<div className="p-4 text-sm text-zinc-500">{t.loading}</div>:messageInfoDeliveries.length===0?<div className="p-4 text-sm text-zinc-500">{notDeliveredLabel}</div>:messageInfoDeliveries.map(r=>{const p=members.find(x=>x.id===r.user_id);return <div key={r.user_id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p?.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:(p?.name||t.member)[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{p?.name||t.member}</div><div className="text-xs text-zinc-500">{new Date(r.delivered_at).toLocaleDateString()}</div></div><div className="text-sm text-zinc-600">{new Date(r.delivered_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div>})}
+    </div>
+    <div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
      <div className="px-4 py-3 border-b border-black/10 font-bold flex items-center gap-2"><CheckCheck className="w-5 h-5 text-sky-500"/>{readByLabel}</div>
+
      {messageInfoBusy?<div className="p-4 text-sm text-zinc-500">{t.loading}</div>:messageInfoReads.length===0?<div className="p-4 text-sm text-zinc-500">{notReadLabel}</div>:messageInfoReads.map(r=>{const p=members.find(x=>x.id===r.user_id);return <div key={r.user_id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p?.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:(p?.name||t.member)[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{p?.name||t.member}</div><div className="text-xs text-zinc-500">{new Date(r.read_at).toLocaleDateString()}</div></div><div className="text-sm text-zinc-600">{new Date(r.read_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div>})}
     </div>
     {!messageInfoBusy&&<div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden"><div className="px-4 py-3 border-b border-black/10 font-bold">{notReadLabel}</div>{members.filter(p=>p.id!==me?.id&&!messageInfoReads.some(r=>r.user_id===p.id)).length===0?<div className="p-4 text-sm text-zinc-500">—</div>:members.filter(p=>p.id!==me?.id&&!messageInfoReads.some(r=>r.user_id===p.id)).map(p=><div key={p.id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:p.name[0]?.toUpperCase()}</div><span className="font-semibold truncate">{p.name}</span></div>)}</div>}
@@ -581,5 +650,5 @@ export default function CommunityV2(){
   {confirmDel&&<div className="fixed inset-0 z-50 bg-black/80 grid place-items-center px-8" onClick={()=>setConfirmDel(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-zinc-950 border border-white/10 p-6"><b className="text-lg">{t.deleteMsg}</b><div className="mt-6 flex gap-3"><button onClick={()=>setConfirmDel(null)} className="flex-1 h-12 rounded-2xl bg-zinc-900">{t.cancel}</button><button onClick={()=>deleteMsg(confirmDel)} className="flex-1 h-12 rounded-2xl bg-red-500 text-black font-black">{t.delete}</button></div></div></div>}
  </div>;
 
- return <div className="fixed inset-0 bg-black text-white overflow-hidden" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}><div className="max-w-xl mx-auto h-full bg-[#080808] flex flex-col"><header className="shrink-0 px-4 pt-3 pb-3 border-b border-white/5"><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-3 min-w-0"><button onClick={goBack} aria-label={t.back} className="w-10 h-10 rounded-full bg-zinc-900 grid place-items-center shrink-0"><ArrowLeft className="w-5 h-5"/></button><img src={entryLogo} alt="Prayer & Fire" className="w-11 h-11 rounded-full object-cover shrink-0 bg-zinc-900"/><div className="min-w-0"><div className="text-[10px] tracking-[.2em] text-orange-400 font-bold">PRAYER &amp; FIRE</div><h1 className="text-xl font-black truncate">{t.title}</h1>{me&&<div className="text-xs text-zinc-500 truncate">{me.name}</div>}</div></div><div className="flex items-center gap-2 shrink-0">{isStaff&&<button onClick={()=>setPanel(true)} aria-label={t.requestsPanel} className="relative w-11 h-11 rounded-full bg-zinc-900 text-orange-400 grid place-items-center"><ShieldCheck className="w-5 h-5"/>{pendingCount>0&&<span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-orange-500 text-black text-[11px] font-black grid place-items-center">{pendingCount}</span>}</button>}<button onClick={()=>setSafety(true)} aria-label={L("Community rules & safety","Reglas y seguridad de la Comunidad","Regras e segurança da Comunidade")} className="w-11 h-11 rounded-full bg-zinc-900 text-orange-400 grid place-items-center"><Info className="w-5 h-5"/></button>{safety&&<SafetyRulesModal lang={lang} onClose={()=>setSafety(false)}/>}<button onClick={()=>canCreate?setCreate(true):toast(t.onlyAdminsCreate)} className={`w-11 h-11 rounded-full grid place-items-center ${canCreate?"bg-orange-500 text-black":"bg-zinc-900 text-zinc-500"}`} aria-label={t.new}><Plus className="w-5 h-5"/></button></div></div></header><div className="shrink-0 px-4 pt-3 pb-2"><div className="bg-zinc-900 border border-white/10 rounded-2xl h-12 px-4 flex items-center gap-2"><Search className="w-5 h-5 text-zinc-500"/><input value={q} onChange={e=>setQ(e.target.value)} placeholder={t.search} className="bg-transparent outline-none flex-1 min-w-0"/></div><div className="mt-2 grid grid-cols-2 gap-2"><button onClick={()=>setShowArchived(false)} className={`h-10 rounded-xl text-sm font-bold ${!showArchived?"bg-orange-500 text-black":"bg-zinc-900 text-zinc-400"}`}>{activeLabel}</button><button onClick={()=>setShowArchived(true)} className={`h-10 rounded-xl text-sm font-bold ${showArchived?"bg-orange-500 text-black":"bg-zinc-900 text-zinc-400"}`}>{archivedLabel}</button></div></div><div className="flex-1 min-h-0 overflow-y-auto px-3 pb-8">{listLoading?<div className="py-20 text-center text-zinc-500 text-sm">{t.loading}</div>:listError?<div className="py-20 text-center px-8"><p className="text-sm text-zinc-400">{t.loadError}</p><button onClick={()=>me&&loadGroups(me.id)} className="mt-4 h-11 px-6 rounded-2xl bg-orange-500 text-black font-black">{t.retry}</button></div>:visible.length===0?<div className="py-20 text-center px-8"><div className="w-16 h-16 rounded-full bg-orange-500/10 text-orange-500 grid place-items-center mx-auto mb-4"><Users className="w-7 h-7"/></div><h2 className="font-bold text-lg">{t.empty}</h2><p className="text-sm text-zinc-500 mt-2">{canCreate?t.sub:`${t.sub} ${t.onlyAdminsCreate}`}</p></div>:visible.map(g=><button key={g.id} onClick={()=>setSelected(g)} className="w-full text-left flex gap-3 px-2 py-3.5 border-b border-white/10 active:bg-white/5 rounded-xl"><img src={g.avatar||entryLogo} alt="" className="w-14 h-14 rounded-full object-cover"/><div className="min-w-0 flex-1"><div className="flex justify-between gap-2"><div className="font-extrabold truncate flex items-center gap-1">{g.favorite&&<Star className="w-3.5 h-3.5 fill-current text-orange-400 shrink-0"/>}<span className="truncate">{g.name}</span></div><span className={`text-[11px] ${g.unread>0?"text-orange-400 font-bold":"text-zinc-500"}`}>{g.lastTime}</span></div><div className="flex justify-between items-center gap-2"><div className={`text-sm truncate mt-1 ${g.unread>0?"text-zinc-100 font-semibold":"text-zinc-400"}`}>{g.subtitle}</div><div className="flex items-center gap-1 shrink-0">{g.muted&&<BellOff className="w-3.5 h-3.5 text-zinc-500"/>}{g.unread>0&&<span className="min-w-5 h-5 px-1.5 rounded-full bg-orange-500 text-black text-[11px] font-black grid place-items-center shrink-0">{g.unread}</span>}</div></div></div></button>)}</div>{noAccessGroup&&<div className="fixed inset-0 z-[130] bg-black/80 grid place-items-center px-8" onClick={()=>setNoAccessGroup(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-zinc-950 border border-white/10 p-6 text-center"><img src={noAccessGroup.avatar||entryLogo} alt="" className="w-16 h-16 rounded-full object-cover mx-auto"/><b className="block mt-4 text-lg">{noAccessGroup.name}</b><p className="mt-1 text-xs text-zinc-500">{noAccessGroup.memberCount} {t.members}</p><b className="block mt-4 text-orange-400 text-sm">{t.noAccessTitle}</b><p className="mt-2 text-sm text-zinc-400">{t.noAccessBody}</p><button onClick={()=>setNoAccessGroup(null)} className="mt-6 w-full h-12 rounded-2xl bg-zinc-900">{t.back}</button></div></div>}{canCreate&&<CreateGroupModal open={create} onClose={()=>setCreate(false)} onCreate={createGroup} language={lang}/>}</div></div>;
+ return <div className="fixed inset-0 bg-black text-white overflow-hidden" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}><div className="max-w-xl mx-auto h-full bg-[#080808] flex flex-col"><header className="shrink-0 px-4 pt-3 pb-3 border-b border-white/5"><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-3 min-w-0"><button onClick={goBack} aria-label={t.back} className="w-10 h-10 rounded-full bg-zinc-900 grid place-items-center shrink-0"><ArrowLeft className="w-5 h-5"/></button><img src={entryLogo} alt="Prayer & Fire" className="w-11 h-11 rounded-full object-cover shrink-0 bg-zinc-900"/><div className="min-w-0"><div className="text-[10px] tracking-[.2em] text-orange-400 font-bold">PRAYER &amp; FIRE</div><h1 className="text-xl font-black truncate">{t.title}</h1>{me&&<div className="text-xs text-zinc-500 truncate">{me.name}</div>}</div></div><div className="flex items-center gap-2 shrink-0">{isStaff&&<button onClick={()=>setPanel(true)} aria-label={t.requestsPanel} className="relative w-11 h-11 rounded-full bg-zinc-900 text-orange-400 grid place-items-center"><ShieldCheck className="w-5 h-5"/>{pendingCount>0&&<span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-orange-500 text-black text-[11px] font-black grid place-items-center">{pendingCount}</span>}</button>}<button onClick={()=>setSafety(true)} aria-label={L("Community rules & safety","Reglas y seguridad de la Comunidad","Regras e segurança da Comunidade")} className="w-11 h-11 rounded-full bg-zinc-900 text-orange-400 grid place-items-center"><Info className="w-5 h-5"/></button>{safety&&<SafetyRulesModal lang={lang} onClose={()=>setSafety(false)}/>}<button onClick={()=>setPushSheet(true)} aria-label={pushSettingsLabel} className="w-11 h-11 rounded-full bg-zinc-900 text-orange-400 grid place-items-center"><Bell className="w-5 h-5"/></button><button onClick={()=>canCreate?setCreate(true):toast(t.onlyAdminsCreate)} className={`w-11 h-11 rounded-full grid place-items-center ${canCreate?"bg-orange-500 text-black":"bg-zinc-900 text-zinc-500"}`} aria-label={t.new}><Plus className="w-5 h-5"/></button></div></div></header><div className="shrink-0 px-4 pt-3 pb-2"><div className="bg-zinc-900 border border-white/10 rounded-2xl h-12 px-4 flex items-center gap-2"><Search className="w-5 h-5 text-zinc-500"/><input value={q} onChange={e=>setQ(e.target.value)} placeholder={t.search} className="bg-transparent outline-none flex-1 min-w-0"/></div><div className="mt-2 grid grid-cols-2 gap-2"><button onClick={()=>setShowArchived(false)} className={`h-10 rounded-xl text-sm font-bold ${!showArchived?"bg-orange-500 text-black":"bg-zinc-900 text-zinc-400"}`}>{activeLabel}</button><button onClick={()=>setShowArchived(true)} className={`h-10 rounded-xl text-sm font-bold ${showArchived?"bg-orange-500 text-black":"bg-zinc-900 text-zinc-400"}`}>{archivedLabel}</button></div></div><div className="flex-1 min-h-0 overflow-y-auto px-3 pb-8">{listLoading?<div className="py-20 text-center text-zinc-500 text-sm">{t.loading}</div>:listError?<div className="py-20 text-center px-8"><p className="text-sm text-zinc-400">{t.loadError}</p><button onClick={()=>me&&loadGroups(me.id)} className="mt-4 h-11 px-6 rounded-2xl bg-orange-500 text-black font-black">{t.retry}</button></div>:visible.length===0?<div className="py-20 text-center px-8"><div className="w-16 h-16 rounded-full bg-orange-500/10 text-orange-500 grid place-items-center mx-auto mb-4"><Users className="w-7 h-7"/></div><h2 className="font-bold text-lg">{t.empty}</h2><p className="text-sm text-zinc-500 mt-2">{canCreate?t.sub:`${t.sub} ${t.onlyAdminsCreate}`}</p></div>:visible.map(g=><button key={g.id} onClick={()=>setSelected(g)} className="w-full text-left flex gap-3 px-2 py-3.5 border-b border-white/10 active:bg-white/5 rounded-xl"><img src={g.avatar||entryLogo} alt="" className="w-14 h-14 rounded-full object-cover"/><div className="min-w-0 flex-1"><div className="flex justify-between gap-2"><div className="font-extrabold truncate flex items-center gap-1">{g.favorite&&<Star className="w-3.5 h-3.5 fill-current text-orange-400 shrink-0"/>}<span className="truncate">{g.name}</span></div><span className={`text-[11px] ${g.unread>0?"text-orange-400 font-bold":"text-zinc-500"}`}>{g.lastTime}</span></div><div className="flex justify-between items-center gap-2"><div className={`text-sm truncate mt-1 ${g.unread>0?"text-zinc-100 font-semibold":"text-zinc-400"}`}>{g.subtitle}</div><div className="flex items-center gap-1 shrink-0">{g.muted&&<BellOff className="w-3.5 h-3.5 text-zinc-500"/>}{g.unread>0&&<span className="min-w-5 h-5 px-1.5 rounded-full bg-orange-500 text-black text-[11px] font-black grid place-items-center shrink-0">{g.unread}</span>}</div></div></div></button>)}</div>{noAccessGroup&&<div className="fixed inset-0 z-[130] bg-black/80 grid place-items-center px-8" onClick={()=>setNoAccessGroup(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-zinc-950 border border-white/10 p-6 text-center"><img src={noAccessGroup.avatar||entryLogo} alt="" className="w-16 h-16 rounded-full object-cover mx-auto"/><b className="block mt-4 text-lg">{noAccessGroup.name}</b><p className="mt-1 text-xs text-zinc-500">{noAccessGroup.memberCount} {t.members}</p><b className="block mt-4 text-orange-400 text-sm">{t.noAccessTitle}</b><p className="mt-2 text-sm text-zinc-400">{t.noAccessBody}</p><button onClick={()=>setNoAccessGroup(null)} className="mt-6 w-full h-12 rounded-2xl bg-zinc-900">{t.back}</button></div></div>}{pushSheet&&<div className="fixed inset-0 z-[140] bg-black/80 flex items-end" onClick={()=>setPushSheet(false)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-5 pb-[max(20px,env(safe-area-inset-bottom))]"><div className="flex justify-between items-center mb-3"><b>{pushSettingsLabel}</b><button onClick={()=>setPushSheet(false)} aria-label={t.cancel}><X/></button></div><PushToggle lang={lang}/></div></div>}{canCreate&&<CreateGroupModal open={create} onClose={()=>setCreate(false)} onCreate={createGroup} language={lang}/>}</div></div>;
 }
