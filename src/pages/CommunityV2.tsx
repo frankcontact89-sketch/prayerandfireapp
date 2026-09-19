@@ -692,29 +692,29 @@ export default function CommunityV2(){
    {menu.sender_id!==me?.id&&<button onClick={()=>{const mm=menu;setMenu(null);setBlockFor(mm)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Ban className="w-5 h-5"/><span>{t.block}</span></button>}
    {(menu.sender_id===me?.id||canManageGroup(selected))&&<button onClick={()=>{setConfirmDel(menu);setMenu(null)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Trash2 className="w-5 h-5"/><span>{t.deleteMsg}</span></button>}
   </div></div>}
-  {messageInfo&&<div className="fixed inset-0 z-[70] bg-[#f3f4f6] text-black overflow-y-auto" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
-   <header className="sticky top-0 z-20 h-16 bg-white/95 border-b border-black/10 px-3 flex items-center gap-3"><button onClick={()=>setMessageInfo(null)} className="w-10 h-10 grid place-items-center"><ArrowLeft/></button><b className="flex-1 text-center pr-10">{messageInfoLabel}</b></header>
-   <div className="max-w-xl mx-auto p-4">
-    <div className="rounded-2xl bg-white border border-black/10 p-4">
-     <div className="text-xs text-zinc-500 mb-2">{sentLabel}</div>
-     <div className="flex items-center justify-between gap-3"><span className="font-semibold">{new Date(messageInfo.created_at).toLocaleDateString()}</span><span className="text-zinc-500">{new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</span></div>
+   {messageInfo&&<div className="fixed inset-0 z-[70] bg-background text-foreground overflow-y-auto" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
+    <header className="sticky top-0 z-20 h-16 bg-background/95 border-b border-border px-3 flex items-center gap-3"><button onClick={()=>setMessageInfo(null)} aria-label={t.back} className="w-10 h-10 grid place-items-center"><ArrowLeft/></button><b className="flex-1 text-center pr-10">{messageInfoLabel}</b></header>
+    <div className="max-w-xl mx-auto px-4 py-5">
+     <div className="flex justify-end pb-5">
+      <div className="max-w-[88%] rounded-2xl bg-primary text-primary-foreground px-3 py-2">
+       {messageInfo.body&&<p className="whitespace-pre-wrap break-words">{renderBody(messageInfo.body)}</p>}
+       {messageInfo.media_type==="image"&&messageInfo.url&&<img src={messageInfo.url} alt="" className="rounded-xl max-h-64"/>}
+       {messageInfo.media_type==="video"&&messageInfo.url&&<video src={messageInfo.url} controls playsInline preload="metadata" className="rounded-xl max-h-64"/>}
+       {messageInfo.media_type==="document"&&messageInfo.url&&<a href={messageInfo.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 py-2"><FileText className="w-5 h-5"/><span>{t.document}</span></a>}
+       {messageInfo.media_type==="audio"&&messageInfo.url&&<AudioBubble url={messageInfo.url} mine avatar={me?.avatar} name={me?.name} time={new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(messageInfo.media_url)} status={messageStatus(messageInfo)}/>} 
+       {messageInfo.media_type!=="audio"&&<div className="mt-1 flex justify-end items-center gap-1 text-[10px] opacity-70"><time>{new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</time>{messageStatusIcon(messageInfo)}</div>}
+      </div>
+     </div>
+     <div className="border-y border-border bg-card">
+      <div className="px-4 py-3 flex items-center gap-3"><Check className="w-5 h-5 text-muted-foreground"/><span className="font-semibold flex-1">{sentLabel}</span><div className="text-right text-sm text-muted-foreground"><div>{new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div><div className="text-xs">{new Date(messageInfo.created_at).toLocaleDateString()}</div></div></div>
+      {messageInfoBusy?<div className="px-4 py-5 text-sm text-muted-foreground border-t border-border">{t.loading}</div>:messageInfoMembers.length===0?<div className="px-4 py-5 text-sm text-muted-foreground border-t border-border">{noOtherRecipientsLabel}</div>:<>
+       <section className="border-t border-border"><div className="px-4 py-3 flex items-center gap-3"><CheckCheck className="w-5 h-5 text-sky-500"/><span className="font-semibold">{readByLabel}</span></div>{receiptRows(messageInfoReads,"read_at")}</section>
+       <section className="border-t border-border"><div className="px-4 py-3 flex items-center gap-3"><CheckCheck className="w-5 h-5 text-muted-foreground"/><span className="font-semibold">{deliveredToLabel}</span></div>{receiptRows(messageInfoDeliveries,"delivered_at")}</section>
+       {messageInfo.media_type==="audio"&&<section className="border-t border-border"><div className="px-4 py-3 flex items-center gap-3"><Mic className="w-5 h-5 text-primary"/><span className="font-semibold">{playedByLabel}</span></div>{receiptRows(messageInfoPlays,"played_at")}</section>}
+      </>}
+     </div>
     </div>
-    {messageInfo.media_type==="audio"&&<div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
-     <div className="px-4 py-3 border-b border-black/10 font-bold flex items-center gap-2"><Mic className="w-5 h-5 text-sky-500"/>{playedByLabel}</div>
-     {messageInfoBusy?<div className="p-4 text-sm text-zinc-500">{t.loading}</div>:messageInfoPlays.length===0?<div className="p-4 text-sm text-zinc-500">{notReadLabel}</div>:messageInfoPlays.map(r=>{const p=members.find(x=>x.id===r.user_id);return <div key={r.user_id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p?.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:(p?.name||t.member)[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{p?.name||t.member}</div><div className="text-xs text-zinc-500">{new Date(r.played_at).toLocaleDateString()}</div></div><div className="text-sm text-zinc-600">{new Date(r.played_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div>})}
-    </div>}
-    <div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
-     <div className="px-4 py-3 border-b border-black/10 font-bold flex items-center gap-2"><CheckCheck className="w-5 h-5 text-zinc-500"/>{deliveredToLabel}</div>
-     {messageInfoBusy?<div className="p-4 text-sm text-zinc-500">{t.loading}</div>:messageInfoDeliveries.length===0?<div className="p-4 text-sm text-zinc-500">{notDeliveredLabel}</div>:messageInfoDeliveries.map(r=>{const p=members.find(x=>x.id===r.user_id);return <div key={r.user_id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p?.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:(p?.name||t.member)[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{p?.name||t.member}</div><div className="text-xs text-zinc-500">{new Date(r.delivered_at).toLocaleDateString()}</div></div><div className="text-sm text-zinc-600">{new Date(r.delivered_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div>})}
-    </div>
-    <div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
-     <div className="px-4 py-3 border-b border-black/10 font-bold flex items-center gap-2"><CheckCheck className="w-5 h-5 text-sky-500"/>{readByLabel}</div>
-
-     {messageInfoBusy?<div className="p-4 text-sm text-zinc-500">{t.loading}</div>:messageInfoReads.length===0?<div className="p-4 text-sm text-zinc-500">{notReadLabel}</div>:messageInfoReads.map(r=>{const p=members.find(x=>x.id===r.user_id);return <div key={r.user_id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p?.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:(p?.name||t.member)[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{p?.name||t.member}</div><div className="text-xs text-zinc-500">{new Date(r.read_at).toLocaleDateString()}</div></div><div className="text-sm text-zinc-600">{new Date(r.read_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div>})}
-    </div>
-    {!messageInfoBusy&&<div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden"><div className="px-4 py-3 border-b border-black/10 font-bold">{notReadLabel}</div>{members.filter(p=>p.id!==me?.id&&!messageInfoReads.some(r=>r.user_id===p.id)).length===0?<div className="p-4 text-sm text-zinc-500">—</div>:members.filter(p=>p.id!==me?.id&&!messageInfoReads.some(r=>r.user_id===p.id)).map(p=><div key={p.id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:p.name[0]?.toUpperCase()}</div><span className="font-semibold truncate">{p.name}</span></div>)}</div>}
-   </div>
-  </div>}
+   </div>}
   <ReactionEmojiPicker open={!!emojiPicker} title={emojiTitle} selected={emojiPicker?(reactions[emojiPicker.id]||[]).find(r=>r.user_id===me?.id)?.emoji:undefined} onClose={()=>setEmojiPicker(null)} onPick={emoji=>emojiPicker&&react(emojiPicker,emoji)}/>
   {reactBar&&<div className="fixed inset-0 z-30" onClick={()=>setReactBar(null)}/>} 
   {rxDetail&&<div className="fixed inset-0 z-50 bg-black/80 flex items-end" onClick={()=>setRxDetail(null)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-4 pb-[max(20px,env(safe-area-inset-bottom))] max-h-[70vh] overflow-y-auto">
