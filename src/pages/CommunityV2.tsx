@@ -17,6 +17,7 @@ type DiscoverGroup={id:string;name:string;description?:string|null;avatar?:strin
 type Msg={id:string;sender_id:string;body?:string|null;media_url?:string|null;media_type?:string|null;created_at:string;deleted_at?:string|null;starred?:boolean;reply_to?:string|null;pinned_at?:string|null;mine?:boolean;url?:string};
 type GroupMember={id:string;name:string;role?:string;avatar?:string|null};
 type ReadReceipt={user_id:string;read_at:string};
+type PlayReceipt={user_id:string;played_at:string};
 type Sender={name:string;avatar?:string|null};
 const db:any=supabase;
 const EMOJIS=["👍","❤️","😂","😮","😢","🙏","🔥"];
@@ -66,6 +67,7 @@ export default function CommunityV2(){
  const readByLabel=L("Read by","Leído por","Lido por");
  const notReadLabel=L("Not read yet","Aún no leído","Ainda não lido");
  const sentLabel=L("Sent","Enviado","Enviado");
+ const playedByLabel=L("Played by","Reproducido por","Reproduzido por");
  const[me,setMe]=useState<any>(null);
  const[access,setAccess]=useState<"loading"|"none"|"pending"|"rejected"|"approved">("loading");
  const[staffRole,setStaffRole]=useState<"owner"|"admin"|null>(null);
@@ -80,6 +82,7 @@ export default function CommunityV2(){
  const[discoverList,setDiscoverList]=useState<DiscoverGroup[]>([]),[discoverLoading,setDiscoverLoading]=useState(false),[noAccessGroup,setNoAccessGroup]=useState<DiscoverGroup|null>(null),[confirmDelGroup,setConfirmDelGroup]=useState(false),[confirmLeave,setConfirmLeave]=useState(false),[showArchived,setShowArchived]=useState(false);
  const file=useRef<HTMLInputElement>(null),photo=useRef<HTMLInputElement>(null),end=useRef<HTMLDivElement>(null);
  const press=useRef<number|null>(null);
+ const swipe=useRef<{id:string;x:number;y:number}|null>(null);
  const msgRefs=useRef<Record<string,HTMLDivElement|null>>({});
  const typingChannel=useRef<any>(null),lastTypingSent=useRef(0);
  const[members,setMembers]=useState<GroupMember[]>([]);
@@ -88,7 +91,7 @@ export default function CommunityV2(){
  const[inviteLink,setInviteLink]=useState<string|null>(null),[inviteBusy,setInviteBusy]=useState(false);
  const[mentionQuery,setMentionQuery]=useState<string|null>(null);
  const[highlightMsg,setHighlightMsg]=useState<string|null>(null);
- const[blocks,setBlocks]=useState<string[]>([]),[reportFor,setReportFor]=useState<Msg|null>(null),[reportReason,setReportReason]=useState("harassment"),[reportNote,setReportNote]=useState(""),[blockFor,setBlockFor]=useState<Msg|null>(null),[busyMod,setBusyMod]=useState(false);\n const[messageInfo,setMessageInfo]=useState<Msg|null>(null),[messageInfoReads,setMessageInfoReads]=useState<ReadReceipt[]>([]),[messageInfoBusy,setMessageInfoBusy]=useState(false);
+ const[blocks,setBlocks]=useState<string[]>([]),[reportFor,setReportFor]=useState<Msg|null>(null),[reportReason,setReportReason]=useState("harassment"),[reportNote,setReportNote]=useState(""),[blockFor,setBlockFor]=useState<Msg|null>(null),[busyMod,setBusyMod]=useState(false);\n const[messageInfo,setMessageInfo]=useState<Msg|null>(null),[messageInfoReads,setMessageInfoReads]=useState<ReadReceipt[]>([]),[messageInfoPlays,setMessageInfoPlays]=useState<PlayReceipt[]>([]),[messageInfoBusy,setMessageInfoBusy]=useState(false);
  const REASONS:[string,string][]=[["harassment",t.reasonHarassment],["hate",t.reasonHate],["sexual",t.reasonSexual],["violence",t.reasonViolence],["spam",t.reasonSpam],["privacy",t.reasonPrivacy],["other",t.reasonOther]];
 
  const goBack=()=>{if(window.history.length>1)window.history.back();else window.location.assign("/")};
@@ -330,11 +333,18 @@ export default function CommunityV2(){
 
  const openMessageInfo=async(m:Msg)=>{
   if(!me||!m.mine)return;
-  setMenu(null);setMessageInfo(m);setMessageInfoReads([]);setMessageInfoBusy(true);
-  const{data,error}=await db.from("community_message_reads").select("user_id,read_at").eq("message_id",m.id).order("read_at",{ascending:true});
+  setMenu(null);setMessageInfo(m);setMessageInfoReads([]);setMessageInfoPlays([]);setMessageInfoBusy(true);
+  const readsPromise=db.from("community_message_reads").select("user_id,read_at").eq("message_id",m.id).order("read_at",{ascending:true});
+  const playsPromise=m.media_type==="audio"?db.from("community_audio_plays").select("user_id,played_at").eq("message_id",m.id).order("played_at",{ascending:true}):Promise.resolve({data:[],error:null});
+  const [{data:reads,error:readError},{data:plays,error:playError}]=await Promise.all([readsPromise,playsPromise]);
   setMessageInfoBusy(false);
-  if(error){toast(error.message||actionFailedLabel);return}
-  setMessageInfoReads((data||[]).filter((r:any)=>r.user_id!==me.id));
+  if(readError||playError){toast(readError?.message||playError?.message||actionFailedLabel);return}
+  setMessageInfoReads((reads||[]).filter((r:any)=>r.user_id!==me.id));
+  setMessageInfoPlays((plays||[]).filter((r:any)=>r.user_id!==me.id));
+ };
+ const reportAudioPlayed=async(m:Msg)=>{
+  if(!me||m.mine||m.media_type!=="audio")return;
+  await db.from("community_audio_plays").upsert({message_id:m.id,user_id:me.id,played_at:new Date().toISOString()},{onConflict:"message_id,user_id"});
  };
 
  const submitReport=async()=>{
@@ -471,8 +481,8 @@ export default function CommunityV2(){
     <div ref={el=>{msgRefs.current[m.id]=el}} className={`flex ${m.mine?"justify-end":"justify-start"} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-orange-400/70":""}`}>
      <div
       onContextMenu={e=>{e.preventDefault();setReactBar(m)}}
-      onTouchStart={()=>{press.current=window.setTimeout(()=>setReactBar(m),400)}}
-      onTouchEnd={()=>{if(press.current)window.clearTimeout(press.current)}}
+      onTouchStart={e=>{const t=e.touches[0];if(m.mine)swipe.current={id:m.id,x:t.clientX,y:t.clientY};press.current=window.setTimeout(()=>setReactBar(m),400)}}
+      onTouchEnd={e=>{if(press.current)window.clearTimeout(press.current);const s=swipe.current;swipe.current=null;if(m.mine&&s?.id===m.id){const t=e.changedTouches[0];const dx=t.clientX-s.x,dy=t.clientY-s.y;if(dx<-55&&Math.abs(dy)<45)openMessageInfo(m)}}}
       onTouchMove={()=>{if(press.current)window.clearTimeout(press.current)}}
       style={{WebkitTouchCallout:"none",WebkitUserSelect:reactBar?.id===m.id?"none":undefined}}
       className={`group relative max-w-[86%] rounded-2xl px-3 py-2 select-none ${(reactions[m.id]||[]).length?"mb-4":""} ${m.mine?"bg-orange-500 text-black":"bg-zinc-900"}`}
@@ -487,9 +497,9 @@ export default function CommunityV2(){
       {m.body&&<p className="whitespace-pre-wrap break-words">{renderBody(m.body)}</p>}
       {m.media_type==="image"&&m.url&&<img src={m.url} alt="" className="rounded-xl max-h-80"/>}
       {m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline preload="metadata" className="rounded-xl max-h-80"/>}
-      {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)}/>} 
+      {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)}/>} 
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
-      {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{m.starred&&<Star className="w-3 h-3 fill-current"/>}{time}{m.mine&&<CheckCheck className={`w-3.5 h-3.5 ${readCounts[m.id]?"text-sky-600":"opacity-70"}`}/>}</div>}
+      {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{m.starred&&<Star className="w-3 h-3 fill-current"/>}{time}{m.mine&&(readCounts[m.id]?<CheckCheck className="w-3.5 h-3.5 text-sky-600"/>:<span className="inline-flex items-center text-black/60">✓</span>)}</div>}
       {(reactions[m.id]||[]).length>0&&<button onClick={ev=>{ev.stopPropagation();const mineRx=(reactions[m.id]||[]).find(r=>r.user_id===me?.id);if(mineRx)react(m,mineRx.emoji);else setRxDetail(m)}} className={`absolute -bottom-3.5 ${m.mine?"left-2":"right-2"} flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] bg-zinc-800 border border-white/10 text-white`}>
        {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
        {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
@@ -518,7 +528,8 @@ export default function CommunityV2(){
   {menu&&<div className="fixed inset-0 z-50 bg-black/70 flex items-end" onClick={()=>setMenu(null)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-4 pb-[max(20px,env(safe-area-inset-bottom))]">
    <div className="flex justify-between items-center mb-3"><b>{t.options}</b><button onClick={()=>setMenu(null)} aria-label={t.cancel}><X/></button></div>
    <div className="flex gap-2 pb-3 overflow-x-auto">{EMOJIS.map(e=><button key={e} onClick={()=>react(menu,e)} className={`w-11 h-11 shrink-0 rounded-full border text-xl grid place-items-center ${(reactions[menu.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-orange-500/20 border-orange-500/60":"bg-zinc-900 border-white/10"}`}>{e}</button>)}<button onClick={()=>{const mm=menu;setMenu(null);setEmojiPicker(mm)}} aria-label={emojiTitle} className="w-11 h-11 shrink-0 rounded-full bg-zinc-900 border border-white/10 text-orange-400 grid place-items-center"><Plus className="w-5 h-5"/></button></div>
-   <button onClick={()=>{setReplyTo(menu);setMenu(null)}} className="w-full h-13 py-3 px-2 flex items-center gap-3 border-t border-white/5"><CornerUpLeft className="w-5 h-5 text-orange-400"/><span>{t.reply}</span></button>\n   {menu.mine&&<button onClick={()=>openMessageInfo(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Info className="w-5 h-5 text-orange-400"/><span>{messageInfoLabel}</span></button>}
+   <button onClick={()=>{setReplyTo(menu);setMenu(null)}} className="w-full h-13 py-3 px-2 flex items-center gap-3 border-t border-white/5"><CornerUpLeft className="w-5 h-5 text-orange-400"/><span>{t.reply}</span></button>
+   {menu.mine&&<button onClick={()=>openMessageInfo(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Info className="w-5 h-5 text-orange-400"/><span>{messageInfoLabel}</span></button>}
    {canManageGroup(selected)&&<button onClick={()=>togglePin(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5">{menu.pinned_at?<PinOff className="w-5 h-5 text-orange-400"/>:<Pin className="w-5 h-5 text-orange-400"/>}<span>{menu.pinned_at?unpinLabel:pinLabel}</span></button>}
    <button onClick={()=>copyMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Copy className="w-5 h-5 text-orange-400"/><span>{copyLabel}</span></button><button onClick={()=>forwardMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Send className="w-5 h-5 text-orange-400"/><span>{forwardLabel}</span></button>
    {menu.sender_id!==me?.id&&<button onClick={()=>{const mm=menu;setMenu(null);setReportFor(mm)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Flag className="w-5 h-5 text-orange-400"/><span>{t.report}</span></button>}
@@ -532,6 +543,10 @@ export default function CommunityV2(){
      <div className="text-xs text-zinc-500 mb-2">{sentLabel}</div>
      <div className="flex items-center justify-between gap-3"><span className="font-semibold">{new Date(messageInfo.created_at).toLocaleDateString()}</span><span className="text-zinc-500">{new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</span></div>
     </div>
+    {messageInfo.media_type==="audio"&&<div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
+     <div className="px-4 py-3 border-b border-black/10 font-bold flex items-center gap-2"><Mic className="w-5 h-5 text-sky-500"/>{playedByLabel}</div>
+     {messageInfoBusy?<div className="p-4 text-sm text-zinc-500">{t.loading}</div>:messageInfoPlays.length===0?<div className="p-4 text-sm text-zinc-500">{notReadLabel}</div>:messageInfoPlays.map(r=>{const p=members.find(x=>x.id===r.user_id);return <div key={r.user_id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p?.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:(p?.name||t.member)[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{p?.name||t.member}</div><div className="text-xs text-zinc-500">{new Date(r.played_at).toLocaleDateString()}</div></div><div className="text-sm text-zinc-600">{new Date(r.played_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div>})}
+    </div>}
     <div className="mt-4 rounded-2xl bg-white border border-black/10 overflow-hidden">
      <div className="px-4 py-3 border-b border-black/10 font-bold flex items-center gap-2"><CheckCheck className="w-5 h-5 text-sky-500"/>{readByLabel}</div>
      {messageInfoBusy?<div className="p-4 text-sm text-zinc-500">{t.loading}</div>:messageInfoReads.length===0?<div className="p-4 text-sm text-zinc-500">{notReadLabel}</div>:messageInfoReads.map(r=>{const p=members.find(x=>x.id===r.user_id);return <div key={r.user_id} className="px-4 py-3 border-b border-black/5 last:border-0 flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden grid place-items-center font-bold text-zinc-600">{p?.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:(p?.name||t.member)[0]?.toUpperCase()}</div><div className="flex-1 min-w-0"><div className="font-semibold truncate">{p?.name||t.member}</div><div className="text-xs text-zinc-500">{new Date(r.read_at).toLocaleDateString()}</div></div><div className="text-sm text-zinc-600">{new Date(r.read_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</div></div>})}
