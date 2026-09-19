@@ -361,15 +361,18 @@ export default function CommunityV2(){
 
  const openMessageInfo=async(m:Msg)=>{
   if(!me||!m.mine)return;
-  setMenu(null);setMessageInfo(m);setMessageInfoReads([]);setMessageInfoPlays([]);setMessageInfoBusy(true);
+  setMenu(null);setMessageInfo(m);setMessageInfoReads([]);setMessageInfoPlays([]);setMessageInfoDeliveries([]);setMessageInfoBusy(true);
   const readsPromise=db.from("community_message_reads").select("user_id,read_at").eq("message_id",m.id).order("read_at",{ascending:true});
+  const deliveriesPromise=db.from("community_message_deliveries").select("user_id,delivered_at").eq("message_id",m.id).order("delivered_at",{ascending:true});
   const playsPromise=m.media_type==="audio"?db.from("community_audio_plays").select("user_id,played_at").eq("message_id",m.id).order("played_at",{ascending:true}):Promise.resolve({data:[],error:null});
-  const [{data:reads,error:readError},{data:plays,error:playError}]=await Promise.all([readsPromise,playsPromise]);
+  const [{data:reads,error:readError},{data:deliveries,error:deliveryError},{data:plays,error:playError}]=await Promise.all([readsPromise,deliveriesPromise,playsPromise]);
   setMessageInfoBusy(false);
-  if(readError||playError){toast(readError?.message||playError?.message||actionFailedLabel);return}
+  if(readError||playError||deliveryError){toast(readError?.message||deliveryError?.message||playError?.message||actionFailedLabel);return}
   setMessageInfoReads((reads||[]).filter((r:any)=>r.user_id!==me.id));
+  setMessageInfoDeliveries((deliveries||[]).filter((r:any)=>r.user_id!==me.id));
   setMessageInfoPlays((plays||[]).filter((r:any)=>r.user_id!==me.id));
  };
+
  const reportAudioPlayed=async(m:Msg)=>{
   if(!me||m.mine||m.media_type!=="audio")return;
   await db.from("community_audio_plays").upsert({message_id:m.id,user_id:me.id,played_at:new Date().toISOString()},{onConflict:"message_id,user_id"});
