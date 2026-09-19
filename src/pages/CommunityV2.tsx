@@ -176,8 +176,8 @@ export default function CommunityV2(){
 
  const loadSenders=useCallback(async(ids:string[])=>{
   if(!ids.length)return;
-  const{data}=await db.from("profiles").select("id,username,email,avatar_url").in("id",ids);
-  setSenders(prev=>{const next={...prev};(data||[]).forEach((p:any)=>{next[p.id]={name:p.username||p.email?.split("@")[0]||"Member",avatar:p.avatar_url}});return next});
+  const{data}=await db.from("profiles").select("id,username,avatar_url").in("id",ids);
+  setSenders(prev=>{const next={...prev};(data||[]).forEach((p:any)=>{next[p.id]={name:p.username||"Member",avatar:p.avatar_url}});return next});
  },[]);
 
  const loadReactions=useCallback(async(ids:string[])=>{
@@ -257,10 +257,22 @@ export default function CommunityV2(){
   const{data:mm}=await db.from("community_group_members").select("user_id,role").eq("group_id",selected.id);
   const ids=(mm||[]).map((x:any)=>x.user_id);
   if(!ids.length){if(alive)setMembers([]);return}
-  const{data:profs}=await db.from("profiles").select("id,username,email,avatar_url").in("id",ids);
+  const{data:profs}=await db.from("profiles").select("id,username,avatar_url").in("id",ids);
   const pm=new Map((profs||[]).map((p:any)=>[p.id,p]));
-  if(alive)setMembers((mm||[]).map((x:any)=>{const p:any=pm.get(x.user_id)||{};return{id:x.user_id,name:p.username||p.email?.split("@")[0]||"Member",role:x.role,avatar:p.avatar_url}}));
+  if(alive)setMembers((mm||[]).map((x:any)=>{const p:any=pm.get(x.user_id)||{};return{id:x.user_id,name:p.username||"Member",role:x.role,avatar:p.avatar_url}}));
  })();return()=>{alive=false}},[selected?.id]);
+
+ // live profile identity: names/avatars always come from the user's own profile
+ useEffect(()=>{
+  const c=supabase.channel("profile-identity").on("postgres_changes",{event:"UPDATE",schema:"public",table:"profiles"},(payload:any)=>{
+   const p:any=payload.new;if(!p?.id)return;
+   const name=p.username||"Member";
+   setSenders(prev=>prev[p.id]?{...prev,[p.id]:{name,avatar:p.avatar_url}}:prev);
+   setMembers(prev=>prev.some(m=>m.id===p.id)?prev.map(m=>m.id===p.id?{...m,name,avatar:p.avatar_url}:m):prev);
+   setMe(prev=>prev&&prev.id===p.id?{...prev,name,avatar:p.avatar_url}:prev);
+  }).subscribe();
+  return()=>{supabase.removeChannel(c)};
+ },[]);
 
  // typing indicator (realtime broadcast only, nothing stored)
  useEffect(()=>{if(!selected||!me){typingChannel.current=null;setTyping({});return}

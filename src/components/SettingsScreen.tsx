@@ -329,7 +329,10 @@ export function SettingsScreen({
     if (!userId) return;
     try {
       setSavingProfile(true);
-      const { error } = await supabase.from("profiles").update({ username: profileName }).eq("id", userId);
+      const nextName = profileName.replace(/\s+/g, " ").trim();
+      if (nextName.length < 2 || nextName.length > 40) throw new Error(L(language, "Your display name must be between 2 and 40 characters.", "Tu nombre debe tener entre 2 y 40 caracteres.", "Seu nome deve ter entre 2 e 40 caracteres."));
+      setProfileName(nextName);
+      const { error } = await supabase.from("profiles").update({ username: nextName }).eq("id", userId);
       if (error) throw error;
       const raw = phone.trim();
       if (!raw) {
@@ -400,6 +403,7 @@ export function SettingsScreen({
                 value={profileName}
                 onChange={(e) => setProfileName(e.target.value)}
                 placeholder={t("name")}
+                maxLength={40}
                 disabled={savingProfile}
                 className="mt-2 h-10"
               />
