@@ -1,39 +1,36 @@
-# Community audit — bugs and missing actions (no code changed)
+# Community swipe and Message Info improvements
 
-## About the missing "delete group"
+## Goal
+Make outgoing-message swipe and Message Info feel natural on iPhone, add audio seeking and ticks, and keep all receipt details accurate and compact.
 
-A Delete group action does exist, but only at the very bottom of the full Group info page, below Leave group, and only for the person who created the group (or a community owner). The gear icon at the top of Group info — the thing that looks like "group settings" — opens a small panel with only Name, Description and Save. That is why it looks missing.
+## Implementation
+1. **Smooth outgoing swipe**
+   - Replace end-only swipe detection with a directional drag that visibly moves the entire outgoing message row.
+   - Lock only after clear horizontal intent, preserve vertical chat scrolling, add resistance, reveal a subtle Info indicator, and snap back after release.
+   - Open Message Info around a 60px left-swipe threshold. Keep this behavior sender-only; incoming message actions remain unchanged.
+   - Keep long-press/reaction behavior, but cancel it as soon as a drag begins.
 
-Files: `src/pages/CommunityV2.tsx` (`canDeleteGroup`, `deleteGroupNow`, the Group info screen and the `edit` panel).
+2. **Audio interaction and ticks**
+   - Make the waveform a dedicated seek surface supporting tap and drag to update playback time.
+   - Isolate waveform gestures from row swipe so seeking never opens Message Info; play/pause remains unchanged.
+   - Add the same sent/delivered/read ticks used by other outgoing messages to outgoing audio bubbles.
 
-Confirmed in the database: both existing groups were created by the same account, and the rules do allow that account to delete them. So this is a visibility/placement problem, not a permissions block — unless the person testing is not the group creator.
+3. **Message Info redesign**
+   - Show the actual outgoing message first: text, media/document preview, or compact playable audio with its time and tick state.
+   - Replace separate cards with compact Prayer & Fire status sections for Read, Delivered, and Played for audio, plus the server-accepted Sent timestamp.
+   - Show current recipient avatar, current name, date, and time beneath each relevant status.
+   - When the sender is the only current group member, show one neutral translated line: “No other recipients in this group,” without empty warning cards.
 
-## Priority 1 — user-visible breakage
+4. **Receipt accuracy**
+   - Refresh current group membership when Message Info opens.
+   - Exclude the sender and filter delivery, read, and played receipts to current members only, so removed or departed members are not shown.
+   - Keep the meanings unchanged: Sent is server acceptance; Delivered is device acknowledgement; Read is opened/read; Played is audio playback.
 
-1. Delete group is hidden inside the gear "settings" panel's blind spot. Fix: put Delete group in the settings panel itself, clearly separated in red, and keep the row in Group info.
-2. Nothing tells the user when an action fails. `deleteGroupNow`, `saveGroup`, `changePhoto`, `leave` and `memberUpdate` ignore errors, so a blocked delete or save looks like a button that does nothing. Fix: check the result and show a success or failure message.
-3. The group creator can leave their own group. After that nobody can delete it, because deletion is tied to the creator still being present. Fix: block the creator from leaving unless they hand over ownership or delete the group.
-4. Leave group has no confirmation. One accidental tap removes the person from the group. Fix: confirm first, like delete does.
-5. Archived conversations vanish forever. The list hides archived groups, but there is no way to archive or un-archive anything. Fix: either add archive/un-archive, or stop hiding them.
+5. **Localization and validation**
+   - Add all new labels and neutral states in English, Spanish, and Portuguese.
+   - Run typecheck, lint, and production build; verify the release build number remains unchanged and do not start TestFlight.
 
-## Priority 2 — missing or incomplete actions
-
-6. Regular members cannot see who is in the group. The member list is only reachable through the admin-only "Admins" entry. Fix: a read-only member list for everyone.
-7. Favorite/pin a conversation is supported by the data but has no button anywhere.
-8. Group avatar can only be changed from the picture on Group info, not from the settings panel where people look for it.
-9. Mute is per person and works, but there is no "mute for 8 hours / 1 week" and no visual muted marker on the conversation row.
-10. Pending email invitations can be created and cancelled in Add members (`src/components/community/MembersModal.tsx`), but there is no way to re-send one.
-
-## Priority 3 — leftovers and cleanup
-
-11. `src/components/ChatScreen.tsx` is unused demo code with fake conversations ("24H PRAYER & FIRE") and dead phone/video buttons. Nothing imports it. Should be deleted before the next App Store build.
-12. Dead filter logic remains in `CommunityV2.tsx` after the tabs were removed: the `filter` state, the unread branch, and the Discover loading it still triggers after a delete. Harmless but confusing.
-13. Reporting and blocking work from a message only. There is no way to report or block a person from their profile or from the member list.
-
-## Verified as working
-
-Sending messages, replies, reactions and the reaction detail list, voice messages, media/documents/links section, message search, copy/delete/report/block on a message, unread badges, loading/error/retry and empty states, add members and admin promotion with owner protection.
-
-## Suggested fix order
-
-Priority 1 items in one pass (delete-group placement, error messages, creator-leave protection, leave confirmation, archived state), then Priority 2, then the cleanup. No code will change until you approve.
+## Technical notes
+- The drag will use pointer/touch-safe state on the message row with vertical-intent cancellation and a bounded negative transform.
+- The waveform will own its pointer sequence and stop propagation so it seeks independently from row swiping.
+- No database schema or iOS/TestFlight workflow changes are required.
