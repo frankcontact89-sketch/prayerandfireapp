@@ -44,6 +44,56 @@ Deno.serve(async (req) => {
   const uid = user.id;
 
   try {
+    // Groups this member owns: hand ownership to another leader/member so the
+    // group keeps working. If nobody else is left, delete the group cleanly.
+    const { data: ownedGroups } = await admin
+      .from("community_groups")
+      .select("id")
+      .eq("created_by", uid);
+
+    for (const g of ownedGroups ?? []) {
+      const { data: others } = await admin
+        .from("community_group_members")
+        .select("user_id, role, created_at")
+        .eq("group_id", g.id)
+        .neq("user_id", uid)
+        .order("created_at", { ascending: true });
+
+      const heir =
+        (others ?? []).find((m: any) => m.role === "owner" || m.role === "admin") ??
+        (others ?? [])[0];
+
+      if (heir) {
+        await admin.from("community_groups").update({ created_by: heir.user_id }).eq("id", g.id);
+        await admin
+          .from("community_group_members")
+          .update({ role: "owner" })
+          .eq("group_id", g.id)
+          .eq("user_id", heir.user_id);
+      } else {
+        const { data: gMsgs } = await admin.from("community_messages").select("id").eq("group_id", g.id);
+        const gMsgIds = (gMsgs ?? []).map((m: any) => m.id);
+        if (gMsgIds.length) {
+          await admin.from("community_reactions").delete().in("message_id", gMsgIds);
+          await admin.from("community_message_reads").delete().in("message_id", gMsgIds);
+          await admin.from("community_audio_plays").delete().in("message_id", gMsgIds);
+          await admin.from("community_messages").update({ reply_to: null }).in("reply_to", gMsgIds);
+          await admin.from("community_reports").update({ message_id: null }).in("message_id", gMsgIds);
+        }
+        await admin.from("community_messages").delete().eq("group_id", g.id);
+        await admin.from("community_group_invite_links").delete().eq("group_id", g.id);
+        await admin.from("community_group_invites").delete().eq("group_id", g.id);
+        await admin.from("community_group_members").delete().eq("group_id", g.id);
+        await admin.from("community_reports").update({ group_id: null }).eq("group_id", g.id);
+        await purgeBucket(admin, "community-media", g.id);
+        await admin.from("community_groups").delete().eq("id", g.id);
+      }
+    }
+
+    // Invite links created by this member are revoked/removed everywhere else.
+    await admin.from("community_group_invite_links").delete().eq("created_by", uid);
+    await admin.from("community_group_invites").update({ invited_by: null }).eq("invited_by", uid);
+
     // Own community UGC
     const { data: myMsgs } = await admin
       .from("community_messages")
@@ -52,8 +102,10 @@ Deno.serve(async (req) => {
     const msgIds = (myMsgs ?? []).map((m: any) => m.id);
 
     await admin.from("community_reactions").delete().eq("user_id", uid);
+    await admin.from("community_audio_plays").delete().eq("user_id", uid);
     await admin.from("community_message_reads").delete().eq("user_id", uid);
     if (msgIds.length) {
+      await admin.from("community_audio_plays").delete().in("message_id", msgIds);
       await admin.from("community_reactions").delete().in("message_id", msgIds);
       await admin.from("community_message_reads").delete().in("message_id", msgIds);
       await admin.from("community_messages").update({ reply_to: null }).in("reply_to", msgIds);
