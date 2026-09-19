@@ -10,6 +10,8 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
   const [supported, setSupported] = useState<boolean | null>(null);
   const [on, setOn] = useState(pushPreferred());
   const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => { pushSupported().then(setSupported); }, []);
 
@@ -21,8 +23,11 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
       setNote(L("Notifications off on this device", "Notificaciones desactivadas en este dispositivo", "Notificações desativadas neste dispositivo"));
       return;
     }
+    setBusy(true);
     const status = await enablePush();
+    setBusy(false);
     setOn(status === "granted");
+    setFailed(status === "error");
     setNote(
       status === "granted"
         ? L("Notifications on for this device", "Notificaciones activadas en este dispositivo", "Notificações ativadas neste dispositivo")
@@ -30,7 +35,11 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
           ? L("Allow notifications for Prayer & Fire in your phone settings.", "Permite las notificaciones de Prayer & Fire en los ajustes del teléfono.", "Permita as notificações do Prayer & Fire nas configurações do telefone.")
           : status === "unsupported"
             ? L("Available in the Prayer & Fire phone app.", "Disponible en la app de Prayer & Fire para teléfono.", "Disponível no aplicativo Prayer & Fire para celular.")
-            : L("Could not complete the action", "No se pudo completar la acción", "Não foi possível concluir a ação"),
+            : L(
+                "This phone could not register for notifications. Check your internet connection and try again.",
+                "Este teléfono no pudo registrarse para las notificaciones. Revisa tu conexión a internet e inténtalo de nuevo.",
+                "Este telefone não conseguiu se registrar para notificações. Verifique sua conexão com a internet e tente novamente.",
+              ),
     );
   };
 
@@ -50,9 +59,24 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
             )}
           </p>
         </div>
-        <Switch checked={on} onCheckedChange={change} disabled={supported === false && !on} />
+        <Switch checked={on} onCheckedChange={change} disabled={busy || (supported === false && !on)} />
       </div>
-      {note && <div className="px-4 pb-3 text-xs text-orange-300">{note}</div>}
+      {busy && (
+        <div className="px-4 pb-3 text-xs text-zinc-400">
+          {L("Connecting this device…", "Conectando este dispositivo…", "Conectando este dispositivo…")}
+        </div>
+      )}
+      {note && <div className={`px-4 pb-3 text-xs ${failed ? "text-red-300" : "text-orange-300"}`}>{note}</div>}
+      {failed && !busy && (
+        <div className="px-4 pb-3">
+          <button
+            onClick={() => change(true)}
+            className="h-9 px-4 rounded-xl bg-orange-500 text-black text-xs font-black"
+          >
+            {L("Try again", "Intentar de nuevo", "Tentar novamente")}
+          </button>
+        </div>
+      )}
       {supported === false && (
         <div className="px-4 pb-3 text-xs text-zinc-500">
           {L(

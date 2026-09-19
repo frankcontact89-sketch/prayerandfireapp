@@ -14,6 +14,12 @@ export type PushStatus = "unsupported" | "granted" | "denied" | "error";
 let listenersReady = false;
 let currentToken: string | null = null;
 
+// Resolved when APNs/FCM actually hands us a device token (or reports an error).
+type RegistrationWaiter = { resolve: (token: string) => void; reject: (err: Error) => void };
+let waiters: RegistrationWaiter[] = [];
+const settleToken = (token: string) => { waiters.forEach((w) => w.resolve(token)); waiters = []; };
+const settleError = (message: string) => { waiters.forEach((w) => w.reject(new Error(message))); waiters = []; };
+
 const core = async () => (await import("@capacitor/core")).Capacitor;
 const plugin = async () => (await import("@capacitor/push-notifications")).PushNotifications;
 
@@ -83,10 +89,12 @@ async function attachListeners() {
   listenersReady = true;
 
   await PushNotifications.addListener("registration", (t: any) => {
-    if (t?.value) saveToken(t.value);
+    if (!t?.value) return;
+    saveToken(t.value).finally(() => settleToken(t.value));
   });
   await PushNotifications.addListener("registrationError", (e: any) => {
     console.error("[push] registration error", e);
+    settleError(e?.error || e?.message || "registration_failed");
   });
   // Arrived on this device → this is a genuine delivery acknowledgement.
   await PushNotifications.addListener("pushNotificationReceived", (n: any) => {
@@ -101,8 +109,11 @@ async function attachListeners() {
   });
 }
 
-/** Asks for permission (only on explicit user intent) and registers the device. */
-export async function enablePush(): Promise<PushStatus> {
+/**
+ * Asks for permission (only on explicit user intent) and registers the device.
+ * Returns "granted" ONLY after APNs/FCM actually returned a device token.
+ */
+export async function enablePush(timeoutMs = 15000): Promise<PushStatus> {
   if (!(await pushSupported())) return "unsupported";
   try {
     const PushNotifications = await plugin();
@@ -113,11 +124,19 @@ export async function enablePush(): Promise<PushStatus> {
       return "denied";
     }
     await attachListeners();
+
+    const registered = new Promise<string>((resolve, reject) => {
+      waiters.push({ resolve, reject });
+      setTimeout(() => reject(new Error("registration_timeout")), timeoutMs);
+    });
     await PushNotifications.register();
+    await registered;
+
     setPushPreferred(true);
     return "granted";
   } catch (e) {
     console.error("[push] enable failed", e);
+    setPushPreferred(false);
     return "error";
   }
 }

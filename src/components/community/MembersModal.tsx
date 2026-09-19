@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Ban, Check, Crown, Flag, Mail, Phone, RefreshCw, Search, ShieldCheck, Trash2, User, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Words } from "./i18n";
+import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE, toE164 } from "@/lib/phone";
 
 const db: any = supabase;
 
@@ -25,6 +26,7 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
   const [confirmBlock, setConfirmBlock] = useState<P | null>(null);
   const [inviteMode, setInviteMode] = useState<"email" | "phone">("email");
   const [invitePhone, setInvitePhone] = useState("");
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE);
 
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setMeId(data.user?.id || null)); }, []);
 
@@ -103,10 +105,10 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
 
   const invitePhoneMember = async () => {
     if (!canManage || busy) return;
-    const digits = invitePhone.replace(/[^0-9]/g, "");
-    if (digits.length < 8 || digits.length > 15) { setMsg({ kind: "err", text: t.noEligibleMember }); return; }
+    const e164 = toE164(invitePhone, countryCode);
+    if (!e164) { setMsg({ kind: "err", text: t.noEligibleMember }); return; }
     setBusy(true);
-    const { data, error } = await db.rpc("invite_group_member_by_phone", { _group_id: groupId, _phone: `+${digits}` });
+    const { data, error } = await db.rpc("invite_group_member_by_phone", { _group_id: groupId, _phone: e164 });
     setBusy(false);
     if (error) {
       const m = String(error.message || "");
@@ -194,7 +196,13 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
             <button onClick={sendInvite} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.sendInvite}</button>
           </> : <>
             <p className="mt-3 text-xs text-zinc-500">{t.phoneInviteHint}</p>
-            <input value={invitePhone} onChange={(e) => setInvitePhone(e.target.value)} inputMode="tel" placeholder="+1 555 000 0000" className="mt-2 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
+            <div className="mt-2 flex gap-2">
+              <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} aria-label={t.phoneLabel} className="h-11 rounded-xl bg-zinc-900 border border-white/10 px-2 outline-none text-sm text-white">
+                {COUNTRY_CODES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+              </select>
+              <input value={invitePhone} onChange={(e) => setInvitePhone(e.target.value)} inputMode="tel" placeholder="857 261 2862" className="flex-1 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
+            </div>
+            <p className="mt-2 text-[11px] text-zinc-600">{toE164(invitePhone, countryCode) || ""}</p>
             <button onClick={invitePhoneMember} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.addMembers}</button>
           </>}
         </div>}
