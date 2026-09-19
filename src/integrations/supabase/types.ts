@@ -182,6 +182,35 @@ export type Database = {
         }
         Relationships: []
       }
+      community_audio_plays: {
+        Row: {
+          id: string
+          message_id: string
+          played_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          played_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          played_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_audio_plays_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "community_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_blocks: {
         Row: {
           blocked_id: string
