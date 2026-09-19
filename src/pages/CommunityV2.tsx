@@ -10,6 +10,7 @@ import VoiceRecorder from"@/components/community/VoiceRecorder";
 import ReactionEmojiPicker from"@/components/community/ReactionEmojiPicker";
 import{dict,getLang}from"@/components/community/i18n";
 import{isBlockedContent}from"@/lib/content-filter";
+import SafetyRulesModal from"@/components/community/SafetyRulesModal";
 import entryLogo from"@/assets/prayer-fire-entry-logo.png";
 
 type Group=CreatedGroup&{role?:string;createdBy?:string;muted?:boolean;mutedUntil?:string|null;archived?:boolean;favorite?:boolean;memberCount?:number;description?:string};
