@@ -1,79 +1,33 @@
-# Phase 1: Content System (Production-Ready)
+# Why the iOS build installs but closes instantly — audit findings
 
-Focus: Daily Devotional, Reading Plans, and Christian Library — real, fully working, admin-managed, translated (EN/ES/PT). No placeholders.
+No code changed. Findings below come from reading the iOS project, the release workflow, and the app's startup code.
 
-Later phases (not this one): Prayer Journal, My Notes, Favorites sync, Join Prayer & Fire form, Share page rebuild, Push notifications, AI Assistant, expanded Solas/Greek admin. The hamburger menu will only expose sections that are ready — unfinished items stay hidden per your rule.
+## Most likely cause (confirmed by inspection)
 
----
+The iOS project never bundles the web app files, so there is nothing for the app to show and it quits at launch.
 
-## 1. Database (one migration)
+- `ios/App/App.xcodeproj/project.pbxproj` — the Resources build phase (around lines 131-141) lists only `Assets.xcassets`, `config.xml`, `Main.storyboard`, `LaunchScreen.storyboard`.
+- Missing from the file references and from Resources: the `public` folder (the built web app) and `capacitor.config.json`. A standard Capacitor iOS project always references both.
+- `ios/.gitignore` correctly ignores `App/App/public` and `App/App/capacitor.config.json` as generated, but generated files still need a reference in the Xcode project; `npx cap sync ios` fills the folder, it does not add missing references.
 
-Three new tables, all trilingual, all RLS-protected, all admin-managed via existing `has_role(auth.uid(), 'admin')`.
+Effect: the packaged app has no `index.html` and no Capacitor config. Capacitor's view controller treats a missing web directory as a fatal error and the process terminates a fraction of a second after launch — exactly the "installs, opens, closes" symptom.
 
-**`devotionals`** — one per date
-- `date` (unique), `is_published`
-- Trilingual fields (EN/ES/PT) for: `title`, `scripture_reference`, `scripture_text`, `context`, `reflection`, `application`, `prayer`, `questions` (text[]), `related_verses` (text[])
+This alone explains the crash. Everything below is secondary and worth a look once assets are bundled.
 
-**`reading_plans`**
-- `slug`, `duration_days`, `order_index`, `is_published`
-- Trilingual: `title`, `description`
+## Secondary risks to inspect
 
-**`reading_plan_days`**
-- FK to plan, `day_number`, trilingual `title` + `passages` (text[])
+1. Offline caching in a packaged app — `vite.config.ts` lines 18-92 enables the PWA/offline service worker. That is a browser concept; inside the native app it is useless and the auto-injected registration code is one more thing running before the first screen. Worth disabling for native builds.
+2. Missing native dependency declaration — `src/components/AppDrawer.tsx` lines 3-4 import `@capacitor/core` and `@capacitor/share`, but `package.json` does not list `@capacitor/core` as a dependency. It currently resolves indirectly; a clean install on the build machine could break.
+3. Backend keys baked at build time — `.env` is committed and read in `src/integrations/supabase/client.ts` lines 5-11. If those values were ever missing during a CI build, the app would fail at startup with a blank screen. Verify the built files contain the real values.
+4. Startup code assuming a browser — `src/pages/Index.tsx` reads saved settings from browser storage at lines 194, 323, 384, 397 before the first screen. Safe inside the WebView, but only once the WebView actually loads; it is a follow-up check, not the cause.
+5. Large Bible data files (about 12 MB total in `src/data/bible/`) are loaded on demand in `src/components/BibleScreen.tsx` lines 43-53. Not a launch crash, but a memory risk on older iPhones when opening the Bible.
+6. The release workflow already runs a simulator launch smoke test (`.github/workflows/testflight-upload.yml`, the "Smoke-test app launch in iOS Simulator" step). Its result for the last run should be read — with the missing assets it should have failed, which tells us whether that guard is actually working.
 
-**`reading_plan_progress`** (per user)
-- `user_id`, `plan_id`, `day_number`, `completed_at` — private RLS
+## Proposed fix, for a later approved pass
 
-**`library_articles`**
-- `category` (enum: bible_studies, doctrine, christology, pneumatology, soteriology, hermeneutics, homiletics, church_history, apologetics, leadership, missions, sermons, articles)
-- `slug`, `order_index`, `is_published`, `cover_image_url`
-- Trilingual: `title`, `summary`, `body` (markdown)
+1. Add the `public` folder and `capacitor.config.json` references to the Xcode project and include them in the Resources build phase, matching the standard Capacitor template.
+2. Re-run the web build and `npx cap sync ios`, then confirm the built `.app` contains `public/index.html` and `capacitor.config.json`.
+3. Turn off the offline/service-worker layer for native builds and add `@capacitor/core` as an explicit dependency.
+4. Bump the build number and let the workflow's simulator smoke test confirm the app stays open before uploading.
 
-All tables get standard GRANTs, RLS policies (public read where `is_published=true`, admin full write, user-owned progress).
-
-Seed data: 3 starter devotionals (today + past 2 days), 2 reading plans (Gospels in 30 Days, Psalms & Proverbs), 3 library articles across different categories — all trilingual — so nothing ships empty.
-
-## 2. New user screens
-
-- **`DailyDevotionalScreen.tsx`** — pulls today's devotional (or latest published fallback). Renders all fields in current language. Share button (native share API). Save-to-favorites button is hidden this phase.
-- **`ReadingPlansScreen.tsx`** — list of published plans with progress %.
-- **`ReadingPlanDetailScreen.tsx`** — day-by-day list, "mark complete" toggle, "continue reading" jumps to first incomplete day, links passages to existing BibleScreen.
-- **`ChristianLibraryScreen.tsx`** — category grid, hides categories with zero published articles (per your rule).
-- **`LibraryArticleScreen.tsx`** — renders markdown body, back to category.
-
-All screens use existing `SimpleScreen` header pattern, safe-area padding, pure black.
-
-## 3. Admin CMS additions
-
-New tabs in `AdminPanel`:
-- **Devotionals** — CRUD with trilingual tabs, date picker, publish toggle.
-- **Reading Plans** — CRUD plan + nested day-by-day editor.
-- **Library** — CRUD articles with category select, markdown body editor, cover image upload to existing `product-images` bucket (or new `library-images` bucket).
-
-Existing admin CRUD pattern (`AdminSolas`, `AdminGreekWords`) is the template.
-
-## 4. Navigation
-
-Update `AppDrawer.tsx` menu order to only include working items this phase:
-Home, Bible, Daily Devotional, Reading Plans, Christian Library, The Five Solas, Biblical Languages Library, Store, About, Settings.
-
-Hidden until their phase: Prayer Journal, My Notes, Favorites, Join Prayer & Fire, Share Prayer & Fire (kept as native share for now).
-
-Rename "50 Greek Words" → "Biblical Languages Library" (label only this phase; Hebrew tables come with Phase for Biblical Languages expansion).
-
-## 5. Translations
-
-Add EN/ES/PT strings for all new UI labels to `src/config/translations.ts`. Content itself comes from DB in the selected language with EN fallback.
-
-## What is NOT in Phase 1
-
-Deferred to explicit later phases so nothing ships broken:
-- Prayer Journal, My Notes, Favorites sync
-- Join Prayer & Fire request form + admin approval workflow
-- Rebuilt Share page with editable admin links
-- Native push notifications (APNs/FCM) — needs your credentials
-- AI Assistant edge function + admin controls
-- Hebrew words + Biblical Expressions tables
-- Store multi-image, Shopify link, drag-reorder upgrades
-
-After you approve Phase 1, I'll ship it end-to-end (migration → screens → admin → drawer → translations → verify), then we move to Phase 2.
+Nothing will be changed until you approve.
