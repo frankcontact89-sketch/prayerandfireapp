@@ -58,6 +58,11 @@ export default function CommunityV2(){
  const inviteInvalidLabel=L("This invite link is no longer valid","Este enlace ya no es válido","Este link não é mais válido");
  const inviteNotApprovedLabel=L("Request community access first","Primero solicita acceso a la comunidad","Solicite acesso à comunidade primeiro");
  const pinLabel=L("Pin message","Fijar mensaje","Fixar mensagem");
+ const starLabel=L("Star message","Destacar mensaje","Destacar mensagem");
+ const unstarLabel=L("Unstar message","Quitar destacado","Remover destaque");
+ const starredToast=L("Message starred","Mensaje destacado","Mensagem destacada");
+ const unstarredToast=L("Star removed","Destacado quitado","Destaque removido");
+ const starErrorToast=L("We could not update the star. Try again.","No pudimos actualizar el destacado. Inténtalo de nuevo.","Não foi possível atualizar o destaque. Tente novamente.");
  const unpinLabel=L("Unpin message","Quitar fijado","Desafixar mensagem");
  const pinnedLabel=L("Pinned","Fijado","Fixado");
  const pinnedDoneLabel=L("Message pinned","Mensaje fijado","Mensagem fixada");
@@ -86,7 +91,7 @@ export default function CommunityV2(){
  const[panel,setPanel]=useState(false);
  const[pendingCount,setPendingCount]=useState(0);
  const[membersModal,setMembersModal]=useState<null|"add"|"admins"|"members">(null);
- const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups"|"discover">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[emojiPicker,setEmojiPicker]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[flash,setFlash]=useState("");
+ const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups"|"discover">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[emojiPicker,setEmojiPicker]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[starredIds,setStarredIds]=useState<Set<string>>(new Set()),[flash,setFlash]=useState("");
  const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[readCounts,setReadCounts]=useState<Record<string,number>>({}),[deliveredCounts,setDeliveredCounts]=useState<Record<string,number>>({});
  const[pushSheet,setPushSheet]=useState(false);
  const pendingDeepLink=useRef<{groupId:string;messageId?:string}|null>(null);
@@ -189,6 +194,10 @@ export default function CommunityV2(){
   loadSenders(Array.from(new Set(rows.map((r:any)=>r.sender_id))));
   const ids=rows.map((r:any)=>r.id);
   if(ids.length)await loadReactions(ids);else setReactions({});
+  if(ids.length){
+   const{data:st}=await db.from("community_message_stars").select("message_id").in("message_id",ids);
+   setStarredIds(new Set((st||[]).map((r:any)=>r.message_id)));
+  }else setStarredIds(new Set());
   const myId=uid||me?.id;
   if(ids.length&&myId){
    const fromOthers=rows.filter((r:any)=>r.sender_id!==myId&&!r.deleted_at).map((r:any)=>r.id);
@@ -342,6 +351,23 @@ export default function CommunityV2(){
   setReactions(v=>{const list=(v[m.id]||[]).filter(r=>r.user_id!==me.id);return{...v,[m.id]:remove?list:[...list,{user_id:me.id,emoji}]}});
   if(remove){await db.from("community_reactions").delete().eq("message_id",m.id).eq("user_id",me.id);return}
   await db.from("community_reactions").upsert({message_id:m.id,user_id:me.id,emoji},{onConflict:"message_id,user_id"});
+ };
+ const toggleStar=async(m:Msg)=>{
+  setMenu(null);
+  const uid=me?.id;
+  if(!uid)return;
+  const wasStarred=starredIds.has(m.id);
+  setStarredIds(prev=>{const next=new Set(prev);if(wasStarred)next.delete(m.id);else next.add(m.id);return next});
+  const{error}=wasStarred
+   ?await db.from("community_message_stars").delete().eq("message_id",m.id).eq("user_id",uid)
+   :await db.from("community_message_stars").insert({message_id:m.id,user_id:uid});
+  if(error){
+   console.error("Star update failed",error);
+   setStarredIds(prev=>{const next=new Set(prev);if(wasStarred)next.add(m.id);else next.delete(m.id);return next});
+   toast(starErrorToast);
+   return;
+  }
+  toast(wasStarred?unstarredToast:starredToast);
  };
  const copyMsg=async(m:Msg)=>{
   setMenu(null);
@@ -564,9 +590,10 @@ export default function CommunityV2(){
       {m.body&&<p className="whitespace-pre-wrap break-words">{renderBody(m.body)}</p>}
       {m.media_type==="image"&&m.url&&<img src={m.url} alt="" className="rounded-xl max-h-80"/>}
       {m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline preload="metadata" className="rounded-xl max-h-80"/>}
+      {m.media_type==="audio"&&m.url&&(starredIds.has(m.id)||m.starred)&&<div className="flex justify-end -mt-1 mb-1"><Star className="w-3 h-3 fill-current text-orange-500"/></div>}
       {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)}/>} 
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
-      {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{m.starred&&<Star className="w-3 h-3 fill-current"/>}{time}{m.mine&&(readCounts[m.id]?<CheckCheck className="w-3.5 h-3.5 text-sky-600"/>:deliveredCounts[m.id]?<CheckCheck className="w-3.5 h-3.5 text-black/50"/>:<Check className="w-3.5 h-3.5 text-black/50"/>)}</div>}
+      {m.media_type!=="audio"&&<div className="text-[10px] opacity-60 text-right mt-1 flex items-center justify-end gap-2">{(starredIds.has(m.id)||m.starred)&&<Star className="w-3 h-3 fill-current text-orange-500"/>}{time}{m.mine&&(readCounts[m.id]?<CheckCheck className="w-3.5 h-3.5 text-sky-600"/>:deliveredCounts[m.id]?<CheckCheck className="w-3.5 h-3.5 text-black/50"/>:<Check className="w-3.5 h-3.5 text-black/50"/>)}</div>}
       {(reactions[m.id]||[]).length>0&&<button onClick={ev=>{ev.stopPropagation();const mineRx=(reactions[m.id]||[]).find(r=>r.user_id===me?.id);if(mineRx)react(m,mineRx.emoji);else setRxDetail(m)}} className={`absolute -bottom-3.5 ${m.mine?"left-2":"right-2"} flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] bg-zinc-800 border border-white/10 text-white`}>
        {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
        {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
@@ -598,7 +625,7 @@ export default function CommunityV2(){
    <button onClick={()=>{setReplyTo(menu);setMenu(null)}} className="w-full h-13 py-3 px-2 flex items-center gap-3 border-t border-white/5"><CornerUpLeft className="w-5 h-5 text-orange-400"/><span>{t.reply}</span></button>
    {menu.mine&&<button onClick={()=>openMessageInfo(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Info className="w-5 h-5 text-orange-400"/><span>{messageInfoLabel}</span></button>}
    {canManageGroup(selected)&&<button onClick={()=>togglePin(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5">{menu.pinned_at?<PinOff className="w-5 h-5 text-orange-400"/>:<Pin className="w-5 h-5 text-orange-400"/>}<span>{menu.pinned_at?unpinLabel:pinLabel}</span></button>}
-   <button onClick={()=>copyMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Copy className="w-5 h-5 text-orange-400"/><span>{copyLabel}</span></button><button onClick={()=>forwardMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Send className="w-5 h-5 text-orange-400"/><span>{forwardLabel}</span></button>
+   <button onClick={()=>copyMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Copy className="w-5 h-5 text-orange-400"/><span>{copyLabel}</span></button><button onClick={()=>forwardMsg(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Send className="w-5 h-5 text-orange-400"/><span>{forwardLabel}</span></button><button onClick={()=>toggleStar(menu)} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Star className={`w-5 h-5 text-orange-400${starredIds.has(menu.id)?" fill-current":""}`}/><span>{starredIds.has(menu.id)?unstarLabel:starLabel}</span></button>
    {menu.sender_id!==me?.id&&<button onClick={()=>{const mm=menu;setMenu(null);setReportFor(mm)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5"><Flag className="w-5 h-5 text-orange-400"/><span>{t.report}</span></button>}
    {menu.sender_id!==me?.id&&<button onClick={()=>{const mm=menu;setMenu(null);setBlockFor(mm)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Ban className="w-5 h-5"/><span>{t.block}</span></button>}
    {(menu.sender_id===me?.id||canManageGroup(selected))&&<button onClick={()=>{setConfirmDel(menu);setMenu(null)}} className="w-full py-3 px-2 flex items-center gap-3 border-t border-white/5 text-red-400"><Trash2 className="w-5 h-5"/><span>{t.deleteMsg}</span></button>}
