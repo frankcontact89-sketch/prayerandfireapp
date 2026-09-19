@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Ban, Check, Crown, Flag, Mail, Phone, RefreshCw, Search, ShieldCheck, Trash2, User, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Words } from "./i18n";
+import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE, toE164 } from "@/lib/phone";
 
 const db: any = supabase;
 
@@ -25,6 +26,7 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
   const [confirmBlock, setConfirmBlock] = useState<P | null>(null);
   const [inviteMode, setInviteMode] = useState<"email" | "phone">("email");
   const [invitePhone, setInvitePhone] = useState("");
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE);
 
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setMeId(data.user?.id || null)); }, []);
 
@@ -103,10 +105,10 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
 
   const invitePhoneMember = async () => {
     if (!canManage || busy) return;
-    const digits = invitePhone.replace(/[^0-9]/g, "");
-    if (digits.length < 8 || digits.length > 15) { setMsg({ kind: "err", text: t.noEligibleMember }); return; }
+    const e164 = toE164(invitePhone, countryCode);
+    if (!e164) { setMsg({ kind: "err", text: t.noEligibleMember }); return; }
     setBusy(true);
-    const { data, error } = await db.rpc("invite_group_member_by_phone", { _group_id: groupId, _phone: `+${digits}` });
+    const { data, error } = await db.rpc("invite_group_member_by_phone", { _group_id: groupId, _phone: e164 });
     setBusy(false);
     if (error) {
       const m = String(error.message || "");
