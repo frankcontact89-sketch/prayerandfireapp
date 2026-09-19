@@ -97,11 +97,18 @@ export function GreekWordsListScreen({ onBack, onOpen, language }: Props) {
         className="w-full h-11 rounded-xl bg-zinc-900 border border-zinc-800 px-4 text-white mb-4 focus:outline-none focus:border-orange-500"
       />
       <div className="space-y-2">
-        {filtered.length === 0 && (
+        {loading && <div className="text-center text-zinc-500 p-6">…</div>}
+        {!loading && loadError && (
+          <div className="text-center text-orange-400 p-6">
+            {L(language, "We could not load this content. Check your connection.", "No pudimos cargar este contenido. Revisa tu conexión.", "Não foi possível carregar este conteúdo. Verifique sua conexão.")}
+          </div>
+        )}
+        {!loading && !loadError && filtered.length === 0 && (
           <div className="text-center text-zinc-500 p-6">
             {L(language, "No entries yet.", "Aún no hay entradas.", "Ainda não há entradas.")}
           </div>
         )}
+
         {filtered.map((r) => (
           <button
             key={r.id}
