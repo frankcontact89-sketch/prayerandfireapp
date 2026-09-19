@@ -204,6 +204,9 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
   const [books, setBooks] = useState<Book[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [audioUnavailable, setAudioUnavailable] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const [view, setView] = useState<"books" | "chapters" | "verses" | "search" | "favorites">(
     () => (localStorage.getItem(VIEW_KEY) as any) || "books",
@@ -250,14 +253,21 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
     setLoading(true);
     const selected = TRANSLATIONS.find((item) => item.code === translation) || TRANSLATIONS[0];
 
-    selected.loader().then((data) => {
-      setBooks(data);
-      setBookIdx((prev) => Math.min(prev, data.length - 1));
-      setLoading(false);
-    });
+    setLoadError(false);
+    selected.loader()
+      .then((data) => {
+        setBooks(data);
+        setBookIdx((prev) => Math.min(prev, data.length - 1));
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Bible translation could not be loaded", err);
+        setLoadError(true);
+        setLoading(false);
+      });
 
     localStorage.setItem(LANG_KEY, translation);
-  }, [translation]);
+  }, [translation, reloadKey]);
 
   useEffect(() => {
     const appTranslation = language ? APP_LANG_TO_BIBLE[language] : null;
@@ -484,8 +494,14 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
     } catch {}
   };
 
+  const speechSupported = typeof window !== "undefined" && "speechSynthesis" in window;
+
   const speakVerseAt = (bIdx: number, cIdx: number, vIdx: number) => {
     if (!books) return;
+    if (!speechSupported) {
+      setAudioUnavailable(true);
+      return;
+    }
     const book = books[bIdx];
     if (!book) return;
     const verses = book.chapters?.[cIdx];
@@ -541,6 +557,10 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
   const playChapter = () => {
     if (!currentBook || !currentVerses.length) return;
+    if (!speechSupported) {
+      setAudioUnavailable(true);
+      return;
+    }
     if (isSpeaking) {
       speakingRef.current = false;
       window.speechSynthesis.cancel();
@@ -826,6 +846,20 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
       </div>
     </div>
   );
+
+  if (loadError) {
+    return (
+      <div className={`${pageBg} min-h-[60vh] flex flex-col items-center justify-center gap-4 px-8 text-center`}>
+        <p className="text-orange-500">{tr("bible_load_error", "We could not load this Bible translation. Check your connection and try again.")}</p>
+        <button
+          onClick={() => { setLoading(true); setReloadKey((k) => k + 1); }}
+          className="h-12 px-6 rounded-2xl bg-orange-500 text-black font-bold"
+        >
+          {tr("retry", "Try again")}
+        </button>
+      </div>
+    );
+  }
 
   if (loading || !books) {
     return (
