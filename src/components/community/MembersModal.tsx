@@ -32,6 +32,7 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
   const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE);
   const [ownPhone, setOwnPhone] = useState<string | null>(null);
   const [textInvitePhone, setTextInvitePhone] = useState<string | null>(null);
+  const [phoneLookupState, setPhoneLookupState] = useState<"idle" | "found" | "invite">("idle");
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -132,13 +133,15 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     }
     const status = (data as any)?.status;
     if (status === "added") {
+      setPhoneLookupState("found");
       setInvitePhone(""); setShowInvite(false);
       setMsg({ kind: "ok", text: t.memberAdded });
       await load();
       onChanged();
       return;
     }
-    if (status === "already_member") { setMsg({ kind: "err", text: t.alreadyMemberMsg }); return; }
+    if (status === "already_member") { setPhoneLookupState("found"); setMsg({ kind: "err", text: t.alreadyMemberMsg }); return; }
+    setPhoneLookupState("invite");
     setTextInvitePhone(e164);
     setMsg(null);
   };
@@ -242,16 +245,30 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
             <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} inputMode="email" autoCapitalize="none" placeholder={t.emailLabel} className="mt-2 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
             <button onClick={sendInvite} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.sendInvite}</button>
           </> : <>
-            <p className="mt-3 text-xs text-zinc-500">{t.phoneInviteHint}</p>
+            <div className="mt-3 rounded-xl border border-white/10 bg-zinc-900/70 p-3">
+              <p className="text-sm font-semibold text-white">
+                {phoneLookupState==="invite"
+                  ? "No eligible Prayer & Fire account found"
+                  : phoneLookupState==="found"
+                    ? "Prayer & Fire account found"
+                    : "Find or invite by phone"}
+              </p>
+              <p className="mt-1 text-xs text-zinc-500">
+                {phoneLookupState==="invite"
+                  ? "This person can receive a secure SMS invitation link to join Prayer & Fire and this group."
+                  : phoneLookupState==="found"
+                    ? "This person can be added directly to the group."
+                    : "If the number belongs to an eligible discoverable Prayer & Fire account, the member can be added directly. Otherwise you can send a secure SMS invitation link."}
+              </p>
+            </div>
             <div className="mt-2 flex gap-2">
-              <select value={countryCode} onChange={(e) => { setCountryCode(e.target.value); setTextInvitePhone(null); setMsg(null); }} aria-label={t.phoneLabel} className="h-11 rounded-xl bg-zinc-900 border border-white/10 px-2 outline-none text-sm text-white">
+              <select value={countryCode} onChange={(e) => { setCountryCode(e.target.value); setTextInvitePhone(null); setPhoneLookupState("idle"); setMsg(null); }} aria-label={t.phoneLabel} className="h-11 rounded-xl bg-zinc-900 border border-white/10 px-2 outline-none text-sm text-white">
                 {COUNTRY_CODES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
               </select>
-              <input value={invitePhone} onChange={(e) => { setInvitePhone(e.target.value); setTextInvitePhone(null); setMsg(null); }} inputMode="tel" placeholder={t.phoneLabel} className="flex-1 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
+              <input value={invitePhone} onChange={(e) => { setInvitePhone(e.target.value); setTextInvitePhone(null); setPhoneLookupState("idle"); setMsg(null); }} inputMode="tel" placeholder={t.phoneLabel} className="flex-1 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
             </div>
             <p className="mt-2 text-[11px] text-zinc-600">{toE164(invitePhone, countryCode) || ""}</p>
-            <p className="mt-2 text-xs text-zinc-500">{t.phoneInviteRequired}</p>
-            {!textInvitePhone ? <button onClick={invitePhoneMember} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.addMember}</button> : <div className="mt-3 rounded-xl border border-orange-500/30 bg-orange-500/10 p-3"><p className="text-xs text-orange-200">{t.phoneInviteRequired}</p><button onClick={inviteByText} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500 flex items-center justify-center gap-2"><MessageSquareText className="h-4 w-4" />{t.inviteByText}</button></div>}
+            {!textInvitePhone ? <button onClick={invitePhoneMember} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">Check number</button> : <div className="mt-3 rounded-xl border border-orange-500/30 bg-orange-500/10 p-3"><p className="text-xs text-orange-200">No eligible account was found for direct add. Send a secure invitation link by text message instead.</p><button onClick={inviteByText} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-orange-500 text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500 flex items-center justify-center gap-2"><MessageSquareText className="h-4 w-4" />Send SMS invitation</button></div>}
           </>}
         </div>}
         {msg && <div className={`mt-3 flex items-start gap-2 rounded-xl px-3 py-2 text-xs ${msg.kind === "ok" ? "bg-orange-500/10 text-orange-300" : "bg-red-500/10 text-red-300"}`}><span className="flex-1">{msg.text}</span><button onClick={() => setMsg(null)} aria-label={t.cancel}><X className="w-3.5 h-3.5" /></button></div>}
