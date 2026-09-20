@@ -103,6 +103,7 @@ export default function CommunityV2(){
  const file=useRef<HTMLInputElement>(null),photo=useRef<HTMLInputElement>(null),end=useRef<HTMLDivElement>(null);
  const press=useRef<number|null>(null);
  const swipe=useRef<{id:string;x:number;y:number;pointerId:number;locked:boolean;offset:number}|null>(null);
+ const suppressSwipeClick=useRef<string|null>(null);
  const[swipeVisual,setSwipeVisual]=useState<{id:string;offset:number}|null>(null);
  const msgRefs=useRef<Record<string,HTMLDivElement|null>>({});
  const typingChannel=useRef<any>(null),lastTypingSent=useRef(0);
@@ -459,6 +460,10 @@ export default function CommunityV2(){
   const active=swipe.current;
   swipe.current=null;
   setSwipeVisual(null);
+   if(active?.id===m.id&&active.locked){
+    suppressSwipeClick.current=m.id;
+    window.setTimeout(()=>{if(suppressSwipeClick.current===m.id)suppressSwipeClick.current=null},250);
+   }
    if(active?.id===m.id&&active.locked&&Math.abs(active.offset)>=37)openMessageInfo(m);
   if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
  };
@@ -648,6 +653,7 @@ export default function CommunityV2(){
       {m.mine&&<div aria-hidden="true" className="absolute right-1 top-1/2 flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-2.5 text-primary shadow-sm transition-opacity" style={{opacity:swipeVisual?.id===m.id?Math.min(1,Math.abs(swipeVisual.offset)/30):0,transform:`translateY(-50%) scale(${swipeVisual?.id===m.id?Math.min(1,0.84+Math.abs(swipeVisual.offset)/180):0.84})`}}><Info className="h-4 w-4"/><span className="text-xs font-semibold">{t.info}</span></div>}
      <div
       onContextMenu={e=>{e.preventDefault();setReactBar(m)}}
+        onClickCapture={event=>{if(suppressSwipeClick.current===m.id){event.preventDefault();event.stopPropagation();suppressSwipeClick.current=null}}}
        onPointerDown={event=>beginMessageGesture(event,m)}
        onPointerMove={event=>moveMessageGesture(event,m)}
        onPointerUp={event=>endMessageGesture(event,m)}
