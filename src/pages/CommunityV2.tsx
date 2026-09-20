@@ -129,7 +129,7 @@ export default function CommunityV2(){
  const goBack=()=>{if(window.history.length>1)window.history.back();else window.location.assign("/")};
  const isStaff=!!staffRole;
  const isOwner=staffRole==="owner";
- const canManageGroup=(g:Group|null)=>!!g&&(isStaff||g.role==="owner"||g.role==="admin"||(!!me&&g.createdBy===me.id));
+ const canManageGroup=(g:Group|null)=>!!g&&(isOwner||g.role==="owner"||g.role==="admin"||(!!me&&g.createdBy===me.id));
  const canDeleteGroup=(g:Group|null)=>!!g&&(isOwner||(!!me&&g.createdBy===me.id)||g.role==="owner");
 
  const signed=async(path?:string|null)=>{if(!path)return undefined;const{data}=await supabase.storage.from("community-media").createSignedUrl(path,3600);return data?.signedUrl};
@@ -337,7 +337,7 @@ export default function CommunityV2(){
   reader.onload=()=>{if(typeof reader.result==="string")saveChatBg(`url("${reader.result}") center / cover fixed`)};
   reader.readAsDataURL(f);
  };
- const chatBackgroundStyle=chatBg==="default"?{background:"#000"}:chatBg==="warm"?{background:"radial-gradient(circle at 20% 0%, rgba(249,115,22,.16), transparent 34%), linear-gradient(180deg,#120c08,#050505 55%)"}:chatBg==="fire"?{background:"radial-gradient(circle at 85% 10%, rgba(249,115,22,.22), transparent 28%), radial-gradient(circle at 15% 90%, rgba(234,88,12,.12), transparent 35%), #050505"}:chatBg.startsWith("url(")?{background:chatBg}:{background:"#000"};
+ const chatBackgroundStyle=chatBg==="default"?{background:"#000"}:chatBg==="warm"?{background:"radial-gradient(circle at 15% 8%, rgba(249,115,22,.30), transparent 30%), radial-gradient(circle at 85% 88%, rgba(194,65,12,.20), transparent 32%), linear-gradient(180deg,#241209 0%,#140b07 48%,#070504 100%)"}:chatBg==="fire"?{background:"radial-gradient(circle at 85% 10%, rgba(249,115,22,.22), transparent 28%), radial-gradient(circle at 15% 90%, rgba(234,88,12,.12), transparent 35%), #050505"}:chatBg.startsWith("url(")?{background:chatBg}:{background:"#000"};
 
  const requestAccess=async()=>{
   if(!me)return;setRequesting(true);
