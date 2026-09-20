@@ -247,7 +247,7 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
               <select value={countryCode} onChange={(e) => { setCountryCode(e.target.value); setTextInvitePhone(null); setMsg(null); }} aria-label={t.phoneLabel} className="h-11 rounded-xl bg-zinc-900 border border-white/10 px-2 outline-none text-sm text-white">
                 {COUNTRY_CODES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
               </select>
-              <input value={invitePhone} onChange={(e) => { setInvitePhone(e.target.value); setTextInvitePhone(null); setMsg(null); }} inputMode="tel" placeholder="857 261 2862" className="flex-1 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
+              <input value={invitePhone} onChange={(e) => { setInvitePhone(e.target.value); setTextInvitePhone(null); setMsg(null); }} inputMode="tel" placeholder={t.phoneLabel} className="flex-1 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
             </div>
             <p className="mt-2 text-[11px] text-zinc-600">{toE164(invitePhone, countryCode) || ""}</p>
             <p className="mt-2 text-xs text-zinc-500">{t.phoneInviteRequired}</p>
