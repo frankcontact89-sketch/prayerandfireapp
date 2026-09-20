@@ -1,29 +1,26 @@
-# Community visual polish
+# Phone invitation fallback
 
 ## Goal
-Bring the existing Community chat and Message Info screens closer to the approved mockup while preserving all current gestures, receipts, localization, privacy, and release settings.
+Keep private direct phone matching unchanged, but replace the unmatched-number dead end with an explicit native text-message invitation.
 
 ## Implementation
-1. **Chat surface and message rhythm**
-   - Refine the black chat canvas, header, day markers, message spacing, bubble widths, corner shapes, text hierarchy, and metadata alignment for iPhone.
-   - Keep outgoing messages Prayer & Fire orange and incoming messages dark, with stronger contrast and consistent media rounding.
+1. **Safe direct-add states**
+   - Continue using the existing protected phone RPC for discoverable, approved accounts.
+   - Keep the existing specific already-member result; detect the signed-in user's own saved number locally without exposing anyone else.
 
-2. **Outgoing audio presentation**
-   - Tighten avatar, play/pause button, waveform, elapsed/total time, timestamp, and receipt ticks into one stable layout.
-   - Preserve the dedicated waveform seek gesture and keep it isolated from row swiping.
+2. **SMS invitation fallback**
+   - After a privacy-safe unmatched result, offer “Invite by text message” instead of only showing an error.
+   - Generate a secure group invite token, build the invite URL, and open the iPhone SMS composer addressed to the normalized number with localized invitation text.
+   - Fall back to the device share sheet if the SMS composer cannot be opened; never send automatically.
 
-3. **Swipe affordance**
-   - Polish the existing left-drag motion, resistance, snap-back, and compact Info reveal without adding destructive swipe actions.
-   - Preserve long-press and the existing options sheet.
+3. **Clear localized guidance**
+   - Explain in EN/ES/PT that direct add works only for eligible discoverable accounts, while text recipients must create/sign in and accept the invite before joining.
+   - Keep the +1 default and international country selector.
 
-4. **Message Info sheet**
-   - Refine the light full-screen sheet with a centered title, clearer message preview, compact Sent/Read/Delivered/Played hierarchy, and polished recipient rows.
-   - Preserve current-member filtering, sender exclusion, exact receipt semantics, and the neutral one-member state.
-
-5. **Validation**
-   - Confirm EN/ES/PT labels remain correct, check iPhone-sized rendering where authentication permits, and run typecheck, lint, and production build.
-   - Keep build/version 38 unchanged and do not start TestFlight.
+4. **Validation**
+   - Run typecheck, lint, and production build.
+   - Keep Build 39/version 1.1 unchanged and do not start TestFlight.
 
 ## Technical notes
-- Changes are limited to Community presentation code and semantic design tokens where needed.
-- No database, push, phone lookup, signing, workflow, or release changes.
+- No weakening of phone privacy, lookup rate limits, group permissions, or invite-token security.
+- Changes are limited to the Community member invitation UI and existing secure invite-link RPC usage.
