@@ -705,7 +705,7 @@ export default function CommunityV2(){
     {msgs.filter(m=>!blocks.includes(m.sender_id)).filter(m=>!csq.trim()||(m.body||"").toLowerCase().includes(csq.trim().toLowerCase())).map((m,mi,arr)=>{
      const s=senders[m.sender_id]||(m.sender_id===me?.id?{name:me?.name,avatar:me?.avatar}:undefined);
     const time=new Date(m.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
-    const canDelete=m.sender_id===me?.id||canManageGroup(selected);
+    const canDeleteMessage=m.sender_id===me?.id||canManageGroup(selected);
     const parent=m.reply_to?msgs.find(x=>x.id===m.reply_to):undefined;
     if(m.deleted_at)return null;
     const dayOf=(v:string)=>new Date(v).toDateString();
@@ -750,7 +750,7 @@ export default function CommunityV2(){
        {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
       </button>}
       <button onClick={()=>setMenu(m)} aria-label={t.options} className={`absolute top-1 ${m.mine?"-left-8":"-right-8"} w-7 h-7 rounded-full bg-zinc-900/90 border border-white/10 text-zinc-300 grid place-items-center`}><MoreHorizontal className="w-4 h-4"/></button>
-      {canDelete&&m.media_type==="audio"&&m.starred&&<Star className="absolute -top-2 -right-2 w-3 h-3 text-orange-400 fill-current"/>}
+      {canDeleteMessage&&m.media_type==="audio"&&m.starred&&<Star className="absolute -top-2 -right-2 w-3 h-3 text-orange-400 fill-current"/>}
      </div>
     </div>
     </React.Fragment>;
