@@ -12,4 +12,4 @@
 - [x] Validate EN/ES/PT labels and iPhone-safe spacing after the polish pass.
 - [x] Run typecheck, lint, and production build; confirm build/version remains unchanged and do not trigger TestFlight.
 - [x] Make outgoing message swipe-to-Info more forgiving while preserving waveform-only seeking.
-- [ ] Validate the adjusted gesture with typecheck, lint, and production build; keep the build number unchanged.
+- [x] Validate the adjusted gesture with typecheck, lint, and production build; keep the build number unchanged.
