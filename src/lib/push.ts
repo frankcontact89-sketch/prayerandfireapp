@@ -1,6 +1,6 @@
 // Native push notifications (Capacitor). Safe no-op on the web build.
 // Permission is NEVER requested at app startup: enablePush() is only called
-// when the member opens Community or turns notifications on in Settings.
+// when the member explicitly turns Community notifications on.
 import { supabase } from "@/integrations/supabase/client";
 
 const db: any = supabase;
@@ -10,15 +10,38 @@ export const pushPreferred = () => localStorage.getItem(PUSH_PREF_KEY) === "1";
 export const setPushPreferred = (v: boolean) => localStorage.setItem(PUSH_PREF_KEY, v ? "1" : "0");
 
 export type PushStatus = "unsupported" | "granted" | "denied" | "error";
+export type PushPermission = "granted" | "denied" | "prompt" | "unsupported" | "error";
 
 let listenersReady = false;
 let currentToken: string | null = null;
 
-// Resolved when APNs/FCM actually hands us a device token (or reports an error).
-type RegistrationWaiter = { resolve: (token: string) => void; reject: (err: Error) => void };
+type RegistrationWaiter = {
+  resolve: (token: string) => void;
+  reject: (err: Error) => void;
+  timer: ReturnType<typeof setTimeout>;
+};
 let waiters: RegistrationWaiter[] = [];
-const settleToken = (token: string) => { waiters.forEach((w) => w.resolve(token)); waiters = []; };
-const settleError = (message: string) => { waiters.forEach((w) => w.reject(new Error(message))); waiters = []; };
+
+const clearWaiter = (w: RegistrationWaiter) => {
+  clearTimeout(w.timer);
+  waiters = waiters.filter((x) => x !== w);
+};
+const settleToken = (token: string) => {
+  const pending = [...waiters];
+  waiters = [];
+  pending.forEach((w) => {
+    clearTimeout(w.timer);
+    w.resolve(token);
+  });
+};
+const settleError = (message: string) => {
+  const pending = [...waiters];
+  waiters = [];
+  pending.forEach((w) => {
+    clearTimeout(w.timer);
+    w.reject(new Error(message));
+  });
+};
 
 const core = async () => (await import("@capacitor/core")).Capacitor;
 const plugin = async () => (await import("@capacitor/push-notifications")).PushNotifications;
@@ -27,6 +50,48 @@ export async function pushSupported(): Promise<boolean> {
   try {
     const Capacitor = await core();
     return Capacitor.isNativePlatform() && Capacitor.isPluginAvailable("PushNotifications");
+  } catch {
+    return false;
+  }
+}
+
+export async function getPushPermission(): Promise<PushPermission> {
+  if (!(await pushSupported())) return "unsupported";
+  try {
+    const perm = await (await plugin()).checkPermissions();
+    if (perm.receive === "granted") return "granted";
+    if (perm.receive === "denied") return "denied";
+    return "prompt";
+  } catch {
+    return "error";
+  }
+}
+
+export async function getPushUiState(): Promise<{
+  supported: boolean;
+  permission: PushPermission;
+  enabled: boolean;
+}> {
+  const supported = await pushSupported();
+  if (!supported) return { supported: false, permission: "unsupported", enabled: false };
+  const permission = await getPushPermission();
+  return {
+    supported: true,
+    permission,
+    enabled: permission === "granted" && pushPreferred(),
+  };
+}
+
+export async function openNotificationSettings(): Promise<boolean> {
+  try {
+    const Capacitor = await core();
+    if (!Capacitor.isNativePlatform()) return false;
+    // iOS routes this scheme to the current app's Settings page.
+    if (Capacitor.getPlatform() === "ios") {
+      window.location.href = "app-settings:";
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }
@@ -96,7 +161,6 @@ async function attachListeners() {
     console.error("[push] registration error", e);
     settleError(e?.error || e?.message || "registration_failed");
   });
-  // Arrived on this device → this is a genuine delivery acknowledgement.
   await PushNotifications.addListener("pushNotificationReceived", (n: any) => {
     const id = n?.data?.message_id || n?.data?.messageId;
     if (id) ackDelivered([id]);
@@ -110,25 +174,38 @@ async function attachListeners() {
 }
 
 /**
- * Asks for permission (only on explicit user intent) and registers the device.
- * Returns "granted" ONLY after APNs/FCM actually returned a device token.
+ * Asks for permission only after explicit user intent.
+ * Returns "granted" ONLY after APNs/FCM actually returns a device token.
+ * A hard timeout prevents an endless "connecting" UI when APNs is unavailable.
  */
-export async function enablePush(timeoutMs = 15000): Promise<PushStatus> {
+export async function enablePush(timeoutMs = 10000): Promise<PushStatus> {
   if (!(await pushSupported())) return "unsupported";
   try {
     const PushNotifications = await plugin();
     let perm = await PushNotifications.checkPermissions();
+    if (perm.receive === "denied") {
+      setPushPreferred(false);
+      return "denied";
+    }
     if (perm.receive !== "granted") perm = await PushNotifications.requestPermissions();
     if (perm.receive !== "granted") {
       setPushPreferred(false);
       return "denied";
     }
+
     await attachListeners();
 
     const registered = new Promise<string>((resolve, reject) => {
-      waiters.push({ resolve, reject });
-      setTimeout(() => reject(new Error("registration_timeout")), timeoutMs);
+      const waiter = {} as RegistrationWaiter;
+      waiter.resolve = resolve;
+      waiter.reject = reject;
+      waiter.timer = setTimeout(() => {
+        clearWaiter(waiter);
+        reject(new Error("registration_timeout"));
+      }, timeoutMs);
+      waiters.push(waiter);
     });
+
     await PushNotifications.register();
     await registered;
 
@@ -162,7 +239,10 @@ export async function resumePush() {
   try {
     const PushNotifications = await plugin();
     const perm = await PushNotifications.checkPermissions();
-    if (perm.receive !== "granted") return;
+    if (perm.receive !== "granted") {
+      setPushPreferred(false);
+      return;
+    }
     await attachListeners();
     await PushNotifications.register();
   } catch { /* ignore */ }
