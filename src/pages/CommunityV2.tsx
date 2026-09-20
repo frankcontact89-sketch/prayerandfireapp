@@ -707,7 +707,7 @@ export default function CommunityV2(){
        onPointerUp={event=>endMessageGesture(event,m)}
        onPointerCancel={cancelMessageGesture}
        style={{WebkitTouchCallout:"none",WebkitUserSelect:reactBar?.id===m.id?"none":undefined,touchAction:"pan-y",transform:swipeVisual?.id===m.id?`translateX(${swipeVisual.offset}px)`:"translateX(0)",transition:swipeVisual?.id===m.id?"none":"transform 180ms ease-out"}}
-      className={`group relative max-w-[86%] select-none px-3 py-2.5 shadow-sm ${(reactions[m.id]||[]).length?"mb-4":""} ${m.mine?"rounded-2xl rounded-tr-md bg-primary text-primary-foreground":"rounded-2xl rounded-tl-md border border-border bg-card text-card-foreground"}`}
+      className={`group relative max-w-[86%] select-none px-3 py-2.5 shadow-sm ${(reactions[m.id]||[]).length?"mb-7":""} ${m.mine?"rounded-2xl rounded-tr-md bg-primary text-primary-foreground":"rounded-2xl rounded-tl-md border border-border bg-card text-card-foreground"}`}
      >
       {reactBar?.id===m.id&&<div className={`absolute -top-14 z-40 ${m.mine?"right-0":"left-0"} flex items-center gap-1 rounded-full bg-zinc-950 border border-orange-500/40 shadow-xl shadow-black/60 px-2 py-1.5`}>
        {EMOJIS.map(e=><button key={e} data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();react(m,e)}} className={`w-9 h-9 shrink-0 rounded-full text-xl grid place-items-center ${(reactions[m.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-orange-500/25":""}`}>{e}</button>)}
@@ -717,13 +717,13 @@ export default function CommunityV2(){
       {parent&&<div className={`mb-1 rounded-lg px-2 py-1 text-[11px] border-l-2 ${m.mine?"bg-black/10 border-black/40 text-black/70":"bg-black/40 border-orange-500 text-zinc-400"}`}><b>{senders[parent.sender_id]?.name||t.member}</b><div className="truncate">{parent.deleted_at?t.messageDeleted:parent.body||t.media}</div></div>}
       {m.pinned_at&&<div className={`flex items-center gap-1 text-[10px] mb-0.5 ${m.mine?"text-black/60":"text-orange-300"}`}><Pin className="w-3 h-3"/>{pinnedLabel}</div>}
        {m.body&&<p className="whitespace-pre-wrap break-words text-[15px] leading-[1.4]">{renderBody(m.body)}</p>}
-       {m.media_type==="image"&&m.url&&<img src={m.url} alt="" className="max-h-80 rounded-xl object-cover"/>}
+       {m.media_type==="image"&&m.url&&<img src={m.url} alt="" draggable={false} onContextMenu={e=>e.preventDefault()} className="max-h-80 rounded-xl object-cover select-none"/>}
        {m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline preload="metadata" className="max-h-80 rounded-xl"/>}
       {m.media_type==="audio"&&m.url&&(starredIds.has(m.id)||m.starred)&&<div className="flex justify-end -mt-1 mb-1"><Star className="w-3 h-3 fill-current text-orange-500"/></div>}
         {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)} status={m.mine?messageStatus(m):undefined} seekLabel={audioPositionLabel} playLabel={playAudioLabel} pauseLabel={pauseAudioLabel}/>} 
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
         {m.media_type!=="audio"&&<div className="mt-1.5 flex items-center justify-end gap-1 text-xs tabular-nums opacity-65">{(starredIds.has(m.id)||m.starred)&&<Star className="mr-1 h-3 w-3 fill-current text-primary"/>}<time>{time}</time>{m.mine&&messageStatusIcon(m)}</div>}
-      {(reactions[m.id]||[]).length>0&&<button data-message-gesture-ignore onClick={ev=>{ev.stopPropagation();openReactionDetails(m)}} aria-label={t.reactions} className={`absolute -bottom-3.5 ${m.mine?"left-2":"right-2"} flex min-h-7 items-center gap-1 rounded-full border border-white/10 bg-zinc-800 px-2 py-0.5 text-[12px] text-white`}>
+      {(reactions[m.id]||[]).length>0&&<button data-message-gesture-ignore onClick={ev=>{ev.stopPropagation();openReactionDetails(m)}} aria-label={t.reactions} className={`absolute -bottom-5 z-20 ${m.mine?"left-3":"right-3"} flex min-h-8 items-center gap-1 rounded-full border border-white/15 bg-zinc-900 px-2.5 py-1 text-[12px] text-white shadow-lg shadow-black/50`}>
        {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
        {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
       </button>}
