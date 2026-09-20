@@ -58,6 +58,7 @@ export function SettingsScreen({
   const [phone, setPhone] = useState("");
   const [phonePrivate, setPhonePrivate] = useState(true);
   const [phoneDiscoverable, setPhoneDiscoverable] = useState(false);
+  const [phonePanelOpen, setPhonePanelOpen] = useState(false);
   const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE);
   const [userId, setUserId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -411,39 +412,100 @@ export function SettingsScreen({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-card/60 p-4 space-y-3">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-zinc-500">{L(language, "Phone number (optional)", "Número de teléfono (opcional)", "Número de telefone (opcional)")}</p>
-              <div className="mt-2 flex gap-2">
-                <select
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  disabled={savingProfile}
-                  aria-label={L(language, "Country code", "Código de país", "Código do país")}
-                  className="h-10 rounded-md border border-border bg-background px-2 text-sm text-white"
-                >
-                  {COUNTRY_CODES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
-                </select>
-                <Input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  inputMode="tel"
-                  placeholder={L(language, "Phone number", "Número de teléfono", "Número de telefone")}
-                  disabled={savingProfile}
-                  className="h-10 flex-1"
-                />
+          <div className="rounded-2xl border border-border bg-card/60 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setPhonePanelOpen((v) => !v)}
+              className="w-full p-4 flex items-center gap-3 text-left"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-white">
+                  {L(language, "Phone & privacy", "Teléfono y privacidad", "Telefone e privacidade")}
+                </p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  {L(
+                    language,
+                    "Use your number only so approved members can find or invite you. It is never shown publicly.",
+                    "Usa tu número solo para que miembros aprobados puedan encontrarte o invitarte. Nunca se muestra públicamente.",
+                    "Use seu número apenas para que membros aprovados possam encontrar ou convidar você. Ele nunca é exibido publicamente."
+                  )}
+                </p>
               </div>
-              <p className="mt-2 text-xs text-zinc-500">{L(language, "Pick your country code, or type the number with + and the country code. Your number is never shown to other members.", "Elige tu código de país, o escribe el número con + y el código de país. Tu número nunca se muestra a otros miembros.", "Escolha o código do país, ou digite o número com + e o código do país. Seu número nunca é mostrado a outros membros.")}</p>
-              {toE164(phone, countryCode) && <p className="mt-1 text-xs text-orange-300">{toE164(phone, countryCode)}</p>}
-            </div>
-            <label className="flex items-center justify-between gap-3 text-sm text-white">
-              <span>{L(language, "Keep my phone number private", "Mantener mi número de teléfono privado", "Manter meu número de telefone privado")}</span>
-              <input type="checkbox" checked={phonePrivate} onChange={(e) => setPhonePrivate(e.target.checked)} className="h-5 w-5 accent-orange-500" aria-label={L(language, "Keep my phone number private", "Mantener mi número de teléfono privado", "Manter meu número de telefone privado")} />
-            </label>
-            <label className="flex items-center justify-between gap-3 text-sm text-white">
-              <span>{L(language, "Allow people to find me by phone number", "Permitir que me encuentren por número de teléfono", "Permitir que me encontrem pelo número de telefone")}</span>
-              <input type="checkbox" checked={phoneDiscoverable} onChange={(e) => setPhoneDiscoverable(e.target.checked)} className="h-5 w-5 accent-orange-500" aria-label={L(language, "Allow people to find me by phone number", "Permitir que me encuentren por número de teléfono", "Permitir que me encontrem pelo número de telefone")} />
-            </label>
+              <div className="shrink-0 text-right">
+                <div className="text-xs font-semibold text-zinc-300">
+                  {phone ? L(language, "Added", "Agregado", "Adicionado") : L(language, "Not added", "No agregado", "Não adicionado")}
+                </div>
+                <div className="mt-1 text-[11px] text-orange-400">
+                  {phonePanelOpen ? L(language, "Close", "Cerrar", "Fechar") : L(language, "Manage", "Administrar", "Gerenciar")}
+                </div>
+              </div>
+            </button>
+
+            {phonePanelOpen && (
+              <div className="border-t border-border px-4 pb-4 pt-3 space-y-3">
+                <div className="flex gap-2">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    disabled={savingProfile}
+                    aria-label={L(language, "Country code", "Código de país", "Código do país")}
+                    className="h-11 rounded-xl border border-border bg-background px-3 text-sm text-white"
+                  >
+                    {COUNTRY_CODES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+                  </select>
+                  <Input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    inputMode="tel"
+                    placeholder={L(language, "Enter phone number", "Escribe tu número", "Digite seu número")}
+                    disabled={savingProfile}
+                    className="h-11 flex-1 rounded-xl"
+                  />
+                </div>
+
+                {toE164(phone, countryCode) && (
+                  <p className="text-xs text-zinc-500">
+                    {L(language, "Saved as", "Se guardará como", "Será salvo como")}{" "}
+                    <span className="text-zinc-300">{toE164(phone, countryCode)}</span>
+                  </p>
+                )}
+
+                <label className="flex items-center justify-between gap-3 rounded-xl bg-background/70 px-3 py-3 text-sm text-white">
+                  <div>
+                    <div className="font-medium">{L(language, "Private number", "Número privado", "Número privado")}</div>
+                    <div className="mt-0.5 text-xs text-zinc-500">
+                      {L(language, "Never show my number to other members.", "Nunca mostrar mi número a otros miembros.", "Nunca mostrar meu número a outros membros.")}
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={phonePrivate}
+                    onChange={(e) => setPhonePrivate(e.target.checked)}
+                    className="h-5 w-5 accent-orange-500"
+                  />
+                </label>
+
+                <label className="flex items-center justify-between gap-3 rounded-xl bg-background/70 px-3 py-3 text-sm text-white">
+                  <div>
+                    <div className="font-medium">{L(language, "Find me by phone", "Encontrarme por teléfono", "Encontrar-me por telefone")}</div>
+                    <div className="mt-0.5 text-xs text-zinc-500">
+                      {L(
+                        language,
+                        "Approved members can use your number to find your Prayer & Fire account.",
+                        "Los miembros aprobados pueden usar tu número para encontrar tu cuenta de Prayer & Fire.",
+                        "Membros aprovados podem usar seu número para encontrar sua conta do Prayer & Fire."
+                      )}
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={phoneDiscoverable}
+                    onChange={(e) => setPhoneDiscoverable(e.target.checked)}
+                    className="h-5 w-5 accent-orange-500"
+                  />
+                </label>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-2">
