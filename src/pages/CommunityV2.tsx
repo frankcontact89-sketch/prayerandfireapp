@@ -153,7 +153,13 @@ export default function CommunityV2(){
   const{data:g,error:ge}=await db.from("community_groups").select("id,name,description,avatar_url,updated_at,created_by").in("id",ids).order("updated_at",{ascending:false});
   if(ge){setListError(true);setListLoading(false);return}
   const mm=new Map((m||[]).map((x:any)=>[x.group_id,x]));
-  // real unread counts: messages from others that I have not read yet
+  // Show the chat list immediately. Unread counts, member counts and signed avatars hydrate below.
+  const quickRows=(g||[]).map((x:any)=>{
+   const z:any=mm.get(x.id)||{};
+   return{id:x.id,name:x.name,subtitle:x.description||"",description:x.description||"",unread:0,lastTime:new Date(x.updated_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:undefined,createdBy:x.created_by,role:z.role,muted:z.muted,mutedUntil:z.muted_until||null,archived:z.archived,favorite:z.favorite,memberCount:0};
+  });
+  setGroups(quickRows);setListLoading(false);
+  // Hydrate real unread counts and previews without blocking the Community screen.
   const{data:allMsgs}=await db.from("community_messages").select("id,group_id,sender_id,body,media_type,created_at,deleted_at").in("group_id",ids).is("deleted_at",null).order("created_at");
   const otherIds=(allMsgs||[]).filter((x:any)=>x.sender_id!==uid).map((x:any)=>x.id);
   let readSet=new Set<string>();
@@ -201,8 +207,16 @@ export default function CommunityV2(){
  },[loadSenders]);
  const loadMsgs=useCallback(async(id:string,uid?:string)=>{
   const{data}=await db.from("community_messages").select("id,sender_id,body,media_url,media_type,created_at,deleted_at,starred,reply_to,pinned_at").eq("group_id",id).order("created_at");
-  const rows=await Promise.all((data||[]).map(async(x:any)=>({...x,mine:x.sender_id===(uid||me?.id),url:x.media_url&&!x.deleted_at?await signed(x.media_url):undefined})));
+  // Render message bubbles as soon as the database responds. Media URLs hydrate in the background.
+  const rows=(data||[]).map((x:any)=>({...x,mine:x.sender_id===(uid||me?.id),url:undefined}));
   setMsgs(rows);
+  const mediaRows=rows.filter((r:any)=>r.media_url&&!r.deleted_at);
+  if(mediaRows.length){
+   void Promise.all(mediaRows.map(async(r:any)=>({id:r.id,url:await signed(r.media_url)}))).then(resolved=>{
+    const byId=new Map(resolved.map((x:any)=>[x.id,x.url]));
+    setMsgs(cur=>cur.map(x=>byId.has(x.id)?{...x,url:byId.get(x.id)}:x));
+   });
+  }
   loadSenders(Array.from(new Set(rows.map((r:any)=>r.sender_id))));
   const ids=rows.map((r:any)=>r.id);
   if(ids.length)await loadReactions(ids);else setReactions({});
