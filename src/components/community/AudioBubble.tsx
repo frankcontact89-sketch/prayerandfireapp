@@ -250,8 +250,20 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
             })}
           </div>
         )}
-        <div className={`mt-0.5 flex items-center justify-between gap-3 text-xs leading-none ${mine ? "text-foreground/65" : "text-muted-foreground"}`}>
-          <span className="tabular-nums">{fmt(cur)} / {fmt(dur)}</span>
+        <div className={`mt-0.5 flex items-center justify-between gap-2 text-xs leading-none ${mine ? "text-foreground/65" : "text-muted-foreground"}`}>
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              data-message-gesture-ignore
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); cycleRate(); }}
+              aria-label={`Playback speed ${rate}x`}
+              className={`h-7 min-w-10 rounded-full px-2 text-[11px] font-black ${mine ? "bg-black/15 text-foreground" : "bg-muted text-foreground"}`}
+            >
+              {rate}x
+            </button>
+            <span className="tabular-nums">{fmt(cur)} / {fmt(dur)}</span>
+          </div>
           <span className="flex shrink-0 items-center gap-0.5 tabular-nums">
             {time}
             {mine && status === "read" && <CheckCheck className="h-4 w-4 text-sky-700" />}
