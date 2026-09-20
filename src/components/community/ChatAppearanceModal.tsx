@@ -1,7 +1,7 @@
 import React,{useEffect,useRef,useState}from"react";
 import{ArrowLeft,Check,Image as ImageIcon,RotateCcw}from"lucide-react";
 
-export type ChatChatPrefs={wallpaper:string;bubble:string};
+export type ChatPrefs={wallpaper:string;bubble:string};
 const WALLPAPERS=[
  {id:"default",label:"Prayer & Fire",css:"linear-gradient(160deg,#090909,#17100b 55%,#080808)"},
  {id:"ember",label:"Ember",css:"radial-gradient(circle at 25% 15%,#3b1607 0,#120b08 38%,#050505 80%)"},
@@ -11,15 +11,15 @@ const WALLPAPERS=[
  {id:"plum",label:"Plum",css:"linear-gradient(145deg,#2e1065,#170b2e,#080808)"}
 ];
 const BUBBLES=["#f97316","#2563eb","#0f766e","#7c3aed","#be123c","#3f3f46","#15803d","#a16207"];
-export const chatChatPrefsKey=(uid:string,gid:string)=>`pf-chat-prefs:${uid}:${gid}`;
-export const readChatChatPrefs=(uid:string,gid:string):ChatPrefs=>{try{return JSON.parse(localStorage.getItem(chatChatPrefsKey(uid,gid))||"") as ChatPrefs}catch{return{wallpaper:"default",bubble:"#f97316"}}};
+export const chatPrefsKey=(uid:string,gid:string)=>`pf-chat-prefs:${uid}:${gid}`;
+export const readChatPrefs=(uid:string,gid:string):ChatPrefs=>{try{return JSON.parse(localStorage.getItem(chatPrefsKey(uid,gid))||"") as ChatPrefs}catch{return{wallpaper:"default",bubble:"#f97316"}}};
 export const wallpaperCss=(id:string)=>WALLPAPERS.find(x=>x.id===id)?.css||WALLPAPERS[0].css;
 
 export default function ChatAppearanceModal({uid,groupId,language,onClose,onChange}:{uid:string;groupId:string;language:string;onClose:()=>void;onChange:(p:ChatPrefs)=>void}){
  const L=(en:string,es:string,pt:string)=>language==="es"?es:language==="pt"?pt:en;
- const[prefs,setChatPrefs]=useState<ChatPrefs>(()=>readChatChatPrefs(uid,groupId));
+ const[prefs,setChatPrefs]=useState<ChatPrefs>(()=>readChatPrefs(uid,groupId));
  const file=useRef<HTMLInputElement>(null);
- const save=(p:ChatPrefs)=>{setChatPrefs(p);localStorage.setItem(chatChatPrefsKey(uid,groupId),JSON.stringify(p));onChange(p)};
+ const save=(p:ChatPrefs)=>{setChatPrefs(p);localStorage.setItem(chatPrefsKey(uid,groupId),JSON.stringify(p));onChange(p)};
  useEffect(()=>onChange(prefs),[]);
  const choosePhoto=(f?:File)=>{if(!f||!f.type.startsWith("image/")||f.size>4*1024*1024)return;const r=new FileReader();r.onload=()=>save({...prefs,wallpaper:String(r.result)});r.readAsDataURL(f)};
  return <div className="fixed inset-0 z-[150] bg-[#080808] text-white overflow-y-auto" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}>
