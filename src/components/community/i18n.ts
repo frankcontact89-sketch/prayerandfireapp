@@ -46,7 +46,7 @@ export const dict = {
     addedMembers: "Members added", audioError: "Audio unavailable", voiceMessage: "Voice message",
     reply: "Reply", react: "React", star: "Star", unstar: "Unstar", copy: "Copy", copied: "Copied",
     messageDeleted: "Message deleted", options: "Message options", pause: "Pause", resume: "Resume",
-    download: "Open file", replying: "Replying to", createGroupsPerm: "Can create groups", you: "You", reactions: "Reactions",
+    download: "Open file", replying: "Replying to", createGroupsPerm: "Can create groups", you: "You", reactions: "Reaction details", noReactions: "No reactions yet",
   },
   es: {
     inviteByEmail: "Invitar por correo", inviteHint: "Usa esto si la persona todavía no aparece.", fullName: "Nombre completo", emailLabel: "Correo electrónico", sendInvite: "Enviar invitación", pendingInvites: "Invitaciones pendientes", pendingInvitation: "Invitación pendiente", inviteSent: "Invitación guardada. Se unirá a este grupo cuando se registre.", memberAdded: "Miembro agregado al grupo", addMember: "Agregar miembro", alreadyMemberMsg: "Esa persona ya está en este grupo", invalidEmail: "Escribe un correo válido", invalidPhone: "Escribe un número de teléfono válido", cancelInvite: "Cancelar invitación", availablePeople: "Personas aprobadas que no están en este grupo", selectedCount: "seleccionados", inviteByEmailOrPhone: "Invitar por correo o teléfono", phoneLabel: "Número de teléfono", phoneInviteHint: "Si este número pertenece a una cuenta elegible y visible de Prayer & Fire, se agregará directamente.", phoneInviteRequired: "Un número de teléfono no puede unirse a un grupo por sí solo. La persona debe tener o crear una cuenta de Prayer & Fire y aceptar la invitación segura.", noEligibleMember: "No se encontró ningún miembro elegible", inviteByText: "Invitar por mensaje de texto", smsInviteText: "Te invitamos a unirte a un grupo de Prayer & Fire. Crea una cuenta o inicia sesión y acepta esta invitación:", smsUnavailable: "No se pudieron abrir los mensajes. Usa el menú de compartir para enviar la invitación.", tooManyLookups: "Demasiadas búsquedas. Inténtalo más tarde.",
@@ -88,7 +88,7 @@ export const dict = {
     addedMembers: "Miembros agregados", audioError: "Audio no disponible", voiceMessage: "Mensaje de voz",
     reply: "Responder", react: "Reaccionar", star: "Destacar", unstar: "Quitar destacado", copy: "Copiar", copied: "Copiado",
     messageDeleted: "Mensaje eliminado", options: "Opciones del mensaje", pause: "Pausar", resume: "Reanudar",
-    download: "Abrir archivo", replying: "Respondiendo a", createGroupsPerm: "Puede crear grupos", you: "Tú", reactions: "Reacciones",
+    download: "Abrir archivo", replying: "Respondiendo a", createGroupsPerm: "Puede crear grupos", you: "Tú", reactions: "Detalles de reacciones", noReactions: "Todavía no hay reacciones",
   },
   pt: {
     inviteByEmail: "Convidar por e-mail", inviteHint: "Use isto se a pessoa ainda não aparecer.", fullName: "Nome completo", emailLabel: "E-mail", sendInvite: "Enviar convite", pendingInvites: "Convites pendentes", pendingInvitation: "Convite pendente", inviteSent: "Convite salvo. Ela entrará neste grupo ao se cadastrar.", memberAdded: "Membro adicionado ao grupo", addMember: "Adicionar membro", alreadyMemberMsg: "Essa pessoa já está neste grupo", invalidEmail: "Digite um e-mail válido", invalidPhone: "Digite um número de telefone válido", cancelInvite: "Cancelar convite", availablePeople: "Pessoas aprovadas que não estão neste grupo", selectedCount: "selecionados", inviteByEmailOrPhone: "Convidar por e-mail ou telefone", phoneLabel: "Número de telefone", phoneInviteHint: "Se este número pertencer a uma conta elegível e visível do Prayer & Fire, ela será adicionada diretamente.", phoneInviteRequired: "Um número de telefone não pode entrar em um grupo sozinho. A pessoa precisa ter ou criar uma conta do Prayer & Fire e aceitar o convite seguro.", noEligibleMember: "Nenhum membro elegível encontrado", inviteByText: "Convidar por mensagem de texto", smsInviteText: "Você foi convidado para um grupo do Prayer & Fire. Crie uma conta ou entre e aceite este convite:", smsUnavailable: "Não foi possível abrir as mensagens. Use o menu de compartilhamento para enviar o convite.", tooManyLookups: "Muitas buscas. Tente novamente mais tarde.",
@@ -130,7 +130,7 @@ export const dict = {
     addedMembers: "Membros adicionados", audioError: "Áudio indisponível", voiceMessage: "Mensagem de voz",
     reply: "Responder", react: "Reagir", star: "Destacar", unstar: "Remover destaque", copy: "Copiar", copied: "Copiado",
     messageDeleted: "Mensagem apagada", options: "Opções da mensagem", pause: "Pausar", resume: "Retomar",
-    download: "Abrir arquivo", replying: "Respondendo a", createGroupsPerm: "Pode criar grupos", you: "Você", reactions: "Reações",
+    download: "Abrir arquivo", replying: "Respondendo a", createGroupsPerm: "Pode criar grupos", you: "Você", reactions: "Detalhes das reações", noReactions: "Ainda não há reações",
   },
 } as const;
 

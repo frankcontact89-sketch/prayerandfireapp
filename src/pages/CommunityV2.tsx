@@ -360,13 +360,21 @@ export default function CommunityV2(){
  };
 
  const toast=(s:string)=>{setFlash(s);window.setTimeout(()=>setFlash(""),1600)};
+  const openReactionDetails=(m:Msg)=>{
+   setMenu(null);setReactBar(null);setEmojiPicker(null);setRxDetail(m);
+   const ids=Array.from(new Set((reactions[m.id]||[]).map(reaction=>reaction.user_id)));
+   if(ids.length)loadSenders(ids);
+  };
  const react=async(m:Msg,emoji:string)=>{
   if(!me)return;setMenu(null);setReactBar(null);setEmojiPicker(null);
   const mine=(reactions[m.id]||[]).find(r=>r.user_id===me.id);
   const remove=mine?.emoji===emoji;
-  setReactions(v=>{const list=(v[m.id]||[]).filter(r=>r.user_id!==me.id);return{...v,[m.id]:remove?list:[...list,{user_id:me.id,emoji}]}});
-  if(remove){await db.from("community_reactions").delete().eq("message_id",m.id).eq("user_id",me.id);return}
-  await db.from("community_reactions").upsert({message_id:m.id,user_id:me.id,emoji},{onConflict:"message_id,user_id"});
+   const previous=reactions[m.id]||[];
+   setReactions(v=>{const list=(v[m.id]||[]).filter(r=>r.user_id!==me.id);return{...v,[m.id]:remove?list:[...list,{user_id:me.id,emoji}]}});
+   const{error}=remove
+    ?await db.from("community_reactions").delete().eq("message_id",m.id).eq("user_id",me.id)
+    :await db.from("community_reactions").upsert({message_id:m.id,user_id:me.id,emoji},{onConflict:"message_id,user_id"});
+   if(error){setReactions(v=>({...v,[m.id]:previous}));toast(actionFailedLabel)}
  };
  const toggleStar=async(m:Msg)=>{
   setMenu(null);
@@ -675,7 +683,7 @@ export default function CommunityV2(){
         {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)} status={m.mine?messageStatus(m):undefined} seekLabel={audioPositionLabel} playLabel={playAudioLabel} pauseLabel={pauseAudioLabel}/>} 
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
         {m.media_type!=="audio"&&<div className="mt-1.5 flex items-center justify-end gap-1 text-xs tabular-nums opacity-65">{(starredIds.has(m.id)||m.starred)&&<Star className="mr-1 h-3 w-3 fill-current text-primary"/>}<time>{time}</time>{m.mine&&messageStatusIcon(m)}</div>}
-      {(reactions[m.id]||[]).length>0&&<button onClick={ev=>{ev.stopPropagation();const mineRx=(reactions[m.id]||[]).find(r=>r.user_id===me?.id);if(mineRx)react(m,mineRx.emoji);else setRxDetail(m)}} className={`absolute -bottom-3.5 ${m.mine?"left-2":"right-2"} flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] bg-zinc-800 border border-white/10 text-white`}>
+      {(reactions[m.id]||[]).length>0&&<button data-message-gesture-ignore onClick={ev=>{ev.stopPropagation();openReactionDetails(m)}} aria-label={t.reactions} className={`absolute -bottom-3.5 ${m.mine?"left-2":"right-2"} flex min-h-7 items-center gap-1 rounded-full border border-white/10 bg-zinc-800 px-2 py-0.5 text-[12px] text-white`}>
        {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
        {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
       </button>}
@@ -736,13 +744,14 @@ export default function CommunityV2(){
    </div>}
   <ReactionEmojiPicker open={!!emojiPicker} title={emojiTitle} selected={emojiPicker?(reactions[emojiPicker.id]||[]).find(r=>r.user_id===me?.id)?.emoji:undefined} onClose={()=>setEmojiPicker(null)} onPick={emoji=>emojiPicker&&react(emojiPicker,emoji)}/>
   {reactBar&&<div className="fixed inset-0 z-30" onClick={()=>setReactBar(null)}/>} 
-  {rxDetail&&<div className="fixed inset-0 z-50 bg-black/80 flex items-end" onClick={()=>setRxDetail(null)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-4 pb-[max(20px,env(safe-area-inset-bottom))] max-h-[70vh] overflow-y-auto">
-   <div className="flex justify-between items-center mb-3"><b>{t.reactions}</b><button onClick={()=>setRxDetail(null)} aria-label={t.cancel}><X/></button></div>
-   {(reactions[rxDetail.id]||[]).map(r=><div key={r.user_id+r.emoji} className="flex items-center gap-3 py-2.5 border-t border-white/5">
-    <img src={(senders[r.user_id]?.avatar)||entryLogo} alt="" className="w-9 h-9 rounded-full object-cover"/>
-    <span className="flex-1 truncate">{r.user_id===me?.id?t.you:senders[r.user_id]?.name||t.member}</span>
-    <span className="text-xl">{r.emoji}</span>
-   </div>)}
+   {rxDetail&&<div className="fixed inset-0 z-50 flex items-end bg-black/80" onClick={()=>setRxDetail(null)}><div role="dialog" aria-modal="true" aria-labelledby="reaction-details-title" onClick={e=>e.stopPropagation()} className="max-h-[70vh] w-full overflow-y-auto rounded-t-3xl border-t border-white/10 bg-zinc-950 px-4 pt-2 pb-[max(20px,env(safe-area-inset-bottom))] shadow-2xl">
+    <div className="mx-auto mb-1 h-1 w-10 rounded-full bg-zinc-700"/>
+    <div className="mb-2 flex min-h-12 items-center justify-between"><b id="reaction-details-title" className="text-[17px]">{t.reactions}</b><button onClick={()=>setRxDetail(null)} aria-label={t.cancel} className="grid h-11 w-11 place-items-center rounded-full bg-zinc-900 text-zinc-200"><X className="h-5 w-5"/></button></div>
+    {(reactions[rxDetail.id]||[]).length===0?<p className="border-t border-white/5 py-8 text-center text-sm text-zinc-500">{t.noReactions}</p>:(reactions[rxDetail.id]||[]).map(r=><div key={r.user_id+r.emoji} className="flex min-h-14 items-center gap-3 border-t border-white/5 py-2.5">
+     <div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-zinc-900 text-sm font-bold text-orange-400">{senders[r.user_id]?.avatar?<img src={senders[r.user_id]?.avatar||undefined} alt="" className="h-full w-full object-cover"/>:(r.user_id===me?.id?me?.name:senders[r.user_id]?.name||t.member)?.[0]?.toUpperCase()}</div>
+     <span className="flex-1 truncate text-[15px] font-medium">{r.user_id===me?.id?t.you:senders[r.user_id]?.name||t.member}</span>
+     <span className="text-2xl" aria-hidden="true">{r.emoji}</span>
+    </div>)}
   </div></div>}
   {reportFor&&<div className="fixed inset-0 z-[60] bg-black/80 flex items-end" onClick={()=>setReportFor(null)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-zinc-950 border-t border-white/10 p-4 pb-[max(20px,env(safe-area-inset-bottom))] max-h-[80vh] overflow-y-auto">
    <div className="flex justify-between items-center mb-3"><b>{t.reportTitle}</b><button onClick={()=>setReportFor(null)} aria-label={t.cancel}><X/></button></div>
