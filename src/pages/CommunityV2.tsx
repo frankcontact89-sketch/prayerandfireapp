@@ -657,7 +657,7 @@ export default function CommunityV2(){
     const dayLabel=dayOf(m.created_at)===today?todayLabel:dayOf(m.created_at)===yest?yesterdayLabel:new Date(m.created_at).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
     return <React.Fragment key={m.id}>
     {showDay&&<div className="flex justify-center py-2.5"><span className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">{dayLabel}</span></div>}
-    <div ref={el=>{msgRefs.current[m.id]=el}} className={`relative flex ${m.mine?"justify-end":"justify-start"} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-orange-400/70":""}`}>
+    <div ref={el=>{msgRefs.current[m.id]=el}} className={`relative flex ${m.mine?"justify-end":"justify-start"} ${reactBar?.id===m.id?"z-40":""} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-orange-400/70":""}`}>
       {m.mine&&<div aria-hidden="true" className="absolute right-1 top-1/2 flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-2.5 text-primary shadow-sm transition-opacity" style={{opacity:swipeVisual?.id===m.id?Math.min(1,Math.abs(swipeVisual.offset)/30):0,transform:`translateY(-50%) scale(${swipeVisual?.id===m.id?Math.min(1,0.84+Math.abs(swipeVisual.offset)/180):0.84})`}}><Info className="h-4 w-4"/><span className="text-xs font-semibold">{t.info}</span></div>}
      <div
       onContextMenu={e=>{e.preventDefault();setReactBar(m)}}
@@ -670,8 +670,8 @@ export default function CommunityV2(){
       className={`group relative max-w-[86%] select-none px-3 py-2.5 shadow-sm ${(reactions[m.id]||[]).length?"mb-4":""} ${m.mine?"rounded-2xl rounded-tr-md bg-primary text-primary-foreground":"rounded-2xl rounded-tl-md border border-border bg-card text-card-foreground"}`}
      >
       {reactBar?.id===m.id&&<div className={`absolute -top-14 z-40 ${m.mine?"right-0":"left-0"} flex items-center gap-1 rounded-full bg-zinc-950 border border-orange-500/40 shadow-xl shadow-black/60 px-2 py-1.5`}>
-       {EMOJIS.map(e=><button key={e} onClick={ev=>{ev.stopPropagation();react(m,e)}} className={`w-9 h-9 shrink-0 rounded-full text-xl grid place-items-center ${(reactions[m.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-orange-500/25":""}`}>{e}</button>)}
-       <button onClick={ev=>{ev.stopPropagation();setReactBar(null);setEmojiPicker(m)}} aria-label={emojiTitle} className="w-9 h-9 rounded-full bg-zinc-900 border border-white/10 grid place-items-center text-orange-400"><Plus className="w-4 h-4"/></button>
+       {EMOJIS.map(e=><button key={e} data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();react(m,e)}} className={`w-9 h-9 shrink-0 rounded-full text-xl grid place-items-center ${(reactions[m.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-orange-500/25":""}`}>{e}</button>)}
+       <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);setEmojiPicker(m)}} aria-label={emojiTitle} className="w-9 h-9 rounded-full bg-zinc-900 border border-white/10 grid place-items-center text-orange-400"><Plus className="w-4 h-4"/></button>
       </div>}
       {!m.mine&&s&&<div className="text-[11px] font-bold text-orange-400 mb-0.5">{s.name}</div>}
       {parent&&<div className={`mb-1 rounded-lg px-2 py-1 text-[11px] border-l-2 ${m.mine?"bg-black/10 border-black/40 text-black/70":"bg-black/40 border-orange-500 text-zinc-400"}`}><b>{senders[parent.sender_id]?.name||t.member}</b><div className="truncate">{parent.deleted_at?t.messageDeleted:parent.body||t.media}</div></div>}
