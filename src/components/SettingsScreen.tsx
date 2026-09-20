@@ -428,7 +428,7 @@ export function SettingsScreen({
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   inputMode="tel"
-                  placeholder="857 261 2862"
+                  placeholder={L(language, "Phone number", "Número de teléfono", "Número de telefone")}
                   disabled={savingProfile}
                   className="h-10 flex-1"
                 />
