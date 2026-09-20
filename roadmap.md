@@ -13,6 +13,6 @@
 - [x] Run typecheck, lint, and production build; confirm build/version remains unchanged and do not trigger TestFlight.
 - [x] Make outgoing message swipe-to-Info more forgiving while preserving waveform-only seeking.
 - [x] Validate the adjusted gesture with typecheck, lint, and production build; keep the build number unchanged.
-- [ ] Preserve secure phone matching while adding an SMS invitation fallback for unmatched numbers.
-- [ ] Add complete EN/ES/PT guidance and safe direct-add/already-member/invite states.
-- [ ] Run typecheck, lint, and production build; keep Build 39 unchanged and do not trigger TestFlight.
+- [x] Preserve secure phone matching while adding an SMS invitation fallback for unmatched numbers.
+- [x] Add complete EN/ES/PT guidance and safe direct-add/already-member/invite states.
+- [x] Run typecheck, lint, and production build; keep Build 39 unchanged and do not trigger TestFlight.
