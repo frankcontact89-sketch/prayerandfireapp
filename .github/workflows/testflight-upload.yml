@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      # Trigger a new TestFlight run when this workflow definition is updated.
+      # Trigger a new TestFlight run when this workflow definition is updated. Retry Build 44 after certificate cleanup.
       # Re-run marker: Build 44 with polished chat spacing, admin-only controls, distinct warm background, phone privacy UX, reactions, audio speed, localized dates and SMS invite fallback.nds, reaction tap fixes, easier swipe, SMS invite fallback, notification UX, profile/privacy fixes and exact Prayer & Fire icon.
       - '.github/workflows/testflight-upload.yml'
 
