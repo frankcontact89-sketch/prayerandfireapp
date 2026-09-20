@@ -472,49 +472,64 @@ export default function CommunityV2(){
  };
 
  const beginMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
-   const target=event.target as HTMLElement;
-   if(target.closest("[data-message-gesture-ignore],a,video,input")||target.closest("button:not([data-message-swipe-control])"))return;
+  const target=event.target as HTMLElement;
+  if(target.closest("[data-message-gesture-ignore],a,video,input")||target.closest("button:not([data-message-swipe-control])"))return;
+  if(press.current){window.clearTimeout(press.current);press.current=null}
   swipe.current={id:m.id,x:event.clientX,y:event.clientY,pointerId:event.pointerId,locked:false,offset:0};
-  press.current=window.setTimeout(()=>setReactBar(m),400);
+  // Fast, deliberate long press: quick enough to feel native without firing on normal taps.
+  press.current=window.setTimeout(()=>{
+   press.current=null;
+   if(swipe.current?.id!==m.id)return;
+   setMenu(null);setEmojiPicker(null);setReactBar(m);
+   try{navigator.vibrate?.(8)}catch{/* optional haptic */}
+  },260);
  };
  const moveMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
   const active=swipe.current;
   if(!active||active.id!==m.id||active.pointerId!==event.pointerId)return;
   const dx=event.clientX-active.x,dy=event.clientY-active.y;
-   if((Math.abs(dx)>6||Math.abs(dy)>6)&&press.current){window.clearTimeout(press.current);press.current=null}
-  if(!m.mine)return;
+  // Give fingers a little natural movement before cancelling long press.
+  if((Math.abs(dx)>10||Math.abs(dy)>10)&&press.current){window.clearTimeout(press.current);press.current=null}
   if(!active.locked){
-    if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){swipe.current=null;setSwipeVisual(null);return}
-    if(dx>-7||Math.abs(dx)<=Math.abs(dy)+2)return;
+   if(Math.abs(dy)>12&&Math.abs(dy)>Math.abs(dx)*1.15){swipe.current=null;setSwipeVisual(null);return}
+   // Own messages swipe left for Message Info. Any message can swipe right to Reply.
+   const horizontal=Math.abs(dx)>9&&Math.abs(dx)>Math.abs(dy)+3;
+   const allowed=horizontal&&((m.mine&&dx<0)||dx>0);
+   if(!allowed)return;
    active.locked=true;
-    if(press.current){window.clearTimeout(press.current);press.current=null}
-    setReactBar(null);
-   event.currentTarget.setPointerCapture(event.pointerId);
+   if(press.current){window.clearTimeout(press.current);press.current=null}
+   setReactBar(null);
+   try{event.currentTarget.setPointerCapture(event.pointerId)}catch{/* iOS may already own pointer */}
   }
-  if(dx>=0)return;
+  const direction=m.mine&&dx<0?-1:1;
+  if((direction<0&&dx>=0)||(direction>0&&dx<=0))return;
   event.preventDefault();
-   const distance=Math.min(88,Math.max(0,Math.abs(dx)-3));
-   const offset=-(distance<=48?distance:48+(distance-48)*0.35);
-  active.offset=offset;
-  setSwipeVisual({id:m.id,offset});
+  const distance=Math.min(92,Math.max(0,Math.abs(dx)-2));
+  const translated=distance<=52?distance:52+(distance-52)*0.28;
+  active.offset=direction*translated;
+  setSwipeVisual({id:m.id,offset:active.offset});
  };
  const endMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
-  if(press.current)window.clearTimeout(press.current);
+  if(press.current){window.clearTimeout(press.current);press.current=null}
   const active=swipe.current;
   swipe.current=null;
   setSwipeVisual(null);
-   if(active?.id===m.id&&active.locked){
-    suppressSwipeClick.current=m.id;
-    window.setTimeout(()=>{if(suppressSwipeClick.current===m.id)suppressSwipeClick.current=null},250);
-   }
-   if(active?.id===m.id&&active.locked&&Math.abs(active.offset)>=37)openMessageInfo(m);
-  if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
+  if(active?.id===m.id&&active.locked){
+   suppressSwipeClick.current=m.id;
+   window.setTimeout(()=>{if(suppressSwipeClick.current===m.id)suppressSwipeClick.current=null},220);
+  }
+  if(active?.id===m.id&&active.locked&&Math.abs(active.offset)>=32){
+   try{navigator.vibrate?.(6)}catch{/* optional haptic */}
+   if(active.offset>0)setReplyTo(m);
+   else if(m.mine)openMessageInfo(m);
+  }
+  try{if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId)}catch{/* ignore */}
  };
  const cancelMessageGesture=(event:React.PointerEvent<HTMLDivElement>)=>{
-  if(press.current)window.clearTimeout(press.current);
+  if(press.current){window.clearTimeout(press.current);press.current=null}
   swipe.current=null;
   setSwipeVisual(null);
-  if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
+  try{if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId)}catch{/* ignore */}
  };
 
  const reportAudioPlayed=async(m:Msg)=>{
@@ -672,7 +687,7 @@ export default function CommunityV2(){
   <header className="shrink-0 min-h-16 px-2 bg-black/95 text-white border-b border-white/10 flex items-center gap-2 backdrop-blur"><button onClick={()=>{setSelected(null);if(me)loadGroups(me.id)}} aria-label={t.back} className="w-11 h-11 grid place-items-center"><ArrowLeft className="h-5 w-5"/></button><button onClick={()=>setInfo(true)} className="flex-1 min-w-0 flex items-center gap-2.5 text-left"><img src={selected.avatar||entryLogo} alt="" className="w-11 h-11 rounded-full object-cover ring-1 ring-white/10"/><div className="min-w-0"><b className="block truncate text-[15px] leading-tight">{selected.name}</b><span className="text-xs text-zinc-400">{memberCountLabel(selected.memberCount||0)}</span></div></button><button onClick={()=>{setChatSearch(v=>!v);setCsq("")}} aria-label={searchMessagesLabel} className="w-11 h-11 grid place-items-center"><Search className="w-5 h-5"/></button><button onClick={()=>setInfo(true)} aria-label={t.info} className="w-11 h-11 grid place-items-center"><MoreHorizontal className="w-5 h-5"/></button></header>
   {chatSearch&&<div className="shrink-0 px-3 py-2 bg-black border-b border-white/10"><div className="h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 flex items-center gap-2"><Search className="w-4 h-4 text-zinc-500"/><input autoFocus value={csq} onChange={e=>setCsq(e.target.value)} placeholder={searchMessagesLabel} className="flex-1 bg-transparent outline-none text-sm min-w-0"/><button onClick={()=>{setChatSearch(false);setCsq("")}} aria-label={t.cancel}><X className="w-4 h-4"/></button></div></div>}
   {pinned.length>0&&<div className="shrink-0 px-3 py-2 bg-zinc-950 border-b border-white/10 space-y-1.5">{pinned.slice(0,3).map(p=><div key={p.id} className="flex items-center gap-2"><button onClick={()=>jumpToMsg(p.id)} className="flex-1 min-w-0 flex items-center gap-2 text-left"><Pin className="w-4 h-4 text-orange-400 shrink-0"/><span className="flex-1 min-w-0 truncate text-xs"><b className="text-orange-300">{pinnedLabel}</b> <span className="text-zinc-300">{p.body||t.media}</span></span></button>{canManageGroup(selected)&&<button onClick={()=>togglePin(p)} aria-label={unpinLabel} className="w-7 h-7 rounded-full bg-zinc-900 grid place-items-center shrink-0"><PinOff className="w-3.5 h-3.5 text-zinc-400"/></button>}</div>)}</div>}
-  <main className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-3.5" style={chatBackgroundStyle}>
+  <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pt-3 pb-6 space-y-3.5" style={chatBackgroundStyle}>
     {msgs.filter(m=>!blocks.includes(m.sender_id)).filter(m=>!csq.trim()||(m.body||"").toLowerCase().includes(csq.trim().toLowerCase())).map((m,mi,arr)=>{
      const s=senders[m.sender_id]||(m.sender_id===me?.id?{name:me?.name,avatar:me?.avatar}:undefined);
     const time=new Date(m.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
@@ -691,7 +706,7 @@ export default function CommunityV2(){
     return <React.Fragment key={m.id}>
     {showDay&&<div className="flex justify-center py-2.5"><span className="rounded-full border border-white/10 bg-zinc-950 px-3 py-1 text-xs font-medium text-zinc-300">{dayLabel}</span></div>}
     <div ref={el=>{msgRefs.current[m.id]=el}} className={`relative flex ${(reactions[m.id]||[]).length?"mb-7":""} ${m.mine?"justify-end":"justify-start"} ${reactBar?.id===m.id?"z-40":""} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-orange-400/70":""}`}>
-      {m.mine&&<div aria-hidden="true" className="absolute right-1 top-1/2 flex h-9 items-center gap-1.5 rounded-full border border-white/10 bg-zinc-950 px-2.5 text-orange-400 shadow-sm transition-opacity" style={{opacity:swipeVisual?.id===m.id?Math.min(1,Math.abs(swipeVisual.offset)/30):0,transform:`translateY(-50%) scale(${swipeVisual?.id===m.id?Math.min(1,0.84+Math.abs(swipeVisual.offset)/180):0.84})`}}><Info className="h-4 w-4"/><span className="text-xs font-semibold">{t.info}</span></div>}
+      {swipeVisual?.id===m.id&&<div aria-hidden="true" className={`absolute top-1/2 flex h-9 items-center gap-1.5 rounded-full border border-white/10 bg-zinc-950 px-2.5 text-orange-400 shadow-sm ${swipeVisual.offset<0?"right-1":"left-1"}`} style={{opacity:Math.min(1,Math.abs(swipeVisual.offset)/24),transform:`translateY(-50%) scale(${Math.min(1,0.86+Math.abs(swipeVisual.offset)/160)})`}}>{swipeVisual.offset<0?<Info className="h-4 w-4"/>:<CornerUpLeft className="h-4 w-4"/>}<span className="text-xs font-semibold">{swipeVisual.offset<0?t.info:t.reply}</span></div>}
      <div
       onContextMenu={e=>{e.preventDefault();setReactBar(m)}}
         onClickCapture={event=>{if(suppressSwipeClick.current===m.id){event.preventDefault();event.stopPropagation();suppressSwipeClick.current=null}}}
@@ -726,7 +741,7 @@ export default function CommunityV2(){
     </div>
     </React.Fragment>;
    })}
-   <div ref={end}/>
+   <div ref={end} className="h-4" aria-hidden="true"/>
   </main>
   {Object.keys(typing).length>0&&<div className="shrink-0 px-4 pb-1 text-[11px] text-orange-300">{Object.keys(typing).length===1?`${Object.values(typing)[0].name} ${typingLabel}`:typingManyLabel}</div>}
   <div className="shrink-0 border-t border-white/10 bg-black text-white px-2 pt-2 pb-[max(8px,env(safe-area-inset-bottom))]">
