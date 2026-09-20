@@ -7,7 +7,7 @@ on:
       - main
     paths:
       # Trigger a new TestFlight run when this workflow definition is updated.
-      # Re-run marker: Build 41 with audio speed, localized chat dates, chat backgrounds, reaction tap fixes, easier swipe, SMS invite fallback, notification UX, profile/privacy fixes and exact Prayer & Fire icon.
+      # Re-run marker: Build 42 with polished chat spacing, admin-only controls, distinct warm background, phone privacy UX, reactions, audio speed, localized dates and SMS invite fallback.nds, reaction tap fixes, easier swipe, SMS invite fallback, notification UX, profile/privacy fixes and exact Prayer & Fire icon.
       - '.github/workflows/testflight-upload.yml'
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
     env:
       APP_BUNDLE_ID: com.frankcontact89.prayerandfiremobile
       APP_VERSION: '1.1'
-      BUILD_NUMBER: '41'
+      BUILD_NUMBER: '42'
       APPLE_TEAM_ID: 2UU7S882KZ
       APP_STORE_CONNECT_KEY_ID: NGM28WWYM2
 
