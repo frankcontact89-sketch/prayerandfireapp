@@ -8,6 +8,7 @@ import MembersModal from"@/components/community/MembersModal";
 import AudioBubble from"@/components/community/AudioBubble";
 import VoiceRecorder from"@/components/community/VoiceRecorder";
 import ReactionEmojiPicker from"@/components/community/ReactionEmojiPicker";
+import ImageViewer from"@/components/community/ImageViewer";
 import ChatAppearanceModal,{readChatPrefs,wallpaperCss,type ChatPrefs}from"@/components/community/ChatAppearanceModal";
 import{dict,getLang}from"@/components/community/i18n";
 import{isBlockedContent}from"@/lib/content-filter";
@@ -97,7 +98,7 @@ export default function CommunityV2(){
  const[pendingCount,setPendingCount]=useState(0);
  const[membersModal,setMembersModal]=useState<null|"add"|"admins"|"members">(null);
  const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups"|"discover">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[emojiPicker,setEmojiPicker]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[starredIds,setStarredIds]=useState<Set<string>>(new Set()),[flash,setFlash]=useState("");
- const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[readCounts,setReadCounts]=useState<Record<string,number>>({}),[deliveredCounts,setDeliveredCounts]=useState<Record<string,number>>({});
+ const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[imageViewer,setImageViewer]=useState<{url:string;title?:string}|null>(null),[readCounts,setReadCounts]=useState<Record<string,number>>({}),[deliveredCounts,setDeliveredCounts]=useState<Record<string,number>>({});
  const[pushSheet,setPushSheet]=useState(false);
  const[chatAppearanceOpen,setChatAppearanceOpen]=useState(false);
  const[chatPrefs,setChatPrefs]=useState<ChatPrefs>({wallpaper:"default",bubble:"#f97316"});
@@ -725,7 +726,7 @@ export default function CommunityV2(){
       {parent&&<div className={`mb-1 rounded-lg px-2 py-1 text-[11px] border-l-2 ${m.mine?"bg-black/10 border-black/40 text-black/70":"bg-black/40 border-orange-500 text-zinc-400"}`}><b>{senders[parent.sender_id]?.name||t.member}</b><div className="truncate">{parent.deleted_at?t.messageDeleted:parent.body||t.media}</div></div>}
       {m.pinned_at&&<div className={`flex items-center gap-1 text-[10px] mb-0.5 ${m.mine?"text-black/60":"text-orange-300"}`}><Pin className="w-3 h-3"/>{pinnedLabel}</div>}
        {m.body&&<p className="whitespace-pre-wrap break-words text-[15px] leading-[1.4]">{renderBody(m.body)}</p>}
-       {m.media_type==="image"&&m.url&&<img src={m.url} alt="" draggable={false} onContextMenu={e=>e.preventDefault()} className="max-h-80 rounded-xl object-cover select-none"/>}
+       {m.media_type==="image"&&m.url&&<img src={m.url} alt="" draggable={false} onClick={()=>setImageViewer({url:m.url!,title:m.mine?(me?.name||t.you):(s?.name||t.member)})} onContextMenu={e=>e.preventDefault()} className="max-h-80 rounded-xl object-cover select-none cursor-zoom-in"/>}}
        {m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline preload="metadata" className="max-h-80 rounded-xl"/>}
       {m.media_type==="audio"&&m.url&&(starredIds.has(m.id)||m.starred)&&<div className="flex justify-end -mt-1 mb-1"><Star className="w-3 h-3 fill-current text-orange-500"/></div>}
         {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)} status={m.mine?messageStatus(m):undefined} seekLabel={audioPositionLabel} playLabel={playAudioLabel} pauseLabel={pauseAudioLabel}/>} 
@@ -773,7 +774,7 @@ export default function CommunityV2(){
       <div className="flex justify-end pb-6">
        <div className="max-w-[88%] rounded-2xl rounded-tr-md bg-primary px-3 py-2.5 text-primary-foreground shadow-sm" style={{backgroundColor:chatPrefs.bubble}}>
         {messageInfo.body&&<p className="whitespace-pre-wrap break-words text-[15px] leading-[1.4]">{renderBody(messageInfo.body)}</p>}
-        {messageInfo.media_type==="image"&&messageInfo.url&&<img src={messageInfo.url} alt="" className="max-h-64 rounded-xl object-cover"/>}
+        {messageInfo.media_type==="image"&&messageInfo.url&&<img src={messageInfo.url} alt="" onClick={()=>setImageViewer({url:messageInfo.url!,title:me?.name||t.you})} className="max-h-64 rounded-xl object-cover cursor-zoom-in"/>}
         {messageInfo.media_type==="video"&&messageInfo.url&&<video src={messageInfo.url} controls playsInline preload="metadata" className="max-h-64 rounded-xl"/>}
         {messageInfo.media_type==="document"&&messageInfo.url&&<a href={messageInfo.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 py-2 text-sm font-semibold"><FileText className="h-5 w-5"/><span>{t.document}</span></a>}
         {messageInfo.media_type==="audio"&&messageInfo.url&&<AudioBubble url={messageInfo.url} mine avatar={me?.avatar} name={me?.name} time={new Date(messageInfo.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(messageInfo.media_url)} status={messageStatus(messageInfo)} seekLabel={audioPositionLabel} playLabel={playAudioLabel} pauseLabel={pauseAudioLabel}/>} 
@@ -790,6 +791,7 @@ export default function CommunityV2(){
      </div>
     </div>
    </div>}
+  {imageViewer&&<ImageViewer url={imageViewer.url} title={imageViewer.title} onClose={()=>setImageViewer(null)}/>}
   <ReactionEmojiPicker open={!!emojiPicker} title={emojiTitle} selected={emojiPicker?(reactions[emojiPicker.id]||[]).find(r=>r.user_id===me?.id)?.emoji:undefined} onClose={()=>setEmojiPicker(null)} onPick={emoji=>emojiPicker&&react(emojiPicker,emoji)}/>
   {reactBar&&<div className="fixed inset-0 z-30" onClick={()=>setReactBar(null)}/>} 
    {rxDetail&&<div className="fixed inset-0 z-50 flex items-end bg-black/80" onClick={()=>setRxDetail(null)}><div role="dialog" aria-modal="true" aria-labelledby="reaction-details-title" onClick={e=>e.stopPropagation()} className="max-h-[70vh] w-full overflow-y-auto rounded-t-3xl border-t border-white/10 bg-zinc-950 px-4 pt-2 pb-[max(20px,env(safe-area-inset-bottom))] shadow-2xl">
