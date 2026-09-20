@@ -179,7 +179,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
       <button
         type="button"
         onClick={toggle}
-        onPointerDown={(event) => event.stopPropagation()}
+        data-message-swipe-control
         aria-label={playing ? pauseLabel : playLabel}
         className={`h-10 w-10 rounded-full grid place-items-center shrink-0 transition-transform active:scale-95 ${mine ? "bg-foreground/15 text-foreground" : "bg-primary text-primary-foreground"}`}
       >
