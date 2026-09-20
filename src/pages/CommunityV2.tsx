@@ -172,11 +172,19 @@ export default function CommunityV2(){
    lastBy[x.group_id]=x;
    if(x.sender_id!==uid&&!readSet.has(x.id))unreadBy[x.group_id]=(unreadBy[x.group_id]||0)+1;
   });
+  const lastSenderIds=Array.from(new Set(Object.values(lastBy).map((x:any)=>x?.sender_id).filter((id:any)=>id&&id!==uid)));
+  let lastSenderNames=new Map<string,string>();
+  if(lastSenderIds.length){
+   const{data:lastProfiles}=await db.from("profiles").select("id,username").in("id",lastSenderIds);
+   lastSenderNames=new Map((lastProfiles||[]).map((p:any)=>[p.id,p.username||t.member]));
+  }
   const rows=await Promise.all((g||[]).map(async(x:any)=>{
    const z:any=mm.get(x.id)||{};
    const{count}=await db.from("community_group_members").select("*",{count:"exact",head:true}).eq("group_id",x.id);
    const last=lastBy[x.id];
-   const preview=last?(last.body||(last.media_type?t.media:"")):"";
+   const rawPreview=last?(last.body||(last.media_type?t.media:"")):"";
+   const senderLabel=last?(last.sender_id===uid?L("You","Tú","Você"):(lastSenderNames.get(last.sender_id)||t.member)):"";
+   const preview=last&&rawPreview?`${senderLabel}: ${rawPreview}`:rawPreview;
    const stamp=last?last.created_at:x.updated_at;
    return{id:x.id,name:x.name,subtitle:preview||x.description||`${count||0} ${t.members}`,description:x.description||"",unread:unreadBy[x.id]||0,lastTime:new Date(stamp).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:x.avatar_url?await signed(x.avatar_url):undefined,createdBy:x.created_by,role:z.role,muted:z.muted,mutedUntil:z.muted_until||null,archived:z.archived,favorite:z.favorite,memberCount:count||0};
   }));
