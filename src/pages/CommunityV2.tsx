@@ -428,7 +428,8 @@ export default function CommunityV2(){
  };
 
  const beginMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
-  if((event.target as HTMLElement).closest("[data-message-gesture-ignore],button,a,video,input"))return;
+   const target=event.target as HTMLElement;
+   if(target.closest("[data-message-gesture-ignore],a,video,input")||target.closest("button:not([data-message-swipe-control])"))return;
   swipe.current={id:m.id,x:event.clientX,y:event.clientY,pointerId:event.pointerId,locked:false,offset:0};
   press.current=window.setTimeout(()=>setReactBar(m),400);
  };
@@ -436,19 +437,20 @@ export default function CommunityV2(){
   const active=swipe.current;
   if(!active||active.id!==m.id||active.pointerId!==event.pointerId)return;
   const dx=event.clientX-active.x,dy=event.clientY-active.y;
-  if((Math.abs(dx)>6||Math.abs(dy)>6)&&press.current)window.clearTimeout(press.current);
+   if((Math.abs(dx)>6||Math.abs(dy)>6)&&press.current){window.clearTimeout(press.current);press.current=null}
   if(!m.mine)return;
   if(!active.locked){
-   if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){swipe.current=null;setSwipeVisual(null);return}
-   if(dx>-8||Math.abs(dx)<=Math.abs(dy)+4)return;
+    if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){swipe.current=null;setSwipeVisual(null);return}
+    if(dx>-7||Math.abs(dx)<=Math.abs(dy)+2)return;
    active.locked=true;
-   if(press.current)window.clearTimeout(press.current);
+    if(press.current){window.clearTimeout(press.current);press.current=null}
+    setReactBar(null);
    event.currentTarget.setPointerCapture(event.pointerId);
   }
   if(dx>=0)return;
   event.preventDefault();
-  const distance=Math.min(88,Math.abs(dx));
-  const offset=-(distance<=64?distance:64+(distance-64)*0.35);
+   const distance=Math.min(88,Math.max(0,Math.abs(dx)-3));
+   const offset=-(distance<=48?distance:48+(distance-48)*0.35);
   active.offset=offset;
   setSwipeVisual({id:m.id,offset});
  };
@@ -457,7 +459,7 @@ export default function CommunityV2(){
   const active=swipe.current;
   swipe.current=null;
   setSwipeVisual(null);
-  if(active?.id===m.id&&active.locked&&Math.abs(active.offset)>=58)openMessageInfo(m);
+   if(active?.id===m.id&&active.locked&&Math.abs(active.offset)>=37)openMessageInfo(m);
   if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
  };
  const cancelMessageGesture=(event:React.PointerEvent<HTMLDivElement>)=>{
@@ -643,7 +645,7 @@ export default function CommunityV2(){
     return <React.Fragment key={m.id}>
     {showDay&&<div className="flex justify-center py-2.5"><span className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">{dayLabel}</span></div>}
     <div ref={el=>{msgRefs.current[m.id]=el}} className={`relative flex ${m.mine?"justify-end":"justify-start"} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-orange-400/70":""}`}>
-     {m.mine&&<div aria-hidden="true" className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-border bg-card text-primary shadow-sm transition-opacity" style={{opacity:swipeVisual?.id===m.id?Math.min(1,Math.abs(swipeVisual.offset)/42):0,transform:`translateY(-50%) scale(${swipeVisual?.id===m.id?Math.min(1,0.8+Math.abs(swipeVisual.offset)/220):0.8})`}}><Info className="h-4 w-4"/></div>}
+      {m.mine&&<div aria-hidden="true" className="absolute right-1 top-1/2 flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-2.5 text-primary shadow-sm transition-opacity" style={{opacity:swipeVisual?.id===m.id?Math.min(1,Math.abs(swipeVisual.offset)/30):0,transform:`translateY(-50%) scale(${swipeVisual?.id===m.id?Math.min(1,0.84+Math.abs(swipeVisual.offset)/180):0.84})`}}><Info className="h-4 w-4"/><span className="text-xs font-semibold">{t.info}</span></div>}
      <div
       onContextMenu={e=>{e.preventDefault();setReactBar(m)}}
        onPointerDown={event=>beginMessageGesture(event,m)}
