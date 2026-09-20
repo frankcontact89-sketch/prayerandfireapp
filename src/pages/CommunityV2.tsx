@@ -706,7 +706,7 @@ export default function CommunityV2(){
        {EMOJIS.map(e=><button key={e} data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();react(m,e)}} className={`w-9 h-9 shrink-0 rounded-full text-xl grid place-items-center ${(reactions[m.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-orange-500/25":""}`}>{e}</button>)}
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);setEmojiPicker(m)}} aria-label={emojiTitle} className="w-9 h-9 rounded-full bg-zinc-900 border border-white/10 grid place-items-center text-orange-400"><Plus className="w-4 h-4"/></button>
       </div>}
-      {!m.mine&&s&&<div className="text-[11px] font-bold text-orange-400 mb-0.5">{s.name}</div>}
+      {<div className={`text-[11px] font-bold mb-1 ${m.mine?"text-black/70":"text-orange-400"}`}>{m.mine?(me?.name||t.you):(s?.name||t.member)}</div>}
       {parent&&<div className={`mb-1 rounded-lg px-2 py-1 text-[11px] border-l-2 ${m.mine?"bg-black/10 border-black/40 text-black/70":"bg-black/40 border-orange-500 text-zinc-400"}`}><b>{senders[parent.sender_id]?.name||t.member}</b><div className="truncate">{parent.deleted_at?t.messageDeleted:parent.body||t.media}</div></div>}
       {m.pinned_at&&<div className={`flex items-center gap-1 text-[10px] mb-0.5 ${m.mine?"text-black/60":"text-orange-300"}`}><Pin className="w-3 h-3"/>{pinnedLabel}</div>}
        {m.body&&<p className="whitespace-pre-wrap break-words text-[15px] leading-[1.4]">{renderBody(m.body)}</p>}
