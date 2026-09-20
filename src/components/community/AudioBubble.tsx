@@ -56,7 +56,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   const [playing, setPlaying] = useState(false);
   const [cur, setCur] = useState(0);
   const [dur, setDur] = useState(0);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState(false);\n  const [rate, setRate] = useState<1 | 1.5 | 2>(1);
   // 0 = original url, 1 = re-signed url, 2 = blob fallback, 3 = gave up
   const stage = useRef(0);
   const objUrl = useRef<string | null>(null);
@@ -150,7 +150,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
     }
   };
 
-  const pct = dur > 0 ? Math.min(100, (cur / dur) * 100) : 0;
+  const cycleRate = () => {\n    const next: 1 | 1.5 | 2 = rate === 1 ? 1.5 : rate === 1.5 ? 2 : 1;\n    setRate(next);\n    if (ref.current) ref.current.playbackRate = next;\n  };\n\n  const pct = dur > 0 ? Math.min(100, (cur / dur) * 100) : 0;
   const bars = 26;
 
   const seekAt = (element: HTMLDivElement, clientX: number) => {
@@ -269,7 +269,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
         onCanPlay={() => {
           if (wantPlay.current && ref.current?.paused) ref.current.play().then(() => setPlaying(true)).catch(() => {});
         }}
-        onPlay={() => { setPlaying(true); if (!playedReported.current) { playedReported.current = true; Promise.resolve(onPlayed?.()).catch(() => {}); } }}
+        onPlay={() => { if (ref.current) ref.current.playbackRate = rate; setPlaying(true); if (!playedReported.current) { playedReported.current = true; Promise.resolve(onPlayed?.()).catch(() => {}); } }}
         onPause={() => setPlaying(false)}
         onLoadedMetadata={(e) => {
           const d = (e.target as HTMLAudioElement).duration;
