@@ -7,6 +7,7 @@ import type { Words } from "./i18n";
 import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE, toE164 } from "@/lib/phone";
 
 const db: any = supabase;
+const PUBLIC_COMMUNITY_URL = "https://prayerandfire.app/community";
 
 type P = { id: string; name: string; avatar?: string | null; role?: string };
 type Invite = { id: string; email: string; full_name: string | null };
@@ -145,16 +146,24 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
   const inviteByText = async () => {
     if (!canManage || busy || !textInvitePhone) return;
     setBusy(true);
-    const { data, error } = await db.rpc("create_group_invite_link", { _group_id: groupId });
+    const now = new Date().toISOString();
+    const { data: activeLinks, error: activeLinkError } = await db.from("community_group_invite_links").select("token").eq("group_id", groupId).eq("revoked", false).gt("expires_at", now).order("created_at", { ascending: false }).limit(1);
+    let token = activeLinks?.[0]?.token ? String(activeLinks[0].token) : null;
+    let inviteError = activeLinkError;
+    if (!token && !inviteError) {
+      const { data, error } = await db.rpc("create_group_invite_link", { _group_id: groupId });
+      token = data ? String(data) : null;
+      inviteError = error;
+    }
     setBusy(false);
-    if (error || !data) {
-      setMsg({ kind: "err", text: String(error?.message || "").includes("NO_PERMISSION") ? t.noPermission : String(error?.message || t.smsUnavailable) });
+    if (inviteError || !token) {
+      setMsg({ kind: "err", text: String(inviteError?.message || "").includes("NO_PERMISSION") ? t.noPermission : String(inviteError?.message || t.smsUnavailable) });
       return;
     }
-    const inviteUrl = `${window.location.origin}/community?invite=${String(data)}`;
+    const inviteUrl = `${PUBLIC_COMMUNITY_URL}?invite=${encodeURIComponent(token)}`;
     const body = `${t.smsInviteText} ${inviteUrl}`;
     if (Capacitor.isNativePlatform()) {
-      window.location.href = `sms:${encodeURIComponent(textInvitePhone)}&body=${encodeURIComponent(body)}`;
+      window.location.href = `sms:${textInvitePhone}&body=${encodeURIComponent(body)}`;
       return;
     }
     try {
