@@ -16,3 +16,6 @@
 - [x] Preserve secure phone matching while adding an SMS invitation fallback for unmatched numbers.
 - [x] Add complete EN/ES/PT guidance and safe direct-add/already-member/invite states.
 - [x] Run typecheck, lint, and production build; keep Build 39 unchanged and do not trigger TestFlight.
+- [x] Make reaction pills open reactor details without mutating the current user's reaction.
+- [x] Unify same-emoji removal and different-emoji replacement across both reaction choosers.
+- [x] Validate realtime reaction counts, EN/ES/PT details UI, typecheck, lint, and production build without changing Build 39.
