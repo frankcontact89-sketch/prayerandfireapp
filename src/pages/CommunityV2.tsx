@@ -697,7 +697,7 @@ export default function CommunityV2(){
     const dayLabel=dayOf(m.created_at)===today?todayLabel:dayOf(m.created_at)===yest?yesterdayLabel:diffDays>=0&&diffDays<7?msgDate.toLocaleDateString(locale,{weekday:"long"}):msgDate.toLocaleDateString(locale,{weekday:"short",day:"numeric",month:"short",...(sameYear?{}:{year:"numeric"})});
     return <React.Fragment key={m.id}>
     {showDay&&<div className="flex justify-center py-2.5"><span className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">{dayLabel}</span></div>}
-    <div ref={el=>{msgRefs.current[m.id]=el}} className={`relative flex ${m.mine?"justify-end":"justify-start"} ${reactBar?.id===m.id?"z-40":""} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-orange-400/70":""}`}>
+    <div ref={el=>{msgRefs.current[m.id]=el}} className={`relative flex ${(reactions[m.id]||[]).length?"mb-7":""} ${m.mine?"justify-end":"justify-start"} ${reactBar?.id===m.id?"z-40":""} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-orange-400/70":""}`}>
       {m.mine&&<div aria-hidden="true" className="absolute right-1 top-1/2 flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-2.5 text-primary shadow-sm transition-opacity" style={{opacity:swipeVisual?.id===m.id?Math.min(1,Math.abs(swipeVisual.offset)/30):0,transform:`translateY(-50%) scale(${swipeVisual?.id===m.id?Math.min(1,0.84+Math.abs(swipeVisual.offset)/180):0.84})`}}><Info className="h-4 w-4"/><span className="text-xs font-semibold">{t.info}</span></div>}
      <div
       onContextMenu={e=>{e.preventDefault();setReactBar(m)}}
@@ -707,7 +707,7 @@ export default function CommunityV2(){
        onPointerUp={event=>endMessageGesture(event,m)}
        onPointerCancel={cancelMessageGesture}
        style={{WebkitTouchCallout:"none",WebkitUserSelect:reactBar?.id===m.id?"none":undefined,touchAction:"pan-y",transform:swipeVisual?.id===m.id?`translateX(${swipeVisual.offset}px)`:"translateX(0)",transition:swipeVisual?.id===m.id?"none":"transform 180ms ease-out"}}
-      className={`group relative max-w-[86%] select-none px-3 py-2.5 shadow-sm ${(reactions[m.id]||[]).length?"mb-7":""} ${m.mine?"rounded-2xl rounded-tr-md bg-primary text-primary-foreground":"rounded-2xl rounded-tl-md border border-border bg-card text-card-foreground"}`}
+      className={`group relative max-w-[86%] select-none px-3 py-2.5 shadow-sm ${m.mine?"rounded-2xl rounded-tr-md bg-primary text-primary-foreground":"rounded-2xl rounded-tl-md border border-border bg-card text-card-foreground"}`}
      >
       {reactBar?.id===m.id&&<div className={`absolute -top-14 z-40 ${m.mine?"right-0":"left-0"} flex items-center gap-1 rounded-full bg-zinc-950 border border-orange-500/40 shadow-xl shadow-black/60 px-2 py-1.5`}>
        {EMOJIS.map(e=><button key={e} data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();react(m,e)}} className={`w-9 h-9 shrink-0 rounded-full text-xl grid place-items-center ${(reactions[m.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-orange-500/25":""}`}>{e}</button>)}
@@ -723,7 +723,7 @@ export default function CommunityV2(){
         {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)} status={m.mine?messageStatus(m):undefined} seekLabel={audioPositionLabel} playLabel={playAudioLabel} pauseLabel={pauseAudioLabel}/>} 
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
         {m.media_type!=="audio"&&<div className="mt-1.5 flex items-center justify-end gap-1 text-xs tabular-nums opacity-65">{(starredIds.has(m.id)||m.starred)&&<Star className="mr-1 h-3 w-3 fill-current text-primary"/>}<time>{time}</time>{m.mine&&messageStatusIcon(m)}</div>}
-      {(reactions[m.id]||[]).length>0&&<button data-message-gesture-ignore onClick={ev=>{ev.stopPropagation();openReactionDetails(m)}} aria-label={t.reactions} className={`absolute -bottom-4 z-20 ${m.mine?"left-3":"right-3"} flex min-h-8 items-center gap-1 rounded-full border border-white/15 bg-zinc-900 px-2.5 py-1 text-[12px] text-white shadow-lg shadow-black/50`}>
+      {(reactions[m.id]||[]).length>0&&<button data-message-gesture-ignore onClick={ev=>{ev.stopPropagation();openReactionDetails(m)}} aria-label={t.reactions} className={`absolute -bottom-5 z-20 ${m.mine?"right-3":"left-3"} flex min-h-8 items-center gap-1 rounded-full border border-white/15 bg-zinc-900 px-2.5 py-1 text-[12px] text-white shadow-lg shadow-black/50`}>
        {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
        {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
       </button>}
