@@ -49,7 +49,7 @@ export function SolasListScreen({ onBack, onOpen, language }: Props) {
       <div className="space-y-3">
         {loading && <p className="text-zinc-400 text-center py-10">…</p>}
         {!loading && loadError && (
-          <p className="text-orange-400 text-center py-10">
+          <p className="text-[#DBB375] text-center py-10">
             {language === "es" ? "No pudimos cargar este contenido. Revisa tu conexión." : language === "pt" ? "Não foi possível carregar este conteúdo. Verifique sua conexão." : "We could not load this content. Check your connection."}
           </p>
         )}
@@ -62,10 +62,10 @@ export function SolasListScreen({ onBack, onOpen, language }: Props) {
           <button
             key={r.id}
             onClick={() => onOpen(r.slug)}
-            className="w-full flex items-center gap-3 p-4 rounded-2xl border border-orange-500/20 bg-zinc-950/60 hover:bg-orange-500/5 text-left"
+            className="w-full flex items-center gap-3 p-4 rounded-2xl border border-[#DBB375]/20 bg-zinc-950/60 hover:bg-[#681B3D]/15 text-left"
           >
             <div className="flex-1">
-              <div className="text-orange-400 font-black text-lg">{r.latin}</div>
+              <div className="text-[#DBB375] font-black text-lg">{r.latin}</div>
               <div className="text-zinc-300 text-sm">{pick(r, "translation")}</div>
             </div>
             <ChevronRight className="w-5 h-5 text-zinc-500" />
