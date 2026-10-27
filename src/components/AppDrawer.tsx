@@ -88,13 +88,13 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="px-6 py-5 flex items-center justify-between border-b border-zinc-800 shrink-0">
-          <h2 className="text-orange-500 text-xl font-black tracking-wide">PRAYER &amp; FIRE</h2>
+          <h2 className="text-[#DBB375] text-xl font-black tracking-wide">PRAYER &amp; FIRE</h2>
           <button onClick={() => onOpenChange(false)} aria-label={L(language, "Close menu", "Cerrar menú", "Fechar menu")} className="w-11 h-11 grid place-items-center rounded-full hover:bg-zinc-900"><X className="w-5 h-5" /></button>
         </div>
         <nav className="p-4 space-y-1 overflow-y-auto">
           {items.map(({ id, icon: Icon, label, action }) => (
-            <button key={id} onClick={action} className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left hover:bg-orange-500/10 active:bg-orange-500/15 transition">
-              <Icon className="text-orange-500" size={24} />
+            <button key={id} onClick={action} className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-left hover:bg-[#641B3D]/30 active:bg-[#641B3D]/50 transition">
+              <Icon className="text-[#DBB375]" size={24} />
               <span className="text-[17px] text-white">{label}</span>
             </button>
           ))}
