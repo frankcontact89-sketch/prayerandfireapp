@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { Calendar, MapPin, Users, Video, XCircle, Bell, BellOff, ArrowLeft } from "lucide-react";
+import { Calendar, MapPin, Video, XCircle, Bell, BellOff, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { notificationHaptic } from "@/lib/haptics";
 
@@ -29,6 +29,7 @@ export function EventsScreen({ t, onNewEvents, onBack }: EventsScreenProps) {
   const [declines, setDeclines] = useState<Set<string>>(new Set());
   const [reminders, setReminders] = useState<Record<string, ReturnType<typeof setTimeout>>>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [now, setNow] = useState<number>(Date.now());
   const { toast } = useToast();
 
@@ -43,6 +44,7 @@ export function EventsScreen({ t, onNewEvents, onBack }: EventsScreenProps) {
   }, []);
 
   const loadEvents = async () => {
+    setLoadError(false);
     try {
       const { data, error } = await supabase
         .from("events")
@@ -54,6 +56,7 @@ export function EventsScreen({ t, onNewEvents, onBack }: EventsScreenProps) {
       setEvents(data || []);
     } catch (error) {
       console.error("Error loading events:", error);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -229,11 +232,11 @@ export function EventsScreen({ t, onNewEvents, onBack }: EventsScreenProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="max-w-4xl mx-auto px-5 py-5 space-y-6 text-white">
       {onBack && (
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-primary font-semibold text-sm"
+          className="inline-flex min-h-11 items-center gap-2 text-[#DBB375] font-semibold text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           {t("back")}
@@ -243,15 +246,18 @@ export function EventsScreen({ t, onNewEvents, onBack }: EventsScreenProps) {
         {t("events")}
       </h1>
 
-      {events.length === 0 && (
-        <div className="text-center py-16 text-muted-foreground text-sm">
-          {t("noEventsYet") || "No upcoming events yet."}
-        </div>
+      {(loadError || events.length === 0) && (
+        <section className="mt-6 rounded-2xl border border-[#DBB375]/20 bg-[#180F16] px-5 py-10 text-center">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-[#681B3D]/45 text-[#DBB375]"><Calendar className="h-7 w-7" /></div>
+          <h2 className="text-lg font-semibold text-white">{loadError ? t("error") : (t("noEventsYet") || "No upcoming events yet.")}</h2>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-400">{loadError ? "Unable to load events right now." : "Check back here for future Prayer & Fire gatherings and announcements."}</p>
+          {loadError && <button type="button" onClick={() => { setLoading(true); void loadEvents(); }} className="mt-5 rounded-xl bg-[#681B3D] px-5 py-3 text-sm font-semibold text-white">Try again</button>}
+        </section>
       )}
 
       <div className="grid gap-4">
         {events.map((event) => (
-            <Card key={event.id} className="p-6">
+            <Card key={event.id} className="p-5 rounded-2xl border-[#DBB375]/20 bg-[#180F16] text-white">
               <div className="flex flex-col md:flex-row gap-4">
                 {event.image_url && (
                   <img src={event.image_url} alt={event.title} className="w-full md:w-48 h-48 object-cover rounded-lg" />
