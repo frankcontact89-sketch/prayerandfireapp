@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - improve/community-ui-review-2026-10-27
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
