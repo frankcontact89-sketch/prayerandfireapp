@@ -32,7 +32,7 @@ export default function SafetyRulesModal({ lang, onClose }: { lang: string; onCl
       >
         <div className="flex items-center justify-between mb-4">
           <b className="flex items-center gap-2 text-lg">
-            <ShieldCheck className="w-5 h-5 text-orange-400" />
+            <ShieldCheck className="w-5 h-5 text-[#DBB375]" />
             {L("Community rules & safety", "Reglas y seguridad de la Comunidad", "Regras e segurança da Comunidade")}
           </b>
           <button onClick={onClose} aria-label={L("Close", "Cerrar", "Fechar")}><X /></button>
@@ -44,7 +44,7 @@ export default function SafetyRulesModal({ lang, onClose }: { lang: string; onCl
 
         <div className="mt-5 space-y-3 text-sm text-zinc-300">
           <p className="flex gap-3">
-            <Flag className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
+            <Flag className="w-4 h-4 text-[#DBB375] shrink-0 mt-0.5" />
             <span>{L(
               "Report: open the menu on any message (long-press or the ⋯ button) and choose Report content.",
               "Reportar: abre el menú de cualquier mensaje (mantén pulsado o el botón ⋯) y elige Reportar contenido.",
@@ -68,12 +68,12 @@ export default function SafetyRulesModal({ lang, onClose }: { lang: string; onCl
             </span>
           </p>
           <p className="flex gap-3">
-            <Mail className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="text-orange-300 underline break-all">{SUPPORT_EMAIL}</a>
+            <Mail className="w-4 h-4 text-[#DBB375] shrink-0 mt-0.5" />
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="text-[#E8BD74] underline break-all">{SUPPORT_EMAIL}</a>
           </p>
         </div>
 
-        <button onClick={onClose} className="mt-6 w-full h-12 rounded-2xl bg-orange-500 text-black font-black">
+        <button onClick={onClose} className="mt-6 w-full h-12 rounded-2xl bg-[#681B3D] text-white font-black">
           {L("I understand", "Entendido", "Entendi")}
         </button>
       </div>
