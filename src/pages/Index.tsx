@@ -300,7 +300,7 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
           <img
             src={entryLogo}
             alt="Prayer & Fire"
-            className="w-[72px] h-[72px] object-contain drop-shadow-[0_0_25px_rgba(249,115,22,0.45)] mb-3"
+            className="w-[88px] h-[88px] object-contain mb-3"\n            style={{ mixBlendMode: "screen" }}
           />
 
           <p className="uppercase tracking-[0.3em] text-white/80 text-xs font-semibold mb-2">PRAYER & FIRE</p>
