@@ -36,7 +36,7 @@ export function SolaDetailScreen({ slug, onBack, language }: Props) {
 
   const section = (label: string, text: string) => text ? (
     <section className="mb-6">
-      <h2 className="text-orange-400 uppercase tracking-[0.15em] text-xs font-black mb-2">{label}</h2>
+      <h2 className="text-[#DBB375] uppercase tracking-[0.15em] text-xs font-black mb-2">{label}</h2>
       <MarkdownView text={text} language={language} />
     </section>
   ) : null;
@@ -49,7 +49,7 @@ export function SolaDetailScreen({ slug, onBack, language }: Props) {
 
   return (
     <SimpleScreen title={row.latin} icon={<Landmark className="w-6 h-6" />} onBack={onBack}>
-      <div className="mb-6 pb-4 border-b border-orange-500/20">
+      <div className="mb-6 pb-4 border-b border-[#DBB375]/20">
         <div className="text-zinc-400 text-xs uppercase tracking-widest">{labels.en}</div>
         <div className="text-2xl font-extrabold text-white mt-1">{pick("translation")}</div>
       </div>
