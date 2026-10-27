@@ -3,7 +3,7 @@ import{ArrowLeft,Check,Image as ImageIcon,RotateCcw}from"lucide-react";
 
 export type ChatPrefs={wallpaper:string;bubble:string};
 const WALLPAPERS=[
- {id:"default",label:"Prayer & Fire",css:"linear-gradient(160deg,#090909,#17100b 55%,#080808)"},
+ {id:"default",label:"Prayer & Fire",css:"linear-gradient(160deg,#090909,#270F1C 55%,#080808)"},
  {id:"ember",label:"Ember",css:"radial-gradient(circle at 25% 15%,#3b1607 0,#120b08 38%,#050505 80%)"},
  {id:"midnight",label:"Midnight",css:"linear-gradient(145deg,#071426,#111827,#05070a)"},
  {id:"stone",label:"Stone",css:"linear-gradient(145deg,#292524,#0f0f0f,#1c1917)"},
@@ -12,7 +12,7 @@ const WALLPAPERS=[
 ];
 const BUBBLES=["#681B3D","#2563eb","#0f766e","#7c3aed","#be123c","#3f3f46","#15803d","#a16207"];
 export const chatPrefsKey=(uid:string,gid:string)=>`pf-chat-prefs:${uid}:${gid}`;
-export const readChatPrefs=(uid:string,gid:string):ChatPrefs=>{try{return JSON.parse(localStorage.getItem(chatPrefsKey(uid,gid))||"") as ChatPrefs}catch{return{wallpaper:"default",bubble:"#681B3D"}}};
+export const readChatPrefs=(uid:string,gid:string):ChatPrefs=>{try{const saved=JSON.parse(localStorage.getItem(chatPrefsKey(uid,gid))||"") as Partial<ChatPrefs>;return{wallpaper:saved.wallpaper||"default",bubble:/^#(?:f97316|ff6a00|ff7a00)$/i.test(saved.bubble||"")?"#681B3D":saved.bubble||"#681B3D"}}catch{return{wallpaper:"default",bubble:"#681B3D"}}};
 export const wallpaperCss=(id:string)=>WALLPAPERS.find(x=>x.id===id)?.css||WALLPAPERS[0].css;
 
 export default function ChatAppearanceModal({uid,groupId,language,onClose,onChange}:{uid:string;groupId:string;language:string;onClose:()=>void;onChange:(p:ChatPrefs)=>void}){
