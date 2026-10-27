@@ -32,3 +32,25 @@ jobs:
         run: npm run build
       - name: Check TypeScript app
         run: npx tsc --noEmit -p tsconfig.app.json
+
+  native-ios-build:
+    name: Compile unsigned iOS simulator app
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund --package-lock=false
+      - name: Build bundled web assets
+        run: npm run build
+      - name: Sync Capacitor native project
+        run: npx cap sync ios
+      - name: Compile iOS simulator without signing
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
