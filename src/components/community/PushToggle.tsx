@@ -22,17 +22,17 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
 
   const refreshState = async () => {
     try {
-      const state = await getPushUiState();
+      const state = await Promise.race([getPushUiState(), new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Push status timeout")), 8000))]);
       setSupported(state.supported);
       setPermission(state.permission);
       setOn(state.enabled);
       return state;
     } catch {
-      setSupported(false);
+      setSupported(null);
       setOn(false);
       setFailed(true);
       setNote(L("Unable to check notifications. Try again.", "No se pudo comprobar las notificaciones. Inténtalo de nuevo.", "Não foi possível verificar as notificações. Tente novamente."));
-      return {supported:false,permission:"prompt" as PushPermission,enabled:false};
+      return {supported:true,permission:"prompt" as PushPermission,enabled:false};
     }
   };
 
@@ -180,7 +180,7 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
       {!busy && failed && permission !== "denied" && (
         <div className="px-4 pb-4">
           <button
-            onClick={() => change(true)}
+            onClick={() => { if (supported === null) { void refreshState(); } else { void change(true); } }}
             className="h-10 px-4 rounded-xl bg-[#681B3D] text-black text-xs font-black"
           >
             {L("Try again", "Intentar de nuevo", "Tentar novamente")}
