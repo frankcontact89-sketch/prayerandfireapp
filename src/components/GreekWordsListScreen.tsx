@@ -79,7 +79,7 @@ export function GreekWordsListScreen({ onBack, onOpen, language }: Props) {
               onClick={() => setTab(t.id)}
               className={`flex-1 rounded-xl border px-2 py-2 text-sm font-semibold transition ${
                 active
-                  ? "border-orange-500 bg-orange-500/10 text-orange-400"
+                  ? "border-[#DBB375] bg-[#681B3D]/30 text-[#DBB375]"
                   : "border-zinc-800 text-zinc-400 hover:text-white"
               }`}
             >
@@ -94,12 +94,12 @@ export function GreekWordsListScreen({ onBack, onOpen, language }: Props) {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={L(language, "Search…", "Buscar…", "Pesquisar…")}
-        className="w-full h-11 rounded-xl bg-zinc-900 border border-zinc-800 px-4 text-white mb-4 focus:outline-none focus:border-orange-500"
+        className="w-full h-11 rounded-xl bg-zinc-900 border border-zinc-800 px-4 text-white mb-4 focus:outline-none focus:border-[#DBB375]"
       />
       <div className="space-y-2">
         {loading && <div className="text-center text-zinc-500 p-6">…</div>}
         {!loading && loadError && (
-          <div className="text-center text-orange-400 p-6">
+          <div className="text-center text-[#DBB375] p-6">
             {L(language, "We could not load this content. Check your connection.", "No pudimos cargar este contenido. Revisa tu conexión.", "Não foi possível carregar este conteúdo. Verifique sua conexão.")}
           </div>
         )}
@@ -113,11 +113,11 @@ export function GreekWordsListScreen({ onBack, onOpen, language }: Props) {
           <button
             key={r.id}
             onClick={() => onOpen(r.slug)}
-            className="w-full flex items-center gap-3 p-4 rounded-2xl border border-orange-500/20 bg-zinc-950/60 hover:bg-orange-500/5 text-left"
+            className="w-full flex items-center gap-3 p-4 rounded-2xl border border-[#DBB375]/20 bg-zinc-950/60 hover:bg-[#681B3D]/15 text-left"
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2">
-                <div className="text-orange-400 font-black text-xl truncate">{r.greek}</div>
+                <div className="text-[#DBB375] font-black text-xl truncate">{r.greek}</div>
                 <div className="text-zinc-400 text-sm italic">{r.transliteration}</div>
               </div>
               <div className="text-zinc-300 text-sm truncate">{pick(r, "meaning")}</div>
