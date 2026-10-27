@@ -1,0 +1,30 @@
+name: Validate Prayer & Fire beta
+
+on:
+  push:
+    branches:
+      - improve/community-ui-review-2026-10-27
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web-build:
+    name: Install and build beta UI
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Compile production web bundle
+        run: npm run build
+      - name: Check TypeScript app
+        run: npx tsc --noEmit -p tsconfig.app.json
