@@ -293,48 +293,48 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
         style={{ backgroundImage: `url(${realisticFlame})`, backgroundSize: "cover", backgroundPosition: "center" }}
       />
 
-      <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-orange-500/10 blur-[140px] pointer-events-none" />
+      <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#641431]/20 blur-[140px] pointer-events-none" />
 
       <div className="relative z-10 px-5 pt-3 pb-5 max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto">
         <div className="flex flex-col items-center text-center mb-5">
           <img
             src={entryLogo}
             alt="Prayer & Fire"
-            className="w-[88px] h-[88px] object-contain mb-3"\n            style={{ mixBlendMode: "screen" }}
+            className="w-[88px] h-[88px] object-contain mb-3 mix-blend-screen"
           />
 
           <p className="uppercase tracking-[0.3em] text-white/80 text-xs font-semibold mb-2">PRAYER & FIRE</p>
 
           <h1 className="text-[26px] leading-[1.05] font-extrabold tracking-tight max-w-[320px]">
             {L.tagline}
-            <span className="block text-orange-500">{L.connects}</span>
+            <span className="block text-[#E8BD74]">{L.connects}</span>
           </h1>
 
           <p className="text-zinc-300 mt-2 text-[14px] leading-snug max-w-sm">{t("home_hero_subtitle")}</p>
         </div>
 
-        <section className="relative w-full rounded-2xl border border-orange-500/20 bg-zinc-950/90 backdrop-blur-xl p-5 overflow-hidden shadow-[0_0_40px_rgba(249,115,22,0.10)]">
+        <section className="relative w-full rounded-2xl border border-[#D9AD66]/20 bg-[#130D12]/95 backdrop-blur-xl p-5 overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.18)]">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">{L.verse}</p>
-              <Quote className="w-4 h-4 text-orange-400" />
+              <p className="text-[#E8BD74] uppercase tracking-[0.2em] text-[10px] font-bold">{L.verse}</p>
+              <Quote className="w-4 h-4 text-[#E8BD74]" />
             </div>
 
             <p className="text-[16px] leading-relaxed font-light text-white">"{today.verse}"</p>
-            <p className="text-orange-400 text-sm font-bold mt-2">— {today.ref}</p>
+            <p className="text-[#E8BD74] text-sm font-bold mt-2">— {today.ref}</p>
 
-            <div className="mt-3 pt-2.5 border-t border-orange-500/10">
+            <div className="mt-3 pt-2.5 border-t border-[#D9AD66]/15">
               <div className="flex items-center gap-2 mb-1">
-                <HandHeart className="w-3.5 h-3.5 text-orange-400" />
-                <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">{L.prayer}</p>
+                <HandHeart className="w-3.5 h-3.5 text-[#E8BD74]" />
+                <p className="text-[#E8BD74] uppercase tracking-[0.2em] text-[10px] font-bold">{L.prayer}</p>
               </div>
               <p className="text-zinc-200 text-[14px] leading-snug">{today.prayer}</p>
             </div>
 
-            <div className="mt-2.5 pt-2.5 border-t border-orange-500/10">
+            <div className="mt-2.5 pt-2.5 border-t border-[#D9AD66]/15">
               <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-3.5 h-3.5 text-orange-400" />
-                <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">{L.reflection}</p>
+                <Sparkles className="w-3.5 h-3.5 text-[#E8BD74]" />
+                <p className="text-[#E8BD74] uppercase tracking-[0.2em] text-[10px] font-bold">{L.reflection}</p>
               </div>
               <p className="text-zinc-200 text-[14px] leading-snug">{today.reflection}</p>
             </div>
