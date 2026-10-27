@@ -21,11 +21,19 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
   const [failed, setFailed] = useState(false);
 
   const refreshState = async () => {
-    const state = await getPushUiState();
-    setSupported(state.supported);
-    setPermission(state.permission);
-    setOn(state.enabled);
-    return state;
+    try {
+      const state = await getPushUiState();
+      setSupported(state.supported);
+      setPermission(state.permission);
+      setOn(state.enabled);
+      return state;
+    } catch {
+      setSupported(false);
+      setOn(false);
+      setFailed(true);
+      setNote(L("Unable to check notifications. Try again.", "No se pudo comprobar las notificaciones. Inténtalo de nuevo.", "Não foi possível verificar as notificações. Tente novamente."));
+      return {supported:false,permission:"prompt" as PushPermission,enabled:false};
+    }
   };
 
   useEffect(() => {
@@ -48,7 +56,12 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
     }
 
     setBusy(true);
-    const status = await enablePush(10000);
+    let status: PushPermission;
+    try {
+      status = await enablePush(10000);
+    } catch {
+      status = "prompt";
+    }
     setBusy(false);
 
     const state = await refreshState();
@@ -109,13 +122,13 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
   return (
     <div className="rounded-2xl bg-zinc-950 border border-white/10 overflow-hidden">
       <div className="px-4 pt-4 pb-3">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-orange-400 font-black">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-[#DBB375] font-black">
           {L("Community notifications", "Notificaciones de Community", "Notificações da Comunidade")}
         </div>
       </div>
 
       <div className="px-4 pb-4 flex items-center gap-3">
-        {on ? <Bell className="w-5 h-5 text-orange-400" /> : <BellOff className="w-5 h-5 text-zinc-500" />}
+        {on ? <Bell className="w-5 h-5 text-[#DBB375]" /> : <BellOff className="w-5 h-5 text-zinc-500" />}
         <div className="flex-1 min-w-0">
           <div className="font-bold text-sm">
             {L("Allow alerts on this iPhone", "Permitir alertas en este iPhone", "Permitir alertas neste iPhone")}
@@ -147,7 +160,7 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
       )}
 
       {!busy && note && (
-        <div className={`px-4 pb-3 text-xs ${failed ? "text-red-300" : "text-orange-300"}`}>
+        <div className={`px-4 pb-3 text-xs ${failed ? "text-red-300" : "text-[#E8BD74]"}`}>
           {note}
         </div>
       )}
@@ -156,7 +169,7 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
         <div className="px-4 pb-4">
           <button
             onClick={openSettings}
-            className="h-10 px-4 rounded-xl bg-orange-500 text-black text-xs font-black inline-flex items-center gap-2"
+            className="h-10 px-4 rounded-xl bg-[#681B3D] text-black text-xs font-black inline-flex items-center gap-2"
           >
             <ExternalLink className="w-4 h-4" />
             {L("Open iPhone Settings", "Abrir Ajustes del iPhone", "Abrir Ajustes do iPhone")}
@@ -168,7 +181,7 @@ export default function PushToggle({ lang = "en" as Lang }: { lang?: Lang }) {
         <div className="px-4 pb-4">
           <button
             onClick={() => change(true)}
-            className="h-10 px-4 rounded-xl bg-orange-500 text-black text-xs font-black"
+            className="h-10 px-4 rounded-xl bg-[#681B3D] text-black text-xs font-black"
           >
             {L("Try again", "Intentar de nuevo", "Tentar novamente")}
           </button>
