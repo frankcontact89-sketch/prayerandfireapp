@@ -530,31 +530,30 @@ export function SettingsScreen({
         </section>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <button onClick={setLanguage} className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left">
-          <Languages className="w-6 h-6 text-orange-500 mb-2" />
-          <h3 className="text-sm font-bold text-white leading-tight">{t("language")}</h3>
-          <p className="text-xs text-zinc-500 uppercase">{language || "EN"}</p>
+      <div className="space-y-2">
+        <button onClick={setLanguage} className="w-full bg-card border border-[#D3AA67]/20 rounded-xl px-4 py-3 min-h-[68px] text-left flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D3AA67]">
+          <Languages className="w-6 h-6 shrink-0 text-[#D3AA67]" />
+          <span className="flex-1"><span className="block text-sm font-semibold text-white">{t("language")}</span><span className="block text-xs text-zinc-400 uppercase">{language || "EN"}</span></span>
         </button>
 
         <button
           onClick={onNotificationsClick}
-          className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left"
+          className="w-full bg-card border border-[#D3AA67]/20 rounded-xl px-4 py-3 min-h-[68px] text-left flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D3AA67]"
         >
-          <Bell className="w-6 h-6 text-orange-500 mb-2" />
-          <h3 className="text-sm font-bold text-white leading-tight">{t("notifications")}</h3>
+          <Bell className="w-6 h-6 shrink-0 text-[#D3AA67]" />
+          <span className="flex-1 text-sm font-semibold text-white">{t("notifications")}</span>
         </button>
 
-        <button onClick={onLegalClick} className="bg-card border border-border rounded-2xl p-3 min-h-[96px] text-left">
-          <Scale className="w-6 h-6 text-orange-500 mb-2" />
-          <h3 className="text-sm font-bold text-white leading-tight">{t("privacy")}</h3>
+        <button onClick={onLegalClick} className="w-full bg-card border border-[#D3AA67]/20 rounded-xl px-4 py-3 min-h-[68px] text-left flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D3AA67]">
+          <Scale className="w-6 h-6 shrink-0 text-[#D3AA67]" />
+          <span className="flex-1 text-sm font-semibold text-white">{t("privacy")}</span>
         </button>
       </div>
 
       {isAdmin && !isGuest && (
         <button
           onClick={onAdminClick}
-          className="w-full max-w-xs mx-auto block bg-orange-500 text-white font-semibold py-2.5 rounded-xl text-sm"
+          className="w-full bg-[#681B3D] border border-[#D3AA67]/35 text-[#FFE6B2] font-semibold py-3 rounded-xl text-sm"
         >
           {t("adminPanel")}
         </button>
