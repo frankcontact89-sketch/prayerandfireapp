@@ -990,7 +990,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                     }}
                     className={`w-full min-h-[44px] rounded-lg border px-3 text-sm font-semibold flex items-center justify-center gap-2 ${
                       isDay
-                        ? "bg-orange-50 border-orange-200 text-orange-700"
+                        ? "bg-[#FAF1E6] border-[#E9CEA8] text-[#6F263E]"
                         : "bg-[#681B3D]/10 border-[#D6AA69]/30 text-[#E8BD74]"
                     }`}
                   >
@@ -1056,11 +1056,11 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                         index === 0 ? "mb-4" : "my-4"
                       } ${
                         isSelected
-                          ? (isDay ? "bg-orange-300/60 ring-2 ring-[#D6AA69]" : "bg-[#681B3D]/30 ring-2 ring-[#D6AA69]")
+                          ? (isDay ? "bg-[#DFB474]/60 ring-2 ring-[#D6AA69]" : "bg-[#681B3D]/30 ring-2 ring-[#D6AA69]")
                           : hl
-                            ? (isDay ? "bg-orange-200/60" : "bg-[#681B3D]/25")
+                            ? (isDay ? "bg-[#E5C69D]/60" : "bg-[#681B3D]/25")
                             : isActive
-                              ? (isDay ? "bg-orange-100" : "bg-[#681B3D]/15")
+                              ? (isDay ? "bg-[#F1DEBF]" : "bg-[#681B3D]/15")
                               : ""
                       }`}
                     >
