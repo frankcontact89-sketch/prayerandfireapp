@@ -390,13 +390,13 @@ export function SettingsScreen({
               type="button"
               onClick={() => setShowImageDialog(true)}
               disabled={savingProfile}
-              className="relative h-20 w-20 shrink-0 rounded-full border-2 border-orange-500/40 bg-muted overflow-hidden flex items-center justify-center"
+              className="relative h-20 w-20 shrink-0 rounded-full border-2 border-[#DBB375]/40 bg-muted overflow-hidden flex items-center justify-center"
               aria-label={t("changePhoto")}
             >
               {profileImage ? (
                 <img src={profileImage} alt={t("profile")} className="h-full w-full object-cover" crossOrigin="anonymous" />
               ) : (
-                <UserIcon className="h-9 w-9 text-orange-500" />
+                <UserIcon className="h-9 w-9 text-[#DBB375]" />
               )}
             </button>
             <div className="min-w-0 flex-1">
@@ -435,7 +435,7 @@ export function SettingsScreen({
                 <div className="text-xs font-semibold text-zinc-300">
                   {phone ? L(language, "Added", "Agregado", "Adicionado") : L(language, "Not added", "No agregado", "Não adicionado")}
                 </div>
-                <div className="mt-1 text-[11px] text-orange-400">
+                <div className="mt-1 text-[11px] text-[#DBB375]">
                   {phonePanelOpen ? L(language, "Close", "Cerrar", "Fechar") : L(language, "Manage", "Administrar", "Gerenciar")}
                 </div>
               </div>
@@ -481,7 +481,7 @@ export function SettingsScreen({
                     type="checkbox"
                     checked={phonePrivate}
                     onChange={(e) => setPhonePrivate(e.target.checked)}
-                    className="h-5 w-5 accent-orange-500"
+                    className="h-5 w-5 accent-[#681B3D]"
                   />
                 </label>
 
@@ -501,7 +501,7 @@ export function SettingsScreen({
                     type="checkbox"
                     checked={phoneDiscoverable}
                     onChange={(e) => setPhoneDiscoverable(e.target.checked)}
-                    className="h-5 w-5 accent-orange-500"
+                    className="h-5 w-5 accent-[#681B3D]"
                   />
                 </label>
               </div>
