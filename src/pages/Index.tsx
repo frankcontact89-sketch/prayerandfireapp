@@ -620,11 +620,11 @@ export default function Index() {
               aria-label={t("profile")}
               className="w-10 h-10 -ml-1 flex items-center justify-center"
             >
-              <span className="h-9 w-9 rounded-full border border-orange-500/40 bg-zinc-900 overflow-hidden flex items-center justify-center">
+              <span className="h-9 w-9 rounded-full border border-[#D6AA69]/40 bg-zinc-900 overflow-hidden flex items-center justify-center">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={t("profile")} className="h-full w-full object-cover" crossOrigin="anonymous" />
                 ) : (
-                  <UserIcon className="w-5 h-5 text-orange-500" />
+                  <UserIcon className="w-5 h-5 text-[#E8BD74]" />
                 )}
               </span>
             </button>
@@ -646,7 +646,7 @@ export default function Index() {
             <button
               onClick={() => setDrawerOpen(true)}
               aria-label="Menu"
-              className="text-orange-500 w-10 h-10 flex items-center justify-center"
+              className="text-[#E8BD74] w-10 h-10 flex items-center justify-center"
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -804,16 +804,16 @@ export default function Index() {
       {page !== "admin" && (
       <div className="relative z-50 shrink-0 bg-black border-t border-zinc-800 pb-[env(safe-area-inset-bottom)]">
         <nav className="flex justify-around items-center h-[64px] px-4 max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto">
-          <button aria-label={t("home")} onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
+          <button aria-label={t("home")} onClick={() => setPage("home")} className={page === "home" ? "text-[#E8BD74]" : "text-zinc-500"}>
             <Flame className="w-6 h-6" />
           </button>
           <button aria-label={language === "es" ? "Comunidad" : language === "pt" ? "Comunidade" : "Community"} onClick={() => navigate("/community")} className="text-zinc-500">
             <MessageCircle className="w-6 h-6" />
           </button>
-          <button aria-label={t("holy_bible")} onClick={() => { setBibleReturnTo(null); setPage("bible"); }} className={page === "bible" ? "text-orange-500" : "text-zinc-500"}>
+          <button aria-label={t("holy_bible")} onClick={() => { setBibleReturnTo(null); setPage("bible"); }} className={page === "bible" ? "text-[#E8BD74]" : "text-zinc-500"}>
             <BookOpen className="w-6 h-6" />
           </button>
-          <button aria-label={language === "es" ? "Biblioteca" : language === "pt" ? "Biblioteca" : "Library"} onClick={() => setPage("library")} className={page === "library" || page.startsWith("article:") ? "text-orange-500" : "text-zinc-500"}>
+          <button aria-label={language === "es" ? "Biblioteca" : language === "pt" ? "Biblioteca" : "Library"} onClick={() => setPage("library")} className={page === "library" || page.startsWith("article:") ? "text-[#E8BD74]" : "text-zinc-500"}>
             <LibraryIcon className="w-6 h-6" />
           </button>
         </nav>
