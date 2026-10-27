@@ -718,16 +718,16 @@ export default function CommunityV2(){
        onPointerMove={event=>moveMessageGesture(event,m)}
        onPointerUp={event=>endMessageGesture(event,m)}
        onPointerCancel={cancelMessageGesture}
-       style={{WebkitTouchCallout:"none",WebkitUserSelect:reactBar?.id===m.id?"none":undefined,touchAction:"pan-y",backgroundColor:m.mine?chatPrefs.bubble:undefined,transform:swipeVisual?.id===m.id?`translateX(${swipeVisual.offset}px)`:"translateX(0)",transition:swipeVisual?.id===m.id?"none":"transform 180ms ease-out"}}
-      className={`group relative ${!m.mine&&m.media_type!=="audio"?"max-w-[calc(86%-2.5rem)]":"max-w-[86%]"} select-none px-3 py-2.5 shadow-sm ${m.mine?"rounded-2xl rounded-tr-md bg-primary text-black":"rounded-2xl rounded-tl-md border border-white/10 bg-zinc-950 text-white"}`}
+       style={{WebkitTouchCallout:"none",WebkitUserSelect:reactBar?.id===m.id?"none":undefined,touchAction:"pan-y",backgroundColor:m.mine?(chatPrefs.bubble==="#ff6a00"?"#681B3D":chatPrefs.bubble):undefined,transform:swipeVisual?.id===m.id?`translateX(${swipeVisual.offset}px)`:"translateX(0)",transition:swipeVisual?.id===m.id?"none":"transform 180ms ease-out"}}
+      className={`group relative ${!m.mine&&m.media_type!=="audio"?"max-w-[calc(86%-2.5rem)]":"max-w-[86%]"} select-none px-3 py-2.5 shadow-sm ${m.mine?"rounded-2xl rounded-tr-md bg-[#681B3D] text-[#FFF4DE]":"rounded-2xl rounded-tl-md border border-[#D2AA67]/20 bg-[#211820] text-[#F8F4EE]"}`}
      >
       {reactBar?.id===m.id&&<div className={`absolute -top-14 z-40 ${m.mine?"right-0":"left-0"} flex items-center gap-1 rounded-full bg-zinc-950 border border-orange-500/40 shadow-xl shadow-black/60 px-2 py-1.5`}>
        {EMOJIS.map(e=><button key={e} data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();react(m,e)}} className={`w-9 h-9 shrink-0 rounded-full text-xl grid place-items-center ${(reactions[m.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-orange-500/25":""}`}>{e}</button>)}
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);setEmojiPicker(m)}} aria-label={emojiTitle} className="w-9 h-9 rounded-full bg-zinc-900 border border-white/10 grid place-items-center text-orange-400"><Plus className="w-4 h-4"/></button>
       </div>}
-      {<div className={`text-[11px] font-bold mb-1 ${m.mine?"text-black/70":"text-orange-400"}`}>{m.mine?(me?.name||t.you):(s?.name||t.member)}</div>}
-      {parent&&<div className={`mb-1 rounded-lg px-2 py-1 text-[11px] border-l-2 ${m.mine?"bg-black/10 border-black/40 text-black/70":"bg-black/40 border-orange-500 text-zinc-400"}`}><b>{senders[parent.sender_id]?.name||t.member}</b><div className="truncate">{parent.deleted_at?t.messageDeleted:parent.body||t.media}</div></div>}
-      {m.pinned_at&&<div className={`flex items-center gap-1 text-[10px] mb-0.5 ${m.mine?"text-black/60":"text-orange-300"}`}><Pin className="w-3 h-3"/>{pinnedLabel}</div>}
+      {<div className={`text-[11px] font-bold mb-1 ${m.mine?"text-[#F4D7A1]":"text-[#E7BD73]"}`}>{m.mine?(me?.name||t.you):(s?.name||t.member)}</div>}
+      {parent&&<div className={`mb-1 rounded-lg px-2 py-1 text-[11px] border-l-2 ${m.mine?"bg-black/20 border-[#E7BD73]/60 text-[#FFE7BC]":"bg-black/30 border-[#D2AA67] text-zinc-300"}`}><b>{senders[parent.sender_id]?.name||t.member}</b><div className="truncate">{parent.deleted_at?t.messageDeleted:parent.body||t.media}</div></div>}
+      {m.pinned_at&&<div className={`flex items-center gap-1 text-[10px] mb-0.5 ${m.mine?"text-[#FFE7BC]/70":"text-[#E7BD73]"}`}><Pin className="w-3 h-3"/>{pinnedLabel}</div>}
        {m.body&&<p className="whitespace-pre-wrap break-words text-[15px] leading-[1.4]">{renderBody(m.body)}</p>}
        {m.media_type==="image"&&m.url&&<img src={m.url} alt="" draggable={false} onClick={()=>setImageViewer({url:m.url!,title:m.mine?(me?.name||t.you):(s?.name||t.member)})} onContextMenu={e=>e.preventDefault()} className="max-h-80 rounded-xl object-cover select-none cursor-zoom-in"/>}
        {m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline preload="metadata" className="max-h-80 rounded-xl"/>}
