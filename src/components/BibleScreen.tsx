@@ -732,7 +732,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
         grad.addColorStop(1, "#1f0a00");
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, W, H);
-        ctx.strokeStyle = "#ff6a00";
+        ctx.strokeStyle = "#D6AA69";
         ctx.lineWidth = 6;
         ctx.strokeRect(50, 50, W - 100, H - 100);
         ctx.fillStyle = "#ffffff";
@@ -751,7 +751,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
         const lineH = 60;
         const startY = H / 2 - (lines.length * lineH) / 2;
         lines.forEach((l, i) => ctx.fillText(l, W / 2, startY + i * lineH));
-        ctx.fillStyle = "#ff6a00";
+        ctx.fillStyle = "#D6AA69";
         ctx.font = "bold 40px sans-serif";
         ctx.fillText(ref, W / 2, H - 170);
         ctx.fillStyle = "#999999";
@@ -796,7 +796,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
       <div className="flex items-center justify-between px-4 py-2 gap-3 min-h-[48px]">
         <div className="flex items-center gap-3 min-w-0">
           {onBack && (
-            <button onClick={onBack} aria-label={tr("back", "Back")} className="text-orange-500 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -ml-2">
+            <button onClick={onBack} aria-label={tr("back", "Back")} className="text-[#E8BD74] shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -ml-2">
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
@@ -810,24 +810,24 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
               <button
                 onClick={() => setView("search")}
                 aria-label="Search"
-                className="text-orange-500 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2"
+                className="text-[#E8BD74] min-w-[44px] min-h-[44px] flex items-center justify-center -m-2"
               >
                 <Search className="w-5 h-5" />
               </button>
             </>
           )}
 
-          <button onClick={() => setShowReaderSettings(true)} className="text-orange-500">
+          <button onClick={() => setShowReaderSettings(true)} className="text-[#E8BD74]">
             <Type className="w-5 h-5" />
           </button>
 
-          <button onClick={() => setMode(isDay ? "night" : "day")} className="text-orange-500">
+          <button onClick={() => setMode(isDay ? "night" : "day")} className="text-[#E8BD74]">
             {isDay ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
           </button>
 
           <button
             onClick={() => setShowLangPicker(true)}
-            className="text-orange-500 shrink-0 flex items-center gap-1.5 text-sm"
+            className="text-[#E8BD74] shrink-0 flex items-center gap-1.5 text-sm"
           >
             <Globe className="w-4 h-4" />
             <span className="uppercase tracking-wider text-xs font-semibold">{translation}</span>
@@ -837,7 +837,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
             <button
               onClick={() => setShowReaderSettings(true)}
               aria-label="Audio"
-              className="text-orange-500"
+              className="text-[#E8BD74]"
             >
               <Headphones className="w-5 h-5" />
             </button>
@@ -850,10 +850,10 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   if (loadError) {
     return (
       <div className={`${pageBg} min-h-[60vh] flex flex-col items-center justify-center gap-4 px-8 text-center`}>
-        <p className="text-orange-500">{tr("bible_load_error", "We could not load this Bible translation. Check your connection and try again.")}</p>
+        <p className="text-[#E8BD74]">{tr("bible_load_error", "We could not load this Bible translation. Check your connection and try again.")}</p>
         <button
           onClick={() => { setLoading(true); setReloadKey((k) => k + 1); }}
-          className="h-12 px-6 rounded-2xl bg-orange-500 text-black font-bold"
+          className="h-12 px-6 rounded-2xl bg-[#5C061F] text-black font-bold"
         >
           {tr("retry", "Try again")}
         </button>
@@ -864,7 +864,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   if (loading || !books) {
     return (
       <div className={`${pageBg} min-h-[60vh] flex items-center justify-center`}>
-        <div className="text-orange-500">{tr("bible_loading", "Loading Bible…")}</div>
+        <div className="text-[#E8BD74]">{tr("bible_loading", "Loading Bible…")}</div>
       </div>
     );
   }
@@ -872,7 +872,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   return (
     <div className={`${pageBg}`}>
       {audioUnavailable && (
-        <div className="mx-4 mt-3 rounded-2xl border border-orange-500/30 bg-orange-500/10 px-4 py-3 text-sm text-orange-300 flex items-start gap-3">
+        <div className="mx-4 mt-3 rounded-2xl border border-[#D6AA69]/30 bg-[#5C061F]/10 px-4 py-3 text-sm text-[#E8BD74] flex items-start gap-3">
           <span className="flex-1">{tr("bible_audio_unavailable", "Audio reading is not available on this device.")}</span>
           <button onClick={() => setAudioUnavailable(false)} aria-label={tr("close", "Close")} className="shrink-0">
             <X className="w-4 h-4" />
@@ -896,7 +896,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
                 <button
                   onClick={() => setView("favorites")}
-                  className={`border rounded-xl px-4 py-3 text-orange-500 ${card}`}
+                  className={`border rounded-xl px-4 py-3 text-[#E8BD74] ${card}`}
                 >
                   <Star className="w-4 h-4" />
                 </button>
@@ -964,7 +964,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                       setView("chapters");
                     }
                   }}
-                  className="text-orange-500 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -ml-2"
+                  className="text-[#E8BD74] shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -ml-2"
                   aria-label="Back"
                 >
                   <ArrowLeft className="w-5 h-5" />
@@ -974,7 +974,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                 </h2>
                 <button
                   onClick={() => setShowBibleMenu(true)}
-                  className="text-orange-500 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2"
+                  className="text-[#E8BD74] shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2"
                   aria-label="Menu"
                 >
                   <Menu className="w-6 h-6" />
@@ -990,8 +990,8 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                     }}
                     className={`w-full min-h-[44px] rounded-lg border px-3 text-sm font-semibold flex items-center justify-center gap-2 ${
                       isDay
-                        ? "bg-orange-50 border-orange-200 text-orange-700"
-                        : "bg-orange-500/10 border-orange-500/30 text-orange-400"
+                        ? "bg-[#FAF1E6] border-[#E9CEA8] text-[#6F263E]"
+                        : "bg-[#5C061F]/10 border-[#D6AA69]/30 text-[#E8BD74]"
                     }`}
                   >
                     <ArrowLeft className="w-4 h-4" />
@@ -1056,11 +1056,11 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                         index === 0 ? "mb-4" : "my-4"
                       } ${
                         isSelected
-                          ? (isDay ? "bg-orange-300/60 ring-2 ring-orange-500" : "bg-orange-500/30 ring-2 ring-orange-500")
+                          ? (isDay ? "bg-[#DFB474]/60 ring-2 ring-[#D6AA69]" : "bg-[#5C061F]/30 ring-2 ring-[#D6AA69]")
                           : hl
-                            ? (isDay ? "bg-orange-200/60" : "bg-orange-500/25")
+                            ? (isDay ? "bg-[#E5C69D]/60" : "bg-[#5C061F]/25")
                             : isActive
-                              ? (isDay ? "bg-orange-100" : "bg-orange-500/15")
+                              ? (isDay ? "bg-[#F1DEBF]" : "bg-[#5C061F]/15")
                               : ""
                       }`}
                     >
@@ -1070,7 +1070,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                         style={{ fontSize: "12px", fontWeight: 700, color: "#F97316", lineHeight: 1 }}
                       >
                         {verseNumber}
-                        {hasNote && <span className="ml-0.5 text-orange-500">•</span>}
+                        {hasNote && <span className="ml-0.5 text-[#E8BD74]">•</span>}
                       </sup>
                       {text}
                     </p>
@@ -1158,7 +1158,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                         </div>
                       ) : (
                         <>
-                          <p className="text-orange-500 text-xs font-bold mb-1">
+                          <p className="text-[#E8BD74] text-xs font-bold mb-1">
                             {bookName(result.book)} {result.cIdx + 1}
                             {result.vIdx != null ? `:${result.vIdx + 1}` : ""}
                           </p>
@@ -1191,14 +1191,14 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
               {favorites.map((favorite, index) => (
                 <div key={index} className={`rounded-xl border p-4 ${card}`}>
-                  <p className="text-orange-500 text-xs font-bold mb-1.5">
+                  <p className="text-[#E8BD74] text-xs font-bold mb-1.5">
                     {favorite.book} {favorite.chapter}:{favorite.verse} · {favorite.translation.toUpperCase()}
                   </p>
 
                   <p className="text-[15px] leading-relaxed">{favorite.text}</p>
 
                   <div className="flex items-center justify-end gap-4 mt-3">
-                    <button onClick={() => toggleFavorite(favorite)} className="text-orange-500">
+                    <button onClick={() => toggleFavorite(favorite)} className="text-[#E8BD74]">
                       <Star className="w-5 h-5" fill="currentColor" />
                     </button>
                   </div>
@@ -1221,7 +1221,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
             }`}
           >
             <div className="flex items-center gap-2 mb-3">
-              <BookOpen className="w-5 h-5 text-orange-500" />
+              <BookOpen className="w-5 h-5 text-[#E8BD74]" />
               <h3 className="text-[18px] font-semibold">{tr("bible_translation", "Bible Translation")}</h3>
             </div>
 
@@ -1235,7 +1235,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                   }}
                   className={`w-full text-left px-4 py-3 rounded-xl border ${
                     translation === item.code
-                      ? "border-orange-500 bg-orange-500/10"
+                      ? "border-[#D6AA69] bg-[#5C061F]/10"
                       : isDay
                         ? "border-zinc-200 bg-zinc-50"
                         : "border-zinc-800 bg-zinc-900"
@@ -1261,7 +1261,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
             }`}
           >
             <div className="flex items-center gap-2 mb-4">
-              <Type className="w-5 h-5 text-orange-500" />
+              <Type className="w-5 h-5 text-[#E8BD74]" />
               <h3 className="text-[18px] font-semibold">{tr("bible_reading_settings", "Reading Settings")}</h3>
             </div>
 
@@ -1278,7 +1278,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                       key={value}
                       onClick={() => setFontFamily(value)}
                       className={`rounded-xl border px-3 py-2 ${
-                        fontFamily === value ? "border-orange-500 bg-orange-500/10" : "border-zinc-700"
+                        fontFamily === value ? "border-[#D6AA69] bg-[#5C061F]/10" : "border-zinc-700"
                       }`}
                     >
                       {label}
@@ -1314,7 +1314,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
               <button
                 onClick={playChapter}
-                className="w-full rounded-xl bg-orange-500 text-white font-semibold py-3 flex items-center justify-center gap-2"
+                className="w-full rounded-xl bg-[#5C061F] text-white font-semibold py-3 flex items-center justify-center gap-2"
               >
                 {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                 {isSpeaking ? tr("stop_audio", "Stop Audio") : tr("play_chapter", "Play Current Chapter")}
@@ -1328,7 +1328,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                       key={r}
                       onClick={() => setAudioRate(r)}
                       className={`rounded-xl border px-3 py-2 text-sm ${
-                        audioRate === r ? "border-orange-500 bg-orange-500/10" : "border-zinc-700"
+                        audioRate === r ? "border-[#D6AA69] bg-[#5C061F]/10" : "border-zinc-700"
                       }`}
                     >
                       {r}x
@@ -1400,7 +1400,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                     isDay ? "hover:bg-zinc-100" : "hover:bg-zinc-900"
                   }`}
                 >
-                  <span className="text-orange-500">{item.icon}</span>
+                  <span className="text-[#E8BD74]">{item.icon}</span>
                   <span className="text-[15px] font-medium">{item.label}</span>
                 </button>
               ))}
@@ -1423,7 +1423,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
             style={{ maxHeight: "70vh" }}
           >
             <div className="flex items-center gap-2">
-              <StickyNote className="w-5 h-5 text-orange-500" />
+              <StickyNote className="w-5 h-5 text-[#E8BD74]" />
               <h3 className="text-[18px] font-semibold">{tr("bible_note", "Note")}</h3>
             </div>
 
@@ -1451,7 +1451,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
               <button
                 onClick={saveCurrentNote}
-                className="flex-1 rounded-xl bg-orange-500 text-white font-semibold py-3 flex items-center justify-center gap-2"
+                className="flex-1 rounded-xl bg-[#5C061F] text-white font-semibold py-3 flex items-center justify-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 {tr("save", "Save")}
@@ -1482,7 +1482,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                 </p>
                 <button
                   onClick={clearSelection}
-                  className="text-orange-500 min-w-[44px] min-h-[44px] -mr-2 flex items-center justify-end"
+                  className="text-[#E8BD74] min-w-[44px] min-h-[44px] -mr-2 flex items-center justify-end"
                   aria-label="Clear selection"
                 >
                   <X className="w-5 h-5" />
@@ -1568,7 +1568,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                         (item as any).disabled ? "opacity-30" : isDay ? "hover:bg-zinc-100" : "hover:bg-zinc-900"
                       }`}
                     >
-                      <span className="text-orange-500">{item.icon}</span>
+                      <span className="text-[#E8BD74]">{item.icon}</span>
                       <span className="text-[11px] font-medium">{item.label}</span>
                     </button>
                   ));
@@ -1587,7 +1587,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
               isDay ? "bg-white text-zinc-950" : "bg-zinc-950 text-white"
             }`}
           >
-            <p className="text-orange-500 text-xs font-bold uppercase tracking-wider mb-1">
+            <p className="text-[#E8BD74] text-xs font-bold uppercase tracking-wider mb-1">
               {bookName(currentBook)} {chapterIdx + 1}:{actionVerse + 1}
             </p>
             <p className="text-sm text-zinc-500 mb-4 line-clamp-2">{currentVerses[actionVerse]}</p>
@@ -1647,7 +1647,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                     isDay ? "hover:bg-zinc-100" : "hover:bg-zinc-900"
                   }`}
                 >
-                  <span className="text-orange-500">{item.icon}</span>
+                  <span className="text-[#E8BD74]">{item.icon}</span>
                   <span className="text-[15px] font-medium">{item.label}</span>
                 </button>
               ))}

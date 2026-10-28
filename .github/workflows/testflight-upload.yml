@@ -5,9 +5,10 @@ on:
   push:
     branches:
       - main
+      - improve/community-ui-review-2026-10-27
     paths:
-      # Trigger a new TestFlight run when this workflow definition is updated. Retry Build 46 after certificate cleanup.
-      # Re-run marker: Build 46 with polished chat spacing, admin-only controls, distinct warm background, phone privacy UX, reactions, audio speed, localized dates and SMS invite fallback.nds, reaction tap fixes, easier swipe, SMS invite fallback, notification UX, profile/privacy fixes and exact Prayer & Fire icon.
+      # Trigger signed internal beta after latest chat reaction, brand palette and home layout fixes.
+      # Build candidate: 2026-10-28 administrator-managed branding and official logo; launch signed TestFlight upload.
       - '.github/workflows/testflight-upload.yml'
 
 permissions:
@@ -20,7 +21,7 @@ jobs:
     env:
       APP_BUNDLE_ID: com.frankcontact89.prayerandfiremobile
       APP_VERSION: '1.1'
-      BUILD_NUMBER: '46'
+      BUILD_NUMBER: '47'
       APPLE_TEAM_ID: 2UU7S882KZ
       APP_STORE_CONNECT_KEY_ID: NGM28WWYM2
 
@@ -33,6 +34,19 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      - name: Select a unique TestFlight build number
+        run: |
+          set -euo pipefail
+          # Builds 46 and 47 were used during earlier attempts. Avoid reusing
+          # the same CFBundleVersion across retries or later workflow runs.
+          BUILD_NUMBER=$((47 + GITHUB_RUN_NUMBER - 43))
+          if [ "$BUILD_NUMBER" -le 47 ]; then
+            echo "Refusing a non-incremental TestFlight build number: $BUILD_NUMBER"
+            exit 1
+          fi
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
+          echo "Preparing Prayer & Fire ${APP_VERSION} (${BUILD_NUMBER})"
 
       - name: Verify App Store Connect credentials
         env:
@@ -106,18 +120,20 @@ jobs:
           npm run build
           npx cap sync ios
 
-      - name: Prepare Prayer & Fire iOS icon
+      - name: Prepare official Prayer & Fire iOS icon
         run: |
           set -euo pipefail
-          ICON_SRC="src/assets/prayer-fire-entry-logo.png"
+          ICON_SRC="public/prayer-fire-official-logo.webp"
           ICON_OUT="ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
-          test -f "$ICON_SRC"
-          sips -s format png "$ICON_SRC" --out "$RUNNER_TEMP/pf-icon.png" >/dev/null
-          sips -z 1024 1024 "$RUNNER_TEMP/pf-icon.png" --out "$ICON_OUT" >/dev/null
+          if [ ! -f "$ICON_SRC" ]; then
+            echo "::error::Official Prayer & Fire logo asset is missing. Refusing to use generic placeholder."
+            exit 1
+          fi
+          sips -s format png "$ICON_SRC" --out "$RUNNER_TEMP/pf-official.png" >/dev/null
+          sips -z 1024 1024 "$RUNNER_TEMP/pf-official.png" --out "$ICON_OUT" >/dev/null
           test "$(sips -g pixelWidth "$ICON_OUT" | awk '/pixelWidth/{print $2}')" = "1024"
           test "$(sips -g pixelHeight "$ICON_OUT" | awk '/pixelHeight/{print $2}')" = "1024"
-          echo "Prayer & Fire icon prepared"
-
+          echo "Official Prayer & Fire artwork installed as AppIcon"
 
       - name: Smoke-test packaged app in iOS Simulator
         run: |

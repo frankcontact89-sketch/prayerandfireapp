@@ -25,14 +25,14 @@ export default function AccessGate({ t, status, busy, onRequest, onBack }: Props
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <div className="text-[10px] tracking-[.2em] text-orange-400 font-bold">PRAYER &amp; FIRE</div>
+          <div className="text-[10px] tracking-[.2em] text-amber-300 font-bold">PRAYER &amp; FIRE</div>
           <h1 className="text-xl font-black">{t.title}</h1>
         </div>
       </header>
 
       <main className="flex-1 grid place-items-center px-8 text-center">
         <div className="max-w-sm">
-          <div className="w-20 h-20 rounded-full bg-orange-500/10 text-orange-500 grid place-items-center mx-auto mb-6">
+          <div className="w-20 h-20 rounded-full bg-[#620B2A]/40 text-amber-300 grid place-items-center mx-auto mb-6">
             <Icon className="w-9 h-9" />
           </div>
           <h2 className="text-2xl font-black">{title}</h2>
@@ -41,7 +41,7 @@ export default function AccessGate({ t, status, busy, onRequest, onBack }: Props
             <button
               onClick={onRequest}
               disabled={busy}
-              className="mt-8 w-full h-14 rounded-2xl bg-orange-500 text-black font-black disabled:opacity-60"
+              className="mt-8 w-full h-14 rounded-2xl bg-[#730C30] text-amber-100 font-black disabled:opacity-60"
             >
               {busy ? t.requesting : t.requestAccess}
             </button>

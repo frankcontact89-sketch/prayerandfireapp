@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useBrandLogo } from "@/hooks/useBrandLogo";
 import { Flame, Bell, Quote, Sparkles, HandHeart, BookOpen, User as UserIcon, Menu, Library as LibraryIcon, MessageCircle } from "lucide-react";
 
 import { SignInScreen } from "@/components/SignInScreen";
@@ -31,7 +32,6 @@ import { translations } from "@/config/translations";
 import { getLastReadAtMs, setLastReadAtNow } from "@/lib/notifications-last-seen";
 
 import realisticFlame from "@/assets/realistic-flame.png";
-import entryLogo from "@/assets/prayer-fire-entry-logo.png";
 
 const SUPPORTED_LANGUAGE_CODES = ["en", "es", "pt"];
 
@@ -205,6 +205,7 @@ function getFreshVerseIndex() {
 }
 
 function HomeScreen({ t, language }: { t: (k: any) => string; language: string }) {
+  const brandLogo = useBrandLogo();
   const [verseIndex] = useState(() => getFreshVerseIndex());
   const safeLang = SUPPORTED_LANGUAGE_CODES.includes(language) ? language : "en";
   const fallback = (dailyContent[verseIndex] as any)[safeLang] || dailyContent[verseIndex].en;
@@ -293,53 +294,43 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
         style={{ backgroundImage: `url(${realisticFlame})`, backgroundSize: "cover", backgroundPosition: "center" }}
       />
 
-      <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-orange-500/10 blur-[140px] pointer-events-none" />
+      <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#641431]/20 blur-[140px] pointer-events-none" />
 
-      <div className="relative z-10 px-5 pt-3 pb-5 max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto">
-        <div className="flex flex-col items-center text-center mb-5">
-          <img
-            src={entryLogo}
-            alt="Prayer & Fire"
-            className="w-[72px] h-[72px] object-contain drop-shadow-[0_0_25px_rgba(249,115,22,0.45)] mb-3"
-          />
-
-          <p className="uppercase tracking-[0.3em] text-white/80 text-xs font-semibold mb-2">PRAYER & FIRE</p>
-
-          <h1 className="text-[26px] leading-[1.05] font-extrabold tracking-tight max-w-[320px]">
-            {L.tagline}
-            <span className="block text-orange-500">{L.connects}</span>
-          </h1>
-
-          <p className="text-zinc-300 mt-2 text-[14px] leading-snug max-w-sm">{t("home_hero_subtitle")}</p>
-        </div>
-
-        <section className="relative w-full rounded-2xl border border-orange-500/20 bg-zinc-950/90 backdrop-blur-xl p-5 overflow-hidden shadow-[0_0_40px_rgba(249,115,22,0.10)]">
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">{L.verse}</p>
-              <Quote className="w-4 h-4 text-orange-400" />
-            </div>
-
-            <p className="text-[16px] leading-relaxed font-light text-white">"{today.verse}"</p>
-            <p className="text-orange-400 text-sm font-bold mt-2">— {today.ref}</p>
-
-            <div className="mt-3 pt-2.5 border-t border-orange-500/10">
-              <div className="flex items-center gap-2 mb-1">
-                <HandHeart className="w-3.5 h-3.5 text-orange-400" />
-                <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">{L.prayer}</p>
-              </div>
-              <p className="text-zinc-200 text-[14px] leading-snug">{today.prayer}</p>
-            </div>
-
-            <div className="mt-2.5 pt-2.5 border-t border-orange-500/10">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-3.5 h-3.5 text-orange-400" />
-                <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">{L.reflection}</p>
-              </div>
-              <p className="text-zinc-200 text-[14px] leading-snug">{today.reflection}</p>
-            </div>
+      <div className="relative z-10 mx-auto max-w-[430px] px-4 pb-7 pt-4 md:max-w-[680px] lg:max-w-[820px]">
+        <header className="relative mb-4 overflow-hidden rounded-[28px] border border-[#E5BB70]/20 bg-gradient-to-br from-[#301124]/90 via-[#1A0D18]/95 to-[#09080B] px-5 py-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.28)]">
+          <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-[#5C061F]/45 blur-3xl" />
+          <div role="img" aria-label="Prayer & Fire" className="relative mx-auto mb-3 flex h-[66px] w-[66px] items-center justify-center rounded-full border border-[#E5BB70]/75 bg-[#5C061F] shadow-[0_6px_26px_rgba(219,179,117,0.14)]">
+            <img src={brandLogo} alt="Prayer and Fire — logotipo oficial" className="h-full w-full rounded-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />
           </div>
-        </section>
+          <p className="relative mb-2 text-[10px] font-bold uppercase tracking-[0.26em] text-[#E8BD74]">PRAYER & FIRE</p>
+          <h1 className="relative mx-auto max-w-[330px] text-[27px] font-extrabold leading-[1.12] tracking-tight">
+            {L.tagline}<span className="block text-[#E8BD74]">{L.connects}</span>
+          </h1>
+          <p className="relative mx-auto mt-3 max-w-sm text-[13px] leading-relaxed text-zinc-300">{t("home_hero_subtitle")}</p>
+        </header>
+
+        <div className="space-y-3">
+          <section className="rounded-[24px] border border-[#E5BB70]/25 bg-gradient-to-br from-[#21111C] via-[#170E16] to-[#100C12] p-5 shadow-[0_10px_32px_rgba(0,0,0,0.22)]">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E8BD74]">{L.verse}</p>
+              <BookOpen className="h-4 w-4 text-[#E8BD74]" aria-hidden="true" />
+            </div>
+            <p className="text-[17px] font-medium leading-relaxed text-white">"{today.verse}"</p>
+            <p className="mt-3 text-sm font-bold text-[#E8BD74]">— {today.ref}</p>
+          </section>
+          <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
+            <section className="min-w-0 rounded-[22px] border border-[#E5BB70]/20 bg-[#25101F]/90 p-4">
+              <HandHeart className="mb-3 h-5 w-5 text-[#E8BD74]" aria-hidden="true" />
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#E8BD74]">{L.prayer}</p>
+              <p className="break-words text-[13px] leading-relaxed text-zinc-100">{today.prayer}</p>
+            </section>
+            <section className="min-w-0 rounded-[22px] border border-[#E5BB70]/20 bg-[#18121D]/95 p-4">
+              <Sparkles className="mb-3 h-5 w-5 text-[#E8BD74]" aria-hidden="true" />
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#E8BD74]">{L.reflection}</p>
+              <p className="break-words text-[13px] leading-relaxed text-zinc-100">{today.reflection}</p>
+            </section>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -620,11 +611,11 @@ export default function Index() {
               aria-label={t("profile")}
               className="w-10 h-10 -ml-1 flex items-center justify-center"
             >
-              <span className="h-9 w-9 rounded-full border border-orange-500/40 bg-zinc-900 overflow-hidden flex items-center justify-center">
+              <span className="h-9 w-9 rounded-full border border-[#D6AA69]/40 bg-zinc-900 overflow-hidden flex items-center justify-center">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={t("profile")} className="h-full w-full object-cover" crossOrigin="anonymous" />
                 ) : (
-                  <UserIcon className="w-5 h-5 text-orange-500" />
+                  <UserIcon className="w-5 h-5 text-[#E8BD74]" />
                 )}
               </span>
             </button>
@@ -646,7 +637,7 @@ export default function Index() {
             <button
               onClick={() => setDrawerOpen(true)}
               aria-label="Menu"
-              className="text-orange-500 w-10 h-10 flex items-center justify-center"
+              className="text-[#E8BD74] w-10 h-10 flex items-center justify-center"
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -804,16 +795,16 @@ export default function Index() {
       {page !== "admin" && (
       <div className="relative z-50 shrink-0 bg-black border-t border-zinc-800 pb-[env(safe-area-inset-bottom)]">
         <nav className="flex justify-around items-center h-[64px] px-4 max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto">
-          <button aria-label={t("home")} onClick={() => setPage("home")} className={page === "home" ? "text-orange-500" : "text-zinc-500"}>
+          <button aria-label={t("home")} onClick={() => setPage("home")} className={page === "home" ? "text-[#E8BD74]" : "text-zinc-500"}>
             <Flame className="w-6 h-6" />
           </button>
           <button aria-label={language === "es" ? "Comunidad" : language === "pt" ? "Comunidade" : "Community"} onClick={() => navigate("/community")} className="text-zinc-500">
             <MessageCircle className="w-6 h-6" />
           </button>
-          <button aria-label={t("holy_bible")} onClick={() => { setBibleReturnTo(null); setPage("bible"); }} className={page === "bible" ? "text-orange-500" : "text-zinc-500"}>
+          <button aria-label={t("holy_bible")} onClick={() => { setBibleReturnTo(null); setPage("bible"); }} className={page === "bible" ? "text-[#E8BD74]" : "text-zinc-500"}>
             <BookOpen className="w-6 h-6" />
           </button>
-          <button aria-label={language === "es" ? "Biblioteca" : language === "pt" ? "Biblioteca" : "Library"} onClick={() => setPage("library")} className={page === "library" || page.startsWith("article:") ? "text-orange-500" : "text-zinc-500"}>
+          <button aria-label={language === "es" ? "Biblioteca" : language === "pt" ? "Biblioteca" : "Library"} onClick={() => setPage("library")} className={page === "library" || page.startsWith("article:") ? "text-[#E8BD74]" : "text-zinc-500"}>
             <LibraryIcon className="w-6 h-6" />
           </button>
         </nav>

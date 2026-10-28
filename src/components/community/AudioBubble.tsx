@@ -159,7 +159,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   };
 
   const pct = dur > 0 ? Math.min(100, (cur / dur) * 100) : 0;
-  const bars = 26;
+  const bars = 18;
 
   const seekAt = (element: HTMLDivElement, clientX: number) => {
     const audio = ref.current;
@@ -173,8 +173,8 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   };
 
   return (
-    <div className="relative grid min-w-[236px] grid-cols-[44px_40px_minmax(0,1fr)] items-center gap-2.5">
-      <div className={`h-11 w-11 overflow-hidden rounded-full shrink-0 grid place-items-center ring-1 ${mine ? "bg-foreground/10 text-foreground ring-foreground/10" : "bg-muted text-primary ring-border"}`}>
+    <div className="relative grid w-full min-w-0 max-w-full grid-cols-[32px_32px_minmax(0,1fr)] items-center gap-1.5 overflow-hidden">
+      <div className={`h-9 w-9 overflow-hidden rounded-full shrink-0 grid place-items-center ring-1 ${mine ? "bg-foreground/10 text-foreground ring-foreground/10" : "bg-muted text-primary ring-border"}`}>
         {avatar ? (
           <img src={avatar} alt={name || ""} className="w-full h-full object-cover" />
         ) : name ? (
@@ -189,12 +189,12 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
         onClick={toggle}
         data-message-swipe-control
         aria-label={playing ? pauseLabel : playLabel}
-        className={`h-10 w-10 rounded-full grid place-items-center shrink-0 transition-transform active:scale-95 ${mine ? "bg-foreground/15 text-foreground" : "bg-primary text-primary-foreground"}`}
+        className={`h-9 w-9 rounded-full grid place-items-center shrink-0 transition-transform active:scale-95 ${mine ? "bg-foreground/15 text-foreground" : "bg-primary text-primary-foreground"}`}
       >
         {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
       </button>
 
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 overflow-hidden">
         {failed ? (
           <div className={`text-xs ${mine ? "text-black/70" : "text-zinc-400"}`}>
             {errorLabel}
@@ -212,7 +212,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
             aria-valuemin={0}
             aria-valuemax={Math.max(0, Math.floor(dur))}
             aria-valuenow={Math.max(0, Math.floor(cur))}
-            className="flex h-9 touch-none cursor-pointer items-center gap-[2px] py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+            className="flex h-9 w-full min-w-0 touch-none cursor-pointer items-center justify-between gap-[2px] overflow-hidden py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
             onPointerDown={(event) => {
               event.stopPropagation();
               seeking.current = true;
@@ -250,7 +250,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
                 <span
                   key={i}
                   style={{ height: h }}
-                    className={`w-[3px] rounded-full transition-colors ${
+                    className={`min-w-0 flex-1 max-w-[4px] rounded-full transition-colors ${
                     active ? (mine ? "bg-foreground" : "bg-primary") : mine ? "bg-foreground/25" : "bg-muted-foreground/50"
                   }`}
                 />
@@ -258,8 +258,8 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
             })}
           </div>
         )}
-        <div className={`mt-0.5 flex items-center justify-between gap-2 text-xs leading-none ${mine ? "text-foreground/65" : "text-muted-foreground"}`}>
-          <div className="flex min-w-0 items-center gap-2">
+        <div className={`mt-0.5 flex min-w-0 flex-wrap items-center justify-between gap-1 text-[11px] leading-tight ${mine ? "text-foreground/65" : "text-muted-foreground"}`}>
+          <div className="flex min-w-0 items-center gap-1">
             <button
               type="button"
               data-message-gesture-ignore
