@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLinks } from "./admin/AdminLinks";
 import { AdminEvents } from "./admin/AdminEvents";
@@ -15,69 +16,26 @@ import { AdminLibrary } from "./admin/AdminLibrary";
 import { ProductionChecklist } from "./ProductionChecklist";
 import { Shield, ArrowLeft, Lock, ClipboardCheck } from "lucide-react";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 
 interface AdminPanelProps {
   t: (key: string) => string;
   onBack: () => void;
 }
 
-const ADMIN_PIN = "1234"; // 4-digit PIN for admin access
-
 export function AdminPanel({ t, onBack }: AdminPanelProps) {
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [pin, setPin] = useState("");
-  const [pinError, setPinError] = useState(false);
+  const { isAdmin, loading } = useUserRole();
   const [showChecklist, setShowChecklist] = useState(false);
 
-  const handlePinSubmit = () => {
-    if (pin === ADMIN_PIN) {
-      setIsUnlocked(true);
-      setPinError(false);
-    } else {
-      setPinError(true);
-      setPin("");
-    }
-  };
-
-  const handlePinChange = (value: string) => {
-    const numericValue = value.replace(/\D/g, "").slice(0, 4);
-    setPin(numericValue);
-    setPinError(false);
-  };
-
-  if (!isUnlocked) {
+  if (loading || !isAdmin) {
     return (
-      <div className="max-w-md mx-auto p-6 space-y-6">
-        <div className="flex min-w-0 items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={onBack}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex min-w-0 items-center gap-2">
-            <Lock className="w-6 h-6 shrink-0 text-[#DBB375]" />
-            <h1 className="text-2xl font-bold text-foreground">Admin Access</h1>
-          </div>
-        </div>
-
-        <div className="bg-card border border-border rounded-xl p-6 space-y-4">
-          <p className="text-muted-foreground text-center">
-            Enter the 4-digit PIN to access the admin panel
-          </p>
-          <Input
-            type="password"
-            placeholder="Enter PIN"
-            value={pin}
-            onChange={(e) => handlePinChange(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handlePinSubmit()}
-            className={`text-center text-2xl tracking-widest h-14 ${pinError ? "border-destructive" : ""}`}
-            maxLength={4}
-          />
-          {pinError && (
-            <p className="text-destructive text-sm text-center">Incorrect PIN. Try again.</p>
-          )}
-          <Button onClick={handlePinSubmit} className="w-full h-12" disabled={pin.length !== 4}>
-            Unlock Admin Panel
-          </Button>
+      <div className="mx-auto max-w-md p-6 space-y-5">
+        <button type="button" onClick={onBack} className="inline-flex min-h-11 items-center gap-2 text-[#DBB375]">
+          <ArrowLeft className="h-5 w-5" /> {t("back")}
+        </button>
+        <div className="rounded-2xl border border-[#DBB375]/20 bg-[#190E16] p-6 text-center">
+          <Lock className="mx-auto mb-3 h-7 w-7 text-[#DBB375]" />
+          <h1 className="text-lg font-semibold text-white">{loading ? "Checking administrator access…" : "Administrator access required"}</h1>
+          <p className="mt-2 text-sm text-zinc-400">{loading ? "Verifying your account permissions." : "Your account does not have permission to access this panel."}</p>
         </div>
       </div>
     );
