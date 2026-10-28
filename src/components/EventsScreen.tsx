@@ -236,7 +236,7 @@ export function EventsScreen({ t, onNewEvents, onBack }: EventsScreenProps) {
       {onBack && (
         <button
           onClick={onBack}
-          className="inline-flex min-h-11 items-center gap-2 text-[#DBB375] font-semibold text-sm"
+          className="inline-flex min-h-11 items-center gap-2 text-[#E5BB70] font-semibold text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           {t("back")}
@@ -247,17 +247,17 @@ export function EventsScreen({ t, onNewEvents, onBack }: EventsScreenProps) {
       </h1>
 
       {(loadError || events.length === 0) && (
-        <section className="mt-6 rounded-2xl border border-[#DBB375]/20 bg-[#180F16] px-5 py-10 text-center">
-          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-[#681B3D]/45 text-[#DBB375]"><Calendar className="h-7 w-7" /></div>
+        <section className="mt-6 rounded-2xl border border-[#E5BB70]/20 bg-[#180F16] px-5 py-10 text-center">
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full bg-[#5C061F]/45 text-[#E5BB70]"><Calendar className="h-7 w-7" /></div>
           <h2 className="text-lg font-semibold text-white">{loadError ? t("error") : (t("noEventsYet") || "No upcoming events yet.")}</h2>
           <p className="mt-2 text-sm leading-relaxed text-zinc-400">{loadError ? "Unable to load events right now." : "Check back here for future Prayer & Fire gatherings and announcements."}</p>
-          {loadError && <button type="button" onClick={() => { setLoading(true); void loadEvents(); }} className="mt-5 rounded-xl bg-[#681B3D] px-5 py-3 text-sm font-semibold text-white">Try again</button>}
+          {loadError && <button type="button" onClick={() => { setLoading(true); void loadEvents(); }} className="mt-5 rounded-xl bg-[#5C061F] px-5 py-3 text-sm font-semibold text-white">Try again</button>}
         </section>
       )}
 
       <div className="grid gap-4">
         {events.map((event) => (
-            <Card key={event.id} className="p-5 rounded-2xl border-[#DBB375]/20 bg-[#180F16] text-white">
+            <Card key={event.id} className="p-5 rounded-2xl border-[#E5BB70]/20 bg-[#180F16] text-white">
               <div className="flex flex-col md:flex-row gap-4">
                 {event.image_url && (
                   <img src={event.image_url} alt={event.title} className="w-full md:w-48 h-48 object-cover rounded-lg" />
