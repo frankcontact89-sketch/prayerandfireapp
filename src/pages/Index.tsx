@@ -31,7 +31,6 @@ import { translations } from "@/config/translations";
 import { getLastReadAtMs, setLastReadAtNow } from "@/lib/notifications-last-seen";
 
 import realisticFlame from "@/assets/realistic-flame.png";
-import entryLogo from "@/assets/prayer-fire-entry-logo.png";
 
 const SUPPORTED_LANGUAGE_CODES = ["en", "es", "pt"];
 
@@ -297,11 +296,9 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
 
       <div className="relative z-10 px-5 pt-3 pb-5 max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto">
         <div className="flex flex-col items-center text-center mb-5">
-          <img
-            src={entryLogo}
-            alt="Prayer & Fire"
-            className="w-[88px] h-[88px] object-contain mb-3 mix-blend-screen"
-          />
+          <div role="img" aria-label="Prayer & Fire" className="mb-3 flex h-[88px] w-[88px] items-center justify-center rounded-full border-2 border-[#DBB375] bg-[#681B3D] shadow-[0_8px_32px_rgba(104,27,61,0.35)]">
+            <Flame className="h-12 w-12 text-[#F0C57D]" strokeWidth={1.6} aria-hidden="true" />
+          </div>
 
           <p className="uppercase tracking-[0.3em] text-white/80 text-xs font-semibold mb-2">PRAYER & FIRE</p>
 
