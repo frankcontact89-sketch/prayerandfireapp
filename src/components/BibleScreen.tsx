@@ -853,7 +853,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
         <p className="text-[#E8BD74]">{tr("bible_load_error", "We could not load this Bible translation. Check your connection and try again.")}</p>
         <button
           onClick={() => { setLoading(true); setReloadKey((k) => k + 1); }}
-          className="h-12 px-6 rounded-2xl bg-[#681B3D] text-black font-bold"
+          className="h-12 px-6 rounded-2xl bg-[#5C061F] text-black font-bold"
         >
           {tr("retry", "Try again")}
         </button>
@@ -872,7 +872,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
   return (
     <div className={`${pageBg}`}>
       {audioUnavailable && (
-        <div className="mx-4 mt-3 rounded-2xl border border-[#D6AA69]/30 bg-[#681B3D]/10 px-4 py-3 text-sm text-[#E8BD74] flex items-start gap-3">
+        <div className="mx-4 mt-3 rounded-2xl border border-[#D6AA69]/30 bg-[#5C061F]/10 px-4 py-3 text-sm text-[#E8BD74] flex items-start gap-3">
           <span className="flex-1">{tr("bible_audio_unavailable", "Audio reading is not available on this device.")}</span>
           <button onClick={() => setAudioUnavailable(false)} aria-label={tr("close", "Close")} className="shrink-0">
             <X className="w-4 h-4" />
@@ -991,7 +991,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                     className={`w-full min-h-[44px] rounded-lg border px-3 text-sm font-semibold flex items-center justify-center gap-2 ${
                       isDay
                         ? "bg-[#FAF1E6] border-[#E9CEA8] text-[#6F263E]"
-                        : "bg-[#681B3D]/10 border-[#D6AA69]/30 text-[#E8BD74]"
+                        : "bg-[#5C061F]/10 border-[#D6AA69]/30 text-[#E8BD74]"
                     }`}
                   >
                     <ArrowLeft className="w-4 h-4" />
@@ -1056,11 +1056,11 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                         index === 0 ? "mb-4" : "my-4"
                       } ${
                         isSelected
-                          ? (isDay ? "bg-[#DFB474]/60 ring-2 ring-[#D6AA69]" : "bg-[#681B3D]/30 ring-2 ring-[#D6AA69]")
+                          ? (isDay ? "bg-[#DFB474]/60 ring-2 ring-[#D6AA69]" : "bg-[#5C061F]/30 ring-2 ring-[#D6AA69]")
                           : hl
-                            ? (isDay ? "bg-[#E5C69D]/60" : "bg-[#681B3D]/25")
+                            ? (isDay ? "bg-[#E5C69D]/60" : "bg-[#5C061F]/25")
                             : isActive
-                              ? (isDay ? "bg-[#F1DEBF]" : "bg-[#681B3D]/15")
+                              ? (isDay ? "bg-[#F1DEBF]" : "bg-[#5C061F]/15")
                               : ""
                       }`}
                     >
@@ -1235,7 +1235,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                   }}
                   className={`w-full text-left px-4 py-3 rounded-xl border ${
                     translation === item.code
-                      ? "border-[#D6AA69] bg-[#681B3D]/10"
+                      ? "border-[#D6AA69] bg-[#5C061F]/10"
                       : isDay
                         ? "border-zinc-200 bg-zinc-50"
                         : "border-zinc-800 bg-zinc-900"
@@ -1278,7 +1278,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                       key={value}
                       onClick={() => setFontFamily(value)}
                       className={`rounded-xl border px-3 py-2 ${
-                        fontFamily === value ? "border-[#D6AA69] bg-[#681B3D]/10" : "border-zinc-700"
+                        fontFamily === value ? "border-[#D6AA69] bg-[#5C061F]/10" : "border-zinc-700"
                       }`}
                     >
                       {label}
@@ -1314,7 +1314,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
               <button
                 onClick={playChapter}
-                className="w-full rounded-xl bg-[#681B3D] text-white font-semibold py-3 flex items-center justify-center gap-2"
+                className="w-full rounded-xl bg-[#5C061F] text-white font-semibold py-3 flex items-center justify-center gap-2"
               >
                 {isSpeaking ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                 {isSpeaking ? tr("stop_audio", "Stop Audio") : tr("play_chapter", "Play Current Chapter")}
@@ -1328,7 +1328,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
                       key={r}
                       onClick={() => setAudioRate(r)}
                       className={`rounded-xl border px-3 py-2 text-sm ${
-                        audioRate === r ? "border-[#D6AA69] bg-[#681B3D]/10" : "border-zinc-700"
+                        audioRate === r ? "border-[#D6AA69] bg-[#5C061F]/10" : "border-zinc-700"
                       }`}
                     >
                       {r}x
@@ -1451,7 +1451,7 @@ export function BibleScreen({ t, language, initialRef, onInitialRefApplied, onEx
 
               <button
                 onClick={saveCurrentNote}
-                className="flex-1 rounded-xl bg-[#681B3D] text-white font-semibold py-3 flex items-center justify-center gap-2"
+                className="flex-1 rounded-xl bg-[#5C061F] text-white font-semibold py-3 flex items-center justify-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 {tr("save", "Save")}
