@@ -101,7 +101,7 @@ export default function CommunityV2(){
  const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[imageViewer,setImageViewer]=useState<{url:string;title?:string}|null>(null),[readCounts,setReadCounts]=useState<Record<string,number>>({}),[deliveredCounts,setDeliveredCounts]=useState<Record<string,number>>({});
  const[pushSheet,setPushSheet]=useState(false);
  const[chatAppearanceOpen,setChatAppearanceOpen]=useState(false);
- const[chatPrefs,setChatPrefs]=useState<ChatPrefs>({wallpaper:"default",bubble:"#681B3D"});
+ const[chatPrefs,setChatPrefs]=useState<ChatPrefs>({wallpaper:"default",bubble:"#471326"});
  const pendingDeepLink=useRef<{groupId:string;messageId?:string}|null>(null);
 
  const[listLoading,setListLoading]=useState(true),[listError,setListError]=useState(false);
@@ -341,7 +341,7 @@ export default function CommunityV2(){
  const visible=useMemo(()=>groups.filter(g=>(showArchived?!!g.archived:!g.archived)&&(filter!=="unread"||g.unread>0)&&(g.name+" "+g.subtitle).toLowerCase().includes(q.toLowerCase())).sort((a,b)=>Number(!!b.favorite)-Number(!!a.favorite)),[groups,q,filter,showArchived]);
 
  useEffect(()=>{
-  if(!selected||!me){setChatPrefs({wallpaper:"default",bubble:"#681B3D"});return}
+  if(!selected||!me){setChatPrefs({wallpaper:"default",bubble:"#471326"});return}
   setChatPrefs(readChatPrefs(me.id,selected.id));
  },[selected?.id,me?.id]);
  const chatBackgroundStyle=chatPrefs.wallpaper.startsWith("data:image")
