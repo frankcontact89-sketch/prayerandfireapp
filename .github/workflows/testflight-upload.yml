@@ -8,7 +8,7 @@ on:
       - improve/community-ui-review-2026-10-27
     paths:
       # Trigger signed internal beta after latest chat reaction, brand palette and home layout fixes.
-      # Build candidate: 2026-10-28 administrator-managed branding and official logo; launch signed TestFlight upload.
+      # Build candidate: 2026-10-28 signed retry with captured archive/export diagnostics; requested by owner.
       - '.github/workflows/testflight-upload.yml'
 
 permissions:
