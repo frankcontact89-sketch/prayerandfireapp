@@ -123,8 +123,8 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         ch.subscribe(async state => {
           if (!alive.current) return;
           if (state === "SUBSCRIBED") {
-            const { error } = await ch.track({ name: userName });
-            if (error) setStatus(error.message);
+            const presenceStatus = await ch.track({ name: userName });
+            if (presenceStatus !== "ok") setStatus("Unable to join room presence");
             else setStatus("Connected");
           } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT") {
             setStatus("Cannot join this room. Check permissions or connection.");
