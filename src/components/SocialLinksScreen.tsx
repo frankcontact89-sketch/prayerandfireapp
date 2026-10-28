@@ -69,7 +69,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
         </button>
 
         <div className="rounded-2xl border border-[#D4A766]/30 bg-gradient-to-br from-[#290F1C] via-[#140A10] to-[#080808] px-3 py-2.5 shadow-[0_8px_30px_rgba(104,27,61,0.2)]">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#681B3D]/35 border border-[#D4A766]/30 px-2.5 py-0.5 mb-1.5">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#5C061F]/35 border border-[#D4A766]/30 px-2.5 py-0.5 mb-1.5">
             <Sparkles className="w-3.5 h-3.5 text-[#E7BA76]" />
             <span className="text-[#E7BA76] text-xs font-bold tracking-wide uppercase">{t("connect")}</span>
           </div>
@@ -94,7 +94,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
           <button
             key={link.id}
             onClick={() => window.open(link.url, "_blank")}
-            className="w-full rounded-xl bg-[#681B3D] hover:bg-[#7D254C] border border-[#D4A766]/20 text-white font-semibold py-3 px-4 flex items-center justify-center gap-2 active:scale-95 transition text-sm"
+            className="w-full rounded-xl bg-[#5C061F] hover:bg-[#7D254C] border border-[#D4A766]/20 text-white font-semibold py-3 px-4 flex items-center justify-center gap-2 active:scale-95 transition text-sm"
           >
             <Instagram className="w-5 h-5" />
             {link.title}
@@ -103,7 +103,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
         <button
           onClick={() => openEmail("Contact Prayer & Fire")}
-          className="w-full rounded-xl bg-[#681B3D] hover:bg-[#7D254C] text-white font-semibold py-3 px-4 flex items-center justify-center gap-2 active:scale-95 transition text-sm shadow-[0_8px_26px_rgba(104,27,61,0.2)]"
+          className="w-full rounded-xl bg-[#5C061F] hover:bg-[#7D254C] text-white font-semibold py-3 px-4 flex items-center justify-center gap-2 active:scale-95 transition text-sm shadow-[0_8px_26px_rgba(104,27,61,0.2)]"
         >
           <Mail className="w-5 h-5" />
           {t("connect_email_ministry")}
@@ -111,7 +111,7 @@ export function SocialLinksScreen({ t, onBack, onNavigateToEvents }: SocialLinks
 
         <button
           onClick={onNavigateToEvents}
-          className="w-full rounded-xl bg-gradient-to-r from-[#681B3D] to-[#8C3452] hover:opacity-90 text-white font-semibold py-3 px-4 flex items-center justify-center gap-2 active:scale-95 transition text-sm"
+          className="w-full rounded-xl bg-gradient-to-r from-[#5C061F] to-[#8C3452] hover:opacity-90 text-white font-semibold py-3 px-4 flex items-center justify-center gap-2 active:scale-95 transition text-sm"
         >
           <Calendar className="w-5 h-5" />
           {t("events")}
