@@ -52,7 +52,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     };
     pc.ontrack = event => {
       let el = audioNodes.current.get(id);
-      if (!el) { el = document.createElement("audio"); el.autoplay = true; el.playsInline = true; el.style.display = "none"; document.body.appendChild(el); audioNodes.current.set(id, el); }
+      if (!el) { el = document.createElement("audio"); el.autoplay = true; el.style.display = "none"; document.body.appendChild(el); audioNodes.current.set(id, el); }
       el.srcObject = event.streams[0];
       void el.play().catch(() => setStatus("Tap the screen to enable audio playback"));
     };
