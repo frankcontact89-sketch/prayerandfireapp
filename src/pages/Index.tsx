@@ -298,7 +298,7 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
         <header className="relative mb-4 overflow-hidden rounded-[28px] border border-[#E5BB70]/20 bg-gradient-to-br from-[#301124]/90 via-[#1A0D18]/95 to-[#09080B] px-5 py-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.28)]">
           <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-[#5C061F]/45 blur-3xl" />
           <div role="img" aria-label="Prayer & Fire" className="relative mx-auto mb-3 flex h-[66px] w-[66px] items-center justify-center rounded-full border border-[#E5BB70]/75 bg-[#5C061F] shadow-[0_6px_26px_rgba(219,179,117,0.14)]">
-            <span className="font-serif text-[21px] font-semibold tracking-tight text-[#E5BB70]">P&amp;F</span>
+            <img src="/prayer-fire-official-logo.png" alt="Prayer and Fire — logotipo oficial" className="h-full w-full rounded-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />
           </div>
           <p className="relative mb-2 text-[10px] font-bold uppercase tracking-[0.26em] text-[#E8BD74]">PRAYER & FIRE</p>
           <h1 className="relative mx-auto max-w-[330px] text-[27px] font-extrabold leading-[1.12] tracking-tight">
