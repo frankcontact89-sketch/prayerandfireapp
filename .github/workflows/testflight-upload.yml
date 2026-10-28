@@ -192,6 +192,9 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/testflight-diagnostics"
+          echo "Archive build number: $BUILD_NUMBER"
+          set +e
           xcodebuild \
             -project ios/App/App.xcodeproj \
             -scheme App \
@@ -206,7 +209,14 @@ jobs:
             MARKETING_VERSION="$APP_VERSION" \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             CODE_SIGN_STYLE=Automatic \
-            clean archive
+            clean archive 2>&1 | tee "$RUNNER_TEMP/testflight-diagnostics/archive.log"
+          RESULT=${PIPESTATUS[0]}
+          set -e
+          if [ "$RESULT" -ne 0 ]; then
+            echo "::error::Xcode archive failed. See archive.log diagnostic artifact."
+            grep -Ei 'error:|provisioning profile|signing certificate|No profiles|authentication failed|requires a development team|failed' "$RUNNER_TEMP/testflight-diagnostics/archive.log" | tail -50 || true
+            exit "$RESULT"
+          fi
 
       - name: Create automatic App Store export options
         run: |
@@ -236,7 +246,8 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/export"
+          mkdir -p "$RUNNER_TEMP/export" "$RUNNER_TEMP/testflight-diagnostics"
+          set +e
           xcodebuild \
             -exportArchive \
             -archivePath "$RUNNER_TEMP/PrayerAndFire.xcarchive" \
@@ -245,7 +256,14 @@ jobs:
             -allowProvisioningUpdates \
             -authenticationKeyPath "$KEY_PATH" \
             -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
-            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID"
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" 2>&1 | tee "$RUNNER_TEMP/testflight-diagnostics/export.log"
+          RESULT=${PIPESTATUS[0]}
+          set -e
+          if [ "$RESULT" -ne 0 ]; then
+            echo "::error::IPA export failed. See export.log diagnostic artifact."
+            grep -Ei 'error:|provisioning|signing|certificate|failed' "$RUNNER_TEMP/testflight-diagnostics/export.log" | tail -50 || true
+            exit "$RESULT"
+          fi
           IPA_PATH=$(find "$RUNNER_TEMP/export" -maxdepth 1 -name '*.ipa' -print -quit)
           test -n "$IPA_PATH"
           echo "IPA_PATH=$IPA_PATH" >> "$GITHUB_ENV"
@@ -284,3 +302,23 @@ jobs:
         run: |
           echo "### TestFlight upload submitted" >> "$GITHUB_STEP_SUMMARY"
           echo "Prayer & Fire ${APP_VERSION} (${BUILD_NUMBER}) was uploaded to App Store Connect for TestFlight processing." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save sanitized TestFlight diagnostics on failure
+        if: failure()
+        continue-on-error: true
+        run: |
+          mkdir -p "$RUNNER_TEMP/testflight-diagnostics"
+          echo "Workflow: $GITHUB_WORKFLOW" > "$RUNNER_TEMP/testflight-diagnostics/context.txt"
+          echo "Run: $GITHUB_RUN_ID / attempt $GITHUB_RUN_ATTEMPT" >> "$RUNNER_TEMP/testflight-diagnostics/context.txt"
+          echo "Commit: $GITHUB_SHA" >> "$RUNNER_TEMP/testflight-diagnostics/context.txt"
+          echo "Build: $BUILD_NUMBER" >> "$RUNNER_TEMP/testflight-diagnostics/context.txt"
+          echo "Inspect the failed step and archive/export log for errors; do not post secrets."
+
+      - name: Upload TestFlight diagnostic artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testflight-diagnostics-${{ github.run_number }}
+          path: ${{ runner.temp }}/testflight-diagnostics/
+          retention-days: 7
+          if-no-files-found: warn
