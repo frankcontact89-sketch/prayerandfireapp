@@ -295,9 +295,9 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
       <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#641431]/20 blur-[140px] pointer-events-none" />
 
       <div className="relative z-10 mx-auto max-w-[430px] px-4 pb-7 pt-4 md:max-w-[680px] lg:max-w-[820px]">
-        <header className="relative mb-4 overflow-hidden rounded-[28px] border border-[#DBB375]/20 bg-gradient-to-br from-[#301124]/90 via-[#1A0D18]/95 to-[#09080B] px-5 py-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.28)]">
-          <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-[#681B3D]/45 blur-3xl" />
-          <div role="img" aria-label="Prayer & Fire" className="relative mx-auto mb-3 flex h-[66px] w-[66px] items-center justify-center rounded-full border border-[#DBB375]/75 bg-[#681B3D] shadow-[0_6px_26px_rgba(219,179,117,0.14)]">
+        <header className="relative mb-4 overflow-hidden rounded-[28px] border border-[#E5BB70]/20 bg-gradient-to-br from-[#301124]/90 via-[#1A0D18]/95 to-[#09080B] px-5 py-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.28)]">
+          <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-[#5C061F]/45 blur-3xl" />
+          <div role="img" aria-label="Prayer & Fire" className="relative mx-auto mb-3 flex h-[66px] w-[66px] items-center justify-center rounded-full border border-[#E5BB70]/75 bg-[#5C061F] shadow-[0_6px_26px_rgba(219,179,117,0.14)]">
             <Flame className="h-9 w-9 text-[#F0C57D]" strokeWidth={1.6} aria-hidden="true" />
           </div>
           <p className="relative mb-2 text-[10px] font-bold uppercase tracking-[0.26em] text-[#E8BD74]">PRAYER & FIRE</p>
@@ -308,7 +308,7 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
         </header>
 
         <div className="space-y-3">
-          <section className="rounded-[24px] border border-[#DBB375]/25 bg-gradient-to-br from-[#21111C] via-[#170E16] to-[#100C12] p-5 shadow-[0_10px_32px_rgba(0,0,0,0.22)]">
+          <section className="rounded-[24px] border border-[#E5BB70]/25 bg-gradient-to-br from-[#21111C] via-[#170E16] to-[#100C12] p-5 shadow-[0_10px_32px_rgba(0,0,0,0.22)]">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E8BD74]">{L.verse}</p>
               <BookOpen className="h-4 w-4 text-[#E8BD74]" aria-hidden="true" />
@@ -317,12 +317,12 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
             <p className="mt-3 text-sm font-bold text-[#E8BD74]">— {today.ref}</p>
           </section>
           <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
-            <section className="min-w-0 rounded-[22px] border border-[#DBB375]/20 bg-[#25101F]/90 p-4">
+            <section className="min-w-0 rounded-[22px] border border-[#E5BB70]/20 bg-[#25101F]/90 p-4">
               <HandHeart className="mb-3 h-5 w-5 text-[#E8BD74]" aria-hidden="true" />
               <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#E8BD74]">{L.prayer}</p>
               <p className="break-words text-[13px] leading-relaxed text-zinc-100">{today.prayer}</p>
             </section>
-            <section className="min-w-0 rounded-[22px] border border-[#DBB375]/20 bg-[#18121D]/95 p-4">
+            <section className="min-w-0 rounded-[22px] border border-[#E5BB70]/20 bg-[#18121D]/95 p-4">
               <Sparkles className="mb-3 h-5 w-5 text-[#E8BD74]" aria-hidden="true" />
               <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#E8BD74]">{L.reflection}</p>
               <p className="break-words text-[13px] leading-relaxed text-zinc-100">{today.reflection}</p>
