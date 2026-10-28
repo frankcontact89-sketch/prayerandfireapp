@@ -7,8 +7,8 @@ on:
       - main
       - improve/community-ui-review-2026-10-27
     paths:
-      # Trigger a new TestFlight run when this workflow definition is updated. Build 47 candidate: run signed archive, simulator smoke test, and upload for internal TestFlight verification.
-      # Re-run marker: Build 47 with polished chat spacing, admin-only controls, distinct warm background, phone privacy UX, reactions, audio speed, localized dates and SMS invite fallback.nds, reaction tap fixes, easier swipe, SMS invite fallback, notification UX, profile/privacy fixes and exact Prayer & Fire icon.
+      # Trigger signed internal beta after latest chat reaction, brand palette and home layout fixes.
+      # Candidate revision: 2026-10-27 reactions in flow and official color styling.
       - '.github/workflows/testflight-upload.yml'
 
 permissions:
