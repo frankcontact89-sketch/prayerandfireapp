@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLinks } from "./admin/AdminLinks";
+import { AdminBranding } from "./admin/AdminBranding";
 import { AdminEvents } from "./admin/AdminEvents";
 import { AdminNotifications } from "./admin/AdminNotifications";
 import { AdminProducts } from "./admin/AdminProducts";
@@ -74,9 +75,10 @@ export function AdminPanel({ t, onBack }: AdminPanelProps) {
         </Button>
       </div>
 
-      <Tabs defaultValue="links" className="w-full">
+      <Tabs defaultValue="branding" className="w-full">
         <div className="w-full">
-          <TabsList className="grid h-auto w-full grid-cols-3 gap-1.5 rounded-2xl bg-[#170D14] p-2 sm:grid-cols-4">
+          <TabsList className="grid h-auto w-full grid-cols-3 gap-1.5 rounded-2xl bg-[#170D14] p-2 sm:grid-cols-4"> 
+            <TabsTrigger value="branding" className="min-h-11 rounded-xl px-1.5 py-2 text-center text-xs text-zinc-300 data-[state=active]:bg-[#5C061F] data-[state=active]:text-[#F3D5A3]">Logo</TabsTrigger>
             <TabsTrigger value="links" className="min-h-11 whitespace-normal break-words rounded-xl px-1.5 py-2 text-center text-xs leading-tight text-zinc-300 data-[state=active]:bg-[#681B3D] data-[state=active]:text-[#F3D5A3] data-[state=active]:shadow-sm">Links</TabsTrigger>
             <TabsTrigger value="events" className="min-h-11 whitespace-normal break-words rounded-xl px-1.5 py-2 text-center text-xs leading-tight text-zinc-300 data-[state=active]:bg-[#681B3D] data-[state=active]:text-[#F3D5A3] data-[state=active]:shadow-sm">Events</TabsTrigger>
             <TabsTrigger value="products" className="min-h-11 whitespace-normal break-words rounded-xl px-1.5 py-2 text-center text-xs leading-tight text-zinc-300 data-[state=active]:bg-[#681B3D] data-[state=active]:text-[#F3D5A3] data-[state=active]:shadow-sm">Products</TabsTrigger>
@@ -92,6 +94,7 @@ export function AdminPanel({ t, onBack }: AdminPanelProps) {
           </TabsList>
         </div>
 
+        <TabsContent value="branding" className="mt-6"><AdminBranding /></TabsContent>
         <TabsContent value="links" className="mt-6">
           <AdminLinks t={t} />
         </TabsContent>
