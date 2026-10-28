@@ -16,6 +16,11 @@ html, body, #root {
 }
 
 :root {
+  /* Official Prayer & Fire identity, matched to the provided logo. */
+  --pf-burgundy: #5C061F;
+  --pf-burgundy-dark: #3B071A;
+  --pf-gold: #E5BB70;
+  --pf-black: #090709;
   --bottom-nav-height: 64px;
 }
 
