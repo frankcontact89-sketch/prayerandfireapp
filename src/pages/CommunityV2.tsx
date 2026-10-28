@@ -731,6 +731,10 @@ export default function CommunityV2(){
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);setEmojiPicker(m)}} aria-label={emojiTitle} className="w-9 h-9 rounded-full bg-zinc-900 border border-white/10 grid place-items-center text-[#E5BB70]"><Plus className="w-4 h-4"/></button>
       </div>}
       {<div className={`text-[11px] font-bold mb-1 ${m.mine?"text-[#F4D7A1]":"text-[#E7BD73]"}`}>{m.mine?(me?.name||t.you):(s?.name||t.member)}</div>}
+      {(reactions[m.id]||[]).length>0&&<div className="mb-2 flex justify-end">{(reactions[m.id]||[]).length>0&&<button data-message-gesture-ignore onClick={ev=>{ev.stopPropagation();openReactionDetails(m)}} aria-label={t.reactions} className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-full border border-[#E5BB70]/35 bg-black/30 px-2 py-1 text-[12px] text-[#F6D89B]">
+       {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
+       {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
+      </button>}</div>}
       {parent&&<div className={`mb-1 rounded-lg px-2 py-1 text-[11px] border-l-2 ${m.mine?"bg-black/20 border-[#E7BD73]/60 text-[#FFE7BC]":"bg-black/30 border-[#D2AA67] text-zinc-300"}`}><b>{senders[parent.sender_id]?.name||t.member}</b><div className="truncate">{parent.deleted_at?t.messageDeleted:parent.body||t.media}</div></div>}
       {m.pinned_at&&<div className={`flex items-center gap-1 text-[10px] mb-0.5 ${m.mine?"text-[#FFE7BC]/70":"text-[#E7BD73]"}`}><Pin className="w-3 h-3"/>{pinnedLabel}</div>}
        {m.body&&<p className="whitespace-pre-wrap break-words text-[15px] leading-[1.4]">{renderBody(m.body)}</p>}
@@ -740,10 +744,7 @@ export default function CommunityV2(){
         {m.media_type==="audio"&&m.url&&<AudioBubble url={m.url} mine={m.mine} avatar={s?.avatar||(m.mine?me?.avatar:undefined)} name={s?.name||(m.mine?me?.name:undefined)} time={time} errorLabel={t.audioError} downloadLabel={t.download} resolve={()=>signed(m.media_url)} onPlayed={()=>reportAudioPlayed(m)} status={m.mine?messageStatus(m):undefined} seekLabel={audioPositionLabel} playLabel={playAudioLabel} pauseLabel={pauseAudioLabel}/>} 
       {m.media_type==="document"&&m.url&&<a href={m.url} target="_blank" rel="noreferrer" className="underline">{t.document}</a>}
         {m.media_type!=="audio"&&<div className="mt-1.5 flex items-center justify-end gap-1 text-xs tabular-nums opacity-65">{(starredIds.has(m.id)||m.starred)&&<Star className="mr-1 h-3 w-3 fill-current text-primary"/>}<time>{time}</time>{m.mine&&messageStatusIcon(m)}</div>}
-      {(reactions[m.id]||[]).length>0&&<button data-message-gesture-ignore onClick={ev=>{ev.stopPropagation();openReactionDetails(m)}} aria-label={t.reactions} className={`mt-3 flex min-h-9 w-fit max-w-full items-center gap-1 self-end rounded-xl border border-[#E5BB70]/30 bg-black/20 px-3 py-1.5 text-[12px] text-[#F6D89B] ${m.mine?"ml-auto":"mr-auto"}`}>
-       {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
-       {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
-      </button>}
+
       <button onClick={()=>setMenu(m)} aria-label={t.options} className={`absolute top-1 ${m.mine?"-left-8":"-right-8"} w-7 h-7 rounded-full bg-zinc-900/90 border border-white/10 text-zinc-300 grid place-items-center`}><MoreHorizontal className="w-4 h-4"/></button>
       {canDeleteMessage&&m.media_type==="audio"&&m.starred&&<Star className="absolute -top-2 -right-2 w-3 h-3 text-[#E5BB70] fill-current"/>}
      </div>
