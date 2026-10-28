@@ -401,16 +401,18 @@ export default function CommunityV2(){
    const ids=Array.from(new Set((reactions[m.id]||[]).map(reaction=>reaction.user_id)));
    if(ids.length)loadSenders(ids);
   };
+ const rxSeq=useRef<Record<string,number>>({});
  const react=async(m:Msg,emoji:string)=>{
   if(!me)return;setMenu(null);setReactBar(null);setEmojiPicker(null);
   const mine=(reactions[m.id]||[]).find(r=>r.user_id===me.id);
   const remove=mine?.emoji===emoji;
    const previous=reactions[m.id]||[];
+   const seq=(rxSeq.current[m.id]||0)+1;rxSeq.current[m.id]=seq;
    setReactions(v=>{const list=(v[m.id]||[]).filter(r=>r.user_id!==me.id);return{...v,[m.id]:remove?list:[...list,{user_id:me.id,emoji}]}});
    const{error}=remove
     ?await db.from("community_reactions").delete().eq("message_id",m.id).eq("user_id",me.id)
     :await db.from("community_reactions").upsert({message_id:m.id,user_id:me.id,emoji},{onConflict:"message_id,user_id"});
-   if(error){setReactions(v=>({...v,[m.id]:previous}));toast(actionFailedLabel)}
+   if(error){if(rxSeq.current[m.id]===seq)setReactions(v=>({...v,[m.id]:previous}));toast(actionFailedLabel)}
  };
  const toggleStar=async(m:Msg)=>{
   setMenu(null);
