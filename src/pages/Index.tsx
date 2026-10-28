@@ -294,49 +294,41 @@ function HomeScreen({ t, language }: { t: (k: any) => string; language: string }
 
       <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#641431]/20 blur-[140px] pointer-events-none" />
 
-      <div className="relative z-10 px-5 pt-3 pb-5 max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto">
-        <div className="flex flex-col items-center text-center mb-5">
-          <div role="img" aria-label="Prayer & Fire" className="mb-3 flex h-[88px] w-[88px] items-center justify-center rounded-full border-2 border-[#DBB375] bg-[#681B3D] shadow-[0_8px_32px_rgba(104,27,61,0.35)]">
-            <Flame className="h-12 w-12 text-[#F0C57D]" strokeWidth={1.6} aria-hidden="true" />
+      <div className="relative z-10 mx-auto max-w-[430px] px-4 pb-7 pt-4 md:max-w-[680px] lg:max-w-[820px]">
+        <header className="relative mb-4 overflow-hidden rounded-[28px] border border-[#DBB375]/20 bg-gradient-to-br from-[#301124]/90 via-[#1A0D18]/95 to-[#09080B] px-5 py-5 text-center shadow-[0_14px_40px_rgba(0,0,0,0.28)]">
+          <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-[#681B3D]/45 blur-3xl" />
+          <div role="img" aria-label="Prayer & Fire" className="relative mx-auto mb-3 flex h-[66px] w-[66px] items-center justify-center rounded-full border border-[#DBB375]/75 bg-[#681B3D] shadow-[0_6px_26px_rgba(219,179,117,0.14)]">
+            <Flame className="h-9 w-9 text-[#F0C57D]" strokeWidth={1.6} aria-hidden="true" />
           </div>
-
-          <p className="uppercase tracking-[0.3em] text-white/80 text-xs font-semibold mb-2">PRAYER & FIRE</p>
-
-          <h1 className="text-[26px] leading-[1.05] font-extrabold tracking-tight max-w-[320px]">
-            {L.tagline}
-            <span className="block text-[#E8BD74]">{L.connects}</span>
+          <p className="relative mb-2 text-[10px] font-bold uppercase tracking-[0.26em] text-[#E8BD74]">PRAYER & FIRE</p>
+          <h1 className="relative mx-auto max-w-[330px] text-[27px] font-extrabold leading-[1.12] tracking-tight">
+            {L.tagline}<span className="block text-[#E8BD74]">{L.connects}</span>
           </h1>
+          <p className="relative mx-auto mt-3 max-w-sm text-[13px] leading-relaxed text-zinc-300">{t("home_hero_subtitle")}</p>
+        </header>
 
-          <p className="text-zinc-300 mt-2 text-[14px] leading-snug max-w-sm">{t("home_hero_subtitle")}</p>
-        </div>
-
-        <section className="relative w-full rounded-2xl border border-[#D9AD66]/20 bg-[#130D12]/95 backdrop-blur-xl p-5 overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.18)]">
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[#E8BD74] uppercase tracking-[0.2em] text-[10px] font-bold">{L.verse}</p>
-              <Quote className="w-4 h-4 text-[#E8BD74]" />
+        <div className="space-y-3">
+          <section className="rounded-[24px] border border-[#DBB375]/25 bg-gradient-to-br from-[#21111C] via-[#170E16] to-[#100C12] p-5 shadow-[0_10px_32px_rgba(0,0,0,0.22)]">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E8BD74]">{L.verse}</p>
+              <BookOpen className="h-4 w-4 text-[#E8BD74]" aria-hidden="true" />
             </div>
-
-            <p className="text-[16px] leading-relaxed font-light text-white">"{today.verse}"</p>
-            <p className="text-[#E8BD74] text-sm font-bold mt-2">— {today.ref}</p>
-
-            <div className="mt-3 pt-2.5 border-t border-[#D9AD66]/15">
-              <div className="flex items-center gap-2 mb-1">
-                <HandHeart className="w-3.5 h-3.5 text-[#E8BD74]" />
-                <p className="text-[#E8BD74] uppercase tracking-[0.2em] text-[10px] font-bold">{L.prayer}</p>
-              </div>
-              <p className="text-zinc-200 text-[14px] leading-snug">{today.prayer}</p>
-            </div>
-
-            <div className="mt-2.5 pt-2.5 border-t border-[#D9AD66]/15">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-3.5 h-3.5 text-[#E8BD74]" />
-                <p className="text-[#E8BD74] uppercase tracking-[0.2em] text-[10px] font-bold">{L.reflection}</p>
-              </div>
-              <p className="text-zinc-200 text-[14px] leading-snug">{today.reflection}</p>
-            </div>
+            <p className="text-[17px] font-medium leading-relaxed text-white">"{today.verse}"</p>
+            <p className="mt-3 text-sm font-bold text-[#E8BD74]">— {today.ref}</p>
+          </section>
+          <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
+            <section className="min-w-0 rounded-[22px] border border-[#DBB375]/20 bg-[#25101F]/90 p-4">
+              <HandHeart className="mb-3 h-5 w-5 text-[#E8BD74]" aria-hidden="true" />
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#E8BD74]">{L.prayer}</p>
+              <p className="break-words text-[13px] leading-relaxed text-zinc-100">{today.prayer}</p>
+            </section>
+            <section className="min-w-0 rounded-[22px] border border-[#DBB375]/20 bg-[#18121D]/95 p-4">
+              <Sparkles className="mb-3 h-5 w-5 text-[#E8BD74]" aria-hidden="true" />
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#E8BD74]">{L.reflection}</p>
+              <p className="break-words text-[13px] leading-relaxed text-zinc-100">{today.reflection}</p>
+            </section>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );
