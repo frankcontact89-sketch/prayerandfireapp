@@ -128,7 +128,8 @@ jobs:
             sips -z 1024 1024 "src/assets/prayer-fire-official-logo.png" --out "$ICON_OUT" >/dev/null
             echo "Using official Prayer & Fire logo for AppIcon"
           else
-            echo "::warning::Official artwork must be added at src/assets/prayer-fire-official-logo.png; temporary icon in use"
+            echo "::error::Official logo is missing: src/assets/prayer-fire-official-logo.png. Refusing to ship the wrong AppIcon."
+            exit 1
           cat > "$RUNNER_TEMP/CreateIcon.swift" <<'SWIFT'
           import AppKit
           let size = 1024
