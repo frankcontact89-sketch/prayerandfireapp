@@ -35,6 +35,19 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Select a unique TestFlight build number
+        run: |
+          set -euo pipefail
+          # Builds 46 and 47 were used during earlier attempts. Avoid reusing
+          # the same CFBundleVersion across retries or later workflow runs.
+          BUILD_NUMBER=$((47 + GITHUB_RUN_NUMBER - 43))
+          if [ "$BUILD_NUMBER" -le 47 ]; then
+            echo "Refusing a non-incremental TestFlight build number: $BUILD_NUMBER"
+            exit 1
+          fi
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
+          echo "Preparing Prayer & Fire ${APP_VERSION} (${BUILD_NUMBER})"
+
       - name: Verify App Store Connect credentials
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
