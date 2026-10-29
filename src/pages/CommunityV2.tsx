@@ -114,6 +114,7 @@ export default function CommunityV2(){
  const press=useRef<number|null>(null);
  const swipe=useRef<{id:string;x:number;y:number;pointerId:number;locked:boolean;offset:number}|null>(null);
  const suppressSwipeClick=useRef<string|null>(null);
+ const visibleMessageIds=useRef<string[]>([]);
  const[swipeVisual,setSwipeVisual]=useState<{id:string;offset:number}|null>(null);
  const msgRefs=useRef<Record<string,HTMLDivElement|null>>({});
  const typingChannel=useRef<any>(null),lastTypingSent=useRef(0);
@@ -282,9 +283,11 @@ export default function CommunityV2(){
   return()=>{supabase.removeChannel(c)};
  },[me?.id,loadAccess,loadGroups]);
 
+ useEffect(()=>{visibleMessageIds.current=msgs.map(m=>m.id)},[msgs]);
+
  useEffect(()=>{if(!selected||!me)return;loadMsgs(selected.id,me.id);
   const c=supabase.channel(`chat:${selected.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_messages",filter:`group_id=eq.${selected.id}`},()=>loadMsgs(selected.id,me.id)).subscribe();
-  const rc=supabase.channel(`rx:${selected.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_reactions"},()=>{setMsgs(cur=>{loadReactions(cur.map(x=>x.id));return cur})}).subscribe();
+  const rc=supabase.channel(`rx:${selected.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_reactions"},()=>{const ids=visibleMessageIds.current;if(ids.length)void loadReactions(ids)}).subscribe();
   return()=>{supabase.removeChannel(c);supabase.removeChannel(rc)};
  },[selected?.id,me?.id,loadMsgs,loadReactions]);
 
