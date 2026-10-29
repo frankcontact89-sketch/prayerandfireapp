@@ -20,6 +20,14 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+      - name: Check for new main-branch commits
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          BEHIND=$(git rev-list --count HEAD..origin/main)
+          if [ "$BEHIND" -gt 0 ]; then
+            echo "::warning::Beta branch is $BEHIND commits behind main. Review integration before TestFlight release."
+          fi
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
