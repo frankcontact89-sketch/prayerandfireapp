@@ -2,9 +2,8 @@ import React,{useEffect,useRef,useState}from"react";
 import{X,RotateCcw}from"lucide-react";
 
 type Point={x:number;y:number};
-type TouchPoint={clientX:number;clientY:number};
-const dist=(a:TouchPoint,b:TouchPoint)=>Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
-const midpoint=(a:TouchPoint,b:TouchPoint):Point=>({x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2});
+const dist=(a:{clientX:number;clientY:number},b:{clientX:number;clientY:number})=>Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+const midpoint=(a:{clientX:number;clientY:number},b:{clientX:number;clientY:number}):Point=>({x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2});
 
 export default function ImageViewer({url,title,onClose}:{url:string;title?:string;onClose:()=>void}){
  const[scale,setScale]=useState(1);
