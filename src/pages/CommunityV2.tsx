@@ -254,6 +254,7 @@ export default function CommunityV2(){
   if(ids.length)await loadReactions(ids);else setReactions({});
   if(ids.length){
    const{data:st}=await db.from("community_message_stars").select("message_id").in("message_id",ids);
+   if(request!==messageLoadSeq.current)return;
    setStarredIds(new Set((st||[]).map((r:any)=>r.message_id)));
   }else setStarredIds(new Set());
   const myId=uid||me?.id;
