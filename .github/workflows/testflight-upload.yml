@@ -134,6 +134,12 @@ jobs:
             echo "::error::Official Prayer & Fire logo asset is missing. Refusing to use generic placeholder."
             exit 1
           fi
+          ICON_WIDTH=$(sips -g pixelWidth "$ICON_SRC" | awk '/pixelWidth/{print $2}')
+          ICON_HEIGHT=$(sips -g pixelHeight "$ICON_SRC" | awk '/pixelHeight/{print $2}')
+          if [ "$ICON_WIDTH" -lt 1024 ] || [ "$ICON_HEIGHT" -lt 1024 ] || [ "$ICON_WIDTH" != "$ICON_HEIGHT" ]; then
+            echo "::error::Official iOS icon must be square and at least 1024x1024; got ${ICON_WIDTH}x${ICON_HEIGHT}"
+            exit 1
+          fi
           sips -s format png "$ICON_SRC" --out "$RUNNER_TEMP/pf-official.png" >/dev/null
           sips -z 1024 1024 "$RUNNER_TEMP/pf-official.png" --out "$ICON_OUT" >/dev/null
           test "$(sips -g pixelWidth "$ICON_OUT" | awk '/pixelWidth/{print $2}')" = "1024"
