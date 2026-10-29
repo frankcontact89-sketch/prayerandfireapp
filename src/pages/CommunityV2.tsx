@@ -119,8 +119,11 @@ export default function CommunityV2(){
   const bounds=element.getBoundingClientRect();
   // Keep the toolbar and action list on opposite sides of the selected bubble.
   // Otherwise short messages near a screen edge can make both menus overlap.
-  const toolbarBelow=bounds.top<110;
-  const actionsAbove=!toolbarBelow&&window.innerHeight-bounds.bottom<205;
+  const viewport=window.visualViewport;
+  const visibleTop=viewport?.offsetTop??0;
+  const visibleBottom=visibleTop+(viewport?.height??window.innerHeight);
+  const toolbarBelow=bounds.top-visibleTop<110;
+  const actionsAbove=!toolbarBelow&&visibleBottom-bounds.bottom<205;
   setReactionPlacement({toolbarBelow,actionsAbove});
  };
  const visibleMessageIds=useRef<string[]>([]);
