@@ -191,6 +191,15 @@ jobs:
           sips -z 1024 1024 "$RUNNER_TEMP/pf-official.png" --out "$ICON_OUT" >/dev/null
           test "$(sips -g pixelWidth "$ICON_OUT" | awk '/pixelWidth/{print $2}')" = "1024"
           test "$(sips -g pixelHeight "$ICON_OUT" | awk '/pixelHeight/{print $2}')" = "1024"
+          # Fail before signing if the asset catalog references a different icon file.
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          catalog = Path("ios/App/App/Assets.xcassets/AppIcon.appiconset")
+          entries = json.loads((catalog / "Contents.json").read_text())["images"]
+          assert any(e.get("filename") == "AppIcon-512@2x.png" for e in entries), "AppIcon catalog does not reference generated icon"
+          assert (catalog / "AppIcon-512@2x.png").stat().st_size > 0, "Generated AppIcon is empty"
+          PY
           echo "Official Prayer & Fire artwork installed as AppIcon"
 
       - name: Smoke-test packaged app in iOS Simulator
