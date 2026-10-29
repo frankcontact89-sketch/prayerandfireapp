@@ -48,6 +48,8 @@ jobs:
           echo "MAIN_HEAD=$(git rev-parse origin/main)"
           echo "BRANCH_BEHIND=$(git rev-list --count HEAD..origin/main)"
           echo "BRANCH_AHEAD=$(git rev-list --count origin/main..HEAD)"
+          echo "=== Merge conflict paths ==="
+          git merge-tree origin/main HEAD 2>/dev/null | grep -E "^(changed in both|added in both|removed in|CONFLICT)" | head -n 60 || true
           git diff --name-status origin/main...HEAD | head -n 80 || true
 
       - name: Block stale or conflicted beta release
