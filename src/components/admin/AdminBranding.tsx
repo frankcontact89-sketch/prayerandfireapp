@@ -50,15 +50,14 @@ export function AdminBranding() {
       const path = `logos/${crypto.randomUUID()}.${ext}`;
       const { error: uploadError } = await supabase.storage.from("pf-branding").upload(path, file, { contentType: file.type, upsert: false });
       if (uploadError) throw uploadError;
-      const { error: writeError } = await (supabase as any).from("app_branding").upsert({ id: "global", logo_path: path, updated_at: new Date().toISOString() }, { onConflict: "id" });
+      const { error: writeError } = await supabase.from("app_branding").upsert({ id: "global", logo_path: path, updated_at: new Date().toISOString() }, { onConflict: "id" });
       if (writeError) {
         // Do not leave an unused upload behind when the database update fails.
         const { error: cleanupError } = await supabase.storage.from("pf-branding").remove([path]);
         if (cleanupError) console.warn("Could not clean up unused branding upload:", cleanupError.message);
         throw writeError;
       }
-      // app_branding is introduced by a new migration and is not yet in generated DB types.
-      const { data: verified, error: verifyError } = await (supabase as any)
+      const { data: verified, error: verifyError } = await supabase
         .from("app_branding").select("logo_path").eq("id", "global").single();
       if (verifyError || verified?.logo_path !== path) {
         throw new Error("Logo uploaded, but the saved setting could not be verified. Please refresh and check the current logo.");
