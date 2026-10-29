@@ -88,7 +88,9 @@ jobs:
           # This workflow has already attempted builds 46 and 47. A fixed
           # offset avoids rejecting fresh runs when the workflow run counter
           # is below 44 (the old calculation could produce build <= 47).
-          BUILD_NUMBER=$((1000 + GITHUB_RUN_NUMBER))
+          # A rerun keeps GITHUB_RUN_NUMBER but increments GITHUB_RUN_ATTEMPT.
+          # Give each upload attempt a distinct CFBundleVersion to avoid Apple duplicate-build rejection.
+          BUILD_NUMBER=$((100000 + GITHUB_RUN_NUMBER * 100 + GITHUB_RUN_ATTEMPT))
           if [ "$BUILD_NUMBER" -le 47 ]; then
             echo "Refusing a non-incremental TestFlight build number: $BUILD_NUMBER"
             exit 1
