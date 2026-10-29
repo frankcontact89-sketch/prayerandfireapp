@@ -163,7 +163,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   };
 
   const pct = dur > 0 ? Math.min(100, (cur / dur) * 100) : 0;
-  const bars = 18;
+  const bars = 28;
 
   const seekAt = (element: HTMLDivElement, clientX: number) => {
     const audio = ref.current;
@@ -200,7 +200,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
 
       <div className="min-w-0 overflow-hidden">
         {failed ? (
-          <div className={`text-xs ${mine ? "text-black/70" : "text-zinc-400"}`}>
+          <div className={`text-xs ${mine ? "text-foreground/75" : "text-zinc-400"}`}>
             {errorLabel}
             {" · "}
             <a href={url} target="_blank" rel="noreferrer" className="underline">
@@ -270,7 +270,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); cycleRate(); }}
               aria-label={`Playback speed ${rate}x`}
-              className={`h-7 min-w-10 rounded-full px-2 text-[11px] font-black ${mine ? "bg-black/15 text-foreground" : "bg-muted text-foreground"}`}
+              className={`min-h-11 min-w-11 rounded-full px-2 text-[11px] font-black ${mine ? "bg-black/15 text-foreground" : "bg-muted text-foreground"}`}
             >
               {rate}x
             </button>
