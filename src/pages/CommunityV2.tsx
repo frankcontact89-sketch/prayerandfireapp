@@ -427,6 +427,8 @@ export default function CommunityV2(){
   };
  const react=async(m:Msg,emoji:string)=>{
   if(!me)return;setMenu(null);setReactBar(null);setEmojiPicker(null);
+  // An older reaction fetch must not replace the reaction just applied to this message.
+  reactionRequestSeq.current += 1;
   const previous=reactions[m.id]||[];
   const mine=previous.find(r=>r.user_id===me.id);
   const remove=mine?.emoji===emoji;
