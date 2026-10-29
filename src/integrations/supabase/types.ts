@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_branding: {
+        Row: {
+          id: string
+          logo_path: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          logo_path?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          logo_path?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_content: {
         Row: {
           created_at: string | null
