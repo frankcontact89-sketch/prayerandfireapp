@@ -77,6 +77,10 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
     setDur(0);
     playedReported.current = false;
     setRate(1);
+    if (objUrl.current) {
+      URL.revokeObjectURL(objUrl.current);
+      objUrl.current = null;
+    }
   }, [url]);
 
   // WebKit refuses files whose URL extension contradicts the container, so for
