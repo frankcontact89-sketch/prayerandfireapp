@@ -168,7 +168,8 @@ jobs:
           set -euo pipefail
           # Resolve the current package.json/lockfile drift in the isolated CI workspace.
           # npm ci then installs exactly the resolved dependency tree.
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org/
+          mkdir -p "$RUNNER_TEMP/testflight-diagnostics"
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org/ 2>&1 | tee "$RUNNER_TEMP/testflight-diagnostics/npm-lock-resolution.log"
           # Some committed lock entries point to Lovable's private npm proxy.
           # Normalize those tarball URLs to the public npm registry before npm ci.
           node - <<'NODE'
@@ -192,7 +193,7 @@ jobs:
             echo "::error::Private Lovable npm tarball URLs remain in package-lock.json"
             exit 1
           fi
-          npm ci --no-audit --no-fund --registry=https://registry.npmjs.org/
+          npm ci --no-audit --no-fund --registry=https://registry.npmjs.org/ 2>&1 | tee "$RUNNER_TEMP/testflight-diagnostics/npm-ci.log"
           # Ensure the resolved lockfile now matches the declared direct dependencies.
           node - <<'NODE'
           const fs = require('node:fs');
