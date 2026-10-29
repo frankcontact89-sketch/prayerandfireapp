@@ -162,10 +162,10 @@ export default function VoiceRecorder({ t, onSend, onClose }: Props) {
 
   return (
     <div className="flex items-center gap-3 w-full">
-      <button onClick={cancel} aria-label={t.cancel} className="w-11 h-11 rounded-full bg-zinc-900 text-red-400 grid place-items-center shrink-0">
+      <button onClick={cancel} aria-label={t.cancel} className="w-12 h-12 rounded-full bg-zinc-900 text-red-400 grid place-items-center shrink-0">
         <Trash2 className="w-5 h-5" />
       </button>
-      <div className="flex-1 min-w-0 h-11 rounded-full bg-zinc-900 border border-red-500/40 px-3 flex items-center gap-2">
+      <div className="flex-1 min-w-0 min-h-12 rounded-full bg-zinc-900 border border-red-500/40 px-3 flex items-center gap-2">
         <span className={`w-2.5 h-2.5 rounded-full bg-red-500 shrink-0 ${paused ? "" : "animate-pulse"}`} />
         <Mic className="w-4 h-4 text-red-400 shrink-0" />
         <span className="text-sm tabular-nums text-red-300 shrink-0">{fmt(secs)}</span>
@@ -174,7 +174,7 @@ export default function VoiceRecorder({ t, onSend, onClose }: Props) {
             <span key={i} style={{ height: paused ? 4 : h }} className="w-[3px] rounded-full bg-orange-500/80" />
           ))}
         </div>
-        <button onClick={togglePause} aria-label={paused ? t.resume : t.pause} className="w-8 h-8 rounded-full bg-black/40 text-orange-400 grid place-items-center shrink-0">
+        <button onClick={togglePause} aria-label={paused ? t.resume : t.pause} className="w-11 h-11 rounded-full bg-black/40 text-orange-400 grid place-items-center shrink-0">
           {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
         </button>
       </div>
@@ -182,7 +182,7 @@ export default function VoiceRecorder({ t, onSend, onClose }: Props) {
         onClick={stopAndSend}
         disabled={busy}
         aria-label={t.send}
-        className="w-11 h-11 rounded-full bg-orange-500 text-black grid place-items-center shrink-0 disabled:opacity-60"
+        className="w-12 h-12 rounded-full bg-orange-500 text-black grid place-items-center shrink-0 disabled:opacity-60"
       >
         <Send className="w-5 h-5" />
       </button>
