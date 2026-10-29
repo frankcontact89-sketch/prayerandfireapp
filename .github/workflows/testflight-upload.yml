@@ -167,6 +167,21 @@ jobs:
           # npm ci then installs exactly the resolved dependency tree.
           npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           npm ci --no-audit --no-fund
+          # Ensure the resolved lockfile now matches the declared direct dependencies.
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+          const root = lock.packages?.[''] ?? {};
+          for (const section of ['dependencies', 'devDependencies']) {
+            for (const [name, spec] of Object.entries(pkg[section] ?? {})) {
+              if (root[section]?.[name] !== spec) {
+                throw new Error(`Lockfile mismatch for ${name}: package.json=${spec}, lock=${root[section]?.[name] ?? 'missing'}`);
+              }
+            }
+          }
+          console.log('All declared dependencies match the resolved lockfile.');
+          NODE
           # Verify that Capacitor plugins are installed and compatible before the web/iOS build.
           npm ls @capacitor/core @capacitor/ios @capacitor/camera @capacitor/push-notifications @capacitor/share --depth=0
           npm run build
