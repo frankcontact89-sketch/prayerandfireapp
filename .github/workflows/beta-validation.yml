@@ -26,7 +26,13 @@ jobs:
           git fetch --no-tags origin main
           BEHIND=$(git rev-list --count HEAD..origin/main)
           if [ "$BEHIND" -gt 0 ]; then
-            echo "::warning::Beta branch is $BEHIND commits behind main. Review integration before TestFlight release."
+            echo "::warning::Beta branch is $BEHIND commits behind main. Checking for merge conflicts."
+            if ! git merge-tree --write-tree origin/main HEAD > "$RUNNER_TEMP/merge-tree-result.txt" 2>&1; then
+              echo "::error::Beta branch has merge conflicts with main; resolve these before publishing."
+              cat "$RUNNER_TEMP/merge-tree-result.txt"
+              exit 1
+            fi
+            echo "Branch can merge cleanly with main (integration still required)."
           fi
       - name: Set up Node
         uses: actions/setup-node@v4
