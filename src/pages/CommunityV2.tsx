@@ -488,7 +488,7 @@ export default function CommunityV2(){
    if(swipe.current?.id!==m.id)return;
    setMenu(null);setEmojiPicker(null);setReactBar(m);
    try{navigator.vibrate?.(8)}catch{/* optional haptic */}
-  },420);
+  },520);
  };
  const moveMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
   const active=swipe.current;
@@ -712,7 +712,7 @@ export default function CommunityV2(){
     const dayLabel=dayOf(m.created_at)===today?todayLabel:dayOf(m.created_at)===yest?yesterdayLabel:diffDays>=0&&diffDays<7?msgDate.toLocaleDateString(locale,{weekday:"long"}):msgDate.toLocaleDateString(locale,{weekday:"short",day:"numeric",month:"short",...(sameYear?{}:{year:"numeric"})});
     return <React.Fragment key={m.id}>
     {showDay&&<div className="flex justify-center py-2.5"><span className="rounded-full border border-white/10 bg-zinc-950 px-3 py-1 text-xs font-medium text-zinc-300">{dayLabel}</span></div>}
-    <div ref={el=>{msgRefs.current[m.id]=el}} className={`relative flex mb-4 ${m.mine?"justify-end":"justify-start"} ${reactBar?.id===m.id?"z-40":""} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-[#E5BB70]/70":""}`}>
+    <div ref={el=>{msgRefs.current[m.id]=el}} className={`relative flex mb-1.5 ${m.mine?"justify-end":"justify-start"} ${reactBar?.id===m.id?"z-40 scale-[1.015] drop-shadow-[0_12px_22px_rgba(0,0,0,0.35)]":""} ${highlightMsg===m.id?"rounded-2xl ring-2 ring-[#E5BB70]/70":""}`}>
       {swipeVisual?.id===m.id&&<div aria-hidden="true" className={`absolute top-1/2 flex h-9 items-center gap-1.5 rounded-full border border-white/10 bg-zinc-950 px-2.5 text-[#E5BB70] shadow-sm ${swipeVisual.offset<0?"right-1":"left-1"}`} style={{opacity:Math.min(1,Math.abs(swipeVisual.offset)/24),transform:`translateY(-50%) scale(${Math.min(1,0.86+Math.abs(swipeVisual.offset)/160)})`}}>{swipeVisual.offset<0?<Info className="h-4 w-4"/>:<CornerUpLeft className="h-4 w-4"/>}<span className="text-xs font-semibold">{swipeVisual.offset<0?t.info:t.reply}</span></div>}
      {!m.mine&&m.media_type!=="audio"&&<div className="mr-2 mt-1 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[#5C061F] text-xs font-semibold text-[#EAC77D]" aria-label={s?.name||t.member}>
       {s?.avatar?<img src={s.avatar} alt="" className="h-full w-full object-cover" loading="lazy"/>:(s?.name||t.member).trim().charAt(0).toUpperCase()}
