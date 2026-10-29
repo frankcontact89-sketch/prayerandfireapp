@@ -478,6 +478,7 @@ export default function CommunityV2(){
 
  const beginMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
   const target=event.target as HTMLElement;
+  if(event.pointerType === "mouse" && event.button !== 0)return;
   if(target.closest("[data-message-gesture-ignore],a,video,input")||target.closest("button:not([data-message-swipe-control])"))return;
   if(press.current){window.clearTimeout(press.current);press.current=null}
   swipe.current={id:m.id,x:event.clientX,y:event.clientY,pointerId:event.pointerId,locked:false,offset:0};
@@ -487,7 +488,7 @@ export default function CommunityV2(){
    if(swipe.current?.id!==m.id)return;
    setMenu(null);setEmojiPicker(null);setReactBar(m);
    try{navigator.vibrate?.(8)}catch{/* optional haptic */}
-  },260);
+  },420);
  };
  const moveMessageGesture=(event:React.PointerEvent<HTMLDivElement>,m:Msg)=>{
   const active=swipe.current;
@@ -727,8 +728,8 @@ export default function CommunityV2(){
       className={`group relative ${!m.mine&&m.media_type!=="audio"?"max-w-[calc(86%-2.5rem)]":"max-w-[86%]"} select-none px-3 py-2.5 shadow-sm ${m.mine?"rounded-2xl rounded-tr-md bg-[#5C061F] text-[#FFF4DE]":"rounded-2xl rounded-tl-md border border-[#D2AA67]/20 bg-[#211820] text-[#F8F4EE]"}`}
      >
       {reactBar?.id===m.id&&<div className={`absolute -top-14 z-40 ${m.mine?"right-0":"left-0"} flex items-center gap-1 rounded-full bg-zinc-950 border border-[#E5BB70]/40 shadow-xl shadow-black/60 px-2 py-1.5`}>
-       {EMOJIS.map(e=><button key={e} data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();react(m,e)}} className={`w-9 h-9 shrink-0 rounded-full text-xl grid place-items-center ${(reactions[m.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-[#5C061F]/25":""}`}>{e}</button>)}
-       <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);setEmojiPicker(m)}} aria-label={emojiTitle} className="w-9 h-9 rounded-full bg-zinc-900 border border-white/10 grid place-items-center text-[#E5BB70]"><Plus className="w-4 h-4"/></button>
+       {EMOJIS.map(e=><button key={e} data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();react(m,e)}} className={`w-11 h-11 shrink-0 rounded-full text-xl grid place-items-center active:scale-95 transition-transform ${(reactions[m.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-[#5C061F]/25":""}`}>{e}</button>)}
+       <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);setEmojiPicker(m)}} aria-label={emojiTitle} className="w-11 h-11 rounded-full bg-zinc-900 border border-white/10 grid place-items-center text-[#E5BB70] active:scale-95 transition-transform"><Plus className="w-4 h-4"/></button>
       </div>}
       {<div className={`text-[11px] font-bold mb-1 ${m.mine?"text-[#F4D7A1]":"text-[#E7BD73]"}`}>{m.mine?(me?.name||t.you):(s?.name||t.member)}</div>}
       {(reactions[m.id]||[]).length>0&&<div className="mb-2 flex justify-end">{(reactions[m.id]||[]).length>0&&<button data-message-gesture-ignore onClick={ev=>{ev.stopPropagation();openReactionDetails(m)}} aria-label={t.reactions} className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-full border border-[#E5BB70]/35 bg-black/30 px-2 py-1 text-[12px] text-[#F6D89B]">
