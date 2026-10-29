@@ -26,6 +26,24 @@ export function AdminBranding() {
     setBusy(true);
     setMessage("");
     try {
+      // Reject corrupt images and non-square artwork before storing the official logo.
+      const dimensions = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+        const image = new Image();
+        const objectUrl = URL.createObjectURL(file);
+        image.onload = () => {
+          const result = { width: image.naturalWidth, height: image.naturalHeight };
+          URL.revokeObjectURL(objectUrl);
+          resolve(result);
+        };
+        image.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error("This image cannot be opened. Choose a valid PNG, JPG or WebP."));
+        };
+        image.src = objectUrl;
+      });
+      if (dimensions.width !== dimensions.height || dimensions.width < 512) {
+        throw new Error("The official logo must be square and at least 512 × 512 pixels.");
+      }
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) throw new Error("Sign in as administrator.");
       const ext = file.type === "image/png" ? "png" : file.type === "image/jpeg" ? "jpg" : "webp";
