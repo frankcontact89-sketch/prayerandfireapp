@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Check for new main-branch commits
         run: |
           set -euo pipefail
