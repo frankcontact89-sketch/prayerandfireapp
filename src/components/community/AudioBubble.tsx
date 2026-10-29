@@ -87,7 +87,8 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
     (async () => {
       try {
         const o = await blobUrlWithRealMime(url);
-        if (!alive || !o) return;
+        if (!alive) { if (o) URL.revokeObjectURL(o); return; }
+        if (!o) return;
         if (objUrl.current) URL.revokeObjectURL(objUrl.current);
         objUrl.current = o;
         stage.current = 2;
