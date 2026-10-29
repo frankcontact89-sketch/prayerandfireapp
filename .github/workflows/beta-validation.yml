@@ -30,6 +30,13 @@ jobs:
         run: npm install --no-save --package-lock=false
       - name: Compile production web bundle
         run: npm run build
+      - name: Verify official logo is bundled for the home screen
+        run: |
+          set -euo pipefail
+          test -s dist/prayer-fire-official-logo.webp || {
+            echo "::error::Official Prayer & Fire logo missing from production web bundle"
+            exit 1
+          }
       - name: Check TypeScript app
         run: npx tsc --noEmit -p tsconfig.app.json
 
