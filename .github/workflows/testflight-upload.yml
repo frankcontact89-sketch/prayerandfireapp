@@ -211,10 +211,22 @@ jobs:
           NODE
           # Verify that Capacitor plugins are installed and compatible before the web/iOS build.
           npm ls @capacitor/core @capacitor/ios @capacitor/camera @capacitor/push-notifications @capacitor/share --depth=0
-          npm run build
-          npx tsc --noEmit -p tsconfig.app.json
+
+      - name: Build Vite web application
+        run: |
+          set -euo pipefail
+          npm run build 2>&1 | tee "$RUNNER_TEMP/testflight-diagnostics/vite-build.log"
           test -s dist/prayer-fire-official-logo.webp || { echo "::error::Official logo missing from built web assets"; exit 1; }
-          npx cap sync ios
+
+      - name: TypeScript application check
+        run: |
+          set -euo pipefail
+          npx tsc --noEmit -p tsconfig.app.json 2>&1 | tee "$RUNNER_TEMP/testflight-diagnostics/typescript.log"
+
+      - name: Sync Capacitor iOS assets and plugins
+        run: |
+          set -euo pipefail
+          npx cap sync ios 2>&1 | tee "$RUNNER_TEMP/testflight-diagnostics/capacitor-sync.log"
           test -s ios/App/App/public/index.html || { echo "::error::Capacitor did not copy web entry point to iOS"; exit 1; }
           test -d ios/App/App/public/assets || { echo "::error::Capacitor did not copy compiled web assets to iOS"; exit 1; }
 
