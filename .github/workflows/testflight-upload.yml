@@ -28,6 +28,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Block stale or conflicted beta release
+        if: github.ref_name != 'main'
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          BEHIND=$(git rev-list --count HEAD..origin/main)
+          if [ "$BEHIND" -gt 0 ]; then
+            echo "::error::This beta branch is $BEHIND commits behind main. Integrate main and rerun before submitting to Apple."
+            git merge-tree --write-tree origin/main HEAD > "$RUNNER_TEMP/merge-check.txt" 2>&1 || cat "$RUNNER_TEMP/merge-check.txt"
+            exit 1
+          fi
 
       - name: Setup Node
         uses: actions/setup-node@v4
