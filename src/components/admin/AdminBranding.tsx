@@ -33,7 +33,12 @@ export function AdminBranding() {
       const { error: uploadError } = await supabase.storage.from("pf-branding").upload(path, file, { contentType: file.type, upsert: false });
       if (uploadError) throw uploadError;
       const { error: writeError } = await (supabase as any).from("app_branding").upsert({ id: "global", logo_path: path, updated_at: new Date().toISOString() }, { onConflict: "id" });
-      if (writeError) throw writeError;
+      if (writeError) {
+        // Do not leave an unused upload behind when the database update fails.
+        const { error: cleanupError } = await supabase.storage.from("pf-branding").remove([path]);
+        if (cleanupError) console.warn("Could not clean up unused branding upload:", cleanupError.message);
+        throw writeError;
+      }
       window.dispatchEvent(new Event(brandLogoChanged));
       setFile(null);
       setMessage("Logo updated. The home screen will use it without another build.");
