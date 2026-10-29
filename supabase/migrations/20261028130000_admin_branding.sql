@@ -21,3 +21,8 @@ CREATE POLICY "Anyone can view branded images" ON storage.objects FOR SELECT TO 
 CREATE POLICY "Only admins upload branded images" ON storage.objects FOR INSERT TO authenticated
  WITH CHECK (bucket_id = 'pf-branding' AND EXISTS
   (SELECT 1 FROM public.user_roles WHERE user_id = (SELECT auth.uid()) AND role = 'admin'));
+
+-- Permit admins to remove abandoned uploads after a failed branding save.
+CREATE POLICY "Only admins delete branded images" ON storage.objects FOR DELETE TO authenticated
+ USING (bucket_id = 'pf-branding' AND EXISTS
+  (SELECT 1 FROM public.user_roles WHERE user_id = (SELECT auth.uid()) AND role = 'admin'));
