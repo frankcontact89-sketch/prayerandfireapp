@@ -55,6 +55,10 @@ jobs:
           sips -g pixelWidth -g pixelHeight "$ICON"
           WIDTH=$(sips -g pixelWidth "$ICON" | awk '/pixelWidth/{print $2}')
           HEIGHT=$(sips -g pixelHeight "$ICON" | awk '/pixelHeight/{print $2}')
+          if [ "$WIDTH" != "$HEIGHT" ]; then
+            echo "::error::Official icon must be square (got ${WIDTH}x${HEIGHT})"
+            exit 1
+          fi
           if [ "$WIDTH" -lt 1024 ] || [ "$HEIGHT" -lt 1024 ]; then
             echo "::error::Official icon source must be at least 1024x1024 pixels"
             exit 1
@@ -63,6 +67,15 @@ jobs:
         run: npm run build
       - name: Sync Capacitor native project
         run: npx cap sync ios
+      - name: Install official icon into iOS asset catalog
+        run: |
+          set -euo pipefail
+          ICON_SRC="public/prayer-fire-official-logo.webp"
+          ICON_OUT="ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
+          sips -s format png "$ICON_SRC" --out "$RUNNER_TEMP/pf-official.png" >/dev/null
+          sips -z 1024 1024 "$RUNNER_TEMP/pf-official.png" --out "$ICON_OUT" >/dev/null
+          test "$(sips -g pixelWidth "$ICON_OUT" | awk '/pixelWidth/{print $2}')" = "1024"
+          test "$(sips -g pixelHeight "$ICON_OUT" | awk '/pixelHeight/{print $2}')" = "1024"
       - name: Compile iOS simulator without signing
         run: |
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
