@@ -165,8 +165,26 @@ jobs:
           set -euo pipefail
           # Resolve the current package.json/lockfile drift in the isolated CI workspace.
           # npm ci then installs exactly the resolved dependency tree.
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-          npm ci --no-audit --no-fund
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org/
+          # Some committed lock entries point to Lovable's private npm proxy.
+          # Normalize those tarball URLs to the public npm registry before npm ci.
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const path = 'package-lock.json';
+          const lock = JSON.parse(fs.readFileSync(path, 'utf8'));
+          let fixed = 0;
+          for (const [name, entry] of Object.entries(lock.packages ?? {})) {
+            if (!entry?.resolved?.includes('lovable-core-prod/sandbox-npm-cache/')) continue;
+            const pkgName = name.replace(/^node_modules\//, '');
+            if (!pkgName || !entry.version) continue;
+            const tarName = pkgName.split('/').pop();
+            entry.resolved = `https://registry.npmjs.org/${pkgName}/-/${tarName}-${entry.version}.tgz`;
+            fixed++;
+          }
+          fs.writeFileSync(path, JSON.stringify(lock, null, 2) + '\n');
+          console.log(`Normalized ${fixed} Lovable-proxy npm tarball URLs`);
+          NODE
+          npm ci --no-audit --no-fund --registry=https://registry.npmjs.org/
           # Ensure the resolved lockfile now matches the declared direct dependencies.
           node - <<'NODE'
           const fs = require('node:fs');
