@@ -8,9 +8,11 @@ export function useBrandLogo() {
   const [logo, setLogo] = useState(FALLBACK_LOGO);
   useEffect(() => {
     let active = true;
+    let requestId = 0;
     const refresh = async () => {
+      const currentRequest = ++requestId;
       const { data, error } = await (supabase as any).from("app_branding").select("logo_path").eq("id", "global").maybeSingle();
-      if (!active) return;
+      if (!active || currentRequest !== requestId) return;
       if (error) { console.warn("Branding configuration not available:", error.message); return; }
       const path = data?.logo_path;
       const next = typeof path === "string" && /^logos\/[a-zA-Z0-9._-]+$/.test(path)
