@@ -21,6 +21,11 @@ on:
 permissions:
   contents: read
 
+# Avoid simultaneous signed uploads competing for the same iOS project and Apple session.
+concurrency:
+  group: prayer-fire-testflight-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-and-upload:
     runs-on: macos-latest
@@ -117,9 +122,6 @@ jobs:
           from pathlib import Path
 
           raw = os.environ['APP_STORE_CONNECT_API_KEY']
-          print(f"API key secret length: {len(raw)}")
-          print(f"Contains BEGIN marker: {'BEGIN PRIVATE KEY' in raw}")
-          print(f"Contains END marker: {'END PRIVATE KEY' in raw}")
 
           def normalize(s: str) -> str:
               s = s.replace('\r\n', '\n').replace('\r', '\n').strip()
