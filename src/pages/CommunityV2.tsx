@@ -310,7 +310,13 @@ export default function CommunityV2(){
  useEffect(()=>{if(!selected||!me)return;loadMsgs(selected.id,me.id);
   const c=supabase.channel(`chat:${selected.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_messages",filter:`group_id=eq.${selected.id}`},()=>loadMsgs(selected.id,me.id)).subscribe();
   const rc=supabase.channel(`rx:${selected.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_reactions"},()=>{const ids=visibleMessageIds.current;if(ids.length)void loadReactions(ids)}).subscribe();
-  return()=>{supabase.removeChannel(c);supabase.removeChannel(rc)};
+  return()=>{
+   // Invalidate pending fetches before another chat can render their results.
+   messageLoadSeq.current+=1;
+   reactionRequestSeq.current+=1;
+   visibleMessageIds.current=[];
+   supabase.removeChannel(c);supabase.removeChannel(rc);
+  };
  },[selected?.id,me?.id,loadMsgs,loadReactions]);
 
  // group members (for @mentions and member actions)
