@@ -407,14 +407,25 @@ export default function CommunityV2(){
   };
  const react=async(m:Msg,emoji:string)=>{
   if(!me)return;setMenu(null);setReactBar(null);setEmojiPicker(null);
-  const mine=(reactions[m.id]||[]).find(r=>r.user_id===me.id);
+  const previous=reactions[m.id]||[];
+  const mine=previous.find(r=>r.user_id===me.id);
   const remove=mine?.emoji===emoji;
-   const previous=reactions[m.id]||[];
    setReactions(v=>{const list=(v[m.id]||[]).filter(r=>r.user_id!==me.id);return{...v,[m.id]:remove?list:[...list,{user_id:me.id,emoji}]}});
    const{error}=remove
     ?await db.from("community_reactions").delete().eq("message_id",m.id).eq("user_id",me.id)
     :await db.from("community_reactions").upsert({message_id:m.id,user_id:me.id,emoji},{onConflict:"message_id,user_id"});
-   if(error){setReactions(v=>({...v,[m.id]:previous}));toast(actionFailedLabel)}
+   if(error){
+    // Do not overwrite a newer reaction if another tap happened while this request was pending.
+    setReactions(v=>{
+     const currentMine=(v[m.id]||[]).find(r=>r.user_id===me.id);
+     const expected=remove?undefined:emoji;
+     if(currentMine?.emoji!==expected)return v;
+     const others=(v[m.id]||[]).filter(r=>r.user_id!==me.id);
+     const oldMine=previous.find(r=>r.user_id===me.id);
+     return {...v,[m.id]:oldMine?[...others,oldMine]:others};
+    });
+    toast(actionFailedLabel);
+   }
  };
  const toggleStar=async(m:Msg)=>{
   setMenu(null);
