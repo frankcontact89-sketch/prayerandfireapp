@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { UploadCloud, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { brandLogoChanged, useBrandLogo } from "@/hooks/useBrandLogo";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 export function AdminBranding() {
   const currentLogo = useBrandLogo();
   const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -64,6 +65,7 @@ export function AdminBranding() {
       }
       window.dispatchEvent(new Event(brandLogoChanged));
       setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       setMessage("Logo saved and verified. The app will use it without another build.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not update logo.");
@@ -80,7 +82,7 @@ export function AdminBranding() {
         <img src={preview || currentLogo} alt="Current Prayer & Fire logo" className="h-28 w-28 rounded-2xl border border-[#E5BB70]/40 object-cover" />
         <label className="flex-1 cursor-pointer rounded-xl border border-dashed border-[#E5BB70]/45 p-4 text-sm text-[#E5BB70]">
           <UploadCloud className="mb-2 h-6 w-6" /> Choose photo
-          <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={event => setFile(event.target.files?.[0] || null)} />
+          <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={event => setFile(event.target.files?.[0] || null)} />
         </label>
       </div>
       {file && <p className="text-xs text-zinc-300">{file.name}</p>}
