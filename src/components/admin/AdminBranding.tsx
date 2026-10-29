@@ -39,9 +39,14 @@ export function AdminBranding() {
         if (cleanupError) console.warn("Could not clean up unused branding upload:", cleanupError.message);
         throw writeError;
       }
+      const { data: verified, error: verifyError } = await supabase
+        .from("app_branding").select("logo_path").eq("id", "global").single();
+      if (verifyError || verified?.logo_path !== path) {
+        throw new Error("Logo uploaded, but the saved setting could not be verified. Please refresh and check the current logo.");
+      }
       window.dispatchEvent(new Event(brandLogoChanged));
       setFile(null);
-      setMessage("Logo updated. The home screen will use it without another build.");
+      setMessage("Logo saved and verified. The app will use it without another build.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not update logo.");
     } finally {
