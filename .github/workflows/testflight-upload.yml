@@ -184,6 +184,11 @@ jobs:
           fs.writeFileSync(path, JSON.stringify(lock, null, 2) + '\n');
           console.log(`Normalized ${fixed} Lovable-proxy npm tarball URLs`);
           NODE
+          # Reject remaining private tarball URLs before the clean installation.
+          if grep -q 'lovable-core-prod/sandbox-npm-cache/' package-lock.json; then
+            echo "::error::Private Lovable npm tarball URLs remain in package-lock.json"
+            exit 1
+          fi
           npm ci --no-audit --no-fund --registry=https://registry.npmjs.org/
           # Ensure the resolved lockfile now matches the declared direct dependencies.
           node - <<'NODE'
