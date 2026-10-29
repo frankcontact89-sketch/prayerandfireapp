@@ -39,7 +39,8 @@ export function AdminBranding() {
         if (cleanupError) console.warn("Could not clean up unused branding upload:", cleanupError.message);
         throw writeError;
       }
-      const { data: verified, error: verifyError } = await supabase
+      // app_branding is introduced by a new migration and is not yet in generated DB types.
+      const { data: verified, error: verifyError } = await (supabase as any)
         .from("app_branding").select("logo_path").eq("id", "global").single();
       if (verifyError || verified?.logo_path !== path) {
         throw new Error("Logo uploaded, but the saved setting could not be verified. Please refresh and check the current logo.");
