@@ -114,6 +114,11 @@ export default function CommunityV2(){
  const press=useRef<number|null>(null);
  const swipe=useRef<{id:string;x:number;y:number;pointerId:number;locked:boolean;offset:number}|null>(null);
  const suppressSwipeClick=useRef<string|null>(null);
+ const[reactionPlacement,setReactionPlacement]=useState({toolbarBelow:false,actionsAbove:false});
+ const placeReactionMenu=(element:HTMLElement)=>{
+  const bounds=element.getBoundingClientRect();
+  setReactionPlacement({toolbarBelow:bounds.top<110,actionsAbove:window.innerHeight-bounds.bottom<205});
+ };
  const visibleMessageIds=useRef<string[]>([]);
  const[swipeVisual,setSwipeVisual]=useState<{id:string;offset:number}|null>(null);
  const msgRefs=useRef<Record<string,HTMLDivElement|null>>({});
@@ -501,10 +506,12 @@ export default function CommunityV2(){
   if(target.closest("[data-message-gesture-ignore],a,video,input")||target.closest("button:not([data-message-swipe-control])"))return;
   if(press.current){window.clearTimeout(press.current);press.current=null}
   swipe.current={id:m.id,x:event.clientX,y:event.clientY,pointerId:event.pointerId,locked:false,offset:0};
+  const messageElement=event.currentTarget;
   // Fast, deliberate long press: quick enough to feel native without firing on normal taps.
   press.current=window.setTimeout(()=>{
    press.current=null;
    if(swipe.current?.id!==m.id)return;
+   placeReactionMenu(messageElement);
    setMenu(null);setEmojiPicker(null);setReactBar(m);
    try{navigator.vibrate?.(8)}catch{/* optional haptic */}
   },520);
@@ -737,7 +744,7 @@ export default function CommunityV2(){
       {s?.avatar?<img src={s.avatar} alt="" className="h-full w-full object-cover" loading="lazy"/>:(s?.name||t.member).trim().charAt(0).toUpperCase()}
      </div>}
      <div
-      onContextMenu={e=>{e.preventDefault();setReactBar(m)}}
+      onContextMenu={e=>{e.preventDefault();placeReactionMenu(e.currentTarget);setReactBar(m)}}
         onClickCapture={event=>{if(suppressSwipeClick.current===m.id){event.preventDefault();event.stopPropagation();suppressSwipeClick.current=null}}}
        onPointerDown={event=>beginMessageGesture(event,m)}
        onPointerMove={event=>moveMessageGesture(event,m)}
@@ -746,11 +753,11 @@ export default function CommunityV2(){
        style={{WebkitTouchCallout:"none",WebkitUserSelect:reactBar?.id===m.id?"none":undefined,touchAction:"pan-y",backgroundColor:m.mine?(chatPrefs.bubble==="#ff6a00"?"#5C061F":chatPrefs.bubble):undefined,transform:swipeVisual?.id===m.id?`translateX(${swipeVisual.offset}px)`:"translateX(0)",transition:swipeVisual?.id===m.id?"none":"transform 180ms ease-out"}}
       className={`group relative ${!m.mine&&m.media_type!=="audio"?"max-w-[calc(86%-2.5rem)]":"max-w-[86%]"} select-none px-3 py-2.5 shadow-sm ${m.mine?"rounded-2xl rounded-tr-md bg-[#5C061F] text-[#FFF4DE]":"rounded-2xl rounded-tl-md border border-[#D2AA67]/20 bg-[#211820] text-[#F8F4EE]"}`}
      >
-      {reactBar?.id===m.id&&<div className={`absolute -top-14 z-40 ${m.mine?"right-0":"left-0"} flex max-w-[calc(100vw-24px)] items-center gap-0.5 overflow-x-auto overscroll-contain rounded-full bg-black border border-[#E5BB70]/40 shadow-xl shadow-black/60 px-1 py-1`}>
+      {reactBar?.id===m.id&&<div className={`absolute ${reactionPlacement.toolbarBelow?"top-full mt-2":"-top-14"} z-40 ${m.mine?"right-0":"left-0"} flex max-w-[calc(100vw-24px)] items-center gap-0.5 overflow-x-auto overscroll-contain rounded-full bg-black border border-[#E5BB70]/40 shadow-xl shadow-black/60 px-1 py-1`}>
        {EMOJIS.slice(0,4).map(e=><button key={e} aria-label={`React ${e}`} data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();react(m,e)}} className={`w-11 h-11 shrink-0 rounded-full text-xl grid place-items-center active:scale-95 transition-transform ${(reactions[m.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-[#5C061F]/25":""}`}>{e}</button>)}
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);setEmojiPicker(m)}} aria-label={emojiTitle} className="w-11 h-11 rounded-full bg-zinc-900 border border-white/10 grid place-items-center text-[#E5BB70] active:scale-95 transition-transform"><Plus className="w-4 h-4"/></button>
       </div>}
-      {reactBar?.id===m.id&&<div className={`absolute top-full mt-2 z-40 ${m.mine?"right-0":"left-0"} flex min-w-[210px] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-2xl border border-[#E5BB70]/25 bg-black text-[#F8F4EE] shadow-2xl shadow-black/60`}>
+      {reactBar?.id===m.id&&<div className={`absolute ${reactionPlacement.actionsAbove?"bottom-full mb-2":"top-full mt-2"} z-40 ${m.mine?"right-0":"left-0"} flex min-w-[210px] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-2xl border border-[#E5BB70]/25 bg-black text-[#F8F4EE] shadow-2xl shadow-black/60`}>
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReplyTo(m);setReactBar(null)}} className="flex min-h-11 items-center gap-3 px-4 text-left text-sm active:bg-white/10"><CornerUpLeft className="h-4 w-4 text-[#E5BB70]"/>{t.reply}</button>
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);forwardMsg(m)}} className="flex min-h-11 items-center gap-3 border-t border-white/10 px-4 text-left text-sm active:bg-white/10"><Send className="h-4 w-4 text-[#E5BB70]"/>{forwardLabel}</button>
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);setMenu(m)}} className="flex min-h-11 items-center gap-3 border-t border-white/10 px-4 text-left text-sm active:bg-white/10"><MoreHorizontal className="h-4 w-4 text-[#E5BB70]"/>{t.options}</button>
