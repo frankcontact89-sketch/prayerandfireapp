@@ -40,7 +40,10 @@ jobs:
           set -euo pipefail
           # Builds 46 and 47 were used during earlier attempts. Avoid reusing
           # the same CFBundleVersion across retries or later workflow runs.
-          BUILD_NUMBER=$((47 + GITHUB_RUN_NUMBER - 43))
+          # This workflow has already attempted builds 46 and 47. A fixed
+          # offset avoids rejecting fresh runs when the workflow run counter
+          # is below 44 (the old calculation could produce build <= 47).
+          BUILD_NUMBER=$((1000 + GITHUB_RUN_NUMBER))
           if [ "$BUILD_NUMBER" -le 47 ]; then
             echo "Refusing a non-incremental TestFlight build number: $BUILD_NUMBER"
             exit 1
@@ -118,6 +121,8 @@ jobs:
           set -euo pipefail
           npm install --no-audit --no-fund
           npm run build
+          npx tsc --noEmit -p tsconfig.app.json
+          test -s dist/prayer-fire-official-logo.webp || { echo "::error::Official logo missing from built web assets"; exit 1; }
           npx cap sync ios
 
       - name: Prepare official Prayer & Fire iOS icon
