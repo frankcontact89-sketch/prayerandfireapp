@@ -233,14 +233,18 @@ export default function CommunityV2(){
   setReactions(map);
   loadSenders(Array.from(new Set((rx||[]).map((r:any)=>r.user_id))));
  },[loadSenders]);
+ const messageLoadSeq=useRef(0);
  const loadMsgs=useCallback(async(id:string,uid?:string)=>{
+  const request=++messageLoadSeq.current;
   const{data}=await db.from("community_messages").select("id,sender_id,body,media_url,media_type,created_at,deleted_at,starred,reply_to,pinned_at").eq("group_id",id).order("created_at");
+  if(request!==messageLoadSeq.current)return;
   // Render message bubbles as soon as the database responds. Media URLs hydrate in the background.
   const rows=(data||[]).map((x:any)=>({...x,mine:x.sender_id===(uid||me?.id),url:undefined}));
   setMsgs(rows);
   const mediaRows=rows.filter((r:any)=>r.media_url&&!r.deleted_at);
   if(mediaRows.length){
    void Promise.all(mediaRows.map(async(r:any)=>({id:r.id,url:await signed(r.media_url)}))).then(resolved=>{
+    if(request!==messageLoadSeq.current)return;
     const byId=new Map(resolved.map((x:any)=>[x.id,x.url]));
     setMsgs(cur=>cur.map(x=>byId.has(x.id)?{...x,url:byId.get(x.id)}:x));
    });
