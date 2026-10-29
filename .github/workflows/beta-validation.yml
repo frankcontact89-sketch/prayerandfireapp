@@ -47,6 +47,18 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm install --no-audit --no-fund --package-lock=false
+      - name: Verify official iOS icon source
+        run: |
+          set -euo pipefail
+          ICON="public/prayer-fire-official-logo.webp"
+          test -s "$ICON" || { echo "::error::Missing official icon source: $ICON"; exit 1; }
+          sips -g pixelWidth -g pixelHeight "$ICON"
+          WIDTH=$(sips -g pixelWidth "$ICON" | awk '/pixelWidth/{print $2}')
+          HEIGHT=$(sips -g pixelHeight "$ICON" | awk '/pixelHeight/{print $2}')
+          if [ "$WIDTH" -lt 1024 ] || [ "$HEIGHT" -lt 1024 ]; then
+            echo "::error::Official icon source must be at least 1024x1024 pixels"
+            exit 1
+          fi
       - name: Build bundled web assets
         run: npm run build
       - name: Sync Capacitor native project
