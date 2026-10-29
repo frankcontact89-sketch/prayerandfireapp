@@ -11,7 +11,7 @@ export function useBrandLogo() {
     let requestId = 0;
     const refresh = async () => {
       const currentRequest = ++requestId;
-      const { data, error } = await (supabase as any).from("app_branding").select("logo_path").eq("id", "global").maybeSingle();
+      const { data, error } = await supabase.from("app_branding").select("logo_path").eq("id", "global").maybeSingle();
       if (!active || currentRequest !== requestId) return;
       if (error) { console.warn("Branding configuration not available:", error.message); return; }
       const path = data?.logo_path;
