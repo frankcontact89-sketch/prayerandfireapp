@@ -117,7 +117,11 @@ export default function CommunityV2(){
  const[reactionPlacement,setReactionPlacement]=useState({toolbarBelow:false,actionsAbove:false});
  const placeReactionMenu=(element:HTMLElement)=>{
   const bounds=element.getBoundingClientRect();
-  setReactionPlacement({toolbarBelow:bounds.top<110,actionsAbove:window.innerHeight-bounds.bottom<205});
+  // Keep the toolbar and action list on opposite sides of the selected bubble.
+  // Otherwise short messages near a screen edge can make both menus overlap.
+  const toolbarBelow=bounds.top<110;
+  const actionsAbove=!toolbarBelow&&window.innerHeight-bounds.bottom<205;
+  setReactionPlacement({toolbarBelow,actionsAbove});
  };
  const visibleMessageIds=useRef<string[]>([]);
  const[swipeVisual,setSwipeVisual]=useState<{id:string;offset:number}|null>(null);
