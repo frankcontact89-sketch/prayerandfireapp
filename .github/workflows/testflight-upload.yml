@@ -166,6 +166,8 @@ jobs:
           npx tsc --noEmit -p tsconfig.app.json
           test -s dist/prayer-fire-official-logo.webp || { echo "::error::Official logo missing from built web assets"; exit 1; }
           npx cap sync ios
+          test -s ios/App/App/public/index.html || { echo "::error::Capacitor did not copy web entry point to iOS"; exit 1; }
+          test -d ios/App/App/public/assets || { echo "::error::Capacitor did not copy compiled web assets to iOS"; exit 1; }
 
       - name: Prepare official Prayer & Fire iOS icon
         run: |
