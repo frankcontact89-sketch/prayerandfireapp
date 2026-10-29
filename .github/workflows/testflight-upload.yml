@@ -90,6 +90,10 @@ jobs:
           # A rerun keeps GITHUB_RUN_NUMBER but increments GITHUB_RUN_ATTEMPT.
           # Give each upload attempt a distinct CFBundleVersion to avoid Apple duplicate-build rejection.
           BUILD_NUMBER=$((100000 + GITHUB_RUN_NUMBER * 100 + GITHUB_RUN_ATTEMPT))
+          if [ "$GITHUB_RUN_ATTEMPT" -ge 100 ]; then
+            echo "::error::More than 99 attempts for this workflow run; use a fresh workflow run to keep build numbers unique."
+            exit 1
+          fi
           if [ "$BUILD_NUMBER" -le 47 ]; then
             echo "Refusing a non-incremental TestFlight build number: $BUILD_NUMBER"
             exit 1
