@@ -161,7 +161,10 @@ jobs:
       - name: Install dependencies and build web app
         run: |
           set -euo pipefail
-          npm install --no-audit --no-fund
+          # Resolve the current package.json/lockfile drift in the isolated CI workspace.
+          # npm ci then installs exactly the resolved dependency tree.
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --no-audit --no-fund
           # Verify that Capacitor plugins are installed and compatible before the web/iOS build.
           npm ls @capacitor/core @capacitor/ios @capacitor/camera @capacitor/push-notifications @capacitor/share --depth=0
           npm run build
