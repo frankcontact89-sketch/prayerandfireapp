@@ -9,10 +9,10 @@ GRANT SELECT ON public.app_branding TO anon, authenticated;
 GRANT INSERT, UPDATE ON public.app_branding TO authenticated;
 CREATE POLICY "Brand logo is readable" ON public.app_branding FOR SELECT TO anon, authenticated USING (true);
 CREATE POLICY "Admins insert brand logo" ON public.app_branding FOR INSERT TO authenticated
-  WITH CHECK (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = (SELECT auth.uid()) AND role = 'admin'));
+  WITH CHECK (EXISTS (SELECT 1 FROM public.admin_users WHERE lower(email) = lower((auth.jwt() ->> 'email')) AND active = true AND role IN ('owner', 'admin')));
 CREATE POLICY "Admins update brand logo" ON public.app_branding FOR UPDATE TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = (SELECT auth.uid()) AND role = 'admin'))
-  WITH CHECK (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = (SELECT auth.uid()) AND role = 'admin'));
+  USING (EXISTS (SELECT 1 FROM public.admin_users WHERE lower(email) = lower((auth.jwt() ->> 'email')) AND active = true AND role IN ('owner', 'admin')))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.admin_users WHERE lower(email) = lower((auth.jwt() ->> 'email')) AND active = true AND role IN ('owner', 'admin')));
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES ('pf-branding', 'pf-branding', true, 5242880, ARRAY['image/png','image/jpeg','image/webp'])
 ON CONFLICT (id) DO NOTHING;
@@ -20,9 +20,9 @@ CREATE POLICY "Anyone can view branded images" ON storage.objects FOR SELECT TO 
  USING (bucket_id = 'pf-branding');
 CREATE POLICY "Only admins upload branded images" ON storage.objects FOR INSERT TO authenticated
  WITH CHECK (bucket_id = 'pf-branding' AND EXISTS
-  (SELECT 1 FROM public.user_roles WHERE user_id = (SELECT auth.uid()) AND role = 'admin'));
+  (SELECT 1 FROM public.admin_users WHERE lower(email) = lower((auth.jwt() ->> 'email')) AND active = true AND role IN ('owner', 'admin')));
 
 -- Permit admins to remove abandoned uploads after a failed branding save.
 CREATE POLICY "Only admins delete branded images" ON storage.objects FOR DELETE TO authenticated
  USING (bucket_id = 'pf-branding' AND EXISTS
-  (SELECT 1 FROM public.user_roles WHERE user_id = (SELECT auth.uid()) AND role = 'admin'));
+  (SELECT 1 FROM public.admin_users WHERE lower(email) = lower((auth.jwt() ->> 'email')) AND active = true AND role IN ('owner', 'admin')));
