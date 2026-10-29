@@ -67,6 +67,10 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
 
   useEffect(() => {
     stage.current = 0;
+    wantPlay.current = false;
+    seeking.current = false;
+    ref.current?.pause();
+    setPlaying(false);
     setSrc(url);
     setFailed(false);
     setCur(0);
@@ -173,8 +177,8 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   };
 
   return (
-    <div className="relative grid w-full min-w-0 max-w-full grid-cols-[32px_32px_minmax(0,1fr)] items-center gap-1.5 overflow-hidden">
-      <div className={`h-9 w-9 overflow-hidden rounded-full shrink-0 grid place-items-center ring-1 ${mine ? "bg-foreground/10 text-foreground ring-foreground/10" : "bg-muted text-primary ring-border"}`}>
+    <div className="relative grid w-full min-w-0 max-w-full grid-cols-[40px_44px_minmax(0,1fr)] items-center gap-1.5 overflow-hidden">
+      <div className={`h-10 w-10 overflow-hidden rounded-full shrink-0 grid place-items-center ring-1 ${mine ? "bg-foreground/10 text-foreground ring-foreground/10" : "bg-muted text-primary ring-border"}`}>
         {avatar ? (
           <img src={avatar} alt={name || ""} className="w-full h-full object-cover" />
         ) : name ? (
@@ -189,9 +193,9 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
         onClick={toggle}
         data-message-swipe-control
         aria-label={playing ? pauseLabel : playLabel}
-        className={`h-9 w-9 rounded-full grid place-items-center shrink-0 transition-transform active:scale-95 ${mine ? "bg-foreground/15 text-foreground" : "bg-primary text-primary-foreground"}`}
+        className={`h-11 w-11 rounded-full grid place-items-center shrink-0 transition-transform active:scale-95 ${mine ? "bg-foreground/15 text-foreground" : "bg-primary text-primary-foreground"}`}
       >
-        {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+        {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
       </button>
 
       <div className="min-w-0 overflow-hidden">
@@ -212,7 +216,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
             aria-valuemin={0}
             aria-valuemax={Math.max(0, Math.floor(dur))}
             aria-valuenow={Math.max(0, Math.floor(cur))}
-            className="flex h-9 w-full min-w-0 touch-none cursor-pointer items-center justify-between gap-[2px] overflow-hidden py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+            className="flex h-11 w-full min-w-0 touch-none cursor-pointer items-center justify-between gap-[2px] overflow-hidden py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
             onPointerDown={(event) => {
               event.stopPropagation();
               seeking.current = true;
