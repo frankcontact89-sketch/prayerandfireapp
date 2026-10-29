@@ -209,10 +209,15 @@ export default function CommunityV2(){
   setSenders(prev=>{const next={...prev};(data||[]).forEach((p:any)=>{next[p.id]={name:p.username||"Member",avatar:p.avatar_url}});return next});
  },[]);
 
+ const reactionRequestSeq=useRef(0);
  const loadReactions=useCallback(async(ids:string[])=>{
-  if(!ids.length)return;
-  const{data:rx}=await db.from("community_reactions").select("message_id,user_id,emoji").in("message_id",ids);
-  const map:Record<string,Rx[]>={};(rx||[]).forEach((r:any)=>{(map[r.message_id]=map[r.message_id]||[]).push({user_id:r.user_id,emoji:r.emoji})});
+  const seq=++reactionRequestSeq.current;
+  if(!ids.length){setReactions({});return;}
+  const{data:rx,error}=await db.from("community_reactions").select("message_id,user_id,emoji").in("message_id",ids);
+  if(seq!==reactionRequestSeq.current||error)return;
+  const visible=new Set(ids);
+  const map:Record<string,Rx[]>={};
+  (rx||[]).forEach((r:any)=>{if(!visible.has(r.message_id))return;(map[r.message_id]=map[r.message_id]||[]).push({user_id:r.user_id,emoji:r.emoji})});
   setReactions(map);
   loadSenders(Array.from(new Set((rx||[]).map((r:any)=>r.user_id))));
  },[loadSenders]);
