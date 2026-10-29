@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
       - improve/community-ui-review-2026-10-27
     paths:
       # Build when app code, native iOS project, dependencies or release workflow changes.
