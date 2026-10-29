@@ -31,6 +31,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Diagnose branch merge and release asset
+        if: github.ref_name != 'main'
+        run: |
+          git fetch --no-tags origin main
+          echo "BETA_TREE=$(git rev-parse HEAD^{tree})"
+          echo "MAIN_TREE=$(git rev-parse origin/main^{tree})"
+          if git merge-tree --write-tree origin/main HEAD > "$RUNNER_TEMP/pf-merge-tree.txt" 2>&1; then
+            echo "MERGE_TREE=$(head -n 1 "$RUNNER_TEMP/pf-merge-tree.txt")"
+          else
+            echo "::warning::Branch merge has conflicts; see diagnostics below"
+            sed -n '1,90p' "$RUNNER_TEMP/pf-merge-tree.txt"
+          fi
+          file public/prayer-fire-official-logo.webp || true
+
       - name: Block stale or conflicted beta release
         if: github.ref_name != 'main'
         run: |
