@@ -262,20 +262,24 @@ export default function CommunityV2(){
    const fromOthers=rows.filter((r:any)=>r.sender_id!==myId&&!r.deleted_at).map((r:any)=>r.id);
    // Real device acknowledgement: these messages actually reached this device.
    if(fromOthers.length)await ackDelivered(fromOthers);
+   if(request!==messageLoadSeq.current)return;
    const unreadOthers=fromOthers.map((id:string)=>({message_id:id,user_id:myId}));
    if(unreadOthers.length)await db.from("community_message_reads").upsert(unreadOthers,{onConflict:"message_id,user_id",ignoreDuplicates:true});
+   if(request!==messageLoadSeq.current)return;
    const mineIds=rows.filter((r:any)=>r.sender_id===myId).map((r:any)=>r.id);
    if(mineIds.length){
     const{data:rd}=await db.from("community_message_reads").select("message_id,user_id").in("message_id",mineIds);
+    if(request!==messageLoadSeq.current)return;
     const counts:Record<string,number>={};(rd||[]).forEach((r:any)=>{if(r.user_id!==myId)counts[r.message_id]=(counts[r.message_id]||0)+1});
     setReadCounts(counts);
     const{data:dd}=await db.from("community_message_deliveries").select("message_id,user_id").in("message_id",mineIds);
+    if(request!==messageLoadSeq.current)return;
     const dc:Record<string,number>={};(dd||[]).forEach((r:any)=>{if(r.user_id!==myId)dc[r.message_id]=(dc[r.message_id]||0)+1});
     setDeliveredCounts(dc);
    }else{setReadCounts({});setDeliveredCounts({})}
   }
 
-  setTimeout(()=>end.current?.scrollIntoView({behavior:"smooth"}),30);
+  setTimeout(()=>{if(request===messageLoadSeq.current)end.current?.scrollIntoView({behavior:"smooth"})},30);
  },[me?.id,loadSenders,loadReactions]);
 
  useEffect(()=>{(async()=>{
