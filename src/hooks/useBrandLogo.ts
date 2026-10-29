@@ -22,8 +22,18 @@ export function useBrandLogo() {
     };
     void refresh();
     const listener = () => void refresh();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
     window.addEventListener(brandLogoChanged, listener);
-    return () => { active = false; window.removeEventListener(brandLogoChanged, listener); };
+    window.addEventListener("focus", listener);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      active = false;
+      window.removeEventListener(brandLogoChanged, listener);
+      window.removeEventListener("focus", listener);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, []);
   return logo;
 }
