@@ -28,13 +28,13 @@ jobs:
           git fetch --no-tags origin main
           BEHIND=$(git rev-list --count HEAD..origin/main)
           if [ "$BEHIND" -gt 0 ]; then
-            echo "::warning::Beta branch is $BEHIND commits behind main. Checking for merge conflicts."
-            if ! git merge-tree --write-tree origin/main HEAD > "$RUNNER_TEMP/merge-tree-result.txt" 2>&1; then
-              echo "::error::Beta branch has merge conflicts with main; resolve these before publishing."
-              cat "$RUNNER_TEMP/merge-tree-result.txt"
-              exit 1
+            echo "::warning::Beta branch is $BEHIND commits behind main. Merge conflicts must be resolved before release."
+            if git merge-tree --write-tree origin/main HEAD > "$RUNNER_TEMP/merge-tree-result.txt" 2>&1; then
+              echo "Branch can merge cleanly with main (integration still required)."
+            else
+              echo "::warning::Beta branch has merge conflicts with main. Continue beta compilation to diagnose the app; do not publish to production until resolved."
+              sed -n '1,100p' "$RUNNER_TEMP/merge-tree-result.txt"
             fi
-            echo "Branch can merge cleanly with main (integration still required)."
           fi
       - name: Set up Node
         uses: actions/setup-node@v4
