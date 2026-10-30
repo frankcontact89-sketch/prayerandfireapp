@@ -182,8 +182,8 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   };
 
   return (
-    <div className="relative grid w-full min-w-0 max-w-full grid-cols-[30px_36px_minmax(0,1fr)] items-center gap-1.5 overflow-hidden">
-      <div className={`h-[30px] w-[30px] overflow-hidden rounded-full shrink-0 grid place-items-center ring-1 ${"bg-white/65 text-slate-700 ring-slate-400/40"}`}>
+    <div className="relative grid w-full min-w-0 max-w-full grid-cols-[26px_34px_minmax(0,1fr)] items-center gap-1 overflow-hidden">
+      <div className={`h-[26px] w-[26px] overflow-hidden rounded-full shrink-0 grid place-items-center ring-1 ${"bg-white/65 text-slate-700 ring-slate-400/40"}`}>
         {avatar ? (
           <img src={avatar} alt={name || ""} className="w-full h-full object-cover" />
         ) : name ? (
@@ -198,7 +198,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
         onClick={toggle}
         data-message-swipe-control
         aria-label={playing ? pauseLabel : playLabel}
-        className="h-9 w-9 rounded-full grid place-items-center shrink-0 bg-slate-700 text-white transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+        className="h-[34px] w-[34px] rounded-full grid place-items-center shrink-0 bg-slate-700 text-white transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
       >
         {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
       </button>
@@ -221,7 +221,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
             aria-valuemin={0}
             aria-valuemax={Math.max(0, Math.floor(dur))}
             aria-valuenow={Math.max(0, Math.floor(cur))}
-            className="flex h-9 w-full min-w-0 touch-none cursor-pointer items-center justify-between gap-[2px] overflow-hidden py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+            className="flex h-7 w-full min-w-0 touch-none cursor-pointer items-center justify-between gap-[2px] overflow-hidden py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
             onPointerDown={(event) => {
               event.stopPropagation();
               seeking.current = true;
@@ -267,7 +267,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
             })}
           </div>
         )}
-        <div className={`mt-0.5 flex min-w-0 flex-wrap items-center justify-between gap-1 text-[10px] leading-tight text-slate-600`}>
+        <div className={`mt-0.5 flex min-w-0 flex-wrap items-center justify-between gap-1 text-[11px] leading-tight text-slate-600`}>
           <div className="flex min-w-0 items-center gap-1">
             <button
               type="button"
@@ -275,7 +275,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); cycleRate(); }}
               aria-label={`Playback speed ${rate}x`}
-              className="min-h-8 min-w-8 rounded-full bg-slate-300/75 px-1 text-[10px] font-bold text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+              className="min-h-7 min-w-7 rounded-full bg-slate-300/75 px-1 text-[10px] font-bold text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
             >
               {rate}x
             </button>
