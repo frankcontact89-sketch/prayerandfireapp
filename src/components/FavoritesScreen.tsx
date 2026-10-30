@@ -85,7 +85,7 @@ export function FavoritesScreen({ onBack, language, onOpen }: Props) {
       {loading ? (
         <div className="text-zinc-400 text-center py-10">…</div>
       ) : items.length === 0 ? (
-        <div className="rounded-2xl border border-orange-500/20 bg-zinc-950/60 p-6 text-center text-zinc-300 text-sm">
+        <div className="rounded-2xl border border-[#E5BB70]/25 bg-[#220D19]/70 p-6 text-center text-zinc-300 text-sm">
           {empty}
         </div>
       ) : (
@@ -94,7 +94,7 @@ export function FavoritesScreen({ onBack, language, onOpen }: Props) {
             <button
               key={`${it.kind}-${it.key}`}
               onClick={() => onOpen(it.nav)}
-              className="w-full text-left rounded-xl border border-zinc-800 bg-zinc-950/70 p-3 hover:border-orange-500/40 flex items-center gap-3"
+              className="w-full text-left rounded-xl border border-[#E5BB70]/20 bg-[#220D19]/80 p-3 hover:border-[#E5BB70]/70 hover:bg-[#5C061F]/35 flex items-center gap-3"
             >
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-white truncate">{it.title}</div>
@@ -102,7 +102,7 @@ export function FavoritesScreen({ onBack, language, onOpen }: Props) {
                   <div className="text-sm text-zinc-400 line-clamp-2 mt-0.5">{it.summary}</div>
                 )}
               </div>
-              <ChevronRight className="w-5 h-5 text-zinc-500" />
+              <ChevronRight className="w-5 h-5 text-[#E5BB70]/70" />
             </button>
           ))}
         </div>
