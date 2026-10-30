@@ -18,6 +18,8 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [status, setStatus] = useState("Connecting…");
   const [connected, setConnected] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const stream = useRef<MediaStream | null>(null);
   const peers = useRef(new Map<string, RTCPeerConnection>());
   const audioNodes = useRef(new Map<string, HTMLAudioElement>());
@@ -27,10 +29,10 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   const connecting = useRef(false);
   const handRef = useRef(false);
   const labels = language === "es"
-    ? { connecting: "Conectando…", connected: "Conectado", you: "Tú", title: "Sala de oración", mute: "Silenciar", unmute: "Activar micrófono", leave: "Salir", raised: "Mano levantada", hand: "Levantar la mano", beta: "Beta · audio en vivo", participants: "Participantes" }
+    ? { connecting: "Conectando…", connected: "Conectado", you: "Tú", title: "Sala de oración", mute: "Silenciar", unmute: "Activar micrófono", leave: "Salir", raised: "Mano levantada", hand: "Levantar la mano", beta: "Beta · audio en vivo", participants: "Participantes", retry: "Reintentar conexión", failure: "No se pudo conectar. Comprueba tu conexión y los permisos de la sala." }
     : language === "pt"
-    ? { connecting: "Conectando…", connected: "Conectado", you: "Você", title: "Sala de oração", mute: "Silenciar", unmute: "Ativar microfone", leave: "Sair", raised: "Mão levantada", hand: "Levantar a mão", beta: "Beta · áudio ao vivo", participants: "Participantes" }
-    : { connecting: "Connecting…", connected: "Connected", you: "You", title: "Prayer room", mute: "Mute", unmute: "Unmute", leave: "Leave", raised: "Hand raised", hand: "Raise hand", beta: "Beta · live audio", participants: "Participants" };
+    ? { connecting: "Conectando…", connected: "Conectado", you: "Você", title: "Sala de oração", mute: "Silenciar", unmute: "Ativar microfone", leave: "Sair", raised: "Mão levantada", hand: "Levantar a mão", beta: "Beta · áudio ao vivo", participants: "Participantes", retry: "Tentar novamente", failure: "Não foi possível conectar. Verifique a conexão e as permissões da sala." }
+    : { connecting: "Connecting…", connected: "Connected", you: "You", title: "Prayer room", mute: "Mute", unmute: "Unmute", leave: "Leave", raised: "Hand raised", hand: "Raise hand", beta: "Beta · live audio", participants: "Participants", retry: "Retry connection", failure: "Could not connect. Check your connection and room permissions." };
 
   const disposePeer = useCallback((id: string) => {
     peers.current.get(id)?.close(); peers.current.delete(id);
@@ -78,6 +80,8 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     const start = async () => {
       if (connecting.current) return;
       connecting.current = true;
+      setFailed(false);
+      setStatus(labels.connecting);
       try {
         if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) throw new Error("Live audio is not supported on this device");
         const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
@@ -126,27 +130,30 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
           if (!alive.current) return;
           if (state === "SUBSCRIBED") {
             const presenceStatus = await ch.track({ name: userName, hand: handRef.current });
-            if (presenceStatus !== "ok") { setConnected(false); setStatus("Unable to join room presence"); }
+            if (presenceStatus !== "ok") { setConnected(false); setStatus(labels.failure); setFailed(true); }
             else { setConnected(true); setStatus(labels.connected); }
           } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT") {
             setConnected(false);
-            setStatus("Cannot join this room. Check permissions or connection.");
+            setStatus(labels.failure);
+            setFailed(true);
           }
         });
       } catch (error) {
-        setStatus(error instanceof Error ? error.message : "Microphone unavailable");
+        setStatus(error instanceof Error ? error.message : labels.failure);
+        setFailed(true);
       }
     };
     void start();
     return () => {
       alive.current = false;
       void channel.current?.unsubscribe();
+      channel.current = null;
       for (const id of Array.from(peers.current.keys())) disposePeer(id);
       stream.current?.getTracks().forEach(t => t.stop());
       stream.current = null;
       connecting.current = false;
     };
-  }, [groupId, userId, userName, getPeer, flushIce, send, disposePeer]);
+  }, [groupId, userId, userName, getPeer, flushIce, send, disposePeer, attempt]);
 
   const toggleHand = () => {
     const next = !handRef.current;
@@ -170,13 +177,14 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         <button onClick={onClose} aria-label={labels.leave} className="grid h-11 w-11 place-items-center rounded-full bg-white/10"><X /></button>
       </header>
       <p role="status" className={`mt-3 text-sm ${connected ? "text-emerald-300" : "text-zinc-400"}`}>{status === "Connecting…" ? labels.connecting : status}</p>
+      {failed && <button type="button" onClick={()=>setAttempt(n=>n+1)} className="mt-4 min-h-12 rounded-xl border border-[#E5BB70]/50 bg-[#5C061F] px-5 font-semibold text-[#E5BB70]">{labels.retry}</button>}
       <div className="mt-8 flex items-center gap-2 text-[#E5BB70]"><Users size={19} /><span>{labels.participants} ({participants.length})</span></div>
       <div className="mt-4 grid grid-cols-2 gap-3 overflow-y-auto">
         {participants.map(p => <div key={p.id} className="flex min-h-28 flex-col items-center justify-center rounded-2xl border border-[#E5BB70]/15 bg-[#220D19] p-3"><span className="grid h-12 w-12 place-items-center rounded-full bg-[#5C061F] text-xl font-bold text-[#E5BB70]">{p.name[0]?.toUpperCase()}</span><span className="mt-2 max-w-full truncate text-sm">{p.name}{p.id === userId ? ` · ${labels.you}` : ""}</span>{(p.id === userId ? hand : !!p.hand) && <span className="mt-1 text-xs text-[#E5BB70]"><Hand className="inline h-3.5 w-3.5 mr-1" />{labels.raised}</span>}</div>)}
       </div>
       <div className="mt-auto flex items-center justify-center gap-4 pt-6">
-        <button onClick={toggleMute} disabled={!stream.current} className={`flex h-16 w-16 items-center justify-center rounded-full ${muted ? "bg-red-950 text-red-200 ring-2 ring-red-400/50" : "bg-[#E5BB70] text-[#20131B]"} disabled:opacity-50`} aria-pressed={!muted} aria-label={muted ? labels.unmute : labels.mute}>{muted ? <MicOff /> : <Mic />}</button>
-        <button onClick={toggleHand} aria-pressed={hand} className={`flex h-16 w-16 items-center justify-center rounded-full ${hand ? "bg-[#E5BB70] text-black" : "bg-zinc-800"}`} aria-label={hand ? labels.raised : labels.hand}><Hand /></button>
+        <button onClick={toggleMute} disabled={!connected || !stream.current} className={`flex h-16 w-16 items-center justify-center rounded-full ${muted ? "bg-red-950 text-red-200 ring-2 ring-red-400/50" : "bg-[#E5BB70] text-[#20131B]"} disabled:opacity-50`} aria-pressed={!muted} aria-label={muted ? labels.unmute : labels.mute}>{muted ? <MicOff /> : <Mic />}</button>
+        <button onClick={toggleHand} disabled={!connected} aria-pressed={hand} className={`flex h-16 w-16 items-center justify-center rounded-full ${hand ? "bg-[#E5BB70] text-black" : "bg-zinc-800"}`} aria-label={hand ? labels.raised : labels.hand}><Hand /></button>
         <button onClick={onClose} className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600" aria-label={labels.leave}><PhoneOff /></button>
       </div>
     </section>
