@@ -434,10 +434,13 @@ export default function CommunityV2(){
 
  const send=async()=>{if(!draft.trim()||!selected||!me)return;const body=draft.trim().slice(0,10000);
   if(isBlockedContent(body)){toast(t.contentBlocked);return}
-  const r=replyTo?.id||null;setDraft("");setReplyTo(null);
-  const{data:inserted,error}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,body,reply_to:r}).select("id").single();
-  if(error){setDraft(body);toast(/CONTENT_BLOCKED/.test(error.message||"")?t.contentBlocked:error.message||"");return}
-  if(inserted?.id)dispatchPush({kind:"message",message_id:inserted.id})};
+  const originalReply=replyTo;const r=originalReply?.id||null;setDraft("");setReplyTo(null);
+  try{
+   const{data:inserted,error}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,body,reply_to:r}).select("id").single();
+   if(error||!inserted?.id){setDraft(current=>current||body);setReplyTo(current=>current||originalReply);toast(/CONTENT_BLOCKED/.test(error?.message||"")?t.contentBlocked:(error?.message||actionFailedLabel));return}
+   void dispatchPush({kind:"message",message_id:inserted.id});
+  }catch(e){setDraft(current=>current||body);setReplyTo(current=>current||originalReply);toast(e instanceof Error?e.message:actionFailedLabel)}
+ };
 
  const upload=async(f?:File)=>{
   if(!f||!selected||!me)return;
