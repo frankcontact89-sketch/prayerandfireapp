@@ -406,8 +406,14 @@ export default function CommunityV2(){
   let path:string|undefined;
   if(g.avatar?.startsWith("blob:")){const b=await fetch(g.avatar).then(r=>r.blob());path=`${me.id}/groups/${crypto.randomUUID()}.jpg`;await supabase.storage.from("community-media").upload(path,b,{contentType:b.type||"image/jpeg"})}
   const{data:x,error}=await db.from("community_groups").insert({name:g.name,description:g.subtitle,avatar_url:path||null,created_by:me.id}).select().single();
-  if(error||!x)return;
-  await db.from("community_group_members").insert([{group_id:x.id,user_id:me.id,role:"owner"},...(g.memberIds||[]).map(id=>({group_id:x.id,user_id:id,role:"member"}))]);
+  if(error||!x){toast(error?.message||actionFailedLabel);return}
+  const invitedIds=Array.from(new Set((g.memberIds||[]).filter(id=>id!==me.id)));
+  const{error:membersError}=await db.from("community_group_members").insert([{group_id:x.id,user_id:me.id,role:"owner"},...invitedIds.map(id=>({group_id:x.id,user_id:id,role:"member"}))]);
+  if(membersError){
+   toast(L("Group created, but members could not be added. Open the group to retry.","Grupo creado, pero no se pudieron agregar los miembros. Abre el grupo e inténtalo de nuevo.","Grupo criado, mas não foi possível adicionar os membros. Abra o grupo e tente novamente."));
+   await loadGroups(me.id);setCreate(false);return;
+  }
+  if(invitedIds.length)void dispatchPush({kind:"invite",group_id:x.id,user_ids:invitedIds});
   await loadGroups(me.id);setCreate(false);
  };
 
