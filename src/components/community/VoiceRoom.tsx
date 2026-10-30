@@ -25,6 +25,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   const audioNodes = useRef(new Map<string, HTMLAudioElement>());
   const channel = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const iceQueues = useRef(new Map<string, RTCIceCandidateInit[]>());
+  const offering = useRef(new Set<string>());
   const alive = useRef(true);
   const connecting = useRef(false);
   const [audioBlocked, setAudioBlocked] = useState(false);
@@ -41,6 +42,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     if (node) { node.pause(); node.srcObject = null; node.remove(); }
     audioNodes.current.delete(id);
     iceQueues.current.delete(id);
+    offering.current.delete(id);
   }, []);
 
   const send = useCallback(async (signal: Signal) => {
@@ -103,6 +105,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         });
         channel.current = ch;
         ch.on("broadcast", { event: "rtc" }, async ({ payload }) => {
+          if (cancelled) return;
           const msg = payload as Signal;
           if (msg.to && msg.to !== userId || msg.from === userId) return;
           try {
@@ -123,18 +126,23 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
           } catch { if (alive.current) { setStatus(language === "es" ? "No se pudo conectar con un participante." : language === "pt" ? "Não foi possível conectar a um participante." : "Could not connect to a participant"); setFailed(true); } }
         });
         ch.on("presence", { event: "sync" }, () => {
+          if (cancelled) return;
           const state = ch.presenceState();
           const people = Object.entries(state).filter(([id]) => id !== userId).map(([id, values]) => ({ id, name: (values[0] as any)?.name || "Member", hand: !!(values[0] as any)?.hand }));
           setParticipants([{ id: userId, name: userName }, ...people]);
           for (const id of peers.current.keys()) if (!people.some(p => p.id === id)) disposePeer(id);
           // Only the lexicographically smaller id initiates each peer connection.
-          for (const p of people) if (userId < p.id && !peers.current.has(p.id)) {
+          for (const p of people) if (userId < p.id) {
+            // ICE may create a peer before presence sync; it still needs an offer.
             const pc = getPeer(p.id);
+            if (pc.signalingState !== "stable" || pc.localDescription || offering.current.has(p.id)) continue;
+            offering.current.add(p.id);
             void (async () => {
               const offer = await pc.createOffer();
+              if (cancelled || pc.signalingState === "closed") return;
               await pc.setLocalDescription(offer);
               await send({ from: userId, to: p.id, kind: "offer", data: offer });
-            })().catch(() => { setStatus(language === "es" ? "No se pudo iniciar el audio." : language === "pt" ? "Não foi possível iniciar o áudio." : "Failed to initiate audio"); setFailed(true); });
+            })().catch(() => { if (!cancelled) { setStatus(language === "es" ? "No se pudo iniciar el audio." : language === "pt" ? "Não foi possível iniciar o áudio." : "Failed to initiate audio"); setFailed(true); } }).finally(() => offering.current.delete(p.id));
           }
         });
         ch.subscribe(async state => {
@@ -162,6 +170,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       void channel.current?.unsubscribe();
       setParticipants([]);
       channel.current = null;
+      offering.current.clear();
       for (const id of Array.from(peers.current.keys())) disposePeer(id);
       stream.current?.getTracks().forEach(t => t.stop());
       stream.current = null;
