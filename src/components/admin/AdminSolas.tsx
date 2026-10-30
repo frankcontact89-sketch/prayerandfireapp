@@ -46,7 +46,7 @@ export function AdminSolas() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold flex items-center gap-2">
+      <h2 className="text-2xl font-bold flex items-center gap-2 text-[#E5BB70]">
         <Landmark className="w-6 h-6" /> Manage Five Solas
       </h2>
       <p className="text-sm text-muted-foreground">Edit each Sola in English, Spanish, and Portuguese.</p>
@@ -54,7 +54,7 @@ export function AdminSolas() {
       {rows.map((row) => {
         const d = drafts[row.id] || {};
         return (
-          <div key={row.id} className="border border-border rounded-lg p-4 space-y-3">
+          <div key={row.id} className="border border-[#E5BB70]/20 bg-[#220D19]/40 rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-bold text-lg">{row.latin}</div>
