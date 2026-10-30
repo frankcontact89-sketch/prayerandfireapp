@@ -112,8 +112,8 @@ export function ContentActions({ itemType, itemId, language }: Props) {
           }}
           className={`w-full flex items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-medium transition ${
             noteContent
-              ? "border-orange-500 bg-orange-500/10 text-orange-400"
-              : "border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+              ? "border-[#E5BB70] bg-[#5C061F]/35 text-[#E5BB70]"
+              : "border-[#E5BB70]/30 text-[#E5BB70] hover:bg-[#5C061F]/35"
           }`}
         >
           <StickyNote className="w-4 h-4" />
@@ -145,7 +145,7 @@ export function ContentActions({ itemType, itemId, language }: Props) {
                 "Escribe tus pensamientos…",
                 "Escreva seus pensamentos…"
               )}
-              className="w-full flex-1 resize-none rounded-lg bg-zinc-900 border border-zinc-800 p-3 text-white focus:outline-none focus:border-orange-500"
+              className="w-full flex-1 resize-none rounded-lg bg-zinc-900 border border-zinc-800 p-3 text-white focus:outline-none focus:border-[#E5BB70]"
             />
           </div>
           <DialogFooter className="gap-2 flex-row justify-end shrink-0 mt-2">
@@ -159,7 +159,7 @@ export function ContentActions({ itemType, itemId, language }: Props) {
             <button
               onClick={saveNote}
               disabled={saving}
-              className="rounded-lg bg-orange-500 text-black font-bold px-4 py-2 text-sm flex items-center gap-1 disabled:opacity-60"
+              className="rounded-lg bg-[#5C061F] text-black font-bold px-4 py-2 text-sm flex items-center gap-1 disabled:opacity-60"
             >
               <Save className="w-4 h-4" />
               {L(language, "Save note", "Guardar nota", "Salvar nota")}
