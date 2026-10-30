@@ -793,7 +793,7 @@ export default function CommunityV2(){
       </button>}</div>}
       {parent&&<div className={`mb-1 rounded-lg px-2 py-1 text-[11px] border-l-2 ${m.mine?"bg-black/20 border-[#E7BD73]/60 text-[#FFE7BC]":"bg-black/30 border-[#D2AA67] text-zinc-300"}`}><b>{senders[parent.sender_id]?.name||t.member}</b><div className="truncate">{parent.deleted_at?t.messageDeleted:parent.body||t.media}</div></div>}
       {m.pinned_at&&<div className={`flex items-center gap-1 text-[10px] mb-0.5 ${m.mine?"text-[#FFE7BC]/70":"text-[#E7BD73]"}`}><Pin className="w-3 h-3"/>{pinnedLabel}</div>}
-       {m.body&&<p className="whitespace-pre-wrap break-words text-[15px] leading-[1.4]">{renderBody(m.body)}</p>}
+       {m.body&&<p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[15px] leading-[1.45]">{renderBody(m.body)}</p>}
        {m.media_type==="image"&&m.url&&<img src={m.url} alt="" draggable={false} onClick={()=>setImageViewer({url:m.url!,title:m.mine?(me?.name||t.you):(s?.name||t.member)})} onContextMenu={e=>e.preventDefault()} className="max-h-80 rounded-xl object-cover select-none cursor-zoom-in"/>}
        {m.media_type==="video"&&m.url&&<video src={m.url} controls playsInline preload="metadata" className="max-h-80 rounded-xl"/>}
       {m.media_type==="audio"&&m.url&&(starredIds.has(m.id)||m.starred)&&<div className="flex justify-end -mt-1 mb-1"><Star className="w-3 h-3 fill-current text-[#E5BB70]"/></div>}
@@ -839,7 +839,7 @@ export default function CommunityV2(){
       <div className={`flex pb-6 ${messageInfo.sender_id===me?.id?"justify-end":"justify-start"}`}>
        <div className={`max-w-[88%] rounded-2xl px-3 py-2.5 shadow-sm ${messageInfo.sender_id===me?.id?"rounded-tr-md text-white":"rounded-tl-md bg-zinc-900 text-zinc-100"}`} style={messageInfo.sender_id===me?.id?{backgroundColor:chatPrefs.bubble}:undefined}>
         {messageInfo.sender_id!==me?.id&&<p className="mb-1 text-xs font-semibold text-[#E8BD74]">{senders[messageInfo.sender_id]?.name||t.member}</p>}
-        {messageInfo.body&&<p className="whitespace-pre-wrap break-words text-[15px] leading-[1.4]">{renderBody(messageInfo.body)}</p>}
+        {messageInfo.body&&<p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[15px] leading-[1.45]">{renderBody(messageInfo.body)}</p>}
         {messageInfo.media_type==="image"&&messageInfo.url&&<img src={messageInfo.url} alt="" onClick={()=>setImageViewer({url:messageInfo.url!,title:messageInfo.sender_id===me?.id?(me?.name||t.you):(senders[messageInfo.sender_id]?.name||t.member)})} className="max-h-64 rounded-xl object-cover cursor-zoom-in"/>}
         {messageInfo.media_type==="video"&&messageInfo.url&&<video src={messageInfo.url} controls playsInline preload="metadata" className="max-h-64 rounded-xl"/>}
         {messageInfo.media_type==="document"&&messageInfo.url&&<a href={messageInfo.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 py-2 text-sm font-semibold"><FileText className="h-5 w-5"/><span>{t.document}</span></a>}
