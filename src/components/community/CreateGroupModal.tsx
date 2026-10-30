@@ -14,7 +14,7 @@ export type CreatedGroup = {
 };
 
 type Person = { id: string; name: string; avatar?: string | null };
-type Props = { open: boolean; onClose: () => void; onCreate: (group: CreatedGroup) => void | Promise<void>; language: "en" | "es" | "pt" };
+type Props = { open: boolean; onClose: () => void; onCreate: (group: CreatedGroup) => boolean | Promise<boolean>; language: "en" | "es" | "pt" };
 
 const words = {
   en: { newGroup:"New group", choose:"Add members", next:"Next", name:"Group name", subject:"Add a name and optional description", desc:"Group description (optional)", create:"Create group", search:"Search people", selected:"selected", photo:"Add group photo", noPeople:"No other Prayer & Fire users found yet", loading:"Loading people…" },
@@ -72,8 +72,8 @@ export default function CreateGroupModal({ open, onClose, onCreate, language }: 
     if(!name.trim() || creating) return;
     setCreating(true);
     try {
-      await onCreate({id:crypto.randomUUID(),name:name.trim(),subtitle:description.trim() || `${chosen.length+1} members`,unread:0,lastTime:"Now",memberIds:chosen,avatar:groupPhoto||undefined});
-      close();
+      const created = await onCreate({id:crypto.randomUUID(),name:name.trim(),subtitle:description.trim() || `${chosen.length+1} members`,unread:0,lastTime:"Now",memberIds:chosen,avatar:groupPhoto||undefined});
+      if (created) close();
     } finally { setCreating(false); }
   };
 
