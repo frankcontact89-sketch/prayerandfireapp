@@ -89,14 +89,14 @@ export function GreekWordDetailScreen({ slug, onBack, language }: Props) {
 
   const section = (label: string, text: string) => text ? (
     <section className="mb-5">
-      <h2 className="text-[#DBB375] uppercase tracking-[0.15em] text-xs font-black mb-2">{label}</h2>
+      <h2 className="text-[#E5BB70] uppercase tracking-[0.15em] text-xs font-black mb-2">{label}</h2>
       <MarkdownView text={text} language={language} />
     </section>
   ) : null;
 
   return (
     <SimpleScreen title={row.greek} icon={<GraduationCap className="w-6 h-6" />} onBack={onBack}>
-      <div className="mb-6 pb-4 border-b border-[#DBB375]/20">
+      <div className="mb-6 pb-4 border-b border-[#E5BB70]/20">
         <div className="text-zinc-400 text-xs uppercase tracking-widest">{labels.tr}</div>
         <div className="text-xl italic text-white mt-1">{row.transliteration}</div>
         {(row.pronunciation || row.pronunciation_text || row.transliteration) && (<>
@@ -109,7 +109,7 @@ export function GreekWordDetailScreen({ slug, onBack, language }: Props) {
         </>)}
         <button
           onClick={playAudio}
-          className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#DBB375]/40 bg-[#681B3D]/30 text-orange-300 hover:bg-[#681B3D]/20 text-sm font-semibold"
+          className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#E5BB70]/40 bg-[#5C061F]/30 text-[#E5BB70] hover:bg-[#5C061F]/20 text-sm font-semibold"
         >
           <Volume2 className="w-4 h-4" /> {labels.play}
         </button>
