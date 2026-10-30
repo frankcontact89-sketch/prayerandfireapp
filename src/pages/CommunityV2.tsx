@@ -122,8 +122,10 @@ export default function CommunityV2(){
   const viewport=window.visualViewport;
   const visibleTop=viewport?.offsetTop??0;
   const visibleBottom=visibleTop+(viewport?.height??window.innerHeight);
-  const toolbarBelow=bounds.top-visibleTop<110;
-  const actionsAbove=!toolbarBelow&&visibleBottom-bounds.bottom<205;
+  // Prefer reactions above the bubble, actions below. For messages close to
+  // the top, put reactions below and actions above only when there is room.
+  const toolbarBelow=bounds.top-visibleTop<76;
+  const actionsAbove=!toolbarBelow&&visibleBottom-bounds.bottom<175&&bounds.top-visibleTop>285;
   setReactionPlacement({toolbarBelow,actionsAbove});
  };
  const visibleMessageIds=useRef<string[]>([]);
@@ -781,7 +783,7 @@ export default function CommunityV2(){
        {EMOJIS.slice(0,4).map(e=><button key={e} aria-label={`React ${e}`} data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();react(m,e)}} className={`w-11 h-11 shrink-0 rounded-full text-xl grid place-items-center active:scale-95 transition-transform ${(reactions[m.id]||[]).some(r=>r.user_id===me?.id&&r.emoji===e)?"bg-[#5C061F]/25":""}`}>{e}</button>)}
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);setEmojiPicker(m)}} aria-label={emojiTitle} className="w-11 h-11 rounded-full bg-zinc-900 border border-white/10 grid place-items-center text-[#E5BB70] active:scale-95 transition-transform"><Plus className="w-4 h-4"/></button>
       </div>}
-      {reactBar?.id===m.id&&<div className={`absolute ${reactionPlacement.actionsAbove?"bottom-full mb-2":reactionPlacement.toolbarBelow?"top-full mt-[72px]":"top-full mt-2"} z-40 ${m.mine?"right-0":"left-0"} flex min-w-[210px] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-2xl border border-[#E5BB70]/25 bg-black text-[#F8F4EE] shadow-2xl shadow-black/60`}>
+      {reactBar?.id===m.id&&<div className={`absolute ${reactionPlacement.toolbarBelow?"bottom-full mb-2":reactionPlacement.actionsAbove?"bottom-full mb-[72px]":"top-full mt-2"} z-40 ${m.mine?"right-0":"left-0"} flex min-w-[210px] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-2xl border border-[#E5BB70]/25 bg-black text-[#F8F4EE] shadow-2xl shadow-black/60`}>
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReplyTo(m);setReactBar(null)}} className="flex min-h-11 items-center gap-3 px-4 text-left text-sm active:bg-white/10"><CornerUpLeft className="h-4 w-4 text-[#E5BB70]"/>{t.reply}</button>
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);forwardMsg(m)}} className="flex min-h-11 items-center gap-3 border-t border-white/10 px-4 text-left text-sm active:bg-white/10"><Send className="h-4 w-4 text-[#E5BB70]"/>{forwardLabel}</button>
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);setMenu(m)}} className="flex min-h-11 items-center gap-3 border-t border-white/10 px-4 text-left text-sm active:bg-white/10"><MoreHorizontal className="h-4 w-4 text-[#E5BB70]"/>{t.options}</button>
@@ -859,7 +861,7 @@ export default function CommunityV2(){
    </div>}
   {imageViewer&&<ImageViewer url={imageViewer.url} title={imageViewer.title} onClose={()=>setImageViewer(null)}/>}
   <ReactionEmojiPicker open={!!emojiPicker} title={emojiTitle} selected={emojiPicker?(reactions[emojiPicker.id]||[]).find(r=>r.user_id===me?.id)?.emoji:undefined} onClose={()=>setEmojiPicker(null)} onPick={emoji=>emojiPicker&&react(emojiPicker,emoji)}/>
-  {reactBar&&<div className="fixed inset-0 z-30" onClick={()=>setReactBar(null)}/>} 
+  {reactBar&&<div className="fixed inset-0 z-30 bg-black/35" onClick={()=>setReactBar(null)}/>} 
    {rxDetail&&<div className="fixed inset-0 z-50 flex items-end bg-black/80" onClick={()=>setRxDetail(null)}><div role="dialog" aria-modal="true" aria-labelledby="reaction-details-title" onClick={e=>e.stopPropagation()} className="max-h-[70vh] w-full overflow-y-auto rounded-t-3xl border-t border-white/10 bg-zinc-950 px-4 pt-2 pb-[max(20px,env(safe-area-inset-bottom))] shadow-2xl">
     <div className="mx-auto mb-1 h-1 w-10 rounded-full bg-zinc-700"/>
     <div className="mb-2 flex min-h-12 items-center justify-between"><b id="reaction-details-title" className="text-[17px]">{t.reactions}</b><button onClick={()=>setRxDetail(null)} aria-label={t.cancel} className="grid h-11 w-11 place-items-center rounded-full bg-zinc-900 text-zinc-200"><X className="h-5 w-5"/></button></div>
