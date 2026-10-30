@@ -55,7 +55,7 @@ export function LanguagesScreen({ t, currentLanguage, onLanguageChange, onBack }
         </Button>
 
         <div className="flex items-center gap-2 min-w-0">
-          <Globe className="w-6 h-6 text-orange-500 shrink-0" />
+          <Globe className="w-6 h-6 text-[#E5BB70] shrink-0" />
           <h1 className="text-2xl font-extrabold text-white truncate">{t("select_language")}</h1>
         </div>
       </div>
