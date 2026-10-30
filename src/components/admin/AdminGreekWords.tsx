@@ -69,7 +69,7 @@ export function AdminGreekWords() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold flex items-center gap-2"><GraduationCap className="w-6 h-6" /> Greek Words</h2>
+        <h2 className="text-2xl font-bold flex items-center gap-2 text-[#E5BB70]"><GraduationCap className="w-6 h-6" /> Greek Words</h2>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => { setEditingId(null); setForm(emptyForm); }}>
@@ -104,7 +104,7 @@ export function AdminGreekWords() {
 
       <div className="space-y-2">
         {rows.map((r) => (
-          <div key={r.id} className="border border-border rounded-lg p-3 flex justify-between items-center gap-2">
+          <div key={r.id} className="border border-[#E5BB70]/20 bg-[#220D19]/40 rounded-lg p-3 flex justify-between items-center gap-2">
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2">
                 <div className="font-black text-lg text-primary">{r.greek}</div>
