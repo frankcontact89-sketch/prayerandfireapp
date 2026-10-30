@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 // Small-group WebRTC beta: Realtime broadcasts are signaling only; microphone
 // audio flows peer-to-peer. Private Realtime channel policies are required.
 type Signal = { from: string; to?: string; kind: "offer" | "answer" | "ice"; data: any };
-type Participant = { id: string; name: string };
+type Participant = { id: string; name: string; hand?: boolean };
 const RTC_CONFIG: RTCConfiguration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
