@@ -246,9 +246,11 @@ export default function CommunityV2(){
   setMsgs(rows);
   const mediaRows=rows.filter((r:any)=>r.media_url&&!r.deleted_at);
   if(mediaRows.length){
-   void Promise.all(mediaRows.map(async(r:any)=>({id:r.id,url:await signed(r.media_url)}))).then(resolved=>{
+   void Promise.allSettled(mediaRows.map(async(r:any)=>({id:r.id,url:await signed(r.media_url)}))).then(results=>{
     if(request!==messageLoadSeq.current)return;
-    const byId=new Map(resolved.map((x:any)=>[x.id,x.url]));
+    // A single expired or unavailable attachment must not prevent the rest from loading.
+    const resolved=results.filter((x):x is PromiseFulfilledResult<{id:string;url:string}>=>x.status==="fulfilled").map(x=>x.value);
+    const byId=new Map(resolved.map(x=>[x.id,x.url]));
     setMsgs(cur=>cur.map(x=>byId.has(x.id)?{...x,url:byId.get(x.id)}:x));
    });
   }
