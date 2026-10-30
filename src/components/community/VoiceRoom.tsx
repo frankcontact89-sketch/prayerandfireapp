@@ -27,6 +27,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   const iceQueues = useRef(new Map<string, RTCIceCandidateInit[]>());
   const alive = useRef(true);
   const connecting = useRef(false);
+  const [audioBlocked, setAudioBlocked] = useState(false);
   const handRef = useRef(false);
   const labels = language === "es"
     ? { connecting: "Conectando…", connected: "Conectado", you: "Tú", title: "Sala de oración", mute: "Silenciar", unmute: "Activar micrófono", leave: "Salir", raised: "Mano levantada", hand: "Levantar la mano", beta: "Beta · audio en vivo", participants: "Participantes", retry: "Reintentar conexión", failure: "No se pudo conectar. Comprueba tu conexión y los permisos de la sala." }
@@ -58,7 +59,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       let el = audioNodes.current.get(id);
       if (!el) { el = document.createElement("audio"); el.autoplay = true; el.style.display = "none"; document.body.appendChild(el); audioNodes.current.set(id, el); }
       el.srcObject = event.streams[0];
-      void el.play().catch(() => setStatus("Tap the screen to enable audio playback"));
+      void el.play().then(() => setAudioBlocked(false)).catch(() => setAudioBlocked(true));
     };
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === "failed") setStatus("Audio connection failed; please rejoin");
@@ -77,15 +78,22 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
 
   useEffect(() => {
     alive.current = true;
+    let cancelled = false;
     const start = async () => {
       if (connecting.current) return;
       connecting.current = true;
       setFailed(false);
+      setConnected(false);
+      setParticipants([]);
+      setAudioBlocked(false);
+      setMuted(false);
+      setHand(false);
+      handRef.current = false;
       setStatus(labels.connecting);
       try {
         if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) throw new Error("Live audio is not supported on this device");
         const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
-        if (!alive.current) { mic.getTracks().forEach(t => t.stop()); return; }
+        if (cancelled) { mic.getTracks().forEach(t => t.stop()); return; }
         stream.current = mic;
         const ch = supabase.channel(`voice-room:${groupId}`, {
           config: { private: true, broadcast: { self: false }, presence: { key: userId } },
@@ -127,7 +135,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
           }
         });
         ch.subscribe(async state => {
-          if (!alive.current) return;
+          if (cancelled) return;
           if (state === "SUBSCRIBED") {
             const presenceStatus = await ch.track({ name: userName, hand: handRef.current });
             if (presenceStatus !== "ok") { setConnected(false); setStatus(labels.failure); setFailed(true); }
@@ -139,12 +147,14 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
           }
         });
       } catch (error) {
+        if (cancelled) return;
         setStatus(error instanceof Error ? error.message : labels.failure);
         setFailed(true);
       }
     };
     void start();
     return () => {
+      cancelled = true;
       alive.current = false;
       void channel.current?.unsubscribe();
       channel.current = null;
@@ -177,6 +187,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         <button onClick={onClose} aria-label={labels.leave} className="grid h-11 w-11 place-items-center rounded-full bg-white/10"><X /></button>
       </header>
       <p role="status" className={`mt-3 text-sm ${connected ? "text-emerald-300" : "text-zinc-400"}`}>{status === "Connecting…" ? labels.connecting : status}</p>
+      {audioBlocked && <button type="button" onClick={()=>{void Promise.all(Array.from(audioNodes.current.values()).map(el=>el.play())).then(()=>setAudioBlocked(false)).catch(()=>setAudioBlocked(true));}} className="mt-4 min-h-12 rounded-xl border border-[#E5BB70]/50 bg-[#5C061F] px-5 font-semibold text-[#E5BB70]">{language==="es"?"Activar audio":language==="pt"?"Ativar áudio":"Enable audio"}</button>}
       {failed && <button type="button" onClick={()=>setAttempt(n=>n+1)} className="mt-4 min-h-12 rounded-xl border border-[#E5BB70]/50 bg-[#5C061F] px-5 font-semibold text-[#E5BB70]">{labels.retry}</button>}
       <div className="mt-8 flex items-center gap-2 text-[#E5BB70]"><Users size={19} /><span>{labels.participants} ({participants.length})</span></div>
       <div className="mt-4 grid grid-cols-2 gap-3 overflow-y-auto">
