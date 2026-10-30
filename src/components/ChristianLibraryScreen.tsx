@@ -71,7 +71,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
             {solasCount > 0 && (
               <button
                 onClick={() => onNavigate?.("solas")}
-                className="w-full text-left rounded-xl border border-[#E5BB70]/30 bg-zinc-950/70 p-3 hover:border-[#E5BB70]/60 flex items-center gap-3"
+                className="w-full text-left rounded-xl border border-[#E5BB70]/30 bg-[#220D19]/80 p-3 hover:border-[#E5BB70]/70 hover:bg-[#5C061F]/35 flex items-center gap-3"
               >
                 <Landmark className="w-5 h-5 text-[#E5BB70] shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -84,13 +84,13 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
                       "Pilares da fé da Reforma")}
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-zinc-500" />
+                <ChevronRight className="w-5 h-5 text-[#E5BB70]/70" />
               </button>
             )}
             {wordsCount > 0 && (
               <button
                 onClick={() => onNavigate?.("greek-words")}
-                className="w-full text-left rounded-xl border border-[#E5BB70]/30 bg-zinc-950/70 p-3 hover:border-[#E5BB70]/60 flex items-center gap-3"
+                className="w-full text-left rounded-xl border border-[#E5BB70]/30 bg-[#220D19]/80 p-3 hover:border-[#E5BB70]/70 hover:bg-[#5C061F]/35 flex items-center gap-3"
               >
                 <GraduationCap className="w-5 h-5 text-[#E5BB70] shrink-0" />
                 <div className="flex-1 min-w-0">
@@ -103,7 +103,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
                     {wordsCount} {L(language, "entries", "entradas", "entradas")}
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-zinc-500" />
+                <ChevronRight className="w-5 h-5 text-[#E5BB70]/70" />
               </button>
             )}
           </section>
@@ -121,7 +121,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
                   <button
                     key={a.id}
                     onClick={() => onOpenArticle(a.id)}
-                    className="w-full text-left rounded-xl border border-zinc-800 bg-zinc-950/70 p-3 hover:border-[#E5BB70]/40 flex items-center gap-3"
+                    className="w-full text-left rounded-xl border border-[#E5BB70]/20 bg-[#220D19]/80 p-3 hover:border-[#E5BB70]/70 hover:bg-[#5C061F]/35 flex items-center gap-3"
                   >
                     <div className="flex-1">
                       <div className="font-semibold text-white">{pick(a, "title", language)}</div>
@@ -131,7 +131,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
                         </div>
                       )}
                     </div>
-                    <ChevronRight className="w-5 h-5 text-zinc-500" />
+                    <ChevronRight className="w-5 h-5 text-[#E5BB70]/70" />
                   </button>
                 ))}
               </div>
