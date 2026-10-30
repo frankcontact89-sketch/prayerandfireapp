@@ -786,8 +786,8 @@ export default function CommunityV2(){
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);forwardMsg(m)}} className="flex min-h-11 items-center gap-3 border-t border-white/10 px-4 text-left text-sm active:bg-white/10"><Send className="h-4 w-4 text-[#E5BB70]"/>{forwardLabel}</button>
        <button data-message-gesture-ignore onPointerDown={ev=>ev.stopPropagation()} onClick={ev=>{ev.stopPropagation();setReactBar(null);setMenu(m)}} className="flex min-h-11 items-center gap-3 border-t border-white/10 px-4 text-left text-sm active:bg-white/10"><MoreHorizontal className="h-4 w-4 text-[#E5BB70]"/>{t.options}</button>
       </div>}
-      {<div className={`text-[11px] font-bold mb-1 ${m.mine?"text-[#F4D7A1]":"text-[#E7BD73]"}`}>{m.mine?(me?.name||t.you):(s?.name||t.member)}</div>}
-      {(reactions[m.id]||[]).length>0&&<div className="mb-2 flex justify-end">{(reactions[m.id]||[]).length>0&&<button data-message-gesture-ignore onClick={ev=>{ev.stopPropagation();openReactionDetails(m)}} aria-label={t.reactions} className="inline-flex min-h-8 max-w-full items-center gap-1 rounded-full border border-[#E5BB70]/35 bg-black/30 px-2 py-1 text-[12px] text-[#F6D89B]">
+      {<div className={`text-[11px] font-bold mb-1 ${m.media_type==="audio"?"text-slate-800":m.mine?"text-[#F4D7A1]":"text-[#E7BD73]"}`}>{m.mine?(me?.name||t.you):(s?.name||t.member)}</div>}
+      {(reactions[m.id]||[]).length>0&&<div className="absolute -bottom-3 right-2 z-10 flex justify-end">{(reactions[m.id]||[]).length>0&&<button data-message-gesture-ignore onClick={ev=>{ev.stopPropagation();openReactionDetails(m)}} aria-label={t.reactions} className="inline-flex min-h-6 max-w-full items-center gap-1 rounded-full border border-[#D5B574]/70 bg-[#22212A] px-2 py-0.5 text-[12px] text-[#F6D89B] shadow-sm">
        {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
        {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
       </button>}</div>}
@@ -818,7 +818,7 @@ export default function CommunityV2(){
     <button onClick={()=>file.current?.click()} className="w-11 h-11 rounded-full bg-zinc-900 grid place-items-center"><Paperclip/></button>
     <input ref={file} type="file" className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" onChange={e=>{upload(e.target.files?.[0]);e.target.value=""}}/>
     <div className="flex-1 bg-zinc-900 rounded-full px-4 flex items-center gap-2 min-w-0"><input maxLength={10000} value={draft} onChange={e=>onDraftChange(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();setMentionQuery(null);send()}}} placeholder={t.type} className="flex-1 bg-transparent outline-none min-w-0"/><button onClick={()=>file.current?.click()} aria-label={t.media}><Camera className="w-5 h-5"/></button></div>
-    {draft.trim()?<button onClick={send} aria-label={t.send} className="w-11 h-11 rounded-full bg-[#5C061F] text-black grid place-items-center"><Send/></button>:<button onClick={()=>setRec(true)} aria-label={t.voiceMessage} className="w-11 h-11 rounded-full bg-[#5C061F] text-black grid place-items-center"><Mic/></button>}
+    {draft.trim()?<button onClick={send} aria-label={t.send} className="w-11 h-11 rounded-full bg-[#E5BB70] text-[#21101A] border border-[#FFF1C9]/70 grid place-items-center"><Send/></button>:<button onClick={()=>setRec(true)} aria-label={t.voiceMessage} className="w-11 h-11 rounded-full bg-[#E5BB70] text-[#21101A] border border-[#FFF1C9]/70 shadow-md shadow-black/30 grid place-items-center focus-visible:ring-2 focus-visible:ring-white active:scale-95 transition-transform"><Mic className="w-5 h-5"/></button>}
    </div>}
   </div>
   {flash&&<div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[60] rounded-full bg-zinc-900 border border-white/10 px-4 py-2 text-sm">{flash}</div>}
