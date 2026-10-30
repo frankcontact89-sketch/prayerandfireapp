@@ -81,7 +81,7 @@ export function ReadingPlansScreen({ onBack, language, onOpenPlan }: Props) {
             <button
               key={p.id}
               onClick={() => onOpenPlan(p.id)}
-              className="w-full text-left rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 hover:border-orange-500/40 transition"
+              className="w-full text-left rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 hover:border-[#E5BB70]/40 transition"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1 pr-3">
@@ -95,7 +95,7 @@ export function ReadingPlansScreen({ onBack, language, onOpenPlan }: Props) {
                     <span>{done}/{total} {L(language, "completed", "completados", "concluídos")}</span>
                   </div>
                   <div className="h-1.5 mt-2 rounded-full bg-zinc-800 overflow-hidden">
-                    <div className="h-full bg-orange-500" style={{ width: `${pct}%` }} />
+                    <div className="h-full bg-[#5C061F]" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-zinc-500 shrink-0" />
