@@ -64,7 +64,7 @@ export function AdminLibrary() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
+        <h2 className="text-2xl font-bold flex items-center gap-2 text-[#E5BB70]">
           <LibraryIcon className="w-6 h-6" /> Christian Library
         </h2>
         <Button onClick={create}><Plus className="w-4 h-4 mr-1" /> New Article</Button>
@@ -74,11 +74,11 @@ export function AdminLibrary() {
         const d = drafts[row.id] || {};
         const val = (k: string) => (k in d ? d[k] : row[k] ?? "");
         return (
-          <div key={row.id} className="border border-border rounded-lg p-4 space-y-3">
+          <div key={row.id} className="border border-[#E5BB70]/20 bg-[#220D19]/40 rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2 flex-wrap">
                 <select
-                  className="bg-background border border-border rounded px-2 py-1 text-sm"
+                  className="bg-[#220D19] border border-[#E5BB70]/30 rounded px-2 py-1 text-sm text-white"
                   value={val("category")}
                   onChange={(e) => setField(row.id, "category", e.target.value)}
                 >
