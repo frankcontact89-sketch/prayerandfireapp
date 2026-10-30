@@ -168,7 +168,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   };
 
   const pct = dur > 0 ? Math.min(100, (cur / dur) * 100) : 0;
-  const bars = 22;
+  const bars = 36;
 
   const seekAt = (element: HTMLDivElement, clientX: number) => {
     const audio = ref.current;
@@ -182,8 +182,8 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   };
 
   return (
-    <div className="relative grid w-full min-w-0 max-w-full grid-cols-[26px_34px_minmax(0,1fr)] items-center gap-1 overflow-hidden">
-      <div className={`h-[26px] w-[26px] overflow-hidden rounded-full shrink-0 grid place-items-center ring-1 ${"bg-white/65 text-slate-700 ring-slate-400/40"}`}>
+    <div className="relative grid w-full min-w-0 max-w-full grid-cols-[32px_40px_minmax(0,1fr)] items-center gap-2 overflow-hidden">
+      <div className={`h-[32px] w-[32px] overflow-hidden rounded-full shrink-0 grid place-items-center ring-1 ${"bg-white/65 text-slate-700 ring-slate-400/40"}`}>
         {avatar ? (
           <img src={avatar} alt={name || ""} className="w-full h-full object-cover" />
         ) : name ? (
@@ -198,7 +198,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
         onClick={toggle}
         data-message-swipe-control
         aria-label={playing ? pauseLabel : playLabel}
-        className="h-[34px] w-[34px] rounded-full grid place-items-center shrink-0 bg-slate-700 text-white transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+        className="h-[40px] w-[40px] rounded-full grid place-items-center shrink-0 bg-slate-700 text-white transition-transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
       >
         {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
       </button>
@@ -221,7 +221,7 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
             aria-valuemin={0}
             aria-valuemax={Math.max(0, Math.floor(dur))}
             aria-valuenow={Math.max(0, Math.floor(cur))}
-            className="flex h-7 w-full min-w-0 touch-none cursor-pointer items-center justify-between gap-[2px] overflow-hidden py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+            className="flex h-8 w-full min-w-0 touch-none cursor-pointer items-center justify-between gap-[2px] overflow-hidden py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
             onPointerDown={(event) => {
               event.stopPropagation();
               seeking.current = true;
@@ -254,12 +254,12 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
           >
             {Array.from({ length: bars }).map((_, i) => {
               const active = (i / bars) * 100 <= pct;
-              const h = 5 + ((i * 7) % 13);
+              const h = 5 + ((i * 11 + 3) % 17);
               return (
                 <span
                   key={i}
                   style={{ height: h }}
-                  className={`min-w-0 flex-1 max-w-[4px] rounded-full transition-colors ${
+                  className={`min-w-0 flex-1 max-w-[3px] rounded-full transition-colors ${
                     active ? "bg-slate-700" : "bg-slate-400/70"
                   }`}
                 />
