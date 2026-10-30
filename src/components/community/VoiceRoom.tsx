@@ -24,6 +24,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   const iceQueues = useRef(new Map<string, RTCIceCandidateInit[]>());
   const alive = useRef(true);
   const connecting = useRef(false);
+  const handRef = useRef(false);
   const labels = language === "es"
     ? { title: "Sala de oración", mute: "Silenciar", unmute: "Activar micrófono", leave: "Salir", raised: "Mano levantada", hand: "Levantar la mano", beta: "Beta · audio en vivo", participants: "Participantes" }
     : language === "pt"
@@ -107,7 +108,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         });
         ch.on("presence", { event: "sync" }, () => {
           const state = ch.presenceState();
-          const people = Object.entries(state).filter(([id]) => id !== userId).map(([id, values]) => ({ id, name: (values[0] as any)?.name || "Member" }));
+          const people = Object.entries(state).filter(([id]) => id !== userId).map(([id, values]) => ({ id, name: (values[0] as any)?.name || "Member", hand: !!(values[0] as any)?.hand }));
           setParticipants([{ id: userId, name: userName }, ...people]);
           for (const id of peers.current.keys()) if (!people.some(p => p.id === id)) disposePeer(id);
           // Only the lexicographically smaller id initiates each peer connection.
@@ -123,7 +124,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         ch.subscribe(async state => {
           if (!alive.current) return;
           if (state === "SUBSCRIBED") {
-            const presenceStatus = await ch.track({ name: userName });
+            const presenceStatus = await ch.track({ name: userName, hand: handRef.current });
             if (presenceStatus !== "ok") setStatus("Unable to join room presence");
             else setStatus("Connected");
           } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT") {
@@ -145,6 +146,15 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     };
   }, [groupId, userId, userName, getPeer, flushIce, send, disposePeer]);
 
+  const toggleHand = () => {
+    const next = !handRef.current;
+    handRef.current = next;
+    setHand(next);
+    if (channel.current?.state === "joined") {
+      void channel.current.track({ name: userName, hand: next }).catch(() => {});
+    }
+  };
+
   const toggleMute = () => {
     const next = !muted;
     stream.current?.getAudioTracks().forEach(t => { t.enabled = !next; });
@@ -160,11 +170,11 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       <p role="status" className="mt-3 text-sm text-zinc-400">{status}</p>
       <div className="mt-8 flex items-center gap-2 text-[#E5BB70]"><Users size={19} /><span>{labels.participants} ({participants.length})</span></div>
       <div className="mt-4 grid grid-cols-2 gap-3 overflow-y-auto">
-        {participants.map(p => <div key={p.id} className="flex min-h-28 flex-col items-center justify-center rounded-2xl border border-[#E5BB70]/15 bg-[#220D19] p-3"><span className="grid h-12 w-12 place-items-center rounded-full bg-[#5C061F] text-xl font-bold text-[#E5BB70]">{p.name[0]?.toUpperCase()}</span><span className="mt-2 max-w-full truncate text-sm">{p.name}{p.id === userId ? " · You" : ""}</span></div>)}
+        {participants.map(p => <div key={p.id} className="flex min-h-28 flex-col items-center justify-center rounded-2xl border border-[#E5BB70]/15 bg-[#220D19] p-3"><span className="grid h-12 w-12 place-items-center rounded-full bg-[#5C061F] text-xl font-bold text-[#E5BB70]">{p.name[0]?.toUpperCase()}</span><span className="mt-2 max-w-full truncate text-sm">{p.name}{p.id === userId ? " · You" : ""}</span>{(p.id === userId ? hand : !!p.hand) && <span className="mt-1 text-xs text-[#E5BB70]"><Hand className="inline h-3.5 w-3.5 mr-1" />{labels.raised}</span>}</div>)}
       </div>
       <div className="mt-auto flex items-center justify-center gap-4 pt-6">
         <button onClick={toggleMute} className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800" aria-label={muted ? labels.unmute : labels.mute}>{muted ? <MicOff /> : <Mic />}</button>
-        <button onClick={() => setHand(h => !h)} className={`flex h-16 w-16 items-center justify-center rounded-full ${hand ? "bg-[#E5BB70] text-black" : "bg-zinc-800"}`} aria-label={hand ? labels.raised : labels.hand}><Hand /></button>
+        <button onClick={toggleHand} className={`flex h-16 w-16 items-center justify-center rounded-full ${hand ? "bg-[#E5BB70] text-black" : "bg-zinc-800"}`} aria-label={hand ? labels.raised : labels.hand}><Hand /></button>
         <button onClick={onClose} className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600" aria-label={labels.leave}><PhoneOff /></button>
       </div>
     </section>
