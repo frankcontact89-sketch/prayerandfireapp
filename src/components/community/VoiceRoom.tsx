@@ -26,6 +26,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   const channel = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const iceQueues = useRef(new Map<string, RTCIceCandidateInit[]>());
   const offering = useRef(new Set<string>());
+  const knownParticipants = useRef(new Set<string>());
   const alive = useRef(true);
   const connecting = useRef(false);
   const [audioBlocked, setAudioBlocked] = useState(false);
@@ -107,7 +108,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         ch.on("broadcast", { event: "rtc" }, async ({ payload }) => {
           if (cancelled) return;
           const msg = payload as Signal;
-          if (msg.to && msg.to !== userId || msg.from === userId) return;
+          if (!msg || typeof msg.from !== "string" || msg.from === userId || (msg.to && msg.to !== userId) || !knownParticipants.current.has(msg.from)) return;
           try {
             const pc = getPeer(msg.from);
             if (msg.kind === "offer") {
@@ -129,6 +130,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
           if (cancelled) return;
           const state = ch.presenceState();
           const people = Object.entries(state).filter(([id]) => id !== userId).map(([id, values]) => ({ id, name: (values[0] as any)?.name || "Member", hand: !!(values[0] as any)?.hand }));
+          knownParticipants.current = new Set(people.map(p => p.id));
           setParticipants([{ id: userId, name: userName }, ...people]);
           for (const id of peers.current.keys()) if (!people.some(p => p.id === id)) disposePeer(id);
           // Only the lexicographically smaller id initiates each peer connection.
@@ -171,6 +173,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       setParticipants([]);
       channel.current = null;
       offering.current.clear();
+      knownParticipants.current.clear();
       for (const id of Array.from(peers.current.keys())) disposePeer(id);
       stream.current?.getTracks().forEach(t => t.stop());
       stream.current = null;
