@@ -401,20 +401,32 @@ export default function CommunityV2(){
   await loadAccess(me.id);setRequesting(false);
  };
 
- const createGroup=async(g:CreatedGroup)=>{
-  if(!me||!canCreate)return;
+ const createGroup=async(g:CreatedGroup):Promise<boolean>=>{
+  if(!me||!canCreate){toast(t.noPermission);return false}
   let path:string|undefined;
-  if(g.avatar?.startsWith("blob:")){const b=await fetch(g.avatar).then(r=>r.blob());path=`${me.id}/groups/${crypto.randomUUID()}.jpg`;await supabase.storage.from("community-media").upload(path,b,{contentType:b.type||"image/jpeg"})}
-  const{data:x,error}=await db.from("community_groups").insert({name:g.name,description:g.subtitle,avatar_url:path||null,created_by:me.id}).select().single();
-  if(error||!x){toast(error?.message||actionFailedLabel);return}
-  const invitedIds=Array.from(new Set((g.memberIds||[]).filter(id=>id!==me.id)));
-  const{error:membersError}=await db.from("community_group_members").insert([{group_id:x.id,user_id:me.id,role:"owner"},...invitedIds.map(id=>({group_id:x.id,user_id:id,role:"member"}))]);
-  if(membersError){
-   toast(L("Group created, but members could not be added. Open the group to retry.","Grupo creado, pero no se pudieron agregar los miembros. Abre el grupo e inténtalo de nuevo.","Grupo criado, mas não foi possível adicionar os membros. Abra o grupo e tente novamente."));
-   await loadGroups(me.id);setCreate(false);return;
+  try {
+   if(g.avatar?.startsWith("blob:")){
+    const b=await fetch(g.avatar).then(r=>r.blob());
+    const imagePath=`${me.id}/groups/${crypto.randomUUID()}.jpg`;
+    const{error:uploadError}=await supabase.storage.from("community-media").upload(imagePath,b,{contentType:b.type||"image/jpeg"});
+    if(uploadError){toast(uploadError.message||actionFailedLabel);return false}
+    path=imagePath;
+   }
+   const{data:x,error}=await db.from("community_groups").insert({name:g.name,description:g.subtitle,avatar_url:path||null,created_by:me.id}).select().single();
+   if(error||!x){toast(error?.message||actionFailedLabel);return false}
+   const invitedIds=Array.from(new Set((g.memberIds||[]).filter(id=>id!==me.id)));
+   const{error:membersError}=await db.from("community_group_members").insert([{group_id:x.id,user_id:me.id,role:"owner"},...invitedIds.map(id=>({group_id:x.id,user_id:id,role:"member"}))]);
+   if(membersError){
+    toast(L("Group created, but members could not be added. Open the group to retry.","Grupo creado, pero no se pudieron agregar los miembros. Abre el grupo e inténtalo de nuevo.","Grupo criado, mas não foi possível adicionar os membros. Abra o grupo e tente novamente."));
+    await loadGroups(me.id);return true;
+   }
+   if(invitedIds.length)void dispatchPush({kind:"invite",group_id:x.id,user_ids:invitedIds});
+   await loadGroups(me.id);
+   return true;
+  } catch(e){
+   toast(e instanceof Error?e.message:actionFailedLabel);
+   return false;
   }
-  if(invitedIds.length)void dispatchPush({kind:"invite",group_id:x.id,user_ids:invitedIds});
-  await loadGroups(me.id);setCreate(false);
  };
 
  // Server-side push dispatch. Credentials stay on the server; failures never block chat.
