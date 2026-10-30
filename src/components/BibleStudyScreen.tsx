@@ -19,10 +19,10 @@ export function BibleStudyScreen({ onBack, onContact }: BibleStudyScreenProps) {
       </button>
 
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-          <BookOpen className="w-5 h-5 text-primary" />
+        <div className="w-11 h-11 rounded-xl bg-[#5C061F]/35 border border-[#E5BB70]/30 flex items-center justify-center">
+          <BookOpen className="w-5 h-5 text-[#E5BB70]" />
         </div>
-        <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Bible Study</h1>
+        <h1 className="text-3xl font-extrabold text-[#E5BB70] tracking-tight">Bible Study</h1>
       </div>
 
       <p className="text-sm text-muted-foreground leading-relaxed">
@@ -32,7 +32,7 @@ export function BibleStudyScreen({ onBack, onContact }: BibleStudyScreenProps) {
       </p>
 
       <div className="mt-8">
-        <Button onClick={onContact} className="w-full gap-2">
+        <Button onClick={onContact} className="w-full gap-2 bg-[#5C061F] text-white hover:bg-[#74112F] border border-[#E5BB70]/25">
           <Mail className="w-4 h-4" />
           Contact the Ministry
         </Button>
