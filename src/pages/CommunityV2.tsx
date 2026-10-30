@@ -640,7 +640,7 @@ export default function CommunityV2(){
  const leave=async()=>{if(!selected||!me)return;if(selected.role==="owner"||selected.createdBy===me.id){setConfirmLeave(false);toast(ownerLeaveBlockedLabel);return}const{error}=await db.from("community_group_members").delete().eq("group_id",selected.id).eq("user_id",me.id);if(error){toast(error.message||actionFailedLabel);return}setConfirmLeave(false);setSelected(null);setInfo(false);await loadGroups(me.id);toast(lang==="es"?"Saliste del grupo":lang==="pt"?"Você saiu do grupo":"You left the group")};
 
  // ---- invite links ----
- const buildInviteUrl=(token:string)=>`${window.location.origin}/community?invite=${token}`;
+ const buildInviteUrl=(token:string)=>`https://prayerandfire.app/community?invite=${encodeURIComponent(token)}`;
  const shareInviteLink=async(url:string)=>{
   try{
    if(navigator.share){await navigator.share({title:selected?.name,text:inviteLinkLabel,url});return}
