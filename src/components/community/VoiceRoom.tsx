@@ -17,6 +17,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   const [hand, setHand] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [status, setStatus] = useState("Connecting…");
+  const [connected, setConnected] = useState(false);
   const stream = useRef<MediaStream | null>(null);
   const peers = useRef(new Map<string, RTCPeerConnection>());
   const audioNodes = useRef(new Map<string, HTMLAudioElement>());
@@ -26,10 +27,10 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   const connecting = useRef(false);
   const handRef = useRef(false);
   const labels = language === "es"
-    ? { title: "Sala de oración", mute: "Silenciar", unmute: "Activar micrófono", leave: "Salir", raised: "Mano levantada", hand: "Levantar la mano", beta: "Beta · audio en vivo", participants: "Participantes" }
+    ? { connecting: "Conectando…", connected: "Conectado", you: "Tú", title: "Sala de oración", mute: "Silenciar", unmute: "Activar micrófono", leave: "Salir", raised: "Mano levantada", hand: "Levantar la mano", beta: "Beta · audio en vivo", participants: "Participantes" }
     : language === "pt"
-    ? { title: "Sala de oração", mute: "Silenciar", unmute: "Ativar microfone", leave: "Sair", raised: "Mão levantada", hand: "Levantar a mão", beta: "Beta · áudio ao vivo", participants: "Participantes" }
-    : { title: "Prayer room", mute: "Mute", unmute: "Unmute", leave: "Leave", raised: "Hand raised", hand: "Raise hand", beta: "Beta · live audio", participants: "Participants" };
+    ? { connecting: "Conectando…", connected: "Conectado", you: "Você", title: "Sala de oração", mute: "Silenciar", unmute: "Ativar microfone", leave: "Sair", raised: "Mão levantada", hand: "Levantar a mão", beta: "Beta · áudio ao vivo", participants: "Participantes" }
+    : { connecting: "Connecting…", connected: "Connected", you: "You", title: "Prayer room", mute: "Mute", unmute: "Unmute", leave: "Leave", raised: "Hand raised", hand: "Raise hand", beta: "Beta · live audio", participants: "Participants" };
 
   const disposePeer = useCallback((id: string) => {
     peers.current.get(id)?.close(); peers.current.delete(id);
@@ -125,9 +126,10 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
           if (!alive.current) return;
           if (state === "SUBSCRIBED") {
             const presenceStatus = await ch.track({ name: userName, hand: handRef.current });
-            if (presenceStatus !== "ok") setStatus("Unable to join room presence");
-            else setStatus("Connected");
+            if (presenceStatus !== "ok") { setConnected(false); setStatus("Unable to join room presence"); }
+            else { setConnected(true); setStatus(labels.connected); }
           } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT") {
+            setConnected(false);
             setStatus("Cannot join this room. Check permissions or connection.");
           }
         });
@@ -167,14 +169,14 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         <div><p className="text-xs uppercase tracking-widest text-[#E5BB70]">{labels.beta}</p><h2 className="mt-1 text-xl font-bold">{name}</h2></div>
         <button onClick={onClose} aria-label={labels.leave} className="grid h-11 w-11 place-items-center rounded-full bg-white/10"><X /></button>
       </header>
-      <p role="status" className="mt-3 text-sm text-zinc-400">{status}</p>
+      <p role="status" className={`mt-3 text-sm ${connected ? "text-emerald-300" : "text-zinc-400"}`}>{status === "Connecting…" ? labels.connecting : status}</p>
       <div className="mt-8 flex items-center gap-2 text-[#E5BB70]"><Users size={19} /><span>{labels.participants} ({participants.length})</span></div>
       <div className="mt-4 grid grid-cols-2 gap-3 overflow-y-auto">
-        {participants.map(p => <div key={p.id} className="flex min-h-28 flex-col items-center justify-center rounded-2xl border border-[#E5BB70]/15 bg-[#220D19] p-3"><span className="grid h-12 w-12 place-items-center rounded-full bg-[#5C061F] text-xl font-bold text-[#E5BB70]">{p.name[0]?.toUpperCase()}</span><span className="mt-2 max-w-full truncate text-sm">{p.name}{p.id === userId ? " · You" : ""}</span>{(p.id === userId ? hand : !!p.hand) && <span className="mt-1 text-xs text-[#E5BB70]"><Hand className="inline h-3.5 w-3.5 mr-1" />{labels.raised}</span>}</div>)}
+        {participants.map(p => <div key={p.id} className="flex min-h-28 flex-col items-center justify-center rounded-2xl border border-[#E5BB70]/15 bg-[#220D19] p-3"><span className="grid h-12 w-12 place-items-center rounded-full bg-[#5C061F] text-xl font-bold text-[#E5BB70]">{p.name[0]?.toUpperCase()}</span><span className="mt-2 max-w-full truncate text-sm">{p.name}{p.id === userId ? ` · ${labels.you}` : ""}</span>{(p.id === userId ? hand : !!p.hand) && <span className="mt-1 text-xs text-[#E5BB70]"><Hand className="inline h-3.5 w-3.5 mr-1" />{labels.raised}</span>}</div>)}
       </div>
       <div className="mt-auto flex items-center justify-center gap-4 pt-6">
-        <button onClick={toggleMute} className="flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800" aria-label={muted ? labels.unmute : labels.mute}>{muted ? <MicOff /> : <Mic />}</button>
-        <button onClick={toggleHand} className={`flex h-16 w-16 items-center justify-center rounded-full ${hand ? "bg-[#E5BB70] text-black" : "bg-zinc-800"}`} aria-label={hand ? labels.raised : labels.hand}><Hand /></button>
+        <button onClick={toggleMute} disabled={!stream.current} className={`flex h-16 w-16 items-center justify-center rounded-full ${muted ? "bg-red-950 text-red-200 ring-2 ring-red-400/50" : "bg-[#E5BB70] text-[#20131B]"} disabled:opacity-50`} aria-pressed={!muted} aria-label={muted ? labels.unmute : labels.mute}>{muted ? <MicOff /> : <Mic />}</button>
+        <button onClick={toggleHand} aria-pressed={hand} className={`flex h-16 w-16 items-center justify-center rounded-full ${hand ? "bg-[#E5BB70] text-black" : "bg-zinc-800"}`} aria-label={hand ? labels.raised : labels.hand}><Hand /></button>
         <button onClick={onClose} className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600" aria-label={labels.leave}><PhoneOff /></button>
       </div>
     </section>
