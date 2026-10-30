@@ -238,8 +238,9 @@ export default function CommunityV2(){
  const messageLoadSeq=useRef(0);
  const loadMsgs=useCallback(async(id:string,uid?:string)=>{
   const request=++messageLoadSeq.current;
-  const{data}=await db.from("community_messages").select("id,sender_id,body,media_url,media_type,created_at,deleted_at,starred,reply_to,pinned_at").eq("group_id",id).order("created_at");
+  const{data,error}=await db.from("community_messages").select("id,sender_id,body,media_url,media_type,created_at,deleted_at,starred,reply_to,pinned_at").eq("group_id",id).order("created_at");
   if(request!==messageLoadSeq.current)return;
+  if(error){toast(L("Could not load messages. Please try again.","No se pudieron cargar los mensajes. Inténtalo de nuevo.","Não foi possível carregar as mensagens. Tente novamente."));return;}
   // Render message bubbles as soon as the database responds. Media URLs hydrate in the background.
   const rows=(data||[]).map((x:any)=>({...x,mine:x.sender_id===(uid||me?.id),url:undefined}));
   setMsgs(rows);
