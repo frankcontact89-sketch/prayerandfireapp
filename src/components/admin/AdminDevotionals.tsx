@@ -74,7 +74,7 @@ export function AdminDevotionals() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
+        <h2 className="text-2xl font-bold flex items-center gap-2 text-[#E5BB70]">
           <Sunrise className="w-6 h-6" /> Devotionals
         </h2>
         <Button onClick={create}><Plus className="w-4 h-4 mr-1" /> New</Button>
@@ -84,7 +84,7 @@ export function AdminDevotionals() {
         const d = drafts[row.id] || {};
         const val = (k: string) => (k in d ? d[k] : row[k] ?? "");
         return (
-          <div key={row.id} className="border border-border rounded-lg p-4 space-y-3">
+          <div key={row.id} className="border border-[#E5BB70]/20 bg-[#220D19]/40 rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <Input
                 type="date"
