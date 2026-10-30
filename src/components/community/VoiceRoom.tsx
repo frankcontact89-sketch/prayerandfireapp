@@ -182,6 +182,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   }, [groupId, userId, userName, getPeer, flushIce, send, disposePeer, attempt]);
 
   const toggleHand = () => {
+    if (!connected) return;
     const next = !handRef.current;
     handRef.current = next;
     setHand(next);
@@ -191,6 +192,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   };
 
   const toggleMute = () => {
+    if (!connected || !stream.current) return;
     const next = !muted;
     stream.current?.getAudioTracks().forEach(t => { t.enabled = !next; });
     setMuted(next);
