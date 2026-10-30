@@ -97,6 +97,7 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     );
     setBusy(false);
     if (error) { setMsg({ kind: "err", text: error.message }); return; }
+    void supabase.functions.invoke("community-push", { body: { kind: "invite", group_id: groupId, user_ids: chosen } }).catch(() => {});
     setChosen([]);
     setMsg({ kind: "ok", text: t.addedMembers });
     await load();
