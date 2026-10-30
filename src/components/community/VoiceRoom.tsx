@@ -62,11 +62,14 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       void el.play().then(() => setAudioBlocked(false)).catch(() => setAudioBlocked(true));
     };
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === "failed") setStatus("Audio connection failed; please rejoin");
+      if (pc.connectionState === "failed") {
+        setStatus(language === "es" ? "Falló el audio con un participante. Reintenta la conexión." : language === "pt" ? "Falha no áudio com um participante. Tente novamente." : "Audio connection to a participant failed. Please retry.");
+        setFailed(true);
+      }
     };
     peers.current.set(id, pc);
     return pc;
-  }, [send, userId]);
+  }, [send, userId, language]);
 
   const flushIce = useCallback(async (id: string) => {
     const pc = peers.current.get(id);
@@ -117,7 +120,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
               if (pc.remoteDescription) await pc.addIceCandidate(msg.data);
               else iceQueues.current.set(msg.from, [...(iceQueues.current.get(msg.from) || []), msg.data]);
             }
-          } catch { if (alive.current) setStatus("Could not connect to a participant"); }
+          } catch { if (alive.current) { setStatus(language === "es" ? "No se pudo conectar con un participante." : language === "pt" ? "Não foi possível conectar a um participante." : "Could not connect to a participant"); setFailed(true); } }
         });
         ch.on("presence", { event: "sync" }, () => {
           const state = ch.presenceState();
@@ -131,7 +134,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
               const offer = await pc.createOffer();
               await pc.setLocalDescription(offer);
               await send({ from: userId, to: p.id, kind: "offer", data: offer });
-            })().catch(() => setStatus("Failed to initiate audio"));
+            })().catch(() => { setStatus(language === "es" ? "No se pudo iniciar el audio." : language === "pt" ? "Não foi possível iniciar o áudio." : "Failed to initiate audio"); setFailed(true); });
           }
         });
         ch.subscribe(async state => {
@@ -157,6 +160,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       cancelled = true;
       alive.current = false;
       void channel.current?.unsubscribe();
+      setParticipants([]);
       channel.current = null;
       for (const id of Array.from(peers.current.keys())) disposePeer(id);
       stream.current?.getTracks().forEach(t => t.stop());
