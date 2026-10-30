@@ -88,18 +88,18 @@ export function ReadingPlanDetailScreen({ planId, onBack, language }: Props) {
       onBack={onBack}
       subtitle={pick(plan, "description", language)}
     >
-      <div className="mb-4 rounded-2xl border border-orange-500/20 bg-zinc-950/70 p-4">
+      <div className="mb-4 rounded-2xl border border-[#E5BB70]/20 bg-zinc-950/70 p-4">
         <div className="flex items-center justify-between text-sm text-zinc-300 mb-2">
           <span>{completed}/{total} {L(language, "days completed", "días completados", "dias concluídos")}</span>
-          <span className="text-orange-400 font-bold">{pct}%</span>
+          <span className="text-[#E5BB70] font-bold">{pct}%</span>
         </div>
         <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
-          <div className="h-full bg-orange-500" style={{ width: `${pct}%` }} />
+          <div className="h-full bg-[#5C061F]" style={{ width: `${pct}%` }} />
         </div>
         {nextDay && (
           <button
             onClick={scrollToNext}
-            className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500 text-black font-bold py-2.5"
+            className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-[#5C061F] text-black font-bold py-2.5"
           >
             <Play className="w-4 h-4" />
             {L(language, "Continue reading", "Continuar lectura", "Continuar leitura")} · {localizeDayLabel(nextDay.day_number, language)}
@@ -116,7 +116,7 @@ export function ReadingPlanDetailScreen({ planId, onBack, language }: Props) {
               key={d.id}
               id={`plan-day-${d.day_number}`}
               className={`rounded-xl border p-3 ${
-                isDone ? "border-orange-500/40 bg-orange-500/5" : "border-zinc-800 bg-zinc-950/50"
+                isDone ? "border-[#E5BB70]/40 bg-[#5C061F]/20" : "border-zinc-800 bg-zinc-950/50"
               }`}
             >
               <div className="flex items-start gap-3">
@@ -125,14 +125,14 @@ export function ReadingPlanDetailScreen({ planId, onBack, language }: Props) {
                   aria-label="Toggle"
                   className={`w-6 h-6 rounded-md border flex items-center justify-center shrink-0 mt-0.5 ${
                     isDone
-                      ? "bg-orange-500 border-orange-500 text-black"
+                      ? "bg-[#5C061F] border-[#E5BB70] text-black"
                       : "border-zinc-600"
                   }`}
                 >
                   {isDone && <Check className="w-4 h-4" />}
                 </button>
                 <div className="flex-1">
-                  <div className="text-xs uppercase tracking-wider text-orange-400 font-bold">
+                  <div className="text-xs uppercase tracking-wider text-[#E5BB70] font-bold">
                     {localizeDayLabel(d.day_number, language)}
                   </div>
                   {dayTitle && <div className="font-semibold text-white">{dayTitle}</div>}
