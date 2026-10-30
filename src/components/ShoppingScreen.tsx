@@ -16,7 +16,7 @@ interface Product {
   is_active: boolean;
 }
 
-const ORANGE = "#FF6A00";
+const BRAND_GOLD = "#E5BB70";
 
 function getButtonLabel(url: string, t: (key: string) => string): string {
   const u = (url || "").toLowerCase();
@@ -77,7 +77,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
 
       <div style={styles.content}>
         {loadError && (
-          <div style={{ textAlign: "center", padding: "40px 16px", color: "#fb923c", fontSize: 15 }}>
+          <div style={{ textAlign: "center", padding: "40px 16px", color: "#E5BB70", fontSize: 15 }}>
             {t("contentLoadError")}
           </div>
         )}
@@ -200,9 +200,9 @@ const styles: Record<string, React.CSSProperties> = {
     width: 44,
     height: 44,
     borderRadius: 14,
-    background: "rgba(255,106,0,0.12)",
-    border: "1px solid rgba(255,106,0,0.25)",
-    color: ORANGE,
+    background: "rgba(92,6,31,0.35)",
+    border: "1px solid rgba(229,187,112,0.3)",
+    color: BRAND_GOLD,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -224,8 +224,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   card: {
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(34,13,25,0.8)",
+    border: "1px solid rgba(229,187,112,0.2)",
     borderRadius: 18,
     overflow: "hidden",
     cursor: "pointer",
@@ -281,7 +281,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   primaryBtn: {
-    background: ORANGE,
+    background: BRAND_GOLD,
     color: "#000",
     border: "none",
     borderRadius: 12,
@@ -297,7 +297,7 @@ const styles: Record<string, React.CSSProperties> = {
 
   primaryBtnFull: {
     width: "100%",
-    background: ORANGE,
+    background: BRAND_GOLD,
     color: "#000",
     border: "none",
     borderRadius: 14,
