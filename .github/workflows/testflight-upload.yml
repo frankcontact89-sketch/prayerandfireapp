@@ -351,6 +351,7 @@ jobs:
           set -e
           if [ "$RESULT" -ne 0 ]; then
             echo "::error::Xcode archive failed. See archive.log diagnostic artifact."
+            echo "::notice::If Xcode reports a certificate limit or missing provisioning profile, review Apple Developer signing resources before retrying."
             grep -Ei 'error:|provisioning profile|signing certificate|No profiles|authentication failed|requires a development team|failed' "$RUNNER_TEMP/testflight-diagnostics/archive.log" | tail -50 || true
             exit "$RESULT"
           fi
