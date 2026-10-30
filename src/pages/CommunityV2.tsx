@@ -440,15 +440,24 @@ export default function CommunityV2(){
   if(inserted?.id)dispatchPush({kind:"message",message_id:inserted.id})};
 
  const upload=async(f?:File)=>{
-  if(!f||!selected||!me||f.size>50*1024*1024)return;
+  if(!f||!selected||!me)return;
+  if(f.size>50*1024*1024){toast(L("Files must be 50 MB or smaller.","Los archivos deben ser de 50 MB o menos.","Os arquivos devem ter no máximo 50 MB."));return}
   const kind=f.type.startsWith("image/")?"image":f.type.startsWith("video/")?"video":f.type.startsWith("audio/")?"audio":"document";
   const safe=f.name.replace(/[^\w.-]+/g,"_");
   const path=`${me.id}/${selected.id}/${Date.now()}-${safe}`;
-  const{error}=await supabase.storage.from("community-media").upload(path,f,{contentType:f.type||"application/octet-stream",upsert:false});
-  if(error)return;
-  const r=replyTo?.id||null;setReplyTo(null);
-  const{data:inserted}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,media_url:path,media_type:kind,reply_to:r}).select("id").single();
-  if(inserted?.id)dispatchPush({kind:"message",message_id:inserted.id});
+  try{
+   const{error:uploadError}=await supabase.storage.from("community-media").upload(path,f,{contentType:f.type||"application/octet-stream",upsert:false});
+   if(uploadError){toast(uploadError.message||actionFailedLabel);return}
+   const r=replyTo?.id||null;
+   const{data:inserted,error:messageError}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,media_url:path,media_type:kind,reply_to:r}).select("id").single();
+   if(messageError||!inserted?.id){
+    void supabase.storage.from("community-media").remove([path]);
+    toast(messageError?.message||actionFailedLabel);
+    return;
+   }
+   setReplyTo(null);
+   void dispatchPush({kind:"message",message_id:inserted.id});
+  }catch(e){toast(e instanceof Error?e.message:actionFailedLabel)}
  };
 
 
