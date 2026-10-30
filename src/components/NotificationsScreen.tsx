@@ -165,7 +165,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
             <DialogContent className="sm:max-w-md">
               <DialogHeader><DialogTitle>{t("notificationSettings")}</DialogTitle></DialogHeader>
               <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
-                <div className="flex items-center gap-3"><Flame className={`w-5 h-5 ${notificationsEnabled ? "text-orange-500" : "text-muted-foreground"}`} /><div><p className="font-medium text-foreground">{t("enableNotifications")}</p><p className="text-sm text-muted-foreground">{notificationsEnabled ? t("youWillReceiveNotifications") : t("notificationsDisabledMsg")}</p></div></div>
+                <div className="flex items-center gap-3"><Flame className={`w-5 h-5 ${notificationsEnabled ? "text-[#E5BB70]" : "text-muted-foreground"}`} /><div><p className="font-medium text-foreground">{t("enableNotifications")}</p><p className="text-sm text-muted-foreground">{notificationsEnabled ? t("youWillReceiveNotifications") : t("notificationsDisabledMsg")}</p></div></div>
                 <Switch checked={notificationsEnabled} onCheckedChange={toggleNotifications} />
               </div>
             </DialogContent>
@@ -181,7 +181,7 @@ export function NotificationsScreen({ t, onBack }: NotificationsScreenProps) {
           {notifications.map((notification) => (
             <Card key={notification.id} className={`p-4 transition-all duration-200 hover:shadow-md cursor-pointer ${!notification.is_read ? "bg-primary/5 border-primary/20" : ""}`} onClick={() => openNotification(notification)}>
               <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-full relative ${!notification.is_read ? "bg-orange-500/20 text-orange-500" : "bg-muted text-muted-foreground"}`}><Flame className="w-5 h-5" /></div>
+                <div className={`p-2 rounded-full relative ${!notification.is_read ? "bg-[#5C061F]/40 text-[#E5BB70]" : "bg-muted text-muted-foreground"}`}><Flame className="w-5 h-5" /></div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2"><h4 className={`font-semibold ${!notification.is_read ? "text-foreground" : "text-muted-foreground"}`}>{notification.title}</h4>{!notification.is_read && <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-2" />}</div>
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{notification.message}</p>
