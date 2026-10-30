@@ -75,8 +75,8 @@ export function DailyDevotionalScreen({ onBack, language }: Props) {
 
   const H = ({ icon, en, es, pt }: any) => (
     <div className="flex items-center gap-2 mb-2">
-      <span className="text-orange-400">{icon}</span>
-      <p className="text-orange-400 uppercase tracking-[0.2em] text-[10px] font-bold">
+      <span className="text-[#E5BB70]">{icon}</span>
+      <p className="text-[#E5BB70] uppercase tracking-[0.2em] text-[10px] font-bold">
         {L(language, en, es, pt)}
       </p>
     </div>
@@ -91,10 +91,10 @@ export function DailyDevotionalScreen({ onBack, language }: Props) {
         </div>
 
         {(scriptureRef || scriptureText) && (
-          <section className="rounded-2xl border border-orange-500/20 bg-zinc-950/70 p-4">
+          <section className="rounded-2xl border border-[#E5BB70]/20 bg-zinc-950/70 p-4">
             <H icon={<BookOpen className="w-3.5 h-3.5" />} en="SCRIPTURE" es="ESCRITURA" pt="ESCRITURA" />
             {scriptureText && <p className="text-white text-[15px] leading-relaxed">"{scriptureText}"</p>}
-            {scriptureRef && <p className="text-orange-400 text-sm font-bold mt-2">— {scriptureRef}</p>}
+            {scriptureRef && <p className="text-[#E5BB70] text-sm font-bold mt-2">— {scriptureRef}</p>}
           </section>
         )}
 
@@ -120,7 +120,7 @@ export function DailyDevotionalScreen({ onBack, language }: Props) {
         )}
 
         {prayer && (
-          <section className="rounded-2xl border border-orange-500/20 bg-zinc-950/70 p-4">
+          <section className="rounded-2xl border border-[#E5BB70]/20 bg-zinc-950/70 p-4">
             <H icon={<HandHeart className="w-3.5 h-3.5" />} en="PRAYER" es="ORACIÓN" pt="ORAÇÃO" />
             <MarkdownView text={prayer} language={language} />
           </section>
