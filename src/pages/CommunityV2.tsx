@@ -313,7 +313,10 @@ export default function CommunityV2(){
 
  useEffect(()=>{visibleMessageIds.current=msgs.map(m=>m.id)},[msgs]);
 
- useEffect(()=>{if(!selected||!me)return;loadMsgs(selected.id,me.id);
+ useEffect(()=>{if(!selected||!me)return;
+  // Do not display messages, reactions or receipts from the previous group while this one loads.
+  setMsgs([]);setReactions({});setStarredIds(new Set());setReadCounts({});setDeliveredCounts({});
+  loadMsgs(selected.id,me.id);
   const c=supabase.channel(`chat:${selected.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_messages",filter:`group_id=eq.${selected.id}`},()=>loadMsgs(selected.id,me.id)).subscribe();
   const rc=supabase.channel(`rx:${selected.id}`).on("postgres_changes",{event:"*",schema:"public",table:"community_reactions"},()=>{const ids=visibleMessageIds.current;if(ids.length)void loadReactions(ids)}).subscribe();
   return()=>{
