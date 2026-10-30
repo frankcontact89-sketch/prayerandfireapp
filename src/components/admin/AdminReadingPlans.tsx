@@ -102,7 +102,7 @@ export function AdminReadingPlans() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
+        <h2 className="text-2xl font-bold flex items-center gap-2 text-[#E5BB70]">
           <CalendarDays className="w-6 h-6" /> Reading Plans
         </h2>
         <Button onClick={createPlan}><Plus className="w-4 h-4 mr-1" /> New Plan</Button>
@@ -114,7 +114,7 @@ export function AdminReadingPlans() {
         const open = openPlan === row.id;
         const days = daysByPlan[row.id] || [];
         return (
-          <div key={row.id} className="border border-border rounded-lg p-4 space-y-3">
+          <div key={row.id} className="border border-[#E5BB70]/20 bg-[#220D19]/40 rounded-lg p-4 space-y-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <button className="flex items-center gap-2 font-bold" onClick={() => togglePlan(row.id)}>
                 {open ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -162,7 +162,7 @@ export function AdminReadingPlans() {
                     ? dd.passages
                     : (dd.passages ?? day.passages ?? []).join?.("\n") ?? "";
                   return (
-                    <div key={day.id} className="border border-border rounded p-3 space-y-2">
+                    <div key={day.id} className="border border-[#E5BB70]/20 bg-[#220D19]/30 rounded p-3 space-y-2">
                       <div className="flex items-center justify-between gap-2">
                         <Input type="number" className="w-20" value={dval("day_number")}
                           onChange={(e) => setField(day.id, "day_number", parseInt(e.target.value) || 0)} />
