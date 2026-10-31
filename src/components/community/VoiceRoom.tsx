@@ -29,6 +29,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   const knownParticipants = useRef(new Set<string>());
   const alive = useRef(true);
   const connecting = useRef(false);
+  const generation = useRef(0);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const handRef = useRef(false);
   const retryRef = useRef<() => void>(() => {});
@@ -104,6 +105,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
 
   useEffect(() => {
     alive.current = true;
+    const thisGeneration = ++generation.current;
     let cancelled = false;
     const start = async () => {
       if (connecting.current) return;
@@ -178,7 +180,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
           }
         });
         ch.subscribe(async (state, error) => {
-          if (cancelled) return;
+          if (cancelled || generation.current !== thisGeneration) return;
           if (state === "SUBSCRIBED") {
             const presenceStatus = await ch.track({ name: userName, hand: handRef.current });
             if (cancelled) return;
@@ -192,7 +194,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
           }
         });
       } catch (error) {
-        if (cancelled) return;
+        if (cancelled || generation.current !== thisGeneration) return;
         const reason = error instanceof Error ? error.name : "";
         const micDenied = reason === "NotAllowedError" || reason === "PermissionDeniedError";
         setStatus(micDenied
@@ -205,6 +207,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     void start();
     return () => {
       cancelled = true;
+      generation.current++;
       alive.current = false;
       if (channel.current) void supabase.removeChannel(channel.current);
       setParticipants([]);
