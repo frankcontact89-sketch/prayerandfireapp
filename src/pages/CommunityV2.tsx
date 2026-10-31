@@ -42,6 +42,12 @@ export default function CommunityV2(){
  const copyLabel=lang==="es"?"Copiar":lang==="pt"?"Copiar":"Copy";
  const copiedLabel=lang==="es"?"Copiado":lang==="pt"?"Copiado":"Copied";
  const mediaSectionLabel=lang==="es"?"Multimedia, enlaces y documentos":lang==="pt"?"Mídia, links e documentos":"Media, links and docs";
+ const replyPreview=(m:Msg)=>m.body?.trim()||(
+  m.media_type==="audio"?L("Voice message","Mensaje de voz","Mensagem de voz"):
+  m.media_type==="image"?L("Photo","Foto","Foto"):
+  m.media_type==="video"?L("Video","Vídeo","Vídeo"):
+  m.media_type==="document"?L("Document","Documento","Documento"):t.media
+ );
  const searchMessagesLabel=lang==="es"?"Buscar mensajes":lang==="pt"?"Buscar mensagens":"Search messages";
  const todayLabel=lang==="es"?"Hoy":lang==="pt"?"Hoje":"Today";
  const yesterdayLabel=lang==="es"?"Ayer":lang==="pt"?"Ontem":"Yesterday";
@@ -103,7 +109,7 @@ export default function CommunityV2(){
  const[voiceRoomOpen,setVoiceRoomOpen]=useState(false);
  const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups"|"discover">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[emojiPicker,setEmojiPicker]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[starredIds,setStarredIds]=useState<Set<string>>(new Set()),[flash,setFlash]=useState("");
  const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[imageViewer,setImageViewer]=useState<{url:string;title?:string}|null>(null),[readCounts,setReadCounts]=useState<Record<string,number>>({}),[deliveredCounts,setDeliveredCounts]=useState<Record<string,number>>({});
- const[pushSheet,setPushSheet]=useState(false);
+ const[pushSheet,setPushSheet]=useState(false);\n const[sending,setSending]=useState(false);\n const sendingRef=useRef(false);
  const[chatAppearanceOpen,setChatAppearanceOpen]=useState(false);
  const[chatPrefs,setChatPrefs]=useState<ChatPrefs>({wallpaper:"default",bubble:"#5C061F"});
  const pendingDeepLink=useRef<{groupId:string;messageId?:string}|null>(null);
@@ -432,7 +438,7 @@ export default function CommunityV2(){
  // Server-side push dispatch. Credentials stay on the server; failures never block chat.
  const dispatchPush=async(payload:any)=>{try{await supabase.functions.invoke("community-push",{body:payload})}catch{/* push is best-effort */}};
 
- const send=async()=>{if(!draft.trim()||!selected||!me)return;const body=draft.trim().slice(0,10000);
+ const send=async()=>{if(sendingRef.current||!draft.trim()||!selected||!me)return;\n  sendingRef.current=true;setSending(true);const body=draft.trim().slice(0,10000);
   if(isBlockedContent(body)){toast(t.contentBlocked);return}
   const originalReply=replyTo;const r=originalReply?.id||null;setDraft("");setReplyTo(null);
   try{
@@ -850,13 +856,13 @@ export default function CommunityV2(){
   {Object.keys(typing).length>0&&<div className="shrink-0 px-4 pb-1 text-[11px] text-[#E7BC7B]">{Object.keys(typing).length===1?`${Object.values(typing)[0].name} ${typingLabel}`:typingManyLabel}</div>}
   <div className="shrink-0 border-t border-white/10 bg-black text-white px-2 pt-2 pb-[max(8px,env(safe-area-inset-bottom))]">
    {mentionOptions.length>0&&<div className="mb-2 rounded-2xl bg-zinc-950 border border-white/10 overflow-hidden">{mentionOptions.map(p=><button key={p.id} onClick={()=>pickMention(p)} className="w-full px-3 py-2.5 flex items-center gap-2 text-left border-b border-white/5 last:border-0"><span className="w-7 h-7 rounded-full bg-zinc-900 grid place-items-center text-[#E5BB70] text-xs font-black overflow-hidden">{p.avatar?<img src={p.avatar} alt="" className="w-full h-full object-cover"/>:p.name[0]?.toUpperCase()}</span><span className="text-sm truncate">{p.name}</span></button>)}</div>}
-   {replyTo&&!rec&&<div className="mb-2 flex items-center gap-2 rounded-xl bg-zinc-900 border-l-2 border-[#E5BB70] px-3 py-2 text-xs"><CornerUpLeft className="w-4 h-4 text-[#E5BB70] shrink-0"/><div className="flex-1 min-w-0"><b className="text-[#E5BB70]">{t.replying} {replyTo.mine?t.you:senders[replyTo.sender_id]?.name||""}</b><div className="truncate text-zinc-400">{replyTo.body||t.media}</div></div><button onClick={()=>setReplyTo(null)} aria-label={t.cancel}><X className="w-4 h-4"/></button></div>}
+   {replyTo&&!rec&&<div className="mb-2 flex items-center gap-2 rounded-xl bg-zinc-900 border-l-2 border-[#E5BB70] px-3 py-2 text-xs"><CornerUpLeft className="w-4 h-4 text-[#E5BB70] shrink-0"/><div className="flex-1 min-w-0"><b className="text-[#E5BB70]">{t.replying} {replyTo.mine?t.you:senders[replyTo.sender_id]?.name||""}</b><div className="truncate text-zinc-400">{replyPreview(replyTo)}</div></div><button onClick={()=>setReplyTo(null)} aria-label={t.cancel}><X className="w-4 h-4"/></button></div>}
    {rec?<VoiceRecorder t={t} onSend={upload} onClose={()=>setRec(false)}/>:
    <div className="flex gap-2">
     <button onClick={()=>file.current?.click()} className="w-11 h-11 rounded-full bg-zinc-900 grid place-items-center"><Paperclip/></button>
     <input ref={file} type="file" className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" onChange={e=>{upload(e.target.files?.[0]);e.target.value=""}}/>
-    <div className="flex-1 bg-zinc-900 rounded-full px-4 flex items-center gap-2 min-w-0"><input maxLength={10000} value={draft} onChange={e=>onDraftChange(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();setMentionQuery(null);send()}}} placeholder={t.type} className="flex-1 bg-transparent outline-none min-w-0"/><button onClick={()=>file.current?.click()} aria-label={t.media}><Camera className="w-5 h-5"/></button></div>
-    {draft.trim()?<button onClick={send} aria-label={t.send} className="w-11 h-11 rounded-full bg-[#E5BB70] text-[#21101A] border border-[#FFF1C9]/70 grid place-items-center"><Send/></button>:<button onClick={()=>setRec(true)} aria-label={t.voiceMessage} className="w-11 h-11 rounded-full bg-[#E5BB70] text-[#21101A] border border-[#FFF1C9]/70 shadow-md shadow-black/30 grid place-items-center focus-visible:ring-2 focus-visible:ring-white active:scale-95 transition-transform"><Mic className="w-5 h-5"/></button>}
+    <div className="flex-1 bg-zinc-900 rounded-full px-4 flex items-center gap-2 min-w-0"><input maxLength={10000} value={draft} onChange={e=>onDraftChange(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.nativeEvent.isComposing){e.preventDefault();setMentionQuery(null);void send()}}} placeholder={t.type} className="flex-1 bg-transparent outline-none min-w-0"/><button onClick={()=>file.current?.click()} aria-label={t.media}><Camera className="w-5 h-5"/></button></div>
+    {draft.trim()?<button onClick={()=>void send()} disabled={sending} aria-label={t.send} className="w-11 h-11 rounded-full bg-[#E5BB70] text-[#21101A] border border-[#FFF1C9]/70 grid place-items-center"><Send/></button>:<button onClick={()=>setRec(true)} aria-label={t.voiceMessage} className="w-11 h-11 rounded-full bg-[#E5BB70] text-[#21101A] border border-[#FFF1C9]/70 shadow-md shadow-black/30 grid place-items-center focus-visible:ring-2 focus-visible:ring-white active:scale-95 transition-transform"><Mic className="w-5 h-5"/></button>}
    </div>}
   </div>
   {flash&&<div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[60] rounded-full bg-zinc-900 border border-white/10 px-4 py-2 text-sm">{flash}</div>}
