@@ -107,7 +107,9 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         supabase.realtime.setAuth(sessionData.session.access_token);
         const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
         if (cancelled) { mic.getTracks().forEach(t => t.stop()); return; }
-        // Join listening first: do not transmit microphone audio without an explicit tap.\n        mic.getAudioTracks().forEach(track => { track.enabled = false; });\n        stream.current = mic;
+        // Join listening first: do not transmit microphone audio without an explicit tap.
+        mic.getAudioTracks().forEach(track => { track.enabled = false; });
+        stream.current = mic;
         const ch = supabase.channel(`voice-room:${groupId}`, {
           config: { private: true, broadcast: { self: false }, presence: { key: userId } },
         });
