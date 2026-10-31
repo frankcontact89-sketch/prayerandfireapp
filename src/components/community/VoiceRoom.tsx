@@ -76,8 +76,12 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     };
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === "connected") {
-        setFailed(false);
-        setStatus(language === "es" ? "Audio conectado" : language === "pt" ? "Áudio conectado" : "Audio connected");
+        // A connected peer does not repair a failed room signaling channel.
+        // Keep any room-level error visible until the member retries.
+        if (channel.current?.state === "joined") {
+          setFailed(false);
+          setStatus(language === "es" ? "Audio conectado" : language === "pt" ? "Áudio conectado" : "Audio connected");
+        }
       } else if (pc.connectionState === "failed") {
         setStatus(language === "es" ? "Falló el audio con un participante. Reintenta la conexión." : language === "pt" ? "Falha no áudio com um participante. Tente novamente." : "Audio connection to a participant failed. Please retry.");
         setFailed(true);
