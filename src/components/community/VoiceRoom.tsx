@@ -57,6 +57,13 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     if (existing) return existing;
     const pc = new RTCPeerConnection(RTC_CONFIG);
     stream.current?.getTracks().forEach(track => pc.addTrack(track, stream.current!));
+    pc.oniceconnectionstatechange = () => {
+      if (pc.iceConnectionState === "failed") {
+        console.warn("[voice-room] ICE connection failed", { groupId, peerId: id });
+        setFailed(true);
+        setStatus(language === "es" ? "No se pudo establecer el audio. Reintenta la conexión." : language === "pt" ? "Não foi possível estabelecer o áudio. Tente novamente." : "Could not establish audio. Retry the connection.");
+      }
+    };
     pc.onicecandidate = event => {
       if (event.candidate) void send({ from: userId, to: id, kind: "ice", data: event.candidate.toJSON() });
     };
@@ -67,14 +74,17 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       void el.play().then(() => setAudioBlocked(false)).catch(() => setAudioBlocked(true));
     };
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === "failed") {
+      if (pc.connectionState === "connected") {
+        setFailed(false);
+        setStatus(language === "es" ? "Audio conectado" : language === "pt" ? "Áudio conectado" : "Audio connected");
+      } else if (pc.connectionState === "failed") {
         setStatus(language === "es" ? "Falló el audio con un participante. Reintenta la conexión." : language === "pt" ? "Falha no áudio com um participante. Tente novamente." : "Audio connection to a participant failed. Please retry.");
         setFailed(true);
       }
     };
     peers.current.set(id, pc);
     return pc;
-  }, [send, userId, language]);
+  }, [send, userId, language, groupId]);
 
   const flushIce = useCallback(async (id: string) => {
     const pc = peers.current.get(id);
