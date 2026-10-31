@@ -109,7 +109,9 @@ export default function CommunityV2(){
  const[voiceRoomOpen,setVoiceRoomOpen]=useState(false);
  const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups"|"discover">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[emojiPicker,setEmojiPicker]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[starredIds,setStarredIds]=useState<Set<string>>(new Set()),[flash,setFlash]=useState("");
  const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[imageViewer,setImageViewer]=useState<{url:string;title?:string}|null>(null),[readCounts,setReadCounts]=useState<Record<string,number>>({}),[deliveredCounts,setDeliveredCounts]=useState<Record<string,number>>({});
- const[pushSheet,setPushSheet]=useState(false);\n const[sending,setSending]=useState(false);\n const sendingRef=useRef(false);
+ const[pushSheet,setPushSheet]=useState(false);
+ const[sending,setSending]=useState(false);
+ const sendingRef=useRef(false);
  const[chatAppearanceOpen,setChatAppearanceOpen]=useState(false);
  const[chatPrefs,setChatPrefs]=useState<ChatPrefs>({wallpaper:"default",bubble:"#5C061F"});
  const pendingDeepLink=useRef<{groupId:string;messageId?:string}|null>(null);
@@ -438,14 +440,30 @@ export default function CommunityV2(){
  // Server-side push dispatch. Credentials stay on the server; failures never block chat.
  const dispatchPush=async(payload:any)=>{try{await supabase.functions.invoke("community-push",{body:payload})}catch{/* push is best-effort */}};
 
- const send=async()=>{if(sendingRef.current||!draft.trim()||!selected||!me)return;\n  sendingRef.current=true;setSending(true);const body=draft.trim().slice(0,10000);
+ const send=async()=>{
+  if(sendingRef.current||!draft.trim()||!selected||!me)return;
+  const body=draft.trim().slice(0,10000);
   if(isBlockedContent(body)){toast(t.contentBlocked);return}
-  const originalReply=replyTo;const r=originalReply?.id||null;setDraft("");setReplyTo(null);
+  sendingRef.current=true;setSending(true);
+  const originalReply=replyTo;
+  const r=originalReply?.id||null;
+  setDraft("");setReplyTo(null);
   try{
    const{data:inserted,error}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,body,reply_to:r}).select("id").single();
-   if(error||!inserted?.id){setDraft(current=>current||body);setReplyTo(current=>current||originalReply);toast(/CONTENT_BLOCKED/.test(error?.message||"")?t.contentBlocked:(error?.message||actionFailedLabel));return}
+   if(error||!inserted?.id){
+    setDraft(current=>current||body);
+    setReplyTo(current=>current||originalReply);
+    toast(/CONTENT_BLOCKED/.test(error?.message||"")?t.contentBlocked:(error?.message||actionFailedLabel));
+    return;
+   }
    void dispatchPush({kind:"message",message_id:inserted.id});
-  }catch(e){setDraft(current=>current||body);setReplyTo(current=>current||originalReply);toast(e instanceof Error?e.message:actionFailedLabel)}
+  }catch(e){
+   setDraft(current=>current||body);
+   setReplyTo(current=>current||originalReply);
+   toast(e instanceof Error?e.message:actionFailedLabel);
+  }finally{
+   sendingRef.current=false;setSending(false);
+  }
  };
 
  const upload=async(f?:File)=>{
