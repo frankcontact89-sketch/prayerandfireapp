@@ -13,7 +13,7 @@ const RTC_CONFIG: RTCConfiguration = {
 export default function VoiceRoom({ groupId, name, userId, userName, onClose, language }: {
   groupId: string; name: string; userId: string; userName: string; onClose: () => void; language: string;
 }) {
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(true);
   const [hand, setHand] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [status, setStatus] = useState("Connecting…");
@@ -92,7 +92,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       setConnected(false);
       setParticipants([]);
       setAudioBlocked(false);
-      setMuted(false);
+      setMuted(true);
       setHand(false);
       handRef.current = false;
       setStatus(labels.connecting);
@@ -107,7 +107,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         supabase.realtime.setAuth(sessionData.session.access_token);
         const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
         if (cancelled) { mic.getTracks().forEach(t => t.stop()); return; }
-        stream.current = mic;
+        // Join listening first: do not transmit microphone audio without an explicit tap.\n        mic.getAudioTracks().forEach(track => { track.enabled = false; });\n        stream.current = mic;
         const ch = supabase.channel(`voice-room:${groupId}`, {
           config: { private: true, broadcast: { self: false }, presence: { key: userId } },
         });
@@ -154,14 +154,14 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
             })().catch(() => { if (!cancelled) { setStatus(language === "es" ? "No se pudo iniciar el audio." : language === "pt" ? "Não foi possível iniciar o áudio." : "Failed to initiate audio"); setFailed(true); } }).finally(() => offering.current.delete(p.id));
           }
         });
-        ch.subscribe(async state => {
+        ch.subscribe(async (state, error) => {
           if (cancelled) return;
           if (state === "SUBSCRIBED") {
             const presenceStatus = await ch.track({ name: userName, hand: handRef.current });
             if (presenceStatus !== "ok") { setConnected(false); setStatus(labels.failure); setFailed(true); }
             else { setConnected(true); setStatus(labels.connected); }
           } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
-            console.warn("[voice-room] signaling channel unavailable", { groupId, state });
+            console.warn("[voice-room] signaling channel unavailable", { groupId, state, error });
             setConnected(false);
             setStatus(labels.failure);
             setFailed(true);
