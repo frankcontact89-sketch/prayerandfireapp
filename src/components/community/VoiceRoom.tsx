@@ -31,6 +31,8 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   const connecting = useRef(false);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const handRef = useRef(false);
+  const retryRef = useRef<() => void>(() => {});
+  retryRef.current = () => setAttempt(n => n + 1);
   const labels = language === "es"
     ? { connecting: "Conectando…", connected: "Conectado", you: "Tú", title: "Sala de oración", mute: "Silenciar", unmute: "Activar micrófono", leave: "Salir", raised: "Mano levantada", hand: "Levantar la mano", beta: "Beta · audio en vivo", participants: "Participantes", retry: "Reintentar conexión", failure: "No se pudo conectar. Comprueba tu conexión y los permisos de la sala." }
     : language === "pt"
@@ -82,6 +84,14 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     for (const candidate of pending) await pc.addIceCandidate(candidate).catch(() => {});
   }, []);
 
+  // Retry once the device regains internet connectivity, rather than requiring
+  // the member to close and reopen the prayer room.
+  useEffect(() => {
+    const retryWhenOnline = () => { if (failed) retryRef.current(); };
+    window.addEventListener("online", retryWhenOnline);
+    return () => window.removeEventListener("online", retryWhenOnline);
+  }, [failed]);
+
   useEffect(() => {
     alive.current = true;
     let cancelled = false;
@@ -105,6 +115,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
           throw new Error(language === "es" ? "Tu sesión expiró. Inicia sesión de nuevo." : language === "pt" ? "Sua sessão expirou. Entre novamente." : "Your session expired. Please sign in again.");
         }
         supabase.realtime.setAuth(sessionData.session.access_token);
+        if (cancelled) return;
         const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
         if (cancelled) { mic.getTracks().forEach(t => t.stop()); return; }
         // Join listening first: do not transmit microphone audio without an explicit tap.
@@ -138,7 +149,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         ch.on("presence", { event: "sync" }, () => {
           if (cancelled) return;
           const state = ch.presenceState();
-          const people = Object.entries(state).filter(([id]) => id !== userId).map(([id, values]) => ({ id, name: (values[0] as any)?.name || "Member", hand: !!(values[0] as any)?.hand }));
+          const people = Object.entries(state).filter(([id]) => id !== userId && !id.startsWith("observer:")).map(([id, values]) => ({ id, name: (values[0] as any)?.name || "Member", hand: !!(values[0] as any)?.hand }));
           knownParticipants.current = new Set(people.map(p => p.id));
           setParticipants([{ id: userId, name: userName }, ...people]);
           for (const id of peers.current.keys()) if (!people.some(p => p.id === id)) disposePeer(id);
@@ -160,7 +171,8 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
           if (cancelled) return;
           if (state === "SUBSCRIBED") {
             const presenceStatus = await ch.track({ name: userName, hand: handRef.current });
-            if (presenceStatus !== "ok") { setConnected(false); setStatus(labels.failure); setFailed(true); }
+            if (cancelled) return;
+            if (presenceStatus !== "ok") { console.warn("[voice-room] presence tracking failed", { groupId, presenceStatus }); setConnected(false); setStatus(labels.failure); setFailed(true); }
             else { setConnected(true); setStatus(labels.connected); }
           } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
             console.warn("[voice-room] signaling channel unavailable", { groupId, state, error });
@@ -184,7 +196,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     return () => {
       cancelled = true;
       alive.current = false;
-      void channel.current?.unsubscribe();
+      if (channel.current) void supabase.removeChannel(channel.current);
       setParticipants([]);
       channel.current = null;
       offering.current.clear();
