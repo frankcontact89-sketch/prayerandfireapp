@@ -98,6 +98,13 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       setStatus(labels.connecting);
       try {
         if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) throw new Error("Live audio is not supported on this device");
+        // Private Realtime channels need the current signed-in member's JWT. Without
+        // this, the signaling subscription can fail even when the app UI is logged in.
+        const { data: sessionData, error: authError } = await supabase.auth.getSession();
+        if (authError || !sessionData.session?.access_token) {
+          throw new Error(language === "es" ? "Tu sesión expiró. Inicia sesión de nuevo." : language === "pt" ? "Sua sessão expirou. Entre novamente." : "Your session expired. Please sign in again.");
+        }
+        supabase.realtime.setAuth(sessionData.session.access_token);
         const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
         if (cancelled) { mic.getTracks().forEach(t => t.stop()); return; }
         stream.current = mic;
@@ -153,7 +160,8 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
             const presenceStatus = await ch.track({ name: userName, hand: handRef.current });
             if (presenceStatus !== "ok") { setConnected(false); setStatus(labels.failure); setFailed(true); }
             else { setConnected(true); setStatus(labels.connected); }
-          } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT") {
+          } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
+            console.warn("[voice-room] signaling channel unavailable", { groupId, state });
             setConnected(false);
             setStatus(labels.failure);
             setFailed(true);
@@ -161,7 +169,12 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         });
       } catch (error) {
         if (cancelled) return;
-        setStatus(error instanceof Error ? error.message : labels.failure);
+        const reason = error instanceof Error ? error.name : "";
+        const micDenied = reason === "NotAllowedError" || reason === "PermissionDeniedError";
+        setStatus(micDenied
+          ? (language === "es" ? "Permite el acceso al micrófono en Ajustes para entrar a la sala." : language === "pt" ? "Permita o acesso ao microfone nos Ajustes para entrar na sala." : "Allow microphone access in Settings to join the room.")
+          : error instanceof Error ? error.message : labels.failure);
+        console.error("[voice-room] connection failed", { groupId, reason, error });
         setFailed(true);
       }
     };
