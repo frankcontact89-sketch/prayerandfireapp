@@ -448,19 +448,18 @@ export default function CommunityV2(){
   sendingRef.current=true;setSending(true);
   const originalReply=replyTo;
   const r=originalReply?.id||null;
-  setDraft("");setReplyTo(null);
+  // Keep the composer intact until the database confirms the message.
+  // A failed request must never discard the text or its reply target.
   try{
    const{data:inserted,error}=await db.from("community_messages").insert({group_id:selected.id,sender_id:me.id,body,reply_to:r}).select("id").single();
    if(error||!inserted?.id){
-    setDraft(current=>current||body);
-    setReplyTo(current=>current||originalReply);
     toast(/CONTENT_BLOCKED/.test(error?.message||"")?t.contentBlocked:(error?.message||actionFailedLabel));
     return;
    }
+   setDraft(current=>current.trim()===body?"":current);
+   setReplyTo(current=>current?.id===originalReply?.id?null:current);
    void dispatchPush({kind:"message",message_id:inserted.id});
   }catch(e){
-   setDraft(current=>current||body);
-   setReplyTo(current=>current||originalReply);
    toast(e instanceof Error?e.message:actionFailedLabel);
   }finally{
    sendingRef.current=false;setSending(false);
