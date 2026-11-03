@@ -876,7 +876,7 @@ export default function CommunityV2(){
        {Array.from(new Set((reactions[m.id]||[]).map(r=>r.emoji))).slice(0,3).map(e=><span key={e}>{e}</span>)}
        {(reactions[m.id]||[]).length>1&&<span className="text-[11px] text-zinc-300">{(reactions[m.id]||[]).length}</span>}
       </button>}</div>}
-      {parent&&<div className={`mb-1 rounded-lg px-2 py-1 text-[11px] border-l-2 ${m.mine?"bg-black/20 border-[#E7BD73]/60 text-[#FFE7BC]":"bg-black/30 border-[#D2AA67] text-zinc-300"}`}><b>{senders[parent.sender_id]?.name||t.member}</b><div className="truncate">{parent.deleted_at?t.messageDeleted:replyPreview(parent)}</div></div>}
+      {m.reply_to&&<div className={`mb-1 rounded-lg px-2 py-1 text-[11px] border-l-2 ${m.mine?"bg-black/20 border-slate-300/60 text-slate-100":"bg-black/30 border-slate-400 text-zinc-300"}`}><b>{parent?(senders[parent.sender_id]?.name||t.member):t.reply}</b><div className="truncate">{parent?(parent.deleted_at?t.messageDeleted:replyPreview(parent)):L("Original message unavailable","Mensaje original no disponible","Mensagem original indisponível")}</div></div>}
       {m.pinned_at&&<div className={`flex items-center gap-1 text-[10px] mb-0.5 ${m.mine?"text-[#FFE7BC]/70":"text-[#E7BD73]"}`}><Pin className="w-3 h-3"/>{pinnedLabel}</div>}
        {m.body&&<p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[15px] leading-[1.45]">{renderBody(m.body)}</p>}
        {m.media_type==="image"&&m.url&&<img src={m.url} alt="" draggable={false} onClick={()=>setImageViewer({url:m.url!,title:m.mine?(me?.name||t.you):(s?.name||t.member)})} onContextMenu={e=>e.preventDefault()} className="max-h-80 rounded-xl object-cover select-none cursor-zoom-in"/>}
