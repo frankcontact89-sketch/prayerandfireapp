@@ -91,9 +91,9 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
             {solasCount > 0 && (
               <button
                 onClick={() => onNavigate?.("solas")}
-                className="w-full text-left rounded-xl border border-[#E5BB70]/30 bg-[#220D19]/80 p-3 hover:border-[#E5BB70]/70 hover:bg-[#5C061F]/35 flex items-center gap-3"
+                className="w-full text-left rounded-xl border border-[#94A3B8]/30 bg-[#111827]/80 p-3 hover:border-[#94A3B8]/70 hover:bg-[#1E293B]/35 flex items-center gap-3"
               >
-                <Landmark className="w-5 h-5 text-[#E5BB70] shrink-0" />
+                <Landmark className="w-5 h-5 text-[#94A3B8] shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-white">
                     {L(language, "The Five Solas", "Los Cinco Solas", "Os Cinco Solas")}
@@ -104,15 +104,15 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
                       "Pilares da fé da Reforma")}
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-[#E5BB70]/70" />
+                <ChevronRight className="w-5 h-5 text-[#94A3B8]/70" />
               </button>
             )}
             {wordsCount > 0 && (
               <button
                 onClick={() => onNavigate?.("greek-words")}
-                className="w-full text-left rounded-xl border border-[#E5BB70]/30 bg-[#220D19]/80 p-3 hover:border-[#E5BB70]/70 hover:bg-[#5C061F]/35 flex items-center gap-3"
+                className="w-full text-left rounded-xl border border-[#94A3B8]/30 bg-[#111827]/80 p-3 hover:border-[#94A3B8]/70 hover:bg-[#1E293B]/35 flex items-center gap-3"
               >
-                <GraduationCap className="w-5 h-5 text-[#E5BB70] shrink-0" />
+                <GraduationCap className="w-5 h-5 text-[#94A3B8] shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-white">
                     {L(language, "Biblical Languages Library",
@@ -123,7 +123,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
                     {wordsCount} {L(language, "entries", "entradas", "entradas")}
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-[#E5BB70]/70" />
+                <ChevronRight className="w-5 h-5 text-[#94A3B8]/70" />
               </button>
             )}
           </section>
@@ -133,7 +133,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
           const labels = CATEGORY_LABELS[cat] || [cat, cat, cat];
           return (
             <section key={cat}>
-              <h2 className="text-[#E5BB70] uppercase tracking-[0.2em] text-[11px] font-bold mb-2">
+              <h2 className="text-[#94A3B8] uppercase tracking-[0.2em] text-[11px] font-bold mb-2">
                 {L(language, labels[0], labels[1], labels[2])}
               </h2>
               <div className="space-y-2">
@@ -141,7 +141,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
                   <button
                     key={a.id}
                     onClick={() => onOpenArticle(a.id)}
-                    className="w-full text-left rounded-xl border border-[#E5BB70]/20 bg-[#220D19]/80 p-3 hover:border-[#E5BB70]/70 hover:bg-[#5C061F]/35 flex items-center gap-3"
+                    className="w-full text-left rounded-xl border border-[#94A3B8]/20 bg-[#111827]/80 p-3 hover:border-[#94A3B8]/70 hover:bg-[#1E293B]/35 flex items-center gap-3"
                   >
                     <div className="flex-1">
                       <div className="font-semibold text-white">{pick(a, "title", language)}</div>
@@ -151,7 +151,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
                         </div>
                       )}
                     </div>
-                    <ChevronRight className="w-5 h-5 text-[#E5BB70]/70" />
+                    <ChevronRight className="w-5 h-5 text-[#94A3B8]/70" />
                   </button>
                 ))}
               </div>
