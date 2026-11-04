@@ -34,18 +34,26 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let active = true;
     (async () => {
-      const [{ data }, { count: wc }, { count: sc }] = await Promise.all([
-        supabase.from("library_articles").select("*")
-          .eq("is_published", true).order("category").order("order_index"),
-        supabase.from("greek_words").select("*", { count: "exact", head: true }),
-        supabase.from("solas").select("*", { count: "exact", head: true }),
-      ]);
-      setRows(data || []);
-      setWordsCount(wc || 0);
-      setSolasCount(sc || 0);
-      setLoading(false);
+      try {
+        const [{ data }, { count: wc }, { count: sc }] = await Promise.all([
+          supabase.from("library_articles").select("*")
+            .eq("is_published", true).order("category").order("order_index"),
+          supabase.from("greek_words").select("*", { count: "exact", head: true }),
+          supabase.from("solas").select("*", { count: "exact", head: true }),
+        ]);
+        if (!active) return;
+        setRows(data || []);
+        setWordsCount(wc || 0);
+        setSolasCount(sc || 0);
+      } catch (error) {
+        console.error("Library content could not be loaded", error);
+      } finally {
+        if (active) setLoading(false);
+      }
     })();
+    return () => { active = false; };
   }, []);
 
   const title = L(language, "Library & Academy", "Biblioteca y Academia", "Biblioteca e Academia");
