@@ -8,18 +8,19 @@ interface SimpleScreenProps {
   onBack: () => void;
   icon?: React.ReactNode;
   children?: React.ReactNode;
+  theme?: "default" | "prayer-fire";
 }
 
-export function SimpleScreen({ title, subtitle, onBack, icon, children }: SimpleScreenProps) {
+export function SimpleScreen({ title, subtitle, onBack, icon, children, theme = "default" }: SimpleScreenProps) {
   return (
     <div className="bg-black text-white">
       <div className="max-w-[430px] md:max-w-[680px] lg:max-w-[820px] mx-auto px-5 pt-1 pb-8">
         <div className="flex items-center gap-2 mb-4">
-          <Button variant="ghost" size="icon" onClick={onBack} className="text-[#E5BB70] hover:bg-[#5C061F]/50 hover:text-[#E5BB70]">
+          <Button variant="ghost" size="icon" onClick={onBack} className={theme === "prayer-fire" ? "text-slate-300 hover:bg-slate-800/70 hover:text-white" : "text-[#E5BB70] hover:bg-[#5C061F]/50 hover:text-[#E5BB70]"}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex items-center gap-2">
-            {icon && <span className="text-[#E5BB70]">{icon}</span>}
+            {icon && <span className={theme === "prayer-fire" ? "text-slate-300" : "text-[#E5BB70]"}>{icon}</span>}
             <h1 className="text-2xl font-extrabold">{title}</h1>
           </div>
         </div>
