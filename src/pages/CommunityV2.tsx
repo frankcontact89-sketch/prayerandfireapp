@@ -470,8 +470,8 @@ export default function CommunityV2(){
   if(!f||!selected||!me)return;
   if(f.size>50*1024*1024){toast(L("Files must be 50 MB or smaller.","Los archivos deben ser de 50 MB o menos.","Os arquivos devem ter no máximo 50 MB."));return}
   const kind=f.type.startsWith("image/")?"image":f.type.startsWith("video/")?"video":f.type.startsWith("audio/")?"audio":"document";
-  const safe=f.name.replace(/[^\w.-]+/g,"_");
-  const path=`${me.id}/${selected.id}/${Date.now()}-${safe}`;
+  const safe=(f.name.replace(/[^\w.-]+/g,"_").replace(/^\.+/,"").slice(-100)||"attachment");
+  const path=`${me.id}/${selected.id}/${Date.now()}-${crypto.randomUUID()}-${safe}`;
   try{
    const{error:uploadError}=await supabase.storage.from("community-media").upload(path,f,{contentType:f.type||"application/octet-stream",upsert:false});
    if(uploadError){toast(uploadError.message||actionFailedLabel);return}
