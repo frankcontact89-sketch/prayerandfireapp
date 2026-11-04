@@ -105,15 +105,20 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
               <h2 className="font-semibold text-white">ABBA Academy</h2>
               <p className="mt-1 text-sm text-slate-300">
                 {L(language,
-                  "Your courses and progress will appear here after your Academy enrollment is verified.",
-                  "Tus clases y tu progreso aparecerán aquí cuando se verifique tu inscripción en la Academia.",
-                  "Suas aulas e seu progresso aparecerão aqui quando sua matrícula na Academia for verificada.")}
+                  "Open the ABBA Academy portal to sign in and access your enrolled courses.",
+                  "Abre el portal de ABBA Academy para iniciar sesión y acceder a tus cursos inscritos.",
+                  "Abra o portal da ABBA Academy para entrar e acessar seus cursos matriculados.")}
               </p>
-              <p className="mt-2 text-xs text-slate-400">
+              <a href="https://prayerandfire.org/academy" target="_blank" rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[#E5BB70]/50 px-4 py-2 text-sm font-semibold text-[#E5BB70] hover:bg-[#5C061F]/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E5BB70]">
+                {L(language, "Open ABBA Academy", "Entrar a ABBA Academy", "Entrar na ABBA Academy")}
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+              <p className="mt-2 text-xs text-zinc-400">
                 {L(language,
-                  "Academy access is being prepared. No course content is available in the app yet.",
-                  "Estamos preparando el acceso a la Academia. Las clases todavía no están disponibles en la app.",
-                  "Estamos preparando o acesso à Academia. As aulas ainda não estão disponíveis no aplicativo.")}
+                  "The portal opens separately. In-app course synchronization is not available yet.",
+                  "El portal se abre por separado. La sincronización de cursos dentro de la app todavía no está disponible.",
+                  "O portal abre separadamente. A sincronização dos cursos no aplicativo ainda não está disponível.")}
               </p>
             </div>
           </div>
