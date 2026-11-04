@@ -656,18 +656,26 @@ export default function CommunityV2(){
  };
 
  const submitReport=async()=>{
-  if(!me||!reportFor||reportFor.sender_id===me.id)return;
+  if(!me||!reportFor||reportFor.sender_id===me.id||busyMod)return;
   setBusyMod(true);
-  await db.from("community_reports").insert({reporter_id:me.id,reported_user_id:reportFor.sender_id,message_id:reportFor.id,group_id:selected?.id||null,reason:reportReason,details:reportNote.trim()||null,status:"pending"});
-  setBusyMod(false);setReportFor(null);setReportNote("");setReportReason("harassment");toast(t.reportSent);
+  try{
+   const{error}=await db.from("community_reports").insert({reporter_id:me.id,reported_user_id:reportFor.sender_id,message_id:reportFor.id,group_id:selected?.id||null,reason:reportReason,details:reportNote.trim()||null,status:"pending"});
+   if(error)throw error;
+   setReportFor(null);setReportNote("");setReportReason("harassment");toast(t.reportSent);
+  }catch(error){toast(error instanceof Error?error.message:actionFailedLabel)}
+  finally{setBusyMod(false)}
  };
  const confirmBlock=async()=>{
-  if(!me||!blockFor||blockFor.sender_id===me.id)return;
+  if(!me||!blockFor||blockFor.sender_id===me.id||busyMod)return;
   setBusyMod(true);
   const target=blockFor.sender_id;
-  await db.from("community_blocks").insert({blocker_id:me.id,blocked_id:target});
-  setBlocks(v=>Array.from(new Set([...v,target])));
-  setBusyMod(false);setBlockFor(null);toast(t.blockedDone);
+  try{
+   const{error}=await db.from("community_blocks").insert({blocker_id:me.id,blocked_id:target});
+   if(error)throw error;
+   setBlocks(v=>Array.from(new Set([...v,target])));
+   setBlockFor(null);toast(t.blockedDone);
+  }catch(error){toast(error instanceof Error?error.message:actionFailedLabel)}
+  finally{setBusyMod(false)}
  };
  const memberUpdate=async(ch:any)=>{if(!selected||!me)return;const{muted,archived,favorite,mutedUntil}=ch;const safe:any={};if(muted!==undefined)safe.muted=muted;if(archived!==undefined)safe.archived=archived;if(favorite!==undefined)safe.favorite=favorite;if(mutedUntil!==undefined)safe.muted_until=mutedUntil;if(!Object.keys(safe).length)return;const{error}=await db.from("community_group_members").update(safe).eq("group_id",selected.id).eq("user_id",me.id);if(error){toast(error.message||actionFailedLabel);return}setSelected(s=>s?{...s,...ch}:s);setGroups(v=>v.map(g=>g.id===selected.id?{...g,...ch}:g));toast(savedLabel)};
  const saveGroup=async()=>{if(!selected||!canManageGroup(selected))return;const nextName=name.trim()||selected.name;const nextDesc=desc.trim();const{error}=await db.from("community_groups").update({name:nextName,description:nextDesc,updated_at:new Date().toISOString()}).eq("id",selected.id);if(error){toast(error.message||actionFailedLabel);return}setSelected(s=>s?{...s,name:nextName,description:nextDesc,subtitle:nextDesc||s.subtitle}:s);setGroups(v=>v.map(g=>g.id===selected.id?{...g,name:nextName,description:nextDesc,subtitle:nextDesc||g.subtitle}:g));setEdit(false);toast(savedLabel)};
