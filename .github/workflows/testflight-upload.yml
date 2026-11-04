@@ -6,7 +6,7 @@ on:
     branches:
       - improve/community-ui-review-2026-10-27
     paths:
-      # Retry the current beta after Apple Developer certificate cleanup; upload only if all checks pass.
+      # Retry the current beta after the developer confirmed obsolete certificates were revoked on 2026-11-04; upload only if all checks pass.
       - '.github/workflows/testflight-upload.yml'
       - 'src/**'
       - 'public/**'
