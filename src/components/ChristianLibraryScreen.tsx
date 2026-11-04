@@ -66,6 +66,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
   return (
     <SimpleScreen title={title} icon={<LibraryIcon className="w-6 h-6" />} onBack={onBack}>
       <div className="space-y-6">
+        {/* Keep the Prayer & Fire navy/silver palette here; ABBA branding belongs inside its own authenticated screen. */}
         <section aria-label="ABBA Academy" className="rounded-xl border border-slate-600/40 bg-slate-900/70 p-4">
           <div className="flex items-start gap-3">
             <GraduationCap className="w-6 h-6 shrink-0 text-slate-300" aria-hidden="true" />
