@@ -32,29 +32,35 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
   const [wordsCount, setWordsCount] = useState<number>(0);
   const [solasCount, setSolasCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setLoadError(false);
     (async () => {
       try {
-        const [{ data }, { count: wc }, { count: sc }] = await Promise.all([
+        const [{ data, error: articlesError }, { count: wc, error: wordsError }, { count: sc, error: solasError }] = await Promise.all([
           supabase.from("library_articles").select("*")
             .eq("is_published", true).order("category").order("order_index"),
           supabase.from("greek_words").select("*", { count: "exact", head: true }),
           supabase.from("solas").select("*", { count: "exact", head: true }),
         ]);
+        if (articlesError || wordsError || solasError) throw articlesError || wordsError || solasError;
         if (!active) return;
         setRows(data || []);
         setWordsCount(wc || 0);
         setSolasCount(sc || 0);
       } catch (error) {
         console.error("Library content could not be loaded", error);
+        if (active) setLoadError(true);
       } finally {
         if (active) setLoading(false);
       }
     })();
     return () => { active = false; };
-  }, []);
+  }, [retryCount]);
 
   const title = L(language, "Library & Academy", "Biblioteca y Academia", "Biblioteca e Academia");
 
@@ -62,6 +68,23 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
     return (
       <SimpleScreen title={title} icon={<LibraryIcon className="w-6 h-6" />} onBack={onBack}>
         <div className="text-zinc-400 text-center py-10">…</div>
+      </SimpleScreen>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <SimpleScreen title={title} icon={<LibraryIcon className="w-6 h-6" />} onBack={onBack}>
+        <div role="alert" className="rounded-xl border border-slate-600/40 bg-slate-900/70 p-5 text-center space-y-3">
+          <p className="text-slate-200">{L(language,
+            "The library could not be loaded. Check your connection and try again.",
+            "No se pudo cargar la biblioteca. Revisa tu conexión e inténtalo de nuevo.",
+            "Não foi possível carregar a biblioteca. Verifique sua conexão e tente novamente.")}</p>
+          <button type="button" onClick={() => setRetryCount(n => n + 1)}
+            className="rounded-lg border border-slate-500 px-4 py-2 text-white hover:bg-slate-800">
+            {L(language, "Try again", "Intentar de nuevo", "Tentar novamente")}
+          </button>
+        </div>
       </SimpleScreen>
     );
   }
