@@ -48,7 +48,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
     })();
   }, []);
 
-  const title = L(language, "Christian Library", "Biblioteca Cristiana", "Biblioteca Cristã");
+  const title = L(language, "Library & Academy", "Biblioteca y Academia", "Biblioteca e Academia");
 
   if (loading) {
     return (
@@ -66,6 +66,26 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
   return (
     <SimpleScreen title={title} icon={<LibraryIcon className="w-6 h-6" />} onBack={onBack}>
       <div className="space-y-6">
+        <section aria-label="ABBA Academy" className="rounded-xl border border-slate-600/40 bg-slate-900/70 p-4">
+          <div className="flex items-start gap-3">
+            <GraduationCap className="w-6 h-6 shrink-0 text-slate-300" aria-hidden="true" />
+            <div className="min-w-0">
+              <h2 className="font-semibold text-white">ABBA Academy</h2>
+              <p className="mt-1 text-sm text-slate-300">
+                {L(language,
+                  "Your courses and progress will appear here after your Academy enrollment is verified.",
+                  "Tus clases y tu progreso aparecerán aquí cuando se verifique tu inscripción en la Academia.",
+                  "Suas aulas e seu progresso aparecerão aqui quando sua matrícula na Academia for verificada.")}
+              </p>
+              <p className="mt-2 text-xs text-slate-400">
+                {L(language,
+                  "Academy access is being prepared. No course content is available in the app yet.",
+                  "Estamos preparando el acceso a la Academia. Las clases todavía no están disponibles en la app.",
+                  "Estamos preparando o acesso à Academia. As aulas ainda não estão disponíveis no aplicativo.")}
+              </p>
+            </div>
+          </div>
+        </section>
         {(solasCount > 0 || wordsCount > 0) && (
           <section className="space-y-2">
             {solasCount > 0 && (
