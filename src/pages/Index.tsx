@@ -22,7 +22,7 @@ import { AboutScreen } from "@/components/StaticScreens";
 import { DailyDevotionalScreen } from "@/components/DailyDevotionalScreen";
 import { ReadingPlansScreen } from "@/components/ReadingPlansScreen";
 import { ReadingPlanDetailScreen } from "@/components/ReadingPlanDetailScreen";
-import { ChristianLibraryScreen } from "@/components/ChristianLibraryScreen";
+import { ChristianLibraryScreen, AbbaAcademyPortalScreen } from "@/components/ChristianLibraryScreen";
 import { LibraryArticleScreen } from "@/components/LibraryArticleScreen";
 import { FavoritesScreen } from "@/components/FavoritesScreen";
 
@@ -729,6 +729,9 @@ export default function Index() {
             onOpenArticle={(id) => setPage(`article:${id}`)}
             onNavigate={(p) => setPage(p)}
           />
+        )}
+        {page === "abba-academy" && (
+          <AbbaAcademyPortalScreen onBack={() => setPage("library")} language={language} />
         )}
         {page === "favorites" && (
           <FavoritesScreen
