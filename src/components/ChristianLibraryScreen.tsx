@@ -75,13 +75,13 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
   if (loadError) {
     return (
       <SimpleScreen title={title} icon={<LibraryIcon className="w-6 h-6" />} onBack={onBack}>
-        <div role="alert" className="rounded-xl border border-slate-600/40 bg-slate-900/70 p-5 text-center space-y-3">
+        <div role="alert" className="rounded-xl border border-[#E5BB70]/30 bg-[#220D19]/70 p-5 text-center space-y-3">
           <p className="text-slate-200">{L(language,
             "The library could not be loaded. Check your connection and try again.",
             "No se pudo cargar la biblioteca. Revisa tu conexión e inténtalo de nuevo.",
             "Não foi possível carregar a biblioteca. Verifique sua conexão e tente novamente.")}</p>
           <button type="button" onClick={() => setRetryCount(n => n + 1)}
-            className="rounded-lg border border-slate-500 px-4 py-2 text-white hover:bg-slate-800">
+            className="rounded-lg border border-[#E5BB70]/60 px-4 py-2 text-[#E5BB70] hover:bg-[#5C061F]/60">
             {L(language, "Try again", "Intentar de nuevo", "Tentar novamente")}
           </button>
         </div>
