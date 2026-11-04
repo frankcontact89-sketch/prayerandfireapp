@@ -109,16 +109,16 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
                   "Abre el portal de ABBA Academy para iniciar sesión y acceder a tus cursos inscritos.",
                   "Abra o portal da ABBA Academy para entrar e acessar seus cursos matriculados.")}
               </p>
-              <a href="https://prayerandfire.org/academy" target="_blank" rel="noopener noreferrer"
+              <button type="button" onClick={() => onNavigate?.("abba-academy")}
                 className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[#E5BB70]/50 px-4 py-2 text-sm font-semibold text-[#E5BB70] hover:bg-[#5C061F]/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E5BB70]">
                 {L(language, "Open ABBA Academy", "Entrar a ABBA Academy", "Entrar na ABBA Academy")}
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              </a>
+              </button>
               <p className="mt-2 text-xs text-zinc-400">
                 {L(language,
-                  "The portal opens separately. In-app course synchronization is not available yet.",
-                  "El portal se abre por separado. La sincronización de cursos dentro de la app todavía no está disponible.",
-                  "O portal abre separadamente. A sincronização dos cursos no aplicativo ainda não está disponível.")}
+                  "The Academy has its own blue portal. Course synchronization in the app is not available yet.",
+                  "La Academia tiene su propio portal azul. La sincronización de cursos dentro de la app todavía no está disponible.",
+                  "A Academia tem seu próprio portal azul. A sincronização dos cursos no aplicativo ainda não está disponível.")}
               </p>
             </div>
           </div>
@@ -197,5 +197,38 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
         })}
       </div>
     </SimpleScreen>
+  );
+}
+/** Academy entry screen only: the official website remains the source of authentication and course access. */
+export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => void; language: string }) {
+  return (
+    <div className="min-h-[70vh] bg-[#071A34] text-white px-5 py-6">
+      <div className="mx-auto max-w-md">
+        <button type="button" onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-slate-200 hover:text-white">
+          <span aria-hidden="true">←</span> {L(language, "Back to Library", "Volver a la Biblioteca", "Voltar à Biblioteca")}
+        </button>
+        <div className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6 shadow-lg">
+          <GraduationCap className="mb-4 h-10 w-10 text-[#D5E4F6]" aria-hidden="true" />
+          <h1 className="text-2xl font-bold">ABBA Academy</h1>
+          <p className="mt-3 text-sm leading-relaxed text-[#D5E4F6]">
+            {L(language,
+              "Sign in to the official Academy website to access your courses and learning progress.",
+              "Inicia sesión en el sitio oficial de la Academia para acceder a tus cursos y progreso.",
+              "Entre no site oficial da Academia para acessar seus cursos e progresso.")}
+          </p>
+          <a href="https://prayerandfire.org/academy" target="_blank" rel="noopener noreferrer"
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#D5E4F6] px-4 py-3 font-semibold text-[#071A34] hover:bg-white">
+            {L(language, "Continue to Academy", "Continuar a la Academia", "Continuar para a Academia")}
+            <ChevronRight className="h-5 w-5" aria-hidden="true" />
+          </a>
+          <p className="mt-4 text-xs text-[#AFC4DD]">
+            {L(language,
+              "The secure sign-in opens on the Academy website. In-app lessons are not connected yet.",
+              "El inicio de sesión seguro se abre en el sitio de la Academia. Las clases aún no están conectadas dentro de la app.",
+              "O login seguro abre no site da Academia. As aulas ainda não estão conectadas no aplicativo.")}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
