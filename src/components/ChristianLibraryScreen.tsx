@@ -66,7 +66,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
 
   if (loading) {
     return (
-      <SimpleScreen title={title} icon={<LibraryIcon className="w-6 h-6" />} onBack={onBack}>
+      <SimpleScreen title={title} icon={<LibraryIcon className="w-6 h-6" />} onBack={onBack} theme="prayer-fire">
         <div className="text-zinc-400 text-center py-10">…</div>
       </SimpleScreen>
     );
@@ -74,7 +74,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
 
   if (loadError) {
     return (
-      <SimpleScreen title={title} icon={<LibraryIcon className="w-6 h-6" />} onBack={onBack}>
+      <SimpleScreen title={title} icon={<LibraryIcon className="w-6 h-6" />} onBack={onBack} theme="prayer-fire">
         <div role="alert" className="rounded-xl border border-slate-600/40 bg-slate-900/70 p-5 text-center space-y-3">
           <p className="text-slate-200">{L(language,
             "The library could not be loaded. Check your connection and try again.",
@@ -95,7 +95,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
   }
 
   return (
-    <SimpleScreen title={title} icon={<LibraryIcon className="w-6 h-6" />} onBack={onBack}>
+    <SimpleScreen title={title} icon={<LibraryIcon className="w-6 h-6" />} onBack={onBack} theme="prayer-fire">
       <div className="space-y-6">
         {/* Keep the Prayer & Fire navy/silver palette here; ABBA branding belongs inside its own authenticated screen. */}
         <section aria-label="ABBA Academy" className="rounded-xl border border-slate-600/40 bg-slate-900/70 p-4">
