@@ -696,11 +696,13 @@ export default function CommunityV2(){
  const makeInviteLink=async()=>{
   if(!selected||!canManageGroup(selected)||inviteBusy)return;
   setInviteBusy(true);
-  const{data,error}=await db.rpc("create_group_invite_link",{_group_id:selected.id});
-  setInviteBusy(false);
-  if(error||!data){toast(/NO_PERMISSION/.test(error?.message||"")?t.noPermission:(error?.message||actionFailedLabel));return}
-  const url=buildInviteUrl(String(data));
-  setInviteLink(url);toast(inviteLinkReadyLabel);
+  try{
+   const{data,error}=await db.rpc("create_group_invite_link",{_group_id:selected.id});
+   if(error||!data){toast(/NO_PERMISSION/.test(error?.message||"")?t.noPermission:(error?.message||actionFailedLabel));return}
+   const url=buildInviteUrl(String(data));
+   setInviteLink(url);toast(inviteLinkReadyLabel);
+  }catch(e){toast(e instanceof Error?e.message:actionFailedLabel)}
+  finally{setInviteBusy(false)}
  };
  const revokeInviteLinks=async()=>{
   if(!selected||!canManageGroup(selected))return;
