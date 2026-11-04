@@ -201,33 +201,61 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
 }
 /** Academy entry screen only: the official website remains the source of authentication and course access. */
 export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => void; language: string }) {
+  const [showAcademy, setShowAcademy] = useState(false);
   return (
-    <div className="min-h-[70vh] bg-[#071A34] text-white px-5 py-6">
-      <div className="mx-auto max-w-md">
-        <button type="button" onClick={onBack} className="mb-8 inline-flex items-center gap-2 text-slate-200 hover:text-white">
-          <span aria-hidden="true">←</span> {L(language, "Back to Library", "Volver a la Biblioteca", "Voltar à Biblioteca")}
+    <div className="min-h-[70vh] bg-[#071A34] text-white px-4 py-5">
+      <div className={showAcademy ? "mx-auto w-full" : "mx-auto max-w-md"}>
+        <button type="button" onClick={() => showAcademy ? setShowAcademy(false) : onBack()}
+          className="mb-5 inline-flex items-center gap-2 text-slate-200 hover:text-white">
+          <span aria-hidden="true">←</span> {showAcademy
+            ? L(language, "Academy home", "Inicio de Academia", "Início da Academia")
+            : L(language, "Back to Library", "Volver a la Biblioteca", "Voltar à Biblioteca")}
         </button>
-        <div className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6 shadow-lg">
-          <GraduationCap className="mb-4 h-10 w-10 text-[#D5E4F6]" aria-hidden="true" />
-          <h1 className="text-2xl font-bold">ABBA Academy</h1>
-          <p className="mt-3 text-sm leading-relaxed text-[#D5E4F6]">
-            {L(language,
-              "Sign in to the official Academy website to access your courses and learning progress.",
-              "Inicia sesión en el sitio oficial de la Academia para acceder a tus cursos y progreso.",
-              "Entre no site oficial da Academia para acessar seus cursos e progresso.")}
-          </p>
-          <a href="https://prayerandfire.org/academy" target="_blank" rel="noopener noreferrer"
-            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#D5E4F6] px-4 py-3 font-semibold text-[#071A34] hover:bg-white">
-            {L(language, "Continue to Academy", "Continuar a la Academia", "Continuar para a Academia")}
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
-          </a>
-          <p className="mt-4 text-xs text-[#AFC4DD]">
-            {L(language,
-              "The secure sign-in opens on the Academy website. In-app lessons are not connected yet.",
-              "El inicio de sesión seguro se abre en el sitio de la Academia. Las clases aún no están conectadas dentro de la app.",
-              "O login seguro abre no site da Academia. As aulas ainda não estão conectadas no aplicativo.")}
-          </p>
-        </div>
+        {showAcademy ? (
+          <div className="overflow-hidden rounded-xl border border-[#365D87] bg-white">
+            <iframe
+              title="ABBA Academy"
+              src="https://prayerandfire.org/academy"
+              className="block w-full border-0"
+              style={{ height: "calc(100dvh - 230px)", minHeight: 480 }}
+              allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+            <p className="bg-[#102A4A] px-4 py-3 text-xs text-[#D5E4F6]">
+              {L(language,
+                "If the Academy does not load here, its website may block embedded access. Use the external option below.",
+                "Si la Academia no carga aquí, su sitio puede bloquear el acceso integrado. Usa la opción externa de abajo.",
+                "Se a Academia não carregar aqui, o site pode bloquear o acesso incorporado. Use a opção externa abaixo.")}
+              {" "}
+              <a href="https://prayerandfire.org/academy" target="_blank" rel="noopener noreferrer"
+                className="font-semibold underline">
+                {L(language, "Open website", "Abrir sitio web", "Abrir site")}
+              </a>
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6 shadow-lg">
+            <GraduationCap className="mb-4 h-10 w-10 text-[#D5E4F6]" aria-hidden="true" />
+            <h1 className="text-2xl font-bold">ABBA Academy</h1>
+            <p className="mt-3 text-sm leading-relaxed text-[#D5E4F6]">
+              {L(language,
+                "Access your Academy account without leaving Prayer & Fire.",
+                "Accede a tu cuenta de la Academia sin salir de Prayer & Fire.",
+                "Acesse sua conta da Academia sem sair do Prayer & Fire.")}
+            </p>
+            <button type="button" onClick={() => setShowAcademy(true)}
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#D5E4F6] px-4 py-3 font-semibold text-[#071A34] hover:bg-white">
+              {L(language, "Continue to Academy", "Continuar a la Academia", "Continuar para a Academia")}
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <p className="mt-4 text-xs text-[#AFC4DD]">
+              {L(language,
+                "Embedded website access is experimental; Academy sign-in and lessons must be tested on iOS.",
+                "El acceso integrado es experimental; debemos probar el inicio de sesión y las clases en iOS.",
+                "O acesso integrado é experimental; precisamos testar o login e as aulas no iOS.")}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
