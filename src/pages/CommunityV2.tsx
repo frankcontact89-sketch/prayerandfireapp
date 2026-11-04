@@ -491,9 +491,11 @@ export default function CommunityV2(){
  const deleteMsg=async(m:Msg)=>{
   if(!me||!selected)return;
   if(!(m.sender_id===me.id||canManageGroup(selected)))return;
-  await db.from("community_messages").update({deleted_at:new Date().toISOString()}).eq("id",m.id);
+  const deletedAt=new Date().toISOString();
+  const{error}=await db.from("community_messages").update({deleted_at:deletedAt}).eq("id",m.id);
+  if(error){toast(error.message||actionFailedLabel);return}
   setConfirmDel(null);setMenu(null);
-  setMsgs(v=>v.map(x=>x.id===m.id?{...x,deleted_at:new Date().toISOString(),url:undefined}:x));
+  setMsgs(v=>v.map(x=>x.id===m.id?{...x,deleted_at:deletedAt,url:undefined}:x));
  };
 
  const toast=(s:string)=>{setFlash(s);window.setTimeout(()=>setFlash(""),1600)};
