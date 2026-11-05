@@ -105,9 +105,9 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
               <h2 className="font-semibold text-white">ABBA Academy</h2>
               <p className="mt-1 text-sm text-slate-300">
                 {L(language,
-                  "Open the ABBA Academy portal to sign in and access your enrolled courses.",
-                  "Abre el portal de ABBA Academy para iniciar sesión y acceder a tus cursos inscritos.",
-                  "Abra o portal da ABBA Academy para entrar e acessar seus cursos matriculados.")}
+                  "Explore ABBA Academy and its biblical training programs.",
+                  "Conoce ABBA Academy y sus programas de formación bíblica.",
+                  "Conheça a ABBA Academy e seus programas de formação bíblica.")}
               </p>
               <button type="button" onClick={() => onNavigate?.("abba-academy")}
                 className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[#E5BB70]/50 px-4 py-2 text-sm font-semibold text-[#E5BB70] hover:bg-[#5C061F]/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E5BB70]">
@@ -116,9 +116,9 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
               </button>
               <p className="mt-2 text-xs text-zinc-400">
                 {L(language,
-                  "The Academy has its own blue portal. Course synchronization in the app is not available yet.",
+                  "Your access to private lessons depends on your Academy enrollment.",
                   "La Academia tiene su propio portal azul. La sincronización de cursos dentro de la app todavía no está disponible.",
-                  "A Academia tem seu próprio portal azul. A sincronização dos cursos no aplicativo ainda não está disponível.")}
+                  "O acesso às aulas privadas depende da sua matrícula na Academia.")}
               </p>
             </div>
           </div>
@@ -199,17 +199,19 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
     </SimpleScreen>
   );
 }
-/** Academy entry screen only: the official website remains the source of authentication and course access. */
+/** The Academy is currently embedded as a separate origin; never imply the app session is shared. */
 export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => void; language: string }) {
   const [showAcademy, setShowAcademy] = useState(false);
   return (
     <div className="min-h-[70vh] bg-[#071A34] text-white px-4 py-5">
       <div className={showAcademy ? "mx-auto w-full" : "mx-auto max-w-md"}>
-        <button type="button" onClick={() => showAcademy ? setShowAcademy(false) : onBack()}
-          className="mb-5 inline-flex items-center gap-2 text-slate-200 hover:text-white">
-          <span aria-hidden="true">←</span> {showAcademy
-            ? L(language, "Academy home", "Inicio de Academia", "Início da Academia")
-            : L(language, "Back to Library", "Volver a la Biblioteca", "Voltar à Biblioteca")}
+        <button
+          type="button"
+          onClick={onBack}
+          className="mb-5 inline-flex items-center gap-2 rounded-lg border border-[#365D87] px-3 py-2 text-slate-100 hover:bg-[#102A4A]"
+        >
+          <span aria-hidden="true">←</span>
+          {L(language, "Return to Prayer & Fire Library", "Volver a la Biblioteca de Prayer & Fire", "Voltar à Biblioteca Prayer & Fire")}
         </button>
         {showAcademy ? (
           <div className="overflow-hidden rounded-xl border border-[#365D87] bg-white">
@@ -221,17 +223,12 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
               allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
               referrerPolicy="strict-origin-when-cross-origin"
             />
-            <p className="bg-[#102A4A] px-4 py-3 text-xs text-[#D5E4F6]">
-              {L(language,
-                "If the Academy does not load here, its website may block embedded access. Use the external option below.",
-                "Si la Academia no carga aquí, su sitio puede bloquear el acceso integrado. Usa la opción externa de abajo.",
-                "Se a Academia não carregar aqui, o site pode bloquear o acesso incorporado. Use a opção externa abaixo.")}
-              {" "}
-              <a href="https://prayerandfire.org/academy" target="_blank" rel="noopener noreferrer"
-                className="font-semibold underline">
-                {L(language, "Open website", "Abrir sitio web", "Abrir site")}
-              </a>
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-[#102A4A] px-4 py-3 text-sm text-[#D5E4F6]">
+              <span>{L(language, "ABBA Academy", "ABBA Academy", "ABBA Academy")}</span>
+              <button type="button" onClick={onBack} className="font-semibold underline underline-offset-4">
+                {L(language, "Return to the app", "Regresar a la aplicación", "Voltar ao aplicativo")}
+              </button>
+            </div>
           </div>
         ) : (
           <div className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6 shadow-lg">
@@ -239,21 +236,15 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
             <h1 className="text-2xl font-bold">ABBA Academy</h1>
             <p className="mt-3 text-sm leading-relaxed text-[#D5E4F6]">
               {L(language,
-                "Access your Academy account without leaving Prayer & Fire.",
-                "Accede a tu cuenta de la Academia sin salir de Prayer & Fire.",
-                "Acesse sua conta da Academia sem sair do Prayer & Fire.")}
+                "Explore biblical training and ministry development. Enrolled students can access their courses after signing in to the Academy.",
+                "Explora la formación bíblica y ministerial. Los estudiantes inscritos pueden acceder a sus clases al identificarse en la Academia.",
+                "Explore a formação bíblica e ministerial. Alunos matriculados podem acessar suas aulas ao entrar na Academia.")}
             </p>
             <button type="button" onClick={() => setShowAcademy(true)}
               className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#D5E4F6] px-4 py-3 font-semibold text-[#071A34] hover:bg-white">
-              {L(language, "Continue to Academy", "Continuar a la Academia", "Continuar para a Academia")}
+              {L(language, "Explore ABBA Academy", "Explorar ABBA Academy", "Explorar ABBA Academy")}
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
             </button>
-            <p className="mt-4 text-xs text-[#AFC4DD]">
-              {L(language,
-                "Embedded website access is experimental; Academy sign-in and lessons must be tested on iOS.",
-                "El acceso integrado es experimental; debemos probar el inicio de sesión y las clases en iOS.",
-                "O acesso integrado é experimental; precisamos testar o login e as aulas no iOS.")}
-            </p>
           </div>
         )}
       </div>
