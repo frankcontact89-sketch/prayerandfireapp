@@ -161,13 +161,12 @@ export default function CommunityV2(){
  const signed=async(path?:string|null)=>{if(!path)return undefined;const{data}=await supabase.storage.from("community-media").createSignedUrl(path,3600);return data?.signedUrl};
 
  const loadAccess=useCallback(async(uid:string)=>{
+  // Any authenticated account may participate; admin privileges remain restricted.
   const{data:adm}=await db.from("community_admins").select("role,can_create_groups").eq("user_id",uid).maybeSingle();
-  if(adm){setStaffRole(adm.role==="owner"?"owner":"admin");setCanCreate(adm.role==="owner"||adm.can_create_groups!==false);setAccess("approved");return true}
-  setStaffRole(null);setCanCreate(false);
-  const{data:req}=await db.from("community_access_requests").select("status").eq("user_id",uid).maybeSingle();
-  if(!req){setAccess("none");return false}
-  setAccess(req.status==="approved"?"approved":req.status==="pending"?"pending":"rejected");
-  return req.status==="approved";
+  setStaffRole(adm?(adm.role==="owner"?"owner":"admin"):null);
+  setCanCreate(!!adm&&(adm.role==="owner"||adm.can_create_groups!==false));
+  setAccess("approved");
+  return true;
  },[]);
 
  const loadGroups=useCallback(async(uid:string)=>{
