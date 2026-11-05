@@ -117,7 +117,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
               <p className="mt-2 text-xs text-zinc-400">
                 {L(language,
                   "Your access to private lessons depends on your Academy enrollment.",
-                  "La Academia tiene su propio portal azul. La sincronización de cursos dentro de la app todavía no está disponible.",
+                  "El acceso a las clases privadas depende de tu inscripción en la Academia.",
                   "O acesso às aulas privadas depende da sua matrícula na Academia.")}
               </p>
             </div>
@@ -199,55 +199,37 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
     </SimpleScreen>
   );
 }
-/** The Academy is currently embedded as a separate origin; never imply the app session is shared. */
+/** ABBA keeps its own authentication until a verified cross-project SSO bridge is deployed. */
 export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => void; language: string }) {
-  const [showAcademy, setShowAcademy] = useState(false);
+  const academyUrl = `https://prayerandfire.org/academy?lang=${encodeURIComponent(
+    language === "pt" || language === "es" ? language : "en"
+  )}`;
+
   return (
-    <div className="min-h-[70vh] bg-[#071A34] text-white px-4 py-5">
-      <div className={showAcademy ? "mx-auto w-full" : "mx-auto max-w-md"}>
-        <button
-          type="button"
-          onClick={onBack}
-          className="mb-5 inline-flex items-center gap-2 rounded-lg border border-[#365D87] px-3 py-2 text-slate-100 hover:bg-[#102A4A]"
-        >
-          <span aria-hidden="true">←</span>
-          {L(language, "Return to Prayer & Fire Library", "Volver a la Biblioteca de Prayer & Fire", "Voltar à Biblioteca Prayer & Fire")}
-        </button>
-        {showAcademy ? (
-          <div className="overflow-hidden rounded-xl border border-[#365D87] bg-white">
-            <iframe
-              title="ABBA Academy"
-              src="https://prayerandfire.org/academy"
-              className="block w-full border-0"
-              style={{ height: "calc(100dvh - 230px)", minHeight: 480 }}
-              allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
-              referrerPolicy="strict-origin-when-cross-origin"
-            />
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-[#102A4A] px-4 py-3 text-sm text-[#D5E4F6]">
-              <span>{L(language, "ABBA Academy", "ABBA Academy", "ABBA Academy")}</span>
-              <button type="button" onClick={onBack} className="font-semibold underline underline-offset-4">
-                {L(language, "Return to the app", "Regresar a la aplicación", "Voltar ao aplicativo")}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6 shadow-lg">
-            <GraduationCap className="mb-4 h-10 w-10 text-[#D5E4F6]" aria-hidden="true" />
-            <h1 className="text-2xl font-bold">ABBA Academy</h1>
-            <p className="mt-3 text-sm leading-relaxed text-[#D5E4F6]">
-              {L(language,
-                "Explore biblical training and ministry development. Enrolled students can access their courses after signing in to the Academy.",
-                "Explora la formación bíblica y ministerial. Los estudiantes inscritos pueden acceder a sus clases al identificarse en la Academia.",
-                "Explore a formação bíblica e ministerial. Alunos matriculados podem acessar suas aulas ao entrar na Academia.")}
-            </p>
-            <button type="button" onClick={() => setShowAcademy(true)}
-              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#D5E4F6] px-4 py-3 font-semibold text-[#071A34] hover:bg-white">
-              {L(language, "Explore ABBA Academy", "Explorar ABBA Academy", "Explorar ABBA Academy")}
-              <ChevronRight className="h-5 w-5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
+    <section className="min-h-[70vh] bg-[#071A34] px-3 py-4 text-white" aria-label="ABBA Academy">
+      <div className="mx-auto w-full max-w-5xl">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-[#365D87] bg-[#102A4A] px-3 py-2 text-sm font-semibold text-white hover:bg-[#18385B]"
+          >
+            <span aria-hidden="true">←</span>
+            {L(language, "Back to Library", "Volver a Biblioteca", "Voltar à Biblioteca")}
+          </button>
+          <span className="min-w-0 truncate text-sm font-semibold text-[#D9BD81]">ABBA Academy</span>
+        </div>
+        <div className="overflow-hidden rounded-xl border border-[#365D87] bg-white">
+          <iframe
+            title="ABBA Academy"
+            src={academyUrl}
+            className="block w-full border-0"
+            style={{ height: "calc(100dvh - 200px)", minHeight: 520 }}
+            allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
