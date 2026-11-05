@@ -6,7 +6,7 @@ on:
     branches:
       - improve/community-ui-review-2026-10-27
     paths:
-      # Retry beta with embedded ABBA Academy portal (commit 885647f); upload only if signing and all checks pass.
+      # Retry after Apple certificate cleanup; request distribution signing for the TestFlight archive.
       - '.github/workflows/testflight-upload.yml'
       - 'src/**'
       - 'public/**'
@@ -346,6 +346,7 @@ jobs:
             MARKETING_VERSION="$APP_VERSION" \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             clean archive 2>&1 | tee "$RUNNER_TEMP/testflight-diagnostics/archive.log"
           RESULT=${PIPESTATUS[0]}
           set -e
