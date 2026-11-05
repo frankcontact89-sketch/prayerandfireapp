@@ -219,9 +219,9 @@ export default function CommunityV2(){
 
  const loadDiscover=useCallback(async()=>{
   setDiscoverLoading(true);
-  const{data,error}=await db.rpc("discover_community_groups");
+  const{data,error}=await db.from("community_groups").select("id,name,description,avatar_url").order("updated_at",{ascending:false});
   if(error){setDiscoverList([]);setDiscoverLoading(false);return}
-  const rows=await Promise.all((data||[]).map(async(x:any)=>({id:x.id,name:x.name,description:x.description,avatar:x.avatar_url?await signed(x.avatar_url):undefined,memberCount:Number(x.member_count)||0})));
+  const rows=await Promise.all((data||[]).map(async(x:any)=>({id:x.id,name:x.name,description:x.description,avatar:x.avatar_url?await signed(x.avatar_url):undefined,memberCount:0})));
   setDiscoverList(rows);setDiscoverLoading(false);
  },[]);
 
