@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Library as LibraryIcon, ChevronRight, Landmark, GraduationCap } from "lucide-react";
 import { SimpleScreen } from "./SimpleScreen";
 import { supabase } from "@/integrations/supabase/client";
@@ -201,7 +201,18 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
 }
 /** ABBA keeps its own authentication until a verified cross-project SSO bridge is deployed. */
 export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => void; language: string }) {
-  const academyUrl = `https://prayerandfire.org/academy?lang=${encodeURIComponent(
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  useEffect(() => {
+    const handleAcademyBack = (event: MessageEvent) => {
+      if (!["https://prayerandfire.org", "https://alineramiro.com"].includes(event.origin)) return;
+      if (event.source !== iframeRef.current?.contentWindow) return;
+      if (event.data?.type !== "prayer-fire:abba-back" || event.data?.version !== 1) return;
+      onBack();
+    };
+    window.addEventListener("message", handleAcademyBack);
+    return () => window.removeEventListener("message", handleAcademyBack);
+  }, [onBack]);
+  const academyUrl = `https://prayerandfire.org/academy?parent_origin=${encodeURIComponent(window.location.origin)}&lang=${encodeURIComponent(
     language === "pt" || language === "es" ? language : "en"
   )}`;
 
@@ -221,6 +232,7 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
         </div>
         <div className="overflow-hidden rounded-xl border border-[#365D87] bg-white">
           <iframe
+            ref={iframeRef}
             title="ABBA Academy"
             src={academyUrl}
             className="block w-full border-0"
