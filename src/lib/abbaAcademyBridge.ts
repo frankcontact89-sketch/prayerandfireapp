@@ -91,13 +91,12 @@ export function parseAcademyAccess(body: unknown): AcademyAccess {
 }
 
 export async function loadAcademyAccess(signal?: AbortSignal): Promise<AcademyAccess> {
-  // Disabled until the authenticated endpoint is deployed and verified.
-  // This prevents accidental requests to a nonexistent endpoint or a public site.
-  if (import.meta.env.VITE_ABBA_NATIVE_BRIDGE_ENABLED !== "true") {
-    return { status: "unavailable" };
-  }
-
-  const url = getTrustedAcademyBridgeUrl(import.meta.env.VITE_ABBA_NATIVE_BRIDGE_URL);
+  // The audited Academy bridge is deployed on the ministry-websites Supabase project.
+  // Keep the destination fixed so Prayer & Fire credentials cannot be redirected
+  // by build-time variables to another host.
+  const url = getTrustedAcademyBridgeUrl(
+    "https://yecywtxbuhfukergbwfc.supabase.co/functions/v1/abba-mobile-bridge",
+  );
   if (!url) return { status: "unavailable" };
 
   if (signal?.aborted) return { status: "unavailable" };
