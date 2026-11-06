@@ -297,7 +297,7 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
   const nextStudyLesson = enrolled && activeCourse
     ? lessons.find((lesson) => !access.progress.some(
         (item) => item.lesson_id === lesson.id && item.completed,
-      )) ?? lessons[lessons.length - 1]
+      ))
     : undefined;
 
   return (
@@ -378,6 +378,14 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
                     {L(language, "Continue studying", "Continuar estudiando", "Continuar estudando")}
                     {" · "}{L(language, "Lesson", "Lección", "Aula")} {nextStudyLesson.lesson_number}
                   </button>
+                )}
+                {!activeLesson && lessons.length > 0 && !nextStudyLesson && (
+                  <p role="status" className="mb-5 rounded-lg border border-[#D9BD81] p-3 text-sm text-[#D9BD81]">
+                    {L(language,
+                      "All available lessons completed. You can select any lesson to review.",
+                      "Completaste todas las lecciones disponibles. Puedes seleccionar cualquiera para repasarla.",
+                      "Você concluiu todas as aulas disponíveis. Selecione uma aula para revisar.")}
+                  </p>
                 )}
                 <div role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}
                   aria-label={L(language, "Course progress", "Progreso del curso", "Progresso do curso")}
