@@ -3,7 +3,7 @@ import { Library as LibraryIcon, ChevronRight, Landmark, GraduationCap } from "l
 import { SimpleScreen } from "./SimpleScreen";
 import { supabase } from "@/integrations/supabase/client";
 import { L, pick } from "./content/lang";
-import { loadAcademyAccess } from "@/lib/abbaAcademyBridge";
+import { loadAcademyAccess, completeAcademyLesson } from "@/lib/abbaAcademyBridge";
 import { academyCompletionPercent, type AcademyAccess } from "@/lib/abbaAcademy";
 
 const CATEGORY_LABELS: Record<string, [string, string, string]> = {
@@ -211,6 +211,8 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
   const [sessionRevision, setSessionRevision] = useState(0);
   const [prayerFireAccountId, setPrayerFireAccountId] = useState<string | null>(null);
   const [accountIdCopied, setAccountIdCopied] = useState(false);
+  const [savingCompletion, setSavingCompletion] = useState(false);
+  const [completionError, setCompletionError] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -494,6 +496,32 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
                     <p className="mt-5 text-sm text-slate-200">
                       {lessonProgress?.completed ? L(language, "Completed", "Completada", "Concluída") : L(language, "Not completed", "Pendiente", "Pendente")}
                     </p>
+                    {!lessonProgress?.completed && (
+                      <div className="mt-3">
+                        <button type="button" disabled={savingCompletion} onClick={async () => {
+                          setSavingCompletion(true);
+                          setCompletionError(false);
+                          try {
+                            const saved = await completeAcademyLesson(activeLesson.id);
+                            if (saved) setRetry(n => n + 1);
+                            else setCompletionError(true);
+                          } finally {
+                            setSavingCompletion(false);
+                          }
+                        }}
+                          className="rounded-lg border border-[#D9BD81] px-4 py-2 text-sm font-semibold text-[#D9BD81] disabled:opacity-50">
+                          {savingCompletion
+                            ? L(language, "Saving…", "Guardando…", "Salvando…")
+                            : L(language, "Mark lesson complete", "Marcar lección como completada", "Marcar aula como concluída")}
+                        </button>
+                        {completionError && <p role="alert" className="mt-2 text-sm text-slate-200">
+                          {L(language,
+                            "Progress could not be saved. Check your connection or enrollment and try again.",
+                            "No se pudo guardar el progreso. Verifica tu conexión o inscripción e inténtalo nuevamente.",
+                            "Não foi possível salvar seu progresso. Verifique a conexão ou matrícula e tente novamente.")}
+                        </p>}
+                      </div>
+                    )}
                     {lessonProgress && lessonProgress.last_position_seconds > 0 && (
                       <p className="mt-2 text-xs text-slate-300">
                         {L(language, "Saved playback position", "Posición guardada", "Posição salva")}:
