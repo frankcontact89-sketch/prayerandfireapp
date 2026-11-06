@@ -229,7 +229,12 @@ export async function getAcademyLessonContent(lessonId: string, signal?: AbortSi
     };
     if (!body.resources.every((v: unknown) => object(v) && typeof v.name === "string" &&
       typeof v.type === "string" && safeStorage(v.url))) return null;
-    return body as AcademyLessonContent;
+    return {
+      lesson_id: lessonId,
+      playback_id: body.playback_id as string | null,
+      extra_videos: body.extra_videos as AcademyLessonContent["extra_videos"],
+      resources: body.resources as AcademyLessonContent["resources"],
+    };
   } catch {
     return null;
   } finally {
