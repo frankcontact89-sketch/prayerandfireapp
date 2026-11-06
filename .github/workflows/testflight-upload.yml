@@ -26,7 +26,37 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Validate required signing inputs on a Linux runner before allocating macOS.
+  # This prevents expensive builds from failing late due to missing GitHub secrets.
+  signing-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check signing secrets are configured
+        env:
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
+          IOS_DISTRIBUTION_P12_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_P12_PASSWORD }}
+          IOS_APPSTORE_PROFILE_BASE64: ${{ secrets.IOS_APPSTORE_PROFILE_BASE64 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_API_KEY IOS_DISTRIBUTION_P12_BASE64 IOS_DISTRIBUTION_P12_PASSWORD IOS_APPSTORE_PROFILE_BASE64; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::GitHub Actions secret ${name} is not configured."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "::error::Set up the existing Apple Distribution .p12 (with its private key) and matching App Store provisioning profile. Do not revoke existing certificates."
+            exit 1
+          fi
+          echo "Required signing secret names are configured. Certificate validity will be checked on macOS."
+
   build-and-upload:
+    needs: signing-preflight
     runs-on: macos-latest
     timeout-minutes: 45
     env:
