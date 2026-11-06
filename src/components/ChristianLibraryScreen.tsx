@@ -215,6 +215,7 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
   const [completionError, setCompletionError] = useState(false);
   const [lessonContent, setLessonContent] = useState<AcademyLessonContent | null>(null);
   const [lessonContentLoading, setLessonContentLoading] = useState(false);
+  const [mediaRetry, setMediaRetry] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -313,7 +314,7 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
         if (!controller.signal.aborted) setLessonContentLoading(false);
       });
     return () => controller.abort();
-  }, [selectedLesson, access.status]);
+  }, [selectedLesson, access.status, mediaRetry]);
 
   const enrolled = access.status === "enrolled";
   const courses = access.status === "unavailable" ? [] : access.courses;
@@ -566,9 +567,13 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
                       {!lessonContentLoading && !lessonContent && (
                         <div className="rounded-lg border border-[#365D87] p-3 text-sm text-slate-300">
                           {L(language,
-                            "Lesson media is unavailable at this time. Try refreshing your Academy access.",
-                            "El contenido no está disponible por el momento. Intenta actualizar tu acceso a la Academia.",
-                            "O conteúdo não está disponível no momento. Tente atualizar seu acesso à Academia.")}
+                            "Lesson media could not be loaded. Check your connection and try again.",
+                            "No se pudo cargar el contenido. Revisa tu conexión e inténtalo de nuevo.",
+                            "Não foi possível carregar o conteúdo. Verifique a conexão e tente novamente.")}
+                          <button type="button" onClick={() => setMediaRetry(n => n + 1)}
+                            className="mt-3 block rounded-lg border border-[#D9BD81] px-3 py-2 text-xs text-[#D9BD81]">
+                            {L(language, "Retry lesson media", "Reintentar contenido", "Tentar conteúdo novamente")}
+                          </button>
                         </div>
                       )}
                       {lessonContent?.playback_id && (
