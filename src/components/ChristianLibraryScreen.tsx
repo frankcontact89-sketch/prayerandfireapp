@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Library as LibraryIcon, ChevronRight, Landmark, GraduationCap } from "lucide-react";
 import { SimpleScreen } from "./SimpleScreen";
 import { supabase } from "@/integrations/supabase/client";
 import { L, pick } from "./content/lang";
-import { loadAcademyAccess, completeAcademyLesson, getAcademyLessonContent, type AcademyLessonContent } from "@/lib/abbaAcademyBridge";
+import { loadAcademyAccess, completeAcademyLesson, getAcademyLessonContent, saveAcademyPlaybackPosition, type AcademyLessonContent } from "@/lib/abbaAcademyBridge";
 import { academyCompletionPercent, type AcademyAccess } from "@/lib/abbaAcademy";
 
 const CATEGORY_LABELS: Record<string, [string, string, string]> = {
@@ -216,6 +216,7 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
   const [lessonContent, setLessonContent] = useState<AcademyLessonContent | null>(null);
   const [lessonContentLoading, setLessonContentLoading] = useState(false);
   const [mediaRetry, setMediaRetry] = useState(0);
+  const lastPositionSent = useRef<Record<string, number>>({});
 
   useEffect(() => {
     let mounted = true;
@@ -582,7 +583,31 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
                             {L(language, "Main video", "Video principal", "Vídeo principal")}
                           </h4>
                           <video key={lessonContent.playback_id} controls playsInline preload="metadata"
-                            className="w-full rounded-lg bg-black" src={`https://stream.mux.com/${lessonContent.playback_id}.m3u8`}>
+                            className="w-full rounded-lg bg-black" src={`https://stream.mux.com/${lessonContent.playback_id}.m3u8`}
+                            onLoadedMetadata={(event) => {
+                              const position = lessonProgress?.last_position_seconds ?? 0;
+                              const duration = event.currentTarget.duration;
+                              if (Number.isFinite(duration) && position > 0 && position < duration - 2) {
+                                event.currentTarget.currentTime = position;
+                                lastPositionSent.current[activeLesson.id] = position;
+                              }
+                            }}
+                            onTimeUpdate={(event) => {
+                              const position = Math.floor(event.currentTarget.currentTime);
+                              if (!Number.isFinite(position) || position < 0) return;
+                              const lastSent = lastPositionSent.current[activeLesson.id] ?? 0;
+                              if (position >= lastSent + 20) {
+                                lastPositionSent.current[activeLesson.id] = position;
+                                void saveAcademyPlaybackPosition(activeLesson.id, position);
+                              }
+                            }}
+                            onPause={(event) => {
+                              const position = Math.floor(event.currentTarget.currentTime);
+                              if (Number.isFinite(position) && position >= 0) {
+                                lastPositionSent.current[activeLesson.id] = position;
+                                void saveAcademyPlaybackPosition(activeLesson.id, position);
+                              }
+                            }}>
                             {L(language, "Your device cannot play this video.", "Tu dispositivo no puede reproducir este video.", "Seu dispositivo não pode reproduzir este vídeo.")}
                           </video>
                         </div>
