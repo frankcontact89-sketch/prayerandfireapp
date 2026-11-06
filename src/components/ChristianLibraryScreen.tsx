@@ -261,7 +261,17 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
       }
     };
     document.addEventListener("visibilitychange", refreshOnResume);
-    return () => document.removeEventListener("visibilitychange", refreshOnResume);
+    // Keep the catalog current during long study sessions without a new build.
+    // Pause network refreshes while the app is in the background.
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        setRetry((value) => value + 1);
+      }
+    }, 5 * 60 * 1000);
+    return () => {
+      document.removeEventListener("visibilitychange", refreshOnResume);
+      window.clearInterval(interval);
+    };
   }, []);
 
   const enrolled = access.status === "enrolled";
