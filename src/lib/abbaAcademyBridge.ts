@@ -85,8 +85,11 @@ export async function loadAcademyAccess(signal?: AbortSignal): Promise<AcademyAc
   const url = getTrustedAcademyBridgeUrl(import.meta.env.VITE_ABBA_NATIVE_BRIDGE_URL);
   if (!url) return { status: "unavailable" };
 
+  if (signal?.aborted) return { status: "unavailable" };
   const { data: { session }, error } = await supabase.auth.getSession();
-  if (error || !session?.access_token) return { status: "unavailable" };
+  // An account switch may abort the request while getSession is resolving.
+  // Never send credentials after cancellation.
+  if (signal?.aborted || error || !session?.access_token) return { status: "unavailable" };
 
   try {
     const response = await fetch(url.toString(), {
