@@ -209,6 +209,19 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
   const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
   const [sessionRevision, setSessionRevision] = useState(0);
+  const [prayerFireAccountId, setPrayerFireAccountId] = useState<string | null>(null);
+  const [accountIdCopied, setAccountIdCopied] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getUser().then(({ data }) => {
+      if (mounted) setPrayerFireAccountId(data.user?.id ?? null);
+    }).catch(() => {
+      if (mounted) setPrayerFireAccountId(null);
+    });
+    return () => { mounted = false; };
+  }, []);
+
 
   useEffect(() => {
     const controller = new AbortController();
@@ -347,6 +360,32 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
                 "Tu sesión de Prayer & Fire está activa. Tu cuenta de la Academia todavía no está vinculada de forma segura. Si ya estás inscrito, solicita a soporte de la Academia que verifique la conexión. Aquí no necesitas iniciar sesión de nuevo ni pagar.",
                 "Sua sessão do Prayer & Fire está ativa. Sua conta da Academia ainda não foi vinculada com segurança. Se já está matriculado, solicite à equipe da Academia a verificação da conexão. Não é necessário entrar novamente nem pagar aqui.")}
             </p>
+            {prayerFireAccountId && (
+              <div className="mt-5 rounded-lg border border-[#365D87] p-3">
+                <p className="mb-2 text-xs text-slate-300">
+                  {L(language,
+                    "Prayer & Fire account reference for verified Academy support",
+                    "Referencia de tu cuenta Prayer & Fire para el soporte autorizado de la Academia",
+                    "Referência da sua conta Prayer & Fire para o suporte autorizado da Academia")}
+                </p>
+                <input readOnly value={prayerFireAccountId} aria-label={L(language, "Account reference", "Referencia de cuenta", "Referência da conta")}
+                  className="w-full rounded bg-[#071A34] px-2 py-2 text-xs text-white" onFocus={(event) => event.currentTarget.select()} />
+                <button type="button"
+                  className="mt-2 rounded-lg border border-[#D9BD81] px-3 py-2 text-xs text-[#D9BD81]"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(prayerFireAccountId);
+                      setAccountIdCopied(true);
+                    } catch {
+                      setAccountIdCopied(false);
+                    }
+                  }}>
+                  {accountIdCopied
+                    ? L(language, "Copied", "Copiado", "Copiado")
+                    : L(language, "Copy account reference", "Copiar referencia", "Copiar referência")}
+                </button>
+              </div>
+            )}
             <button type="button" onClick={() => setRetry((value) => value + 1)}
               className="mt-5 rounded-lg border border-[#D9BD81] px-4 py-2 text-sm text-[#D9BD81]">
               {L(language, "Check again", "Verificar de nuevo", "Verificar novamente")}
