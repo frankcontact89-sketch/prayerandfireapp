@@ -367,6 +367,10 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
                 <h2 className="text-xl font-semibold">{activeCourse.title}</h2>
                 <p className="my-3 text-sm text-slate-200">
                   {L(language, "Completed", "Completado", "Concluído")}: {percent}%
+                  {" · "}
+                  {lessons.filter((lesson) => access.status === "enrolled" &&
+                    access.progress.some((item) => item.lesson_id === lesson.id && item.completed)).length}
+                  /{lessons.length} {L(language, "lessons", "lecciones", "aulas")}
                 </p>
                 {!activeLesson && nextStudyLesson && (
                   <button type="button" onClick={() => setSelectedLesson(nextStudyLesson.id)}
@@ -434,6 +438,11 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
                       {L(language, "Lesson", "Lección", "Aula")} {lesson.lesson_number}
                     </span>
                     <h3 className="font-semibold">{lesson.title}</h3>
+                    {lesson.duration_minutes !== null && (
+                      <p className="mt-1 text-xs text-slate-300">
+                        {lesson.duration_minutes} {L(language, "min", "min", "min")}
+                      </p>
+                    )}
                     <p className="mt-1 text-sm text-slate-200">{lesson.description}</p>
                     <span className="mt-2 block text-xs text-slate-300">
                       {access.progress.some((item) => item.lesson_id === lesson.id && item.completed)
