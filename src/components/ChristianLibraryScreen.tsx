@@ -212,7 +212,7 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
     window.addEventListener("message", handleAcademyBack);
     return () => window.removeEventListener("message", handleAcademyBack);
   }, [onBack]);
-  const academyUrl = `https://prayerandfire.org/academy?embedded=prayer-fire&lang=${encodeURIComponent(
+  const academyUrl = `https://prayerandfire.org/academy-portal.html?embedded=prayer-fire&lang=${encodeURIComponent(
     language === "pt" || language === "es" ? language : "en"
   )}`;
 
