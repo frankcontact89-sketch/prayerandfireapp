@@ -294,6 +294,11 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
   const percent = enrolled && activeCourse
     ? academyCompletionPercent(lessons, access.progress)
     : 0;
+  const nextStudyLesson = enrolled && activeCourse
+    ? lessons.find((lesson) => !access.progress.some(
+        (item) => item.lesson_id === lesson.id && item.completed,
+      )) ?? lessons[lessons.length - 1]
+    : undefined;
 
   return (
     <section className="min-h-[70vh] bg-[#071A34] px-5 py-8 text-white" aria-label="ABBA Academy">
@@ -363,6 +368,13 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
                 <p className="my-3 text-sm text-slate-200">
                   {L(language, "Completed", "Completado", "Concluído")}: {percent}%
                 </p>
+                {!activeLesson && nextStudyLesson && (
+                  <button type="button" onClick={() => setSelectedLesson(nextStudyLesson.id)}
+                    className="mb-5 rounded-lg bg-[#D9BD81] px-4 py-3 text-sm font-semibold text-[#071A34]">
+                    {L(language, "Continue studying", "Continuar estudiando", "Continuar estudando")}
+                    {" · "}{L(language, "Lesson", "Lección", "Aula")} {nextStudyLesson.lesson_number}
+                  </button>
+                )}
                 <div role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}
                   aria-label={L(language, "Course progress", "Progreso del curso", "Progresso do curso")}
                   className="mb-5 h-2 overflow-hidden rounded-full bg-[#365D87]">
