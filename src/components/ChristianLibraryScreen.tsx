@@ -212,8 +212,8 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
 
   useEffect(() => {
     const controller = new AbortController();
-    // Do not display the previous student's courses while a fresh request runs.
-    setAccess({ status: "unavailable" });
+    // Keep the current authorized lesson visible during routine refreshes.
+    // Account changes explicitly clear access in the auth listener below.
     setLoading(true);
     loadAcademyAccess(controller.signal)
       .then((value) => {
@@ -294,7 +294,7 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
     <section className="min-h-[70vh] bg-[#071A34] px-5 py-8 text-white" aria-label="ABBA Academy">
       <div className="mx-auto max-w-2xl">
         <h1 className="mb-6 text-xl font-semibold tracking-wide text-[#D9BD81]">ABBA Academy</h1>
-        {loading ? (
+        {loading && access.status === "unavailable" ? (
           <p role="status" className="text-slate-200">
             {L(language, "Checking your Academy access…", "Verificando tu acceso a la Academia…", "Verificando seu acesso à Academia…")}
           </p>
