@@ -335,6 +335,23 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
               {L(language, "Try again", "Intentar de nuevo", "Tentar novamente")}
             </button>
           </div>
+        ) : access.status === "link_required" ? (
+          <div role="status" className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6">
+            <GraduationCap className="mb-4 h-10 w-10 text-[#D9BD81]" aria-hidden="true" />
+            <h2 className="text-xl font-semibold">
+              {L(language, "Connect your Academy account", "Conecta tu cuenta de la Academia", "Conecte sua conta da Academia")}
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-200">
+              {L(language,
+                "Your Prayer & Fire session is active. Your Academy account has not been securely linked yet. If you are enrolled, contact Academy support to verify the connection. No second sign-in or payment is needed here.",
+                "Tu sesión de Prayer & Fire está activa. Tu cuenta de la Academia todavía no está vinculada de forma segura. Si ya estás inscrito, solicita a soporte de la Academia que verifique la conexión. Aquí no necesitas iniciar sesión de nuevo ni pagar.",
+                "Sua sessão do Prayer & Fire está ativa. Sua conta da Academia ainda não foi vinculada com segurança. Se já está matriculado, solicite à equipe da Academia a verificação da conexão. Não é necessário entrar novamente nem pagar aqui.")}
+            </p>
+            <button type="button" onClick={() => setRetry((value) => value + 1)}
+              className="mt-5 rounded-lg border border-[#D9BD81] px-4 py-2 text-sm text-[#D9BD81]">
+              {L(language, "Check again", "Verificar de nuevo", "Verificar novamente")}
+            </button>
+          </div>
         ) : access.status === "not_enrolled" ? (
           <div className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6">
             <h2 className="text-xl font-semibold">{L(language, "Academy courses", "Cursos de la Academia", "Cursos da Academia")}</h2>
