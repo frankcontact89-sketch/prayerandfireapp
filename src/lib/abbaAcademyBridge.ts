@@ -93,6 +93,14 @@ export async function loadAcademyAccess(signal?: AbortSignal): Promise<AcademyAc
   // Never send credentials after cancellation.
   if (signal?.aborted || error || !session?.access_token) return { status: "unavailable" };
 
+  // A stalled connection must not leave the Academy loading indefinitely.
+  // Forward caller cancellation and cap network requests at 15 seconds.
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  signal?.addEventListener("abort", abort, { once: true });
+  const timeout = setTimeout(abort, 15_000);
+  if (signal?.aborted) controller.abort();
+
   try {
     const response = await fetch(url.toString(), {
       method: "GET",
@@ -103,13 +111,16 @@ export async function loadAcademyAccess(signal?: AbortSignal): Promise<AcademyAc
       cache: "no-store",
       credentials: "omit",
       redirect: "error",
-      signal,
+      signal: controller.signal,
     });
     if (!response.ok) return { status: "unavailable" };
     const body: unknown = await response.json();
     return parseAcademyAccess(body);
   } catch {
     // Network, parsing and aborted requests must not bypass enrollment.
+  } finally {
+    clearTimeout(timeout);
+    signal?.removeEventListener("abort", abort);
   }
   return { status: "unavailable" };
 }
