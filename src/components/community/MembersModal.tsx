@@ -32,6 +32,7 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
   const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE);
   const [ownPhone, setOwnPhone] = useState<string | null>(null);
   const [textInvitePhone, setTextInvitePhone] = useState<string | null>(null);
+  const [preparedInvite, setPreparedInvite] = useState<{ phone: string; url: string; body: string } | null>(null);
   const [phoneLookupState, setPhoneLookupState] = useState<"idle" | "found" | "invite">("idle");
 
   useEffect(() => {
@@ -122,6 +123,8 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     if (!canManage || busy) return;
     const e164 = toE164(invitePhone, countryCode);
     setTextInvitePhone(null);
+    setPreparedInvite(null);
+    setPhoneLookupState("idle");
     if (!e164) { setMsg({ kind: "err", text: t.invalidPhone }); return; }
     if (ownPhone === e164) { setMsg({ kind: "err", text: t.cannotSelf }); return; }
     setBusy(true);
@@ -147,18 +150,20 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     setMsg(null);
   };
 
+  const shareTextInvite = async (invite: { url: string; body: string }) => {
+    try {
+      await Share.share({ title: "Prayer & Fire", text: invite.body, dialogTitle: t.inviteByText });
+    } catch {
+      setMsg({ kind: "err", text: t.smsUnavailable });
+    }
+  };
+
   const inviteByText = async () => {
     if (!canManage || busy || !textInvitePhone) return;
     setBusy(true);
-    const now = new Date().toISOString();
-    const { data: activeLinks, error: activeLinkError } = await db.from("community_group_invite_links").select("token").eq("group_id", groupId).eq("revoked", false).gt("expires_at", now).order("created_at", { ascending: false }).limit(1);
-    let token = activeLinks?.[0]?.token ? String(activeLinks[0].token) : null;
-    let inviteError = activeLinkError;
-    if (!token && !inviteError) {
-      const { data, error } = await db.rpc("create_group_invite_link", { _group_id: groupId });
-      token = data ? String(data) : null;
-      inviteError = error;
-    }
+    // Create through the existing permission-checked RPC; never expose another member\'s token.
+    const { data, error: inviteError } = await db.rpc("create_group_invite_link", { _group_id: groupId });
+    const token = data ? String(data) : null;
     setBusy(false);
     if (inviteError || !token) {
       setMsg({ kind: "err", text: String(inviteError?.message || "").includes("NO_PERMISSION") ? t.noPermission : String(inviteError?.message || t.smsUnavailable) });
@@ -166,16 +171,20 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     }
     const inviteUrl = `${PUBLIC_COMMUNITY_URL}?invite=${encodeURIComponent(token)}`;
     const body = `${t.smsInviteText} ${inviteUrl}`;
-    if (Capacitor.isNativePlatform()) {
-      window.location.href = `sms:${textInvitePhone}&body=${encodeURIComponent(body)}`;
+    const invite = { phone: textInvitePhone, url: inviteUrl, body };
+    setPreparedInvite(invite);
+    if (Capacitor.getPlatform() === "ios") {
+      // Opening an SMS URL only composes a message; the user must tap Send.
+      // Keep the share option available if iOS cannot handle the URL.
+      const smsUrl = `sms:${encodeURIComponent(invite.phone)}&body=${encodeURIComponent(body)}`;
+      try {
+        window.location.assign(smsUrl);
+      } catch {
+        await shareTextInvite(invite);
+      }
       return;
     }
-    try {
-      if (navigator.share) await navigator.share({ title: "Prayer & Fire", text: body });
-      else await Share.share({ title: "Prayer & Fire", text: body, url: inviteUrl, dialogTitle: t.inviteByText });
-    } catch {
-      setMsg({ kind: "err", text: t.smsUnavailable });
-    }
+    await shareTextInvite(invite);
   };
 
   const resendInvite = async (i: Invite) => {
@@ -249,27 +258,27 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
             <div className="mt-3 rounded-xl border border-white/10 bg-zinc-900/70 p-3">
               <p className="text-sm font-semibold text-white">
                 {phoneLookupState==="invite"
-                  ? "No eligible Prayer & Fire account found"
+                  ? t.noEligibleMember
                   : phoneLookupState==="found"
-                    ? "Prayer & Fire account found"
-                    : "Find or invite by phone"}
+                    ? t.memberAdded
+                    : t.inviteByEmailOrPhone}
               </p>
               <p className="mt-1 text-xs text-zinc-500">
                 {phoneLookupState==="invite"
-                  ? "This person can receive a secure SMS invitation link to join Prayer & Fire and this group."
+                  ? t.phoneInviteRequired
                   : phoneLookupState==="found"
-                    ? "This person can be added directly to the group."
-                    : "If the number belongs to an eligible discoverable Prayer & Fire account, the member can be added directly. Otherwise you can send a secure SMS invitation link."}
+                    ? t.phoneInviteHint
+                    : t.phoneInviteHint + " " + t.phoneInviteRequired}
               </p>
             </div>
             <div className="mt-2 flex gap-2">
-              <select value={countryCode} onChange={(e) => { setCountryCode(e.target.value); setTextInvitePhone(null); setPhoneLookupState("idle"); setMsg(null); }} aria-label={t.phoneLabel} className="h-11 rounded-xl bg-zinc-900 border border-white/10 px-2 outline-none text-sm text-white">
+              <select value={countryCode} onChange={(e) => { setCountryCode(e.target.value); setTextInvitePhone(null); setPreparedInvite(null); setPhoneLookupState("idle"); setMsg(null); }} aria-label={t.phoneLabel} className="h-11 rounded-xl bg-zinc-900 border border-white/10 px-2 outline-none text-sm text-white">
                 {COUNTRY_CODES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
               </select>
               <input value={invitePhone} onChange={(e) => { setInvitePhone(e.target.value); setTextInvitePhone(null); setPhoneLookupState("idle"); setMsg(null); }} inputMode="tel" placeholder={t.phoneLabel} className="flex-1 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
             </div>
             <p className="mt-2 text-[11px] text-zinc-600">{toE164(invitePhone, countryCode) || ""}</p>
-            {!textInvitePhone ? <button onClick={invitePhoneMember} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-[#5C061F] text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">Check number</button> : <div className="mt-3 rounded-xl border border-[#E5BB70]/30 bg-[#5C061F]/30 p-3"><p className="text-xs text-[#E5BB70]">No eligible account was found for direct add. Send a secure invitation link by text message instead.</p><button onClick={inviteByText} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-[#5C061F] text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500 flex items-center justify-center gap-2"><MessageSquareText className="h-4 w-4" />Send SMS invitation</button></div>}
+            {!textInvitePhone ? <button onClick={invitePhoneMember} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-[#5C061F] text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.phoneLabel}</button> : <div className="mt-3 rounded-xl border border-[#E5BB70]/30 bg-[#5C061F]/30 p-3"><p className="text-xs text-[#E5BB70]">{t.noEligibleMember}. {t.phoneInviteRequired}</p><button onClick={inviteByText} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-[#5C061F] text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500 flex items-center justify-center gap-2"><MessageSquareText className="h-4 w-4" />{t.inviteByText}</button>{preparedInvite && <button type="button" onClick={() => shareTextInvite(preparedInvite)} className="mt-2 w-full h-10 rounded-xl border border-white/20 text-white text-sm">{t.smsUnavailable}</button>}</div>}
           </>}
         </div>}
         {msg && <div className={`mt-3 flex items-start gap-2 rounded-xl px-3 py-2 text-xs ${msg.kind === "ok" ? "bg-[#5C061F]/30 text-[#E5BB70]" : "bg-red-500/10 text-red-300"}`}><span className="flex-1">{msg.text}</span><button onClick={() => setMsg(null)} aria-label={t.cancel}><X className="w-3.5 h-3.5" /></button></div>}
