@@ -239,6 +239,10 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
         setSelectedCourse(null);
         setSelectedLesson(null);
         setSessionRevision((value) => value + 1);
+      } else if (event === "TOKEN_REFRESHED") {
+        // Refresh authorized Academy data without losing the course selection.
+        // The request effect aborts any in-flight request from the old token.
+        setSessionRevision((value) => value + 1);
       }
     });
     return () => subscription.unsubscribe();
