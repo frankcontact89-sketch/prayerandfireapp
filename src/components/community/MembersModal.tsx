@@ -145,6 +145,11 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
       return;
     }
     if (status === "already_member") { setPhoneLookupState("found"); setMsg({ kind: "err", text: t.alreadyMemberMsg }); return; }
+    // The protected RPC returns "none" for all non-discoverable/unmatched numbers.
+    if (status !== "none") {
+      setMsg({ kind: "err", text: t.noPermission });
+      return;
+    }
     setPhoneLookupState("invite");
     setTextInvitePhone(e164);
     setMsg(null);
@@ -278,7 +283,7 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
               <input value={invitePhone} onChange={(e) => { setInvitePhone(e.target.value); setTextInvitePhone(null); setPhoneLookupState("idle"); setMsg(null); }} inputMode="tel" placeholder={t.phoneLabel} className="flex-1 w-full h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 outline-none text-sm" />
             </div>
             <p className="mt-2 text-[11px] text-zinc-600">{toE164(invitePhone, countryCode) || ""}</p>
-            {!textInvitePhone ? <button onClick={invitePhoneMember} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-[#5C061F] text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.phoneLabel}</button> : <div className="mt-3 rounded-xl border border-[#E5BB70]/30 bg-[#5C061F]/30 p-3"><p className="text-xs text-[#E5BB70]">{t.noEligibleMember}. {t.phoneInviteRequired}</p><button onClick={inviteByText} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-[#5C061F] text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500 flex items-center justify-center gap-2"><MessageSquareText className="h-4 w-4" />{t.inviteByText}</button>{preparedInvite && <button type="button" onClick={() => shareTextInvite(preparedInvite)} className="mt-2 w-full h-10 rounded-xl border border-white/20 text-white text-sm">{t.shareInvitation}</button>}</div>}
+            {!textInvitePhone ? <button onClick={invitePhoneMember} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-[#5C061F] text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500">{t.phoneInviteHint}</button> : <div className="mt-3 rounded-xl border border-[#E5BB70]/30 bg-[#5C061F]/30 p-3"><p className="text-xs text-[#E5BB70]">{t.noEligibleMember}. {t.phoneInviteRequired}</p><button onClick={inviteByText} disabled={busy} className="mt-3 w-full h-11 rounded-xl bg-[#5C061F] text-black font-black disabled:bg-zinc-800 disabled:text-zinc-500 flex items-center justify-center gap-2"><MessageSquareText className="h-4 w-4" />{t.inviteByText}</button>{preparedInvite && <button type="button" onClick={() => shareTextInvite(preparedInvite)} className="mt-2 w-full h-10 rounded-xl border border-white/20 text-white text-sm">{t.shareInvitation}</button>}</div>}
           </>}
         </div>}
         {msg && <div className={`mt-3 flex items-start gap-2 rounded-xl px-3 py-2 text-xs ${msg.kind === "ok" ? "bg-[#5C061F]/30 text-[#E5BB70]" : "bg-red-500/10 text-red-300"}`}><span className="flex-1">{msg.text}</span><button onClick={() => setMsg(null)} aria-label={t.cancel}><X className="w-3.5 h-3.5" /></button></div>}
