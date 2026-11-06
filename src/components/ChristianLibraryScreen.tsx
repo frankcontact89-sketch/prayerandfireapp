@@ -3,7 +3,7 @@ import { Library as LibraryIcon, ChevronRight, Landmark, GraduationCap } from "l
 import { SimpleScreen } from "./SimpleScreen";
 import { supabase } from "@/integrations/supabase/client";
 import { L, pick } from "./content/lang";
-import { loadAcademyAccess, completeAcademyLesson } from "@/lib/abbaAcademyBridge";
+import { loadAcademyAccess, completeAcademyLesson, getAcademyLessonContent, type AcademyLessonContent } from "@/lib/abbaAcademyBridge";
 import { academyCompletionPercent, type AcademyAccess } from "@/lib/abbaAcademy";
 
 const CATEGORY_LABELS: Record<string, [string, string, string]> = {
@@ -213,6 +213,8 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
   const [accountIdCopied, setAccountIdCopied] = useState(false);
   const [savingCompletion, setSavingCompletion] = useState(false);
   const [completionError, setCompletionError] = useState(false);
+  const [lessonContent, setLessonContent] = useState<AcademyLessonContent | null>(null);
+  const [lessonContentLoading, setLessonContentLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -293,6 +295,25 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
       window.clearInterval(interval);
     };
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setLessonContent(null);
+    if (access.status !== "enrolled" || !selectedLesson ||
+        !access.lessons.some(lesson => lesson.id === selectedLesson)) {
+      setLessonContentLoading(false);
+      return () => controller.abort();
+    }
+    setLessonContentLoading(true);
+    getAcademyLessonContent(selectedLesson, controller.signal)
+      .then(content => {
+        if (!controller.signal.aborted) setLessonContent(content);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLessonContentLoading(false);
+      });
+    return () => controller.abort();
+  }, [selectedLesson, access.status]);
 
   const enrolled = access.status === "enrolled";
   const courses = access.status === "unavailable" ? [] : access.courses;
@@ -536,12 +557,61 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
                         {L(language, "Next lesson", "Siguiente lección", "Próxima aula")}
                       </button>}
                     </nav>
-                    <p className="mt-5 rounded-lg border border-[#365D87] p-3 text-xs text-slate-300">
-                      {L(language,
-                        "Video, audio and activities will appear after the secure lesson service is connected.",
-                        "Los videos, audios y actividades aparecerán cuando se conecte el servicio seguro de lecciones.",
-                        "Vídeos, áudios e atividades aparecerão após a conexão segura das aulas.")}
-                    </p>
+                    <section className="mt-5 space-y-4" aria-label={L(language, "Lesson media", "Material de la lección", "Material da aula")}>
+                      {lessonContentLoading && (
+                        <p role="status" className="text-sm text-slate-300">
+                          {L(language, "Loading lesson media…", "Cargando el contenido…", "Carregando o conteúdo…")}
+                        </p>
+                      )}
+                      {!lessonContentLoading && !lessonContent && (
+                        <div className="rounded-lg border border-[#365D87] p-3 text-sm text-slate-300">
+                          {L(language,
+                            "Lesson media is unavailable at this time. Try refreshing your Academy access.",
+                            "El contenido no está disponible por el momento. Intenta actualizar tu acceso a la Academia.",
+                            "O conteúdo não está disponível no momento. Tente atualizar seu acesso à Academia.")}
+                        </div>
+                      )}
+                      {lessonContent?.playback_id && (
+                        <div>
+                          <h4 className="mb-2 text-sm font-semibold text-[#D9BD81]">
+                            {L(language, "Main video", "Video principal", "Vídeo principal")}
+                          </h4>
+                          <video key={lessonContent.playback_id} controls playsInline preload="metadata"
+                            className="w-full rounded-lg bg-black" src={`https://stream.mux.com/${lessonContent.playback_id}.m3u8`}>
+                            {L(language, "Your device cannot play this video.", "Tu dispositivo no puede reproducir este video.", "Seu dispositivo não pode reproduzir este vídeo.")}
+                          </video>
+                        </div>
+                      )}
+                      {lessonContent?.extra_videos.map((video, index) => (
+                        <div key={video.playback_id}>
+                          <h4 className="mb-2 text-sm font-semibold text-[#D9BD81]">{video.name || `Video ${index + 2}`}</h4>
+                          <video controls playsInline preload="metadata" className="w-full rounded-lg bg-black"
+                            src={`https://stream.mux.com/${video.playback_id}.m3u8`} />
+                        </div>
+                      ))}
+                      {lessonContent && lessonContent.resources.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-semibold text-[#D9BD81]">
+                            {L(language, "Lesson resources", "Materiales de la lección", "Materiais da aula")}
+                          </h4>
+                          {lessonContent.resources.map((resource, index) => (
+                            <a key={index} href={resource.url} target="_blank" rel="noopener noreferrer"
+                              className="block rounded-lg border border-[#365D87] px-3 py-2 text-sm text-slate-100 underline">
+                              {resource.name}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                      {lessonContent && !lessonContent.playback_id &&
+                        lessonContent.extra_videos.length === 0 && lessonContent.resources.length === 0 && (
+                        <p role="status" className="rounded-lg border border-[#365D87] p-3 text-sm text-slate-300">
+                          {L(language,
+                            "No videos or resources have been added to this lesson yet.",
+                            "Todavía no se han agregado videos ni materiales a esta lección.",
+                            "Ainda não foram adicionados vídeos ou materiais a esta aula.")}
+                        </p>
+                      )}
+                    </section>
                   </div>
                 ) : lessons.map((lesson) => (
                   <button type="button" onClick={() => setSelectedLesson(lesson.id)}
