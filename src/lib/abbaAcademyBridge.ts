@@ -176,3 +176,64 @@ export async function completeAcademyLesson(lessonId: string): Promise<boolean> 
     window.clearTimeout(timeout);
   }
 }
+
+export type AcademyLessonContent = {
+  lesson_id: string;
+  playback_id: string | null;
+  extra_videos: Array<{ name: string; playback_id: string }>;
+  resources: Array<{ name: string; type: string; url: string }>;
+};
+
+/** Requests lesson-specific media only after server-side enrollment validation. */
+export async function getAcademyLessonContent(lessonId: string, signal?: AbortSignal): Promise<AcademyLessonContent | null> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lessonId)) return null;
+  const url = getTrustedAcademyBridgeUrl(
+    "https://yecywtxbuhfukergbwfc.supabase.co/functions/v1/abba-mobile-bridge",
+  );
+  if (!url || signal?.aborted) return null;
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error || !session?.access_token || signal?.aborted) return null;
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  signal?.addEventListener("abort", abort, { once: true });
+  const timeout = window.setTimeout(abort, 15000);
+  try {
+    const response = await fetch(url.toString(), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ action: "lesson_content", lesson_id: lessonId }),
+      cache: "no-store",
+      credentials: "omit",
+      redirect: "error",
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
+    const body: unknown = await response.json();
+    if (!object(body) || body.lesson_id !== lessonId ||
+        !Array.isArray(body.extra_videos) || !Array.isArray(body.resources)) return null;
+    const validPlayback = (value: unknown): value is string =>
+      typeof value === "string" && /^[A-Za-z0-9_-]{8,160}$/.test(value);
+    if (body.playback_id !== null && !validPlayback(body.playback_id)) return null;
+    if (!body.extra_videos.every((v: unknown) => object(v) && typeof v.name === "string" && validPlayback(v.playback_id))) return null;
+    const safeStorage = (raw: unknown): boolean => {
+      if (typeof raw !== "string") return false;
+      try {
+        const parsed = new URL(raw);
+        return parsed.protocol === "https:" && parsed.hostname === "yecywtxbuhfukergbwfc.supabase.co" &&
+          parsed.pathname.startsWith("/storage/v1/object/sign/abba-course-files/");
+      } catch { return false; }
+    };
+    if (!body.resources.every((v: unknown) => object(v) && typeof v.name === "string" &&
+      typeof v.type === "string" && safeStorage(v.url))) return null;
+    return body as AcademyLessonContent;
+  } catch {
+    return null;
+  } finally {
+    window.clearTimeout(timeout);
+    signal?.removeEventListener("abort", abort);
+  }
+}
