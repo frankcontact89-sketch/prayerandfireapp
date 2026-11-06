@@ -227,7 +227,12 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
           value.courses.some((course) => course.id === previous) ? previous : null);
       })
       .catch(() => {
-        if (!controller.signal.aborted) setAccess({ status: "unavailable" });
+        if (!controller.signal.aborted) {
+          // Never retain potentially stale enrollment after a failed refresh.
+          setAccess({ status: "unavailable" });
+          setSelectedLesson(null);
+          setSelectedCourse(null);
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
