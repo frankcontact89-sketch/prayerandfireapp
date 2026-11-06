@@ -58,6 +58,9 @@ export function parseAcademyAccess(body: unknown): AcademyAccess {
   const publicCourseSlugs = new Set((body.courses as Array<{ slug: string }>).map((item) => item.slug));
   if (publicCourseIds.size !== body.courses.length ||
       publicCourseSlugs.size !== body.courses.length) return { status: "unavailable" };
+  if (body.status === "link_required") {
+    return { status: "link_required", courses: body.courses as Extract<AcademyAccess, { status: "link_required" }>["courses"] };
+  }
   if (body.status === "not_enrolled") {
     return { status: "not_enrolled", courses: body.courses as Extract<AcademyAccess, { status: "not_enrolled" }>["courses"] };
   }
