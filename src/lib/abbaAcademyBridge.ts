@@ -139,3 +139,40 @@ export async function loadAcademyAccess(signal?: AbortSignal): Promise<AcademyAc
   }
   return { status: "unavailable" };
 }
+
+/** Mark a currently authorized lesson as complete through the audited bridge.
+ * Enrollment, course release and identity mapping are rechecked server-side.
+ */
+export async function completeAcademyLesson(lessonId: string): Promise<boolean> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lessonId)) return false;
+  const url = getTrustedAcademyBridgeUrl(
+    "https://yecywtxbuhfukergbwfc.supabase.co/functions/v1/abba-mobile-bridge",
+  );
+  if (!url) return false;
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error || !session?.access_token) return false;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch(url.toString(), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ action: "complete_lesson", lesson_id: lessonId }),
+      cache: "no-store",
+      credentials: "omit",
+      redirect: "error",
+      signal: controller.signal,
+    });
+    if (!response.ok) return false;
+    const body: unknown = await response.json();
+    return object(body) && body.saved === true && body.lesson_id === lessonId;
+  } catch {
+    return false;
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
