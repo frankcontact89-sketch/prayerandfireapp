@@ -208,6 +208,7 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
+  const [sessionRevision, setSessionRevision] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -221,7 +222,19 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
       setLoading(false);
     });
     return () => controller.abort();
-  }, [retry]);
+  }, [retry, sessionRevision]);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        setAccess({ status: "unavailable" });
+        setSelectedCourse(null);
+        setSelectedLesson(null);
+        setSessionRevision((value) => value + 1);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const enrolled = access.status === "enrolled";
   const courses = access.status === "unavailable" ? [] : access.courses;
