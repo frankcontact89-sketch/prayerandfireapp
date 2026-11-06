@@ -248,6 +248,19 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    // Refresh course catalog and progress when the student returns to the app.
+    // A future authenticated Academy bridge can then surface newly published
+    // lessons without requiring another TestFlight release.
+    const refreshOnResume = () => {
+      if (document.visibilityState === "visible") {
+        setRetry((value) => value + 1);
+      }
+    };
+    document.addEventListener("visibilitychange", refreshOnResume);
+    return () => document.removeEventListener("visibilitychange", refreshOnResume);
+  }, []);
+
   const enrolled = access.status === "enrolled";
   const courses = access.status === "unavailable" ? [] : access.courses;
   const activeCourse = courses.find((course) => course.id === selectedCourse);
