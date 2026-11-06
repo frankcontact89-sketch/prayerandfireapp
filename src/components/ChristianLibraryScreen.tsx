@@ -364,7 +364,17 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
                   className="mb-4 text-sm text-[#D9BD81]">
                   {L(language, "All courses", "Todos los cursos", "Todos os cursos")}
                 </button>
-                <h2 className="text-xl font-semibold">{activeCourse.title}</h2>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="text-xl font-semibold">{activeCourse.title}</h2>
+                  <button type="button" disabled={loading}
+                    onClick={() => setRetry((value) => value + 1)}
+                    aria-label={L(language, "Refresh course and progress", "Actualizar curso y progreso", "Atualizar curso e progresso")}
+                    className="rounded-lg border border-[#D9BD81] px-3 py-2 text-xs text-[#D9BD81] disabled:opacity-50">
+                    {loading
+                      ? L(language, "Updating…", "Actualizando…", "Atualizando…")
+                      : L(language, "Refresh", "Actualizar", "Atualizar")}
+                  </button>
+                </div>
                 <p className="my-3 text-sm text-slate-200">
                   {L(language, "Completed", "Completado", "Concluído")}: {percent}%
                   {" · "}
