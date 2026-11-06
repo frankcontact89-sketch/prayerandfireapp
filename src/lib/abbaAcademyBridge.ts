@@ -58,10 +58,12 @@ export function parseAcademyAccess(body: unknown): AcademyAccess {
       !Array.isArray(body.progress) || !body.lessons.every(lesson) ||
       !body.progress.every(progress)) return { status: "unavailable" };
   const courseIds = new Set((body.courses as Array<{ id: string }>).map((item) => item.id));
+  if (courseIds.size !== body.courses.length) return { status: "unavailable" };
   if ((body.lessons as Array<{ course_id: string }>).some((item) => !courseIds.has(item.course_id))) {
     return { status: "unavailable" };
   }
   const lessonIds = new Set((body.lessons as Array<{ id: string }>).map((item) => item.id));
+  if (lessonIds.size !== body.lessons.length) return { status: "unavailable" };
   if ((body.progress as Array<{ lesson_id: string }>).some((item) => !lessonIds.has(item.lesson_id))) {
     return { status: "unavailable" };
   }
