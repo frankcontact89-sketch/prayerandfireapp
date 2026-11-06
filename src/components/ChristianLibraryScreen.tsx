@@ -206,6 +206,7 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
   const [access, setAccess] = useState<AcademyAccess>({ status: "unavailable" });
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
@@ -214,6 +215,7 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
     loadAcademyAccess(controller.signal).then((value) => {
       if (controller.signal.aborted) return;
       setAccess(value);
+      setSelectedLesson(null);
       setSelectedCourse((previous) => previous && value.status !== "unavailable" &&
         value.courses.some((course) => course.id === previous) ? previous : null);
       setLoading(false);
@@ -228,6 +230,8 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
     ? access.lessons.filter((lesson) => lesson.course_id === activeCourse.id)
         .sort((a, b) => a.lesson_number - b.lesson_number)
     : [];
+  const activeLesson = lessons.find((lesson) => lesson.id === selectedLesson);
+  const lessonProgress = enrolled && activeLesson ? access.progress.find((item) => item.lesson_id === activeLesson.id) : undefined;
   const percent = enrolled && activeCourse
     ? academyCompletionPercent(lessons, access.progress)
     : 0;
@@ -287,7 +291,7 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
               </>
             ) : (
               <>
-                <button type="button" onClick={() => setSelectedCourse(null)}
+                <button type="button" onClick={() => { setSelectedCourse(null); setSelectedLesson(null); }}
                   className="mb-4 text-sm text-[#D9BD81]">
                   {L(language, "All courses", "Todos los cursos", "Todos os cursos")}
                 </button>
@@ -300,8 +304,41 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
                   className="mb-5 h-2 overflow-hidden rounded-full bg-[#365D87]">
                   <div className="h-full bg-[#D9BD81]" style={{ width: `${percent}%` }} />
                 </div>
-                {lessons.map((lesson) => (
-                  <div key={lesson.id} className="mb-3 rounded-xl border border-[#365D87] bg-[#102A4A] p-4">
+                {activeLesson ? (
+                  <div className="rounded-xl border border-[#365D87] bg-[#102A4A] p-5">
+                    <button type="button" onClick={() => setSelectedLesson(null)} className="mb-4 text-sm text-[#D9BD81]">
+                      {L(language, "All lessons", "Todas las lecciones", "Todas as aulas")}
+                    </button>
+                    <p className="text-xs text-[#D9BD81]">{L(language, "Lesson", "Lección", "Aula")} {activeLesson.lesson_number}</p>
+                    <h3 className="mt-1 text-xl font-semibold">{activeLesson.title}</h3>
+                    {activeLesson.description && <p className="mt-3 text-sm text-slate-200">{activeLesson.description}</p>}
+                    {activeLesson.summary && (
+                      <div className="mt-5">
+                        <h4 className="mb-2 font-semibold text-[#D9BD81]">
+                          {L(language, "Lesson summary", "Resumen de la lección", "Resumo da aula")}
+                        </h4>
+                        <p className="whitespace-pre-wrap text-sm leading-6 text-slate-200">{activeLesson.summary}</p>
+                      </div>
+                    )}
+                    <p className="mt-5 text-sm text-slate-200">
+                      {lessonProgress?.completed ? L(language, "Completed", "Completada", "Concluída") : L(language, "Not completed", "Pendiente", "Pendente")}
+                    </p>
+                    {lessonProgress && lessonProgress.last_position_seconds > 0 && (
+                      <p className="mt-2 text-xs text-slate-300">
+                        {L(language, "Saved playback position", "Posición guardada", "Posição salva")}:
+                        {" "}{Math.floor(lessonProgress.last_position_seconds / 60)}:{String(Math.floor(lessonProgress.last_position_seconds % 60)).padStart(2, "0")}
+                      </p>
+                    )}
+                    <p className="mt-5 rounded-lg border border-[#365D87] p-3 text-xs text-slate-300">
+                      {L(language,
+                        "Video, audio and activities will appear after the secure lesson service is connected.",
+                        "Los videos, audios y actividades aparecerán cuando se conecte el servicio seguro de lecciones.",
+                        "Vídeos, áudios e atividades aparecerão após a conexão segura das aulas.")}
+                    </p>
+                  </div>
+                ) : lessons.map((lesson) => (
+                  <button type="button" onClick={() => setSelectedLesson(lesson.id)}
+                    key={lesson.id} className="mb-3 block w-full rounded-xl border border-[#365D87] bg-[#102A4A] p-4 text-left">
                     <span className="text-xs text-[#D9BD81]">
                       {L(language, "Lesson", "Lección", "Aula")} {lesson.lesson_number}
                     </span>
@@ -312,7 +349,7 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
                         ? L(language, "Completed", "Completada", "Concluída")
                         : L(language, "Not completed", "Pendiente", "Pendente")}
                     </span>
-                  </div>
+                  </button>
                 ))}
               </>
             )}
