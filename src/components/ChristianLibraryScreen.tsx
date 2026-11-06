@@ -3,6 +3,8 @@ import { Library as LibraryIcon, ChevronRight, Landmark, GraduationCap } from "l
 import { SimpleScreen } from "./SimpleScreen";
 import { supabase } from "@/integrations/supabase/client";
 import { L, pick } from "./content/lang";
+import { loadAcademyAccess } from "@/lib/abbaAcademyBridge";
+import { academyCompletionPercent, type AcademyAccess } from "@/lib/abbaAcademy";
 
 const CATEGORY_LABELS: Record<string, [string, string, string]> = {
   bible_studies: ["Bible Studies", "Estudios Bíblicos", "Estudos Bíblicos"],
@@ -199,34 +201,123 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
     </SimpleScreen>
   );
 }
-/** Native Academy entry. Do not embed the public website or prompt for a second password.
- * Private lessons must remain locked until a verified cross-project identity bridge exists.
- */
+/** App-native Academy UI. The backend must authorize every private request. */
 export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; language: string }) {
+  const [access, setAccess] = useState<AcademyAccess>({ status: "unavailable" });
+  const [loading, setLoading] = useState(true);
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    loadAcademyAccess(controller.signal).then((value) => {
+      if (controller.signal.aborted) return;
+      setAccess(value);
+      setSelectedCourse((previous) => previous && value.status !== "unavailable" &&
+        value.courses.some((course) => course.id === previous) ? previous : null);
+      setLoading(false);
+    });
+    return () => controller.abort();
+  }, [retry]);
+
+  const enrolled = access.status === "enrolled";
+  const courses = access.status === "unavailable" ? [] : access.courses;
+  const activeCourse = courses.find((course) => course.id === selectedCourse);
+  const lessons = enrolled && activeCourse
+    ? access.lessons.filter((lesson) => lesson.course_id === activeCourse.id)
+        .sort((a, b) => a.lesson_number - b.lesson_number)
+    : [];
+  const percent = enrolled && activeCourse
+    ? academyCompletionPercent(lessons, access.progress)
+    : 0;
+
   return (
     <section className="min-h-[70vh] bg-[#071A34] px-5 py-8 text-white" aria-label="ABBA Academy">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-8">
-          <h1 className="text-xl font-semibold tracking-wide text-[#D9BD81]">ABBA Academy</h1>
-        </div>
-        <div className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6">
-          <GraduationCap className="mb-4 h-10 w-10 text-[#D9BD81]" aria-hidden="true" />
-          <h2 className="text-2xl font-semibold">
-            {L(language, "Your learning space", "Tu espacio de aprendizaje", "Seu espaço de aprendizagem")}
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-slate-200">
-            {L(language,
-              "Academy lessons will appear here after your enrollment can be verified securely. You will not be asked for another password on this screen.",
-              "Tus clases aparecerán aquí cuando podamos verificar tu inscripción de forma segura. No se solicitará otra contraseña en esta pantalla.",
-              "Suas aulas aparecerão aqui quando sua matrícula puder ser verificada com segurança. Nenhuma outra senha será solicitada nesta tela.")}
+        <h1 className="mb-6 text-xl font-semibold tracking-wide text-[#D9BD81]">ABBA Academy</h1>
+        {loading ? (
+          <p role="status" className="text-slate-200">
+            {L(language, "Checking your Academy access…", "Verificando tu acceso a la Academia…", "Verificando seu acesso à Academia…")}
           </p>
-          <p className="mt-5 rounded-lg border border-[#D9BD81]/40 bg-[#071A34] p-4 text-sm text-[#D9BD81]" role="status">
-            {L(language,
-              "Academy access is being connected. Private lessons and progress are not available in the app yet.",
-              "Estamos conectando el acceso a la Academia. Las clases privadas y el progreso todavía no están disponibles en el app.",
-              "Estamos conectando o acesso à Academia. As aulas privadas e o progresso ainda não estão disponíveis no aplicativo.")}
-          </p>
-        </div>
+        ) : access.status === "unavailable" ? (
+          <div className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6">
+            <GraduationCap className="mb-4 h-10 w-10 text-[#D9BD81]" aria-hidden="true" />
+            <h2 className="text-xl font-semibold">
+              {L(language, "Academy connection pending", "Conexión con la Academia pendiente", "Conexão com a Academia pendente")}
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-200">
+              {L(language,
+                "Your lessons will appear here once secure enrollment verification is enabled. No additional password is required on this screen.",
+                "Tus clases aparecerán aquí cuando se active la verificación segura de inscripción. No se requiere otra contraseña en esta pantalla.",
+                "Suas aulas aparecerão aqui quando a verificação segura da matrícula for ativada. Nenhuma outra senha é necessária nesta tela.")}
+            </p>
+            <button type="button" onClick={() => setRetry((value) => value + 1)}
+              className="mt-5 rounded-lg border border-[#D9BD81] px-4 py-2 text-sm text-[#D9BD81]">
+              {L(language, "Try again", "Intentar de nuevo", "Tentar novamente")}
+            </button>
+          </div>
+        ) : access.status === "not_enrolled" ? (
+          <div className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6">
+            <h2 className="text-xl font-semibold">{L(language, "Academy courses", "Cursos de la Academia", "Cursos da Academia")}</h2>
+            <p className="mt-3 text-sm text-slate-200">
+              {L(language, "You do not have an active enrollment. Enrollment is managed on the Academy website, not inside this app.",
+                "No tienes una inscripción activa. Las inscripciones se gestionan en el website de la Academia, no dentro del app.",
+                "Você não tem uma matrícula ativa. As inscrições são gerenciadas no site da Academia, não no aplicativo.")}
+            </p>
+            {courses.map((course) => (
+              <div key={course.id} className="mt-4 rounded-lg border border-[#365D87] p-4">
+                <h3 className="font-semibold text-[#D9BD81]">{course.title}</h3>
+                <p className="mt-1 text-sm text-slate-200">{course.description}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div>
+            {!activeCourse ? (
+              <>
+                <h2 className="mb-4 text-lg font-semibold">{L(language, "My courses", "Mis cursos", "Meus cursos")}</h2>
+                {courses.map((course) => (
+                  <button key={course.id} type="button" onClick={() => setSelectedCourse(course.id)}
+                    className="mb-3 block w-full rounded-xl border border-[#365D87] bg-[#102A4A] p-5 text-left">
+                    <span className="block font-semibold text-[#D9BD81]">{course.title}</span>
+                    <span className="mt-1 block text-sm text-slate-200">{course.description}</span>
+                  </button>
+                ))}
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={() => setSelectedCourse(null)}
+                  className="mb-4 text-sm text-[#D9BD81]">
+                  {L(language, "All courses", "Todos los cursos", "Todos os cursos")}
+                </button>
+                <h2 className="text-xl font-semibold">{activeCourse.title}</h2>
+                <p className="my-3 text-sm text-slate-200">
+                  {L(language, "Completed", "Completado", "Concluído")}: {percent}%
+                </p>
+                <div role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}
+                  aria-label={L(language, "Course progress", "Progreso del curso", "Progresso do curso")}
+                  className="mb-5 h-2 overflow-hidden rounded-full bg-[#365D87]">
+                  <div className="h-full bg-[#D9BD81]" style={{ width: `${percent}%` }} />
+                </div>
+                {lessons.map((lesson) => (
+                  <div key={lesson.id} className="mb-3 rounded-xl border border-[#365D87] bg-[#102A4A] p-4">
+                    <span className="text-xs text-[#D9BD81]">
+                      {L(language, "Lesson", "Lección", "Aula")} {lesson.lesson_number}
+                    </span>
+                    <h3 className="font-semibold">{lesson.title}</h3>
+                    <p className="mt-1 text-sm text-slate-200">{lesson.description}</p>
+                    <span className="mt-2 block text-xs text-slate-300">
+                      {access.progress.some((item) => item.lesson_id === lesson.id && item.completed)
+                        ? L(language, "Completed", "Completada", "Concluída")
+                        : L(language, "Not completed", "Pendiente", "Pendente")}
+                    </span>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );
