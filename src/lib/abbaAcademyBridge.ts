@@ -62,6 +62,13 @@ export function parseAcademyAccess(body: unknown): AcademyAccess {
   if ((body.lessons as Array<{ course_id: string }>).some((item) => !courseIds.has(item.course_id))) {
     return { status: "unavailable" };
   }
+  // A course cannot contain two lessons with the same sequence number.
+  // Duplicate ordering would make Previous/Next navigation ambiguous.
+  const lessonPositions = new Set(
+    (body.lessons as Array<{ course_id: string; lesson_number: number }>).
+      map((item) => JSON.stringify([item.course_id, item.lesson_number])),
+  );
+  if (lessonPositions.size !== body.lessons.length) return { status: "unavailable" };
   const lessonIds = new Set((body.lessons as Array<{ id: string }>).map((item) => item.id));
   if (lessonIds.size !== body.lessons.length) return { status: "unavailable" };
   const progressIds = new Set((body.progress as Array<{ lesson_id: string }>).map((item) => item.lesson_id));
