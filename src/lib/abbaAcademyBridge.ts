@@ -51,14 +51,19 @@ export function parseAcademyAccess(body: unknown): AcademyAccess {
   if (!object(body) || !Array.isArray(body.courses) || !body.courses.every(course)) {
     return { status: "unavailable" };
   }
+  // Validate the public catalog as strictly as the enrolled catalog.
+  // Duplicate course IDs or slugs can otherwise create ambiguous navigation.
+  const publicCourseIds = new Set((body.courses as Array<{ id: string }>).map((item) => item.id));
+  const publicCourseSlugs = new Set((body.courses as Array<{ slug: string }>).map((item) => item.slug));
+  if (publicCourseIds.size !== body.courses.length ||
+      publicCourseSlugs.size !== body.courses.length) return { status: "unavailable" };
   if (body.status === "not_enrolled") {
     return { status: "not_enrolled", courses: body.courses as Extract<AcademyAccess, { status: "not_enrolled" }>["courses"] };
   }
   if (body.status !== "enrolled" || !Array.isArray(body.lessons) ||
       !Array.isArray(body.progress) || !body.lessons.every(lesson) ||
       !body.progress.every(progress)) return { status: "unavailable" };
-  const courseIds = new Set((body.courses as Array<{ id: string }>).map((item) => item.id));
-  if (courseIds.size !== body.courses.length) return { status: "unavailable" };
+  const courseIds = publicCourseIds;
   if ((body.lessons as Array<{ course_id: string }>).some((item) => !courseIds.has(item.course_id))) {
     return { status: "unavailable" };
   }
