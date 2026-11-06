@@ -202,15 +202,12 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
 /** Native Academy entry. Do not embed the public website or prompt for a second password.
  * Private lessons must remain locked until a verified cross-project identity bridge exists.
  */
-export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => void; language: string }) {
+export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; language: string }) {
   return (
     <section className="min-h-[70vh] bg-[#071A34] px-5 py-8 text-white" aria-label="ABBA Academy">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8">
           <h1 className="text-xl font-semibold tracking-wide text-[#D9BD81]">ABBA Academy</h1>
-          <button type="button" onClick={onBack} className="rounded-lg border border-[#365D87] px-4 py-2 text-sm text-white">
-            {L(language, "Library", "Biblioteca", "Biblioteca")}
-          </button>
         </div>
         <div className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6">
           <GraduationCap className="mb-4 h-10 w-10 text-[#D9BD81]" aria-hidden="true" />
@@ -219,9 +216,9 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
           </h2>
           <p className="mt-3 text-sm leading-6 text-slate-200">
             {L(language,
-              "Your Prayer & Fire session is already active. Academy lessons will appear here when secure enrollment verification is available. No second sign-in is needed on this screen.",
-              "Tu sesión de Prayer & Fire ya está activa. Tus clases aparecerán aquí cuando esté disponible la verificación segura de inscripción. No necesitas iniciar sesión de nuevo en esta pantalla.",
-              "Sua sessão do Prayer & Fire já está ativa. Suas aulas aparecerão aqui quando a verificação segura de matrícula estiver disponível. Não é necessário entrar novamente nesta tela.")}
+              "Academy lessons will appear here after your enrollment can be verified securely. You will not be asked for another password on this screen.",
+              "Tus clases aparecerán aquí cuando podamos verificar tu inscripción de forma segura. No se solicitará otra contraseña en esta pantalla.",
+              "Suas aulas aparecerão aqui quando sua matrícula puder ser verificada com segurança. Nenhuma outra senha será solicitada nesta tela.")}
           </p>
           <p className="mt-5 rounded-lg border border-[#D9BD81]/40 bg-[#071A34] p-4 text-sm text-[#D9BD81]" role="status">
             {L(language,
