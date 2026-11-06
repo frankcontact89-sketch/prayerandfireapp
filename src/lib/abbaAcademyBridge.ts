@@ -6,18 +6,19 @@ import type { AcademyAccess } from "./abbaAcademy";
  * to an ABBA student and enforce enrollment using server-side credentials.
  * Never send an app access token to the public Academy website. Configure a\n * dedicated, audited backend URL only after the endpoint is deployed.
  */
-// Only an explicitly configured trusted HTTPS backend may receive the app JWT.
-// The public Academy website is intentionally not a permitted bridge origin.
-const PUBLIC_WEBSITE_HOSTS = new Set(["prayerandfire.org", "www.prayerandfire.org", "alineramiro.com", "www.alineramiro.com"]);
+// The only permitted destination is the ministry-websites Supabase Edge Function.
+// This prevents build-time variables from redirecting Prayer & Fire credentials
+// to a third-party host. Deploy and audit the function before enabling it.
+const ACADEMY_BRIDGE_HOST = "yecywtxbuhfukergbwfc.supabase.co";
+const ACADEMY_BRIDGE_PATH = "/functions/v1/abba-mobile-bridge";
 
 export function getTrustedAcademyBridgeUrl(raw: string | undefined): URL | null {
   if (!raw) return null;
   try {
     const url = new URL(raw);
     if (url.protocol !== "https:" || url.username || url.password || url.hash ||
-        url.search || url.port || !url.hostname ||
-        PUBLIC_WEBSITE_HOSTS.has(url.hostname.toLowerCase()) ||
-        url.pathname !== "/functions/v1/abba-mobile-bridge") return null;
+        url.search || url.port || url.hostname !== ACADEMY_BRIDGE_HOST ||
+        url.pathname !== ACADEMY_BRIDGE_PATH) return null;
     return url;
   } catch {
     return null;
