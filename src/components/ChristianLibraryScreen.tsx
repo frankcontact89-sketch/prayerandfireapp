@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Library as LibraryIcon, ChevronRight, Landmark, GraduationCap } from "lucide-react";
 import { SimpleScreen } from "./SimpleScreen";
 import { supabase } from "@/integrations/supabase/client";
@@ -199,47 +199,36 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
     </SimpleScreen>
   );
 }
-/** ABBA keeps its own authentication until a verified cross-project SSO bridge is deployed. */
+/** Native Academy entry. Do not embed the public website or prompt for a second password.
+ * Private lessons must remain locked until a verified cross-project identity bridge exists.
+ */
 export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => void; language: string }) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  useEffect(() => {
-    const handleAcademyBack = (event: MessageEvent) => {
-      if (!["https://prayerandfire.org", "https://alineramiro.com"].includes(event.origin)) return;
-      if (event.source !== iframeRef.current?.contentWindow) return;
-      if (event.data?.type !== "prayer-fire:abba-back" || event.data?.version !== 1) return;
-      onBack();
-    };
-    window.addEventListener("message", handleAcademyBack);
-    return () => window.removeEventListener("message", handleAcademyBack);
-  }, [onBack]);
-  const academyUrl = `https://prayerandfire.org/academy-portal.html?embedded=prayer-fire&lang=${encodeURIComponent(
-    language === "pt" || language === "es" ? language : "en"
-  )}`;
-
   return (
-    <section className="min-h-[70vh] bg-[#071A34] px-3 py-4 text-white" aria-label="ABBA Academy">
-      <div className="mx-auto w-full max-w-5xl">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-[#365D87] bg-[#102A4A] px-3 py-2 text-sm font-semibold text-white hover:bg-[#18385B]"
-          >
-            <span aria-hidden="true">←</span>
-            {L(language, "Back to Library", "Volver a Biblioteca", "Voltar à Biblioteca")}
+    <section className="min-h-[70vh] bg-[#071A34] px-5 py-8 text-white" aria-label="ABBA Academy">
+      <div className="mx-auto max-w-2xl">
+        <div className="mb-8 flex items-center justify-between">
+          <h1 className="text-xl font-semibold tracking-wide text-[#D9BD81]">ABBA Academy</h1>
+          <button type="button" onClick={onBack} className="rounded-lg border border-[#365D87] px-4 py-2 text-sm text-white">
+            {L(language, "Library", "Biblioteca", "Biblioteca")}
           </button>
-          <span className="min-w-0 truncate text-sm font-semibold text-[#D9BD81]">ABBA Academy</span>
         </div>
-        <div className="overflow-hidden rounded-xl border border-[#365D87] bg-white">
-          <iframe
-            ref={iframeRef}
-            title="ABBA Academy"
-            src={academyUrl}
-            className="block w-full border-0"
-            style={{ height: "calc(100dvh - 200px)", minHeight: 520 }}
-            allow="fullscreen; autoplay; encrypted-media; picture-in-picture"
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
+        <div className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6">
+          <GraduationCap className="mb-4 h-10 w-10 text-[#D9BD81]" aria-hidden="true" />
+          <h2 className="text-2xl font-semibold">
+            {L(language, "Your learning space", "Tu espacio de aprendizaje", "Seu espaço de aprendizagem")}
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-slate-200">
+            {L(language,
+              "Your Prayer & Fire session is already active. Academy lessons will appear here when secure enrollment verification is available. No second sign-in is needed on this screen.",
+              "Tu sesión de Prayer & Fire ya está activa. Tus clases aparecerán aquí cuando esté disponible la verificación segura de inscripción. No necesitas iniciar sesión de nuevo en esta pantalla.",
+              "Sua sessão do Prayer & Fire já está ativa. Suas aulas aparecerão aqui quando a verificação segura de matrícula estiver disponível. Não é necessário entrar novamente nesta tela.")}
+          </p>
+          <p className="mt-5 rounded-lg border border-[#D9BD81]/40 bg-[#071A34] p-4 text-sm text-[#D9BD81]" role="status">
+            {L(language,
+              "Academy access is being connected. Private lessons and progress are not available in the app yet.",
+              "Estamos conectando el acceso a la Academia. Las clases privadas y el progreso todavía no están disponibles en el app.",
+              "Estamos conectando o acesso à Academia. As aulas privadas e o progresso ainda não estão disponíveis no aplicativo.")}
+          </p>
         </div>
       </div>
     </section>
