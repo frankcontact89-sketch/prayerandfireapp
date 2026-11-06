@@ -219,7 +219,10 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
       .then((value) => {
         if (controller.signal.aborted) return;
         setAccess(value);
-        setSelectedLesson(null);
+        // Keep the current lesson open when a background refresh returns it.
+        // Clear selection immediately if enrollment or lesson access was revoked.
+        setSelectedLesson((previous) => previous && value.status === "enrolled" &&
+          value.lessons.some((lesson) => lesson.id === previous) ? previous : null);
         setSelectedCourse((previous) => previous && value.status !== "unavailable" &&
           value.courses.some((course) => course.id === previous) ? previous : null);
       })
