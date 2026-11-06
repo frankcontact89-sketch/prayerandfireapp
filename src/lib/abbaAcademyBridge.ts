@@ -33,16 +33,17 @@ const nullableStr = (value: unknown): value is string | null => value === null |
 const number = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
 const nonnegative = (value: unknown): value is number => number(value) && value >= 0;
 const positiveInteger = (value: unknown): value is number => number(value) && Number.isInteger(value) && value > 0;
+const nonempty = (value: unknown): value is string => str(value) && value.trim().length > 0;
 const course = (value: unknown): boolean => object(value) &&
-  str(value.id) && str(value.slug) && str(value.title) &&
+  nonempty(value.id) && nonempty(value.slug) && nonempty(value.title) &&
   nullableStr(value.description) && nonnegative(value.total_lessons) && Number.isInteger(value.total_lessons);
 const lesson = (value: unknown): boolean => object(value) &&
-  str(value.id) && str(value.course_id) && positiveInteger(value.lesson_number) &&
-  str(value.title) && nullableStr(value.description) &&
+  nonempty(value.id) && nonempty(value.course_id) && positiveInteger(value.lesson_number) &&
+  nonempty(value.title) && nullableStr(value.description) &&
   (value.duration_minutes === null || nonnegative(value.duration_minutes)) &&
   nullableStr(value.summary) && "videos" in value && "attachments" in value;
 const progress = (value: unknown): boolean => object(value) &&
-  str(value.lesson_id) && typeof value.completed === "boolean" &&
+  nonempty(value.lesson_id) && typeof value.completed === "boolean" &&
   nonnegative(value.watched_seconds) && nonnegative(value.last_position_seconds) &&
   nullableStr(value.completed_at);
 
