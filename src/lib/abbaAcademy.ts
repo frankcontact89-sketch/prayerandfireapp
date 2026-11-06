@@ -36,6 +36,7 @@ export type AcademyProgress = {
 
 export type AcademyAccess =
   | { status: "unavailable" }
+  | { status: "link_required"; courses: AcademyCourse[] }
   | { status: "not_enrolled"; courses: AcademyCourse[] }
   | { status: "enrolled"; courses: AcademyCourse[]; lessons: AcademyLesson[]; progress: AcademyProgress[] };
 
