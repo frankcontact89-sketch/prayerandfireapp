@@ -155,10 +155,12 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     setMsg(null);
   };
 
-  const shareTextInvite = async (invite: { url: string; body: string }) => {
+  const shareTextInvite = async (invite: { body: string }) => {
     try {
       await Share.share({ title: "Prayer & Fire", text: invite.body, dialogTitle: t.inviteByText });
-    } catch {
+    } catch (error) {
+      // Closing the native share sheet is a normal cancellation, not an error.
+      if (String(error).toLowerCase().includes("cancel")) return;
       setMsg({ kind: "err", text: t.smsUnavailable });
     }
   };
@@ -167,7 +169,15 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     if (!canManage || busy || !textInvitePhone) return;
     setBusy(true);
     // Create through the existing permission-checked RPC; never expose another member\'s token.
-    const { data, error: inviteError } = await db.rpc("create_group_invite_link", { _group_id: groupId });
+    let data: unknown = null;
+    let inviteError: { message?: string } | null = null;
+    try {
+      const result = await db.rpc("create_group_invite_link", { _group_id: groupId });
+      data = result.data;
+      inviteError = result.error;
+    } catch {
+      inviteError = { message: t.smsUnavailable };
+    }
     const token = data ? String(data) : null;
     setBusy(false);
     if (inviteError || !token) {
@@ -181,7 +191,7 @@ export default function MembersModal({ t, groupId, mode, canManage, onClose, onC
     if (Capacitor.getPlatform() === "ios") {
       // Opening an SMS URL only composes a message; the user must tap Send.
       // Keep the share option available if iOS cannot handle the URL.
-      const smsUrl = `sms:${encodeURIComponent(invite.phone)}&body=${encodeURIComponent(body)}`;
+      const smsUrl = `sms:${invite.phone}&body=${encodeURIComponent(body)}`;
       try {
         window.location.assign(smsUrl);
       } catch {
