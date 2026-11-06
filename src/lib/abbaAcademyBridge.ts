@@ -4,10 +4,25 @@ import type { AcademyAccess } from "./abbaAcademy";
 /**
  * A future trusted backend must verify the Prayer & Fire JWT, map the identity
  * to an ABBA student and enforce enrollment using server-side credentials.
- * Never send an app access token to the public Academy website or arbitrary URLs.
+ * Never send an app access token to the public Academy website. Configure a\n * dedicated, audited backend URL only after the endpoint is deployed.
  */
-const BRIDGE_ORIGIN = "https://prayerandfire.org";
-const BRIDGE_PATH = "/api/mobile/academy";
+// Only an explicitly configured trusted HTTPS backend may receive the app JWT.
+// The public Academy website is intentionally not a permitted bridge origin.
+const PUBLIC_WEBSITE_HOSTS = new Set(["prayerandfire.org", "www.prayerandfire.org", "alineramiro.com", "www.alineramiro.com"]);
+
+export function getTrustedAcademyBridgeUrl(raw: string | undefined): URL | null {
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "https:" || url.username || url.password || url.hash ||
+        url.search || url.port || !url.hostname ||
+        PUBLIC_WEBSITE_HOSTS.has(url.hostname.toLowerCase()) ||
+        url.pathname !== "/functions/v1/abba-mobile-bridge") return null;
+    return url;
+  } catch {
+    return null;
+  }
+}
 
 type RecordValue = Record<string, unknown>;
 const object = (value: unknown): value is RecordValue =>
@@ -62,11 +77,13 @@ export async function loadAcademyAccess(signal?: AbortSignal): Promise<AcademyAc
     return { status: "unavailable" };
   }
 
+  const url = getTrustedAcademyBridgeUrl(import.meta.env.VITE_ABBA_NATIVE_BRIDGE_URL);
+  if (!url) return { status: "unavailable" };
+
   const { data: { session }, error } = await supabase.auth.getSession();
   if (error || !session?.access_token) return { status: "unavailable" };
 
   try {
-    const url = new URL(BRIDGE_PATH, BRIDGE_ORIGIN);
     const response = await fetch(url.toString(), {
       method: "GET",
       headers: {
