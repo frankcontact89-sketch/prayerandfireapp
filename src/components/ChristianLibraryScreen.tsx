@@ -212,15 +212,23 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
 
   useEffect(() => {
     const controller = new AbortController();
+    // Do not display the previous student's courses while a fresh request runs.
+    setAccess({ status: "unavailable" });
     setLoading(true);
-    loadAcademyAccess(controller.signal).then((value) => {
-      if (controller.signal.aborted) return;
-      setAccess(value);
-      setSelectedLesson(null);
-      setSelectedCourse((previous) => previous && value.status !== "unavailable" &&
-        value.courses.some((course) => course.id === previous) ? previous : null);
-      setLoading(false);
-    });
+    loadAcademyAccess(controller.signal)
+      .then((value) => {
+        if (controller.signal.aborted) return;
+        setAccess(value);
+        setSelectedLesson(null);
+        setSelectedCourse((previous) => previous && value.status !== "unavailable" &&
+          value.courses.some((course) => course.id === previous) ? previous : null);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setAccess({ status: "unavailable" });
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
     return () => controller.abort();
   }, [retry, sessionRevision]);
 
