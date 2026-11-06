@@ -324,7 +324,41 @@ jobs:
         run: |
           echo "Uploading Prayer & Fire ${APP_VERSION} (${BUILD_NUMBER})"
 
-      - name: Archive iOS app with automatic signing
+      - name: Install App Store signing identity and provisioning profile
+        env:
+          IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
+          IOS_DISTRIBUTION_P12_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_P12_PASSWORD }}
+          IOS_APPSTORE_PROFILE_BASE64: ${{ secrets.IOS_APPSTORE_PROFILE_BASE64 }}
+        run: |
+          set -euo pipefail
+          for name in IOS_DISTRIBUTION_P12_BASE64 IOS_DISTRIBUTION_P12_PASSWORD IOS_APPSTORE_PROFILE_BASE64; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Missing GitHub Actions secret $name. Export the existing Apple Distribution certificate WITH its private key as a .p12 and download the valid App Store provisioning profile; add both as base64 secrets. Do not revoke certificates."
+              exit 1
+            fi
+          done
+          printf '%s' "$IOS_DISTRIBUTION_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/distribution.p12"
+          printf '%s' "$IOS_APPSTORE_PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/appstore.mobileprovision"
+          security create-keychain -p "$RUNNER_TEMP" "$RUNNER_TEMP/testflight.keychain-db"
+          security set-keychain-settings -lut 21600 "$RUNNER_TEMP/testflight.keychain-db"
+          security unlock-keychain -p "$RUNNER_TEMP" "$RUNNER_TEMP/testflight.keychain-db"
+          security import "$RUNNER_TEMP/distribution.p12" -k "$RUNNER_TEMP/testflight.keychain-db" -P "$IOS_DISTRIBUTION_P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$RUNNER_TEMP" "$RUNNER_TEMP/testflight.keychain-db"
+          security list-keychains -d user -s "$RUNNER_TEMP/testflight.keychain-db"
+          security find-identity -v -p codesigning "$RUNNER_TEMP/testflight.keychain-db"
+          security cms -D -i "$RUNNER_TEMP/appstore.mobileprovision" > "$RUNNER_TEMP/appstore-profile.plist"
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$RUNNER_TEMP/appstore-profile.plist")
+          PROFILE_TEAM=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$RUNNER_TEMP/appstore-profile.plist")
+          PROFILE_APP_ID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$RUNNER_TEMP/appstore-profile.plist")
+          if [ "$PROFILE_TEAM" != "$APPLE_TEAM_ID" ] || [ "$PROFILE_APP_ID" != "$APPLE_TEAM_ID.$APP_BUNDLE_ID" ]; then
+            echo "::error::App Store profile does not match Prayer & Fire team and bundle ID"
+            exit 1
+          fi
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$RUNNER_TEMP/appstore.mobileprovision" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
+          echo "IOS_PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"
+
+      - name: Archive iOS app with distribution signing
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
@@ -345,7 +379,9 @@ jobs:
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             MARKETING_VERSION="$APP_VERSION" \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
-            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$IOS_PROFILE_UUID" \
             clean archive 2>&1 | tee "$RUNNER_TEMP/testflight-diagnostics/archive.log"
           RESULT=${PIPESTATUS[0]}
           set -e
@@ -368,7 +404,14 @@ jobs:
             <key>destination</key>
             <string>export</string>
             <key>signingStyle</key>
-            <string>automatic</string>
+            <string>manual</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${APP_BUNDLE_ID}</key>
+              <string>${IOS_PROFILE_UUID}</string>
+            </dict>
             <key>teamID</key>
             <string>${APPLE_TEAM_ID}</string>
             <key>uploadSymbols</key>
