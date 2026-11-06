@@ -202,7 +202,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
   );
 }
 /** App-native Academy UI. The backend must authorize every private request. */
-export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; language: string }) {
+export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => void; language: string }) {
   const [access, setAccess] = useState<AcademyAccess>({ status: "unavailable" });
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
@@ -303,7 +303,17 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
   return (
     <section className="min-h-[70vh] bg-[#071A34] px-5 py-8 text-white" aria-label="ABBA Academy">
       <div className="mx-auto max-w-2xl">
-        <h1 className="mb-6 text-xl font-semibold tracking-wide text-[#D9BD81]">ABBA Academy</h1>
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <h1 className="text-xl font-semibold tracking-wide text-[#D9BD81]">ABBA Academy</h1>
+          <button type="button" onClick={() => {
+            if (selectedLesson) setSelectedLesson(null);
+            else if (selectedCourse) setSelectedCourse(null);
+            else onBack();
+          }} className="rounded-lg border border-[#365D87] px-3 py-2 text-sm text-white hover:bg-[#102A4A]"
+            aria-label={L(language, "Go back", "Regresar", "Voltar")}>
+            {L(language, "Back", "Regresar", "Voltar")}
+          </button>
+        </div>
         {loading && access.status === "unavailable" ? (
           <p role="status" className="text-slate-200">
             {L(language, "Checking your Academy access…", "Verificando tu acceso a la Academia…", "Verificando seu acesso à Academia…")}
