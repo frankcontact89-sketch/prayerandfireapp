@@ -242,3 +242,43 @@ export async function getAcademyLessonContent(lessonId: string, signal?: AbortSi
     signal?.removeEventListener("abort", abort);
   }
 }
+
+/** Persist an enrolled student's main-video playback position without overwriting completion. */
+export async function saveAcademyPlaybackPosition(lessonId: string, seconds: number): Promise<boolean> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lessonId) ||
+      !Number.isFinite(seconds) || seconds < 0 || seconds > 86400) return false;
+  const url = getTrustedAcademyBridgeUrl(
+    "https://yecywtxbuhfukergbwfc.supabase.co/functions/v1/abba-mobile-bridge",
+  );
+  if (!url) return false;
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error || !session?.access_token) return false;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch(url.toString(), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        action: "save_position",
+        lesson_id: lessonId,
+        position_seconds: Math.floor(seconds),
+      }),
+      cache: "no-store",
+      credentials: "omit",
+      redirect: "error",
+      signal: controller.signal,
+    });
+    if (!response.ok) return false;
+    const body: unknown = await response.json();
+    return object(body) && body.saved === true && body.lesson_id === lessonId;
+  } catch {
+    return false;
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
