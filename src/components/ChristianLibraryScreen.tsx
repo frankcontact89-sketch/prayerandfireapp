@@ -232,6 +232,9 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
     : [];
   const activeLesson = lessons.find((lesson) => lesson.id === selectedLesson);
   const lessonProgress = enrolled && activeLesson ? access.progress.find((item) => item.lesson_id === activeLesson.id) : undefined;
+  const lessonIndex = activeLesson ? lessons.findIndex((item) => item.id === activeLesson.id) : -1;
+  const previousLesson = lessonIndex > 0 ? lessons[lessonIndex - 1] : null;
+  const nextLesson = lessonIndex >= 0 && lessonIndex < lessons.length - 1 ? lessons[lessonIndex + 1] : null;
   const percent = enrolled && activeCourse
     ? academyCompletionPercent(lessons, access.progress)
     : 0;
@@ -329,6 +332,14 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
                         {" "}{Math.floor(lessonProgress.last_position_seconds / 60)}:{String(Math.floor(lessonProgress.last_position_seconds % 60)).padStart(2, "0")}
                       </p>
                     )}
+                    <nav className="mt-5 flex flex-wrap gap-3" aria-label="Lesson navigation">
+                      {previousLesson && <button type="button" onClick={() => setSelectedLesson(previousLesson.id)} className="rounded-lg border border-[#D9BD81] px-4 py-2 text-sm text-[#D9BD81]">
+                        {L(language, "Previous lesson", "Lección anterior", "Aula anterior")}
+                      </button>}
+                      {nextLesson && <button type="button" onClick={() => setSelectedLesson(nextLesson.id)} className="rounded-lg border border-[#D9BD81] px-4 py-2 text-sm text-[#D9BD81]">
+                        {L(language, "Next lesson", "Siguiente lección", "Próxima aula")}
+                      </button>}
+                    </nav>
                     <p className="mt-5 rounded-lg border border-[#365D87] p-3 text-xs text-slate-300">
                       {L(language,
                         "Video, audio and activities will appear after the secure lesson service is connected.",
