@@ -305,6 +305,11 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
             {!activeCourse ? (
               <>
                 <h2 className="mb-4 text-lg font-semibold">{L(language, "My courses", "Mis cursos", "Meus cursos")}</h2>
+                {courses.length === 0 && (
+                  <p role="status" className="rounded-xl border border-[#365D87] p-4 text-sm text-slate-200">
+                    {L(language, "No courses are available yet.", "Todavía no hay cursos disponibles.", "Ainda não há cursos disponíveis.")}
+                  </p>
+                )}
                 {courses.map((course) => (
                   <button key={course.id} type="button" onClick={() => setSelectedCourse(course.id)}
                     className="mb-3 block w-full rounded-xl border border-[#365D87] bg-[#102A4A] p-5 text-left">
@@ -328,6 +333,13 @@ export function AbbaAcademyPortalScreen({ language }: { onBack: () => void; lang
                   className="mb-5 h-2 overflow-hidden rounded-full bg-[#365D87]">
                   <div className="h-full bg-[#D9BD81]" style={{ width: `${percent}%` }} />
                 </div>
+                {lessons.length === 0 && (
+                  <p role="status" className="rounded-xl border border-[#365D87] p-4 text-sm text-slate-200">
+                    {L(language, "There are no available lessons in this course yet.",
+                      "Todavía no hay lecciones disponibles en este curso.",
+                      "Ainda não há aulas disponíveis neste curso.")}
+                  </p>
+                )}
                 {activeLesson ? (
                   <div className="rounded-xl border border-[#365D87] bg-[#102A4A] p-5">
                     <button type="button" onClick={() => setSelectedLesson(null)} className="mb-4 text-sm text-[#D9BD81]">
