@@ -4,7 +4,7 @@ import type { AcademyAccess } from "./abbaAcademy";
 /**
  * A future trusted backend must verify the Prayer & Fire JWT, map the identity
  * to an ABBA student and enforce enrollment using server-side credentials.
- * Never send an app access token to the public Academy website. Configure a\n * dedicated, audited backend URL only after the endpoint is deployed.
+ * Never send an app access token to the public Academy website. Configure a dedicated, audited backend URL only after the endpoint is deployed.
  */
 // The only permitted destination is the ministry-websites Supabase Edge Function.
 // This prevents build-time variables from redirecting Prayer & Fire credentials
@@ -31,17 +31,19 @@ const object = (value: unknown): value is RecordValue =>
 const str = (value: unknown): value is string => typeof value === "string";
 const nullableStr = (value: unknown): value is string | null => value === null || str(value);
 const number = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);
+const nonnegative = (value: unknown): value is number => number(value) && value >= 0;
+const positiveInteger = (value: unknown): value is number => number(value) && Number.isInteger(value) && value > 0;
 const course = (value: unknown): boolean => object(value) &&
   str(value.id) && str(value.slug) && str(value.title) &&
-  nullableStr(value.description) && number(value.total_lessons);
+  nullableStr(value.description) && nonnegative(value.total_lessons) && Number.isInteger(value.total_lessons);
 const lesson = (value: unknown): boolean => object(value) &&
-  str(value.id) && str(value.course_id) && number(value.lesson_number) &&
+  str(value.id) && str(value.course_id) && positiveInteger(value.lesson_number) &&
   str(value.title) && nullableStr(value.description) &&
-  (value.duration_minutes === null || number(value.duration_minutes)) &&
+  (value.duration_minutes === null || nonnegative(value.duration_minutes)) &&
   nullableStr(value.summary) && "videos" in value && "attachments" in value;
 const progress = (value: unknown): boolean => object(value) &&
   str(value.lesson_id) && typeof value.completed === "boolean" &&
-  number(value.watched_seconds) && number(value.last_position_seconds) &&
+  nonnegative(value.watched_seconds) && nonnegative(value.last_position_seconds) &&
   nullableStr(value.completed_at);
 
 /** Validate untrusted JSON before exposing it to the native UI. */
