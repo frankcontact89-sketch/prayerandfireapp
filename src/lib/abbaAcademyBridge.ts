@@ -64,6 +64,8 @@ export function parseAcademyAccess(body: unknown): AcademyAccess {
   }
   const lessonIds = new Set((body.lessons as Array<{ id: string }>).map((item) => item.id));
   if (lessonIds.size !== body.lessons.length) return { status: "unavailable" };
+  const progressIds = new Set((body.progress as Array<{ lesson_id: string }>).map((item) => item.lesson_id));
+  if (progressIds.size !== body.progress.length) return { status: "unavailable" };
   if ((body.progress as Array<{ lesson_id: string }>).some((item) => !lessonIds.has(item.lesson_id))) {
     return { status: "unavailable" };
   }
