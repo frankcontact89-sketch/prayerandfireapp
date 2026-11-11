@@ -220,12 +220,32 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getUser().then(({ data }) => {
-      if (mounted) setPrayerFireAccountId(data.user?.id ?? null);
+    let authRevision = 0;
+    // Keep the support reference tied to the currently signed-in app account.
+    // Otherwise switching accounts can leave the previous user's ID on screen.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+          authRevision += 1;
+          if (mounted) {
+            setPrayerFireAccountId(session?.user?.id ?? null);
+            setAccountIdCopied(false);
+          }
+        }
+      },
+    );
+    const initialRevision = authRevision;
+    void supabase.auth.getUser().then(({ data, error }) => {
+      if (mounted && initialRevision === authRevision) {
+        setPrayerFireAccountId(error ? null : (data.user?.id ?? null));
+      }
     }).catch(() => {
-      if (mounted) setPrayerFireAccountId(null);
+      if (mounted && initialRevision === authRevision) setPrayerFireAccountId(null);
     });
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
 
@@ -349,7 +369,11 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
             else onBack();
           }} className="rounded-lg border border-[#365D87] px-3 py-2 text-sm text-white hover:bg-[#102A4A]"
             aria-label={L(language, "Go back", "Regresar", "Voltar")}>
-            {L(language, "Back", "Regresar", "Voltar")}
+            {selectedLesson
+              ? L(language, "All lessons", "Todas las lecciones", "Todas as aulas")
+              : selectedCourse
+                ? L(language, "All courses", "Todos los cursos", "Todos os cursos")
+                : L(language, "Back to Prayer & Fire", "Volver a Prayer & Fire", "Voltar ao Prayer & Fire")}
           </button>
         </div>
         {loading && access.status === "unavailable" ? (
@@ -385,6 +409,26 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
                 "Tu sesión de Prayer & Fire está activa. Tu cuenta de la Academia todavía no está vinculada de forma segura. Si ya estás inscrito, solicita a soporte de la Academia que verifique la conexión. Aquí no necesitas iniciar sesión de nuevo ni pagar.",
                 "Sua sessão do Prayer & Fire está ativa. Sua conta da Academia ainda não foi vinculada com segurança. Se já está matriculado, solicite à equipe da Academia a verificação da conexão. Não é necessário entrar novamente nem pagar aqui.")}
             </p>
+            {courses.length > 0 && (
+              <section className="mt-5 space-y-3" aria-label={L(language,
+                "Available Academy courses", "Cursos disponibles de la Academia", "Cursos disponíveis da Academia")}>
+                <h3 className="text-sm font-semibold text-[#D9BD81]">
+                  {L(language, "Explore our courses", "Conoce nuestros cursos", "Conheça nossos cursos")}
+                </h3>
+                {courses.map((course) => (
+                  <div key={course.id} className="rounded-lg border border-[#365D87] p-4">
+                    <h4 className="font-semibold text-[#D9BD81]">{course.title}</h4>
+                    {course.description && <p className="mt-1 text-sm text-slate-200">{course.description}</p>}
+                    <p className="mt-2 text-xs text-slate-300">
+                      {L(language,
+                        "Course preview only. Lessons require a verified enrollment.",
+                        "Solo vista previa. Las lecciones requieren una inscripción verificada.",
+                        "Apenas prévia. As aulas exigem matrícula verificada.")}
+                    </p>
+                  </div>
+                ))}
+              </section>
+            )}
             {prayerFireAccountId && (
               <div className="mt-5 rounded-lg border border-[#365D87] p-3">
                 <p className="mb-2 text-xs text-slate-300">
@@ -451,10 +495,6 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
               </>
             ) : (
               <>
-                <button type="button" onClick={() => { setSelectedCourse(null); setSelectedLesson(null); }}
-                  className="mb-4 text-sm text-[#D9BD81]">
-                  {L(language, "All courses", "Todos los cursos", "Todos os cursos")}
-                </button>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-xl font-semibold">{activeCourse.title}</h2>
                   <button type="button" disabled={loading}
@@ -502,9 +542,6 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
                 )}
                 {activeLesson ? (
                   <div className="rounded-xl border border-[#365D87] bg-[#102A4A] p-5">
-                    <button type="button" onClick={() => setSelectedLesson(null)} className="mb-4 text-sm text-[#D9BD81]">
-                      {L(language, "All lessons", "Todas las lecciones", "Todas as aulas")}
-                    </button>
                     <p className="text-xs text-[#D9BD81]">{L(language, "Lesson", "Lección", "Aula")} {activeLesson.lesson_number}</p>
                     <h3 className="mt-1 text-xl font-semibold">{activeLesson.title}</h3>
                     {activeLesson.description && <p className="mt-3 text-sm text-slate-200">{activeLesson.description}</p>}
