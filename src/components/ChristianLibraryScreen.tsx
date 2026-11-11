@@ -405,6 +405,26 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
                 "Tu sesión de Prayer & Fire está activa. Tu cuenta de la Academia todavía no está vinculada de forma segura. Si ya estás inscrito, solicita a soporte de la Academia que verifique la conexión. Aquí no necesitas iniciar sesión de nuevo ni pagar.",
                 "Sua sessão do Prayer & Fire está ativa. Sua conta da Academia ainda não foi vinculada com segurança. Se já está matriculado, solicite à equipe da Academia a verificação da conexão. Não é necessário entrar novamente nem pagar aqui.")}
             </p>
+            {courses.length > 0 && (
+              <section className="mt-5 space-y-3" aria-label={L(language,
+                "Available Academy courses", "Cursos disponibles de la Academia", "Cursos disponíveis da Academia")}>
+                <h3 className="text-sm font-semibold text-[#D9BD81]">
+                  {L(language, "Explore our courses", "Conoce nuestros cursos", "Conheça nossos cursos")}
+                </h3>
+                {courses.map((course) => (
+                  <div key={course.id} className="rounded-lg border border-[#365D87] p-4">
+                    <h4 className="font-semibold text-[#D9BD81]">{course.title}</h4>
+                    {course.description && <p className="mt-1 text-sm text-slate-200">{course.description}</p>}
+                    <p className="mt-2 text-xs text-slate-300">
+                      {L(language,
+                        "Course preview only. Lessons require a verified enrollment.",
+                        "Solo vista previa. Las lecciones requieren una inscripción verificada.",
+                        "Apenas prévia. As aulas exigem matrícula verificada.")}
+                    </p>
+                  </div>
+                ))}
+              </section>
+            )}
             {prayerFireAccountId && (
               <div className="mt-5 rounded-lg border border-[#365D87] p-3">
                 <p className="mb-2 text-xs text-slate-300">
