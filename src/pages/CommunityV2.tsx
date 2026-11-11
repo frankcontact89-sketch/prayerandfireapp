@@ -113,6 +113,9 @@ export default function CommunityV2(){
  const[pushSheet,setPushSheet]=useState(false);
  const[sending,setSending]=useState(false);
  const sendingRef=useRef(false);
+ // A message confirmation must not clear a composer from another conversation.
+ const selectedGroupIdRef=useRef<string|null>(null);
+ selectedGroupIdRef.current=selected?.id??null;
  const[chatAppearanceOpen,setChatAppearanceOpen]=useState(false);
  const[chatPrefs,setChatPrefs]=useState<ChatPrefs>({wallpaper:"default",bubble:"#5C061F"});
  const pendingDeepLink=useRef<{groupId:string;messageId?:string}|null>(null);
@@ -438,6 +441,7 @@ export default function CommunityV2(){
   const body=draft.trim().slice(0,10000);
   if(isBlockedContent(body)){toast(t.contentBlocked);return}
   sendingRef.current=true;setSending(true);
+  const sentGroupId=selected.id;
   const originalReply=replyTo;
   const r=originalReply?.id||null;
   // Keep the composer intact until the database confirms the message.
@@ -448,8 +452,12 @@ export default function CommunityV2(){
     toast(/CONTENT_BLOCKED/.test(error?.message||"")?t.contentBlocked:(error?.message||actionFailedLabel));
     return;
    }
-   setDraft(current=>current.trim()===body?"":current);
-   setReplyTo(current=>current?.id===originalReply?.id?null:current);
+   // Users can switch chats while the insert is in flight. Only clear the
+   // composer if the originating conversation is still selected.
+   if(selectedGroupIdRef.current===sentGroupId){
+    setDraft(current=>current.trim()===body?"":current);
+    setReplyTo(current=>current?.id===originalReply?.id?null:current);
+   }
    void dispatchPush({kind:"message",message_id:inserted.id});
   }catch(e){
    toast(e instanceof Error?e.message:actionFailedLabel);
