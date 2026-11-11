@@ -731,7 +731,7 @@ export default function Index() {
           />
         )}
         {page === "abba-academy" && (
-          <AbbaAcademyPortalScreen onBack={() => setPage("library")} language={language} />
+          <AbbaAcademyPortalScreen onBack={() => setPage("home")} language={language} />
         )}
         {page === "favorites" && (
           <FavoritesScreen
