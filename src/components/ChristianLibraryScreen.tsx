@@ -220,12 +220,32 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getUser().then(({ data }) => {
-      if (mounted) setPrayerFireAccountId(data.user?.id ?? null);
+    let authRevision = 0;
+    // Keep the support reference tied to the currently signed-in app account.
+    // Otherwise switching accounts can leave the previous user's ID on screen.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+          authRevision += 1;
+          if (mounted) {
+            setPrayerFireAccountId(session?.user?.id ?? null);
+            setAccountIdCopied(false);
+          }
+        }
+      },
+    );
+    const initialRevision = authRevision;
+    void supabase.auth.getUser().then(({ data, error }) => {
+      if (mounted && initialRevision === authRevision) {
+        setPrayerFireAccountId(error ? null : (data.user?.id ?? null));
+      }
     }).catch(() => {
-      if (mounted) setPrayerFireAccountId(null);
+      if (mounted && initialRevision === authRevision) setPrayerFireAccountId(null);
     });
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
 
