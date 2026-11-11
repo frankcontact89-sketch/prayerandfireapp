@@ -369,7 +369,11 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
             else onBack();
           }} className="rounded-lg border border-[#365D87] px-3 py-2 text-sm text-white hover:bg-[#102A4A]"
             aria-label={L(language, "Go back", "Regresar", "Voltar")}>
-            {L(language, "Back", "Regresar", "Voltar")}
+            {selectedLesson
+              ? L(language, "All lessons", "Todas las lecciones", "Todas as aulas")
+              : selectedCourse
+                ? L(language, "All courses", "Todos los cursos", "Todos os cursos")
+                : L(language, "Back to Prayer & Fire", "Volver a Prayer & Fire", "Voltar ao Prayer & Fire")}
           </button>
         </div>
         {loading && access.status === "unavailable" ? (
@@ -491,10 +495,6 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
               </>
             ) : (
               <>
-                <button type="button" onClick={() => { setSelectedCourse(null); setSelectedLesson(null); }}
-                  className="mb-4 text-sm text-[#D9BD81]">
-                  {L(language, "All courses", "Todos los cursos", "Todos os cursos")}
-                </button>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-xl font-semibold">{activeCourse.title}</h2>
                   <button type="button" disabled={loading}
@@ -542,9 +542,6 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
                 )}
                 {activeLesson ? (
                   <div className="rounded-xl border border-[#365D87] bg-[#102A4A] p-5">
-                    <button type="button" onClick={() => setSelectedLesson(null)} className="mb-4 text-sm text-[#D9BD81]">
-                      {L(language, "All lessons", "Todas las lecciones", "Todas as aulas")}
-                    </button>
                     <p className="text-xs text-[#D9BD81]">{L(language, "Lesson", "Lección", "Aula")} {activeLesson.lesson_number}</p>
                     <h3 className="mt-1 text-xl font-semibold">{activeLesson.title}</h3>
                     {activeLesson.description && <p className="mt-3 text-sm text-slate-200">{activeLesson.description}</p>}
