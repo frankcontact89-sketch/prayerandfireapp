@@ -192,6 +192,12 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
             else { setConnected(true); setStatus(labels.connected); }
           } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
             console.warn("[voice-room] signaling channel unavailable", { groupId, state, error });
+            // The WebRTC media connection can remain alive after signaling fails.
+            // Immediately stop transmitting and close peer audio connections so
+            // a user never unknowingly broadcasts while the UI says disconnected.
+            stream.current?.getAudioTracks().forEach(track => { track.enabled = false; });
+            setMuted(true);
+            for (const peerId of Array.from(peers.current.keys())) disposePeer(peerId);
             setConnected(false);
             setStatus(labels.failure);
             setFailed(true);
