@@ -329,6 +329,9 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
           }
         }}
         onEnded={() => {
+          // An ended recording is no longer requesting playback. Otherwise,
+          // a subsequent media reload can trigger onCanPlay and start it again.
+          wantPlay.current = false;
           setPlaying(false);
           setCur(0);
         }}
