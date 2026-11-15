@@ -118,7 +118,9 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
   const recover = async () => {
     if (stage.current === 0 && resolve) {
       stage.current = 1;
-      const fresh = await resolve();
+      // Expired-link renewal can fail offline; continue to the MIME-aware
+      // fallback rather than leaving an unhandled rejection in the player.
+      const fresh = await resolve().catch(() => undefined);
       if (fresh) {
         setSrc(fresh);
         return;
@@ -329,6 +331,9 @@ export default function AudioBubble({ url, mine, avatar, name, time, errorLabel,
           }
         }}
         onEnded={() => {
+          // An ended recording is no longer requesting playback. Otherwise,
+          // a subsequent media reload can trigger onCanPlay and start it again.
+          wantPlay.current = false;
           setPlaying(false);
           setCur(0);
         }}
