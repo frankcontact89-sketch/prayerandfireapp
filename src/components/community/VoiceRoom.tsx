@@ -99,6 +99,23 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     for (const candidate of pending) await pc.addIceCandidate(candidate).catch(() => {});
   }, []);
 
+  // Never leave the microphone transmitting after the user backgrounds the app
+  // or switches away from the prayer room. Returning requires another tap.
+  useEffect(() => {
+    const muteWhenHidden = () => {
+      if (document.visibilityState === "hidden") {
+        stream.current?.getAudioTracks().forEach(track => { track.enabled = false; });
+        setMuted(true);
+      }
+    };
+    document.addEventListener("visibilitychange", muteWhenHidden);
+    window.addEventListener("pagehide", muteWhenHidden);
+    return () => {
+      document.removeEventListener("visibilitychange", muteWhenHidden);
+      window.removeEventListener("pagehide", muteWhenHidden);
+    };
+  }, []);
+
   // Retry once the device regains internet connectivity, rather than requiring
   // the member to close and reopen the prayer room.
   useEffect(() => {
@@ -242,7 +259,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   };
 
   const toggleMute = () => {
-    if (!connected || !stream.current) return;
+    if (!connected || !stream.current || document.visibilityState !== "visible") return;
     const next = !muted;
     stream.current?.getAudioTracks().forEach(t => { t.enabled = !next; });
     setMuted(next);
