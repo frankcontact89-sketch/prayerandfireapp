@@ -120,6 +120,29 @@ export default function VoiceRecorder({ t, onSend, onClose }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Preserve the draft recording but never capture microphone audio silently
+  // while the app is in the background. Resume is always a deliberate tap.
+  useEffect(() => {
+    const pauseWhenHidden = () => {
+      if (document.visibilityState !== "hidden") return;
+      const recorder = rec.current;
+      if (recorder?.state === "recording") {
+        try {
+          recorder.pause();
+          setPaused(true);
+        } catch {
+          // A stopped recorder will be cleaned up by its normal lifecycle.
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", pauseWhenHidden);
+    window.addEventListener("pagehide", pauseWhenHidden);
+    return () => {
+      document.removeEventListener("visibilitychange", pauseWhenHidden);
+      window.removeEventListener("pagehide", pauseWhenHidden);
+    };
+  }, []);
+
   useEffect(() => {
     const id = window.setInterval(() => {
       if (rec.current?.state !== "recording") return;
@@ -154,7 +177,7 @@ export default function VoiceRecorder({ t, onSend, onClose }: Props) {
     if (r.state === "recording") {
       r.pause();
       setPaused(true);
-    } else if (r.state === "paused") {
+    } else if (r.state === "paused" && document.visibilityState === "visible") {
       r.resume();
       setPaused(false);
     }
