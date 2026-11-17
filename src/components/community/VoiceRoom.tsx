@@ -73,7 +73,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       if (!el) {
         el = document.createElement("audio");
         el.autoplay = true;
-        el.playsInline = true;
+        el.setAttribute("playsinline", "");
         // On iOS WKWebView, display:none can prevent remote audio playback.
         // Keep the element visually hidden without removing it from layout.
         Object.assign(el.style, {
