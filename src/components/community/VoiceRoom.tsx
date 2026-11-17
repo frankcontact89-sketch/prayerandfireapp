@@ -128,6 +128,11 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     alive.current = true;
     const thisGeneration = ++generation.current;
     let cancelled = false;
+    let subscribeTimer: ReturnType<typeof setTimeout> | null = null;
+    const stopSubscribeTimer = () => {
+      if (subscribeTimer !== null) clearTimeout(subscribeTimer);
+      subscribeTimer = null;
+    };
     const start = async () => {
       if (connecting.current) return;
       connecting.current = true;
@@ -203,11 +208,13 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         ch.subscribe(async (state, error) => {
           if (cancelled || generation.current !== thisGeneration) return;
           if (state === "SUBSCRIBED") {
+            stopSubscribeTimer();
             const presenceStatus = await ch.track({ name: userName, hand: handRef.current });
             if (cancelled) return;
             if (presenceStatus !== "ok") { console.warn("[voice-room] presence tracking failed", { groupId, presenceStatus }); setConnected(false); setStatus(labels.failure); setFailed(true); }
             else { setConnected(true); setStatus(labels.connected); }
           } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
+            stopSubscribeTimer();
             console.warn("[voice-room] signaling channel unavailable", { groupId, state, error });
             // The WebRTC media connection can remain alive after signaling fails.
             // Immediately stop transmitting and close peer audio connections so
@@ -220,7 +227,18 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
             setFailed(true);
           }
         });
+        // A missing SUBSCRIBED/CHANNEL_ERROR callback must not leave the room
+        // displaying "Connecting…" forever. Offer an explicit retry instead.
+        subscribeTimer = setTimeout(() => {
+          if (cancelled || generation.current !== thisGeneration || ch.state === "joined") return;
+          stream.current?.getAudioTracks().forEach(track => { track.enabled = false; });
+          setMuted(true);
+          setConnected(false);
+          setStatus(labels.failure);
+          setFailed(true);
+        }, 20000);
       } catch (error) {
+        stopSubscribeTimer();
         if (cancelled || generation.current !== thisGeneration) return;
         const reason = error instanceof Error ? error.name : "";
         const micDenied = reason === "NotAllowedError" || reason === "PermissionDeniedError";
@@ -234,6 +252,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     void start();
     return () => {
       cancelled = true;
+      stopSubscribeTimer();
       generation.current++;
       alive.current = false;
       if (channel.current) void supabase.removeChannel(channel.current);
