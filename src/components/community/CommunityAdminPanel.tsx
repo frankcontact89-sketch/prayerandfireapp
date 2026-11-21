@@ -16,7 +16,7 @@ type Report = { id: string; reporter_id: string; reported_user_id: string | null
 type Props = { t: Words; meId: string; isOwner: boolean; onClose: () => void; onChanged: () => void };
 
 export default function CommunityAdminPanel({ t, meId, isOwner, onClose, onChanged }: Props) {
-  const [tab, setTab] = useState<"requests" | "admins" | "groups" | "moderation">("requests");
+  const [tab, setTab] = useState<"requests" | "admins" | "groups" | "moderation">("groups");
   const [reports, setReports] = useState<Report[]>([]);
   const [rows, setRows] = useState<Row[]>([]);
   const [admins, setAdmins] = useState<AdminRow[]>([]);
@@ -119,7 +119,7 @@ export default function CommunityAdminPanel({ t, meId, isOwner, onClose, onChang
   return (
     <div className="fixed inset-0 z-[110] bg-[#080808] text-white flex flex-col" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}>
       <header className="shrink-0 h-16 px-3 flex items-center gap-3 border-b border-white/10 bg-black/95"><button onClick={onClose} aria-label={t.back} className="w-10 h-10 rounded-full bg-zinc-900 grid place-items-center"><ArrowLeft className="w-5 h-5" /></button><b className="flex-1 truncate">{title}</b></header>
-      <div className="shrink-0 flex gap-2 px-4 py-3 overflow-x-auto">{(isOwner ? (["requests", "admins", "groups", "moderation"] as const) : (["requests", "groups", "moderation"] as const)).map((x) => <button key={x} onClick={() => setTab(x)} className={`px-4 py-2 rounded-full text-sm font-semibold border whitespace-nowrap ${tab === x ? "bg-[#5C061F] text-white border-[#E5BB70]/45" : "bg-zinc-950 border-white/10 text-zinc-300"}`}>{x === "requests" ? t.requestsPanel : x === "admins" ? t.manageAdmins : x === "groups" ? t.groups : t.moderation}</button>)}</div>
+      <div className="shrink-0 flex flex-wrap gap-2 px-4 py-3">{(isOwner ? (["groups", "admins", "moderation"] as const) : (["groups", "moderation"] as const)).map((x) => <button key={x} onClick={() => setTab(x)} className={`min-w-0 flex-auto px-3 py-2 rounded-xl text-sm font-semibold border whitespace-normal break-words ${tab === x ? "bg-[#5C061F] text-white border-[#E5BB70]/45" : "bg-zinc-950 border-white/10 text-zinc-300"}`}>{x === "requests" ? t.requestsPanel : x === "admins" ? t.manageAdmins : x === "groups" ? t.groups : t.moderation}</button>)}</div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-10">
         {tab === "groups" ? (
