@@ -44,18 +44,19 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
+		<string>audio</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>Prayer &amp; Fire uses the camera when you choose to take a profile, group, or community photo.</string>
+	<string>Prayer &amp; Fire uses the camera when you choose to take a profile, group, or community photo, or turn on video in a meeting.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Prayer &amp; Fire uses your photo library when you choose an image for your profile, groups, or community.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Prayer &amp; Fire can save an image to your photo library only when you choose to save it.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Prayer &amp; Fire uses the microphone when you choose to record a voice message or use an audio feature.</string>
+	<string>Prayer &amp; Fire uses the microphone when you choose to record a voice message, speak in a prayer room, or participate in a voice or video call.</string>
 </dict>
 </plist>
