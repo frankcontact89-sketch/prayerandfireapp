@@ -400,6 +400,18 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/testflight-diagnostics"
           echo "Archive build number: $BUILD_NUMBER"
+          # Configure only the app target; global signing flags leak into Swift packages.
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          p = Path("ios/App/App.xcodeproj/project.pbxproj")
+          s = p.read_text()
+          old = "CODE_SIGN_STYLE = Automatic;"
+          if s.count(old) != 2 or s.count("PRODUCT_BUNDLE_IDENTIFIER = com.frankcontact89.prayerandfiremobile;") != 2:
+              raise SystemExit("Unexpected app target signing configuration")
+          s = s.replace(old, 'CODE_SIGN_STYLE = Manual;\n\t\t\t\tCODE_SIGN_IDENTITY = "Apple Distribution";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "' + os.environ["IOS_PROFILE_UUID"] + '";')
+          p.write_text(s)
+          PY
           set +e
           xcodebuild \
             -project ios/App/App.xcodeproj \
@@ -414,9 +426,6 @@ jobs:
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             MARKETING_VERSION="$APP_VERSION" \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="$IOS_PROFILE_UUID" \
             clean archive 2>&1 | tee "$RUNNER_TEMP/testflight-diagnostics/archive.log"
           RESULT=${PIPESTATUS[0]}
           set -e
