@@ -152,7 +152,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         if (authError || !sessionData.session?.access_token) {
           throw new Error(language === "es" ? "Tu sesión expiró. Inicia sesión de nuevo." : language === "pt" ? "Sua sessão expirou. Entre novamente." : "Your session expired. Please sign in again.");
         }
-        supabase.realtime.setAuth(sessionData.session.access_token);
+        await supabase.realtime.setAuth(sessionData.session.access_token);
         if (cancelled) return;
         const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
         if (cancelled) { mic.getTracks().forEach(t => t.stop()); return; }
@@ -211,15 +211,17 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
             stopSubscribeTimer();
             const presenceStatus = await ch.track({ name: userName, hand: handRef.current });
             if (cancelled) return;
-            if (presenceStatus !== "ok") { console.warn("[voice-room] presence tracking failed", { groupId, presenceStatus }); setConnected(false); setStatus(labels.failure); setFailed(true); }
-            else { setConnected(true); setStatus(labels.connected); }
+            if (presenceStatus !== "ok") { stream.current?.getTracks().forEach(t => t.stop()); stream.current = null; setParticipants([]); console.warn("[voice-room] presence tracking failed", { groupId, presenceStatus }); setConnected(false); setStatus(labels.failure); setFailed(true); }
+            else if (stream.current?.getAudioTracks().some(track => track.readyState === "live")) { setFailed(false); setConnected(true); setStatus(labels.connected); }
           } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
             stopSubscribeTimer();
             console.warn("[voice-room] signaling channel unavailable", { groupId, state, error });
             // The WebRTC media connection can remain alive after signaling fails.
             // Immediately stop transmitting and close peer audio connections so
             // a user never unknowingly broadcasts while the UI says disconnected.
-            stream.current?.getAudioTracks().forEach(track => { track.enabled = false; });
+            stream.current?.getTracks().forEach(track => track.stop());
+            stream.current = null;
+            setParticipants([]);
             setMuted(true);
             for (const peerId of Array.from(peers.current.keys())) disposePeer(peerId);
             setConnected(false);
@@ -231,7 +233,9 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         // displaying "Connecting…" forever. Offer an explicit retry instead.
         subscribeTimer = setTimeout(() => {
           if (cancelled || generation.current !== thisGeneration || ch.state === "joined") return;
-          stream.current?.getAudioTracks().forEach(track => { track.enabled = false; });
+          stream.current?.getTracks().forEach(track => track.stop());
+          stream.current = null;
+          setParticipants([]);
           setMuted(true);
           setConnected(false);
           setStatus(labels.failure);
@@ -240,6 +244,9 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       } catch (error) {
         stopSubscribeTimer();
         if (cancelled || generation.current !== thisGeneration) return;
+        stream.current?.getTracks().forEach(track => track.stop());
+        stream.current = null;
+        setParticipants([]);
         const reason = error instanceof Error ? error.name : "";
         const micDenied = reason === "NotAllowedError" || reason === "PermissionDeniedError";
         setStatus(micDenied
