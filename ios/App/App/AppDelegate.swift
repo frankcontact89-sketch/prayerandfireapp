@@ -76,13 +76,13 @@ class PrayerAudioRoutePlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc private func interrupted(_ notification: Notification) {
-        guard let type = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
-              type == AVAudioSession.InterruptionType.began.rawValue else { return }
-        notifyListeners("interrupted", data: [:])
+        guard let value = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: value) else { return }
+        notifyListeners("interrupted", data: ["ended": type == .ended])
     }
 
     private func activateVoiceAudio() throws {
-        if audio.category != .playAndRecord {
+        if audio.category != .playAndRecord || audio.mode != .voiceChat {
             try audio.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth])
         }
         try audio.setActive(true)

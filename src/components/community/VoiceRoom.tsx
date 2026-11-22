@@ -53,18 +53,19 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
   const reactionTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const audioContext = useRef<AudioContext | null>(null);
   const analysers = useRef(new Map<string, { source: MediaStreamAudioSourceNode; analyser: AnalyserNode }>());
-  const t = (en: string, es: string, pt: string) => language === "es" ? es : language === "pt" ? pt : en;
+  const t = useCallback((en: string, es: string, pt: string) => language === "es" ? es : language === "pt" ? pt : en, [language]);
   const stream = useRef<MediaStream | null>(null);
   const peers = useRef(new Map<string, RTCPeerConnection>());
   const audioNodes = useRef(new Map<string, HTMLAudioElement>());
   const channel = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const peerTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const iceQueues = useRef(new Map<string, RTCIceCandidateInit[]>());
   const offering = useRef(new Set<string>());
   const knownParticipants = useRef(new Set<string>());
-  const alive = useRef(true);
   const connecting = useRef(false);
   const generation = useRef(0);
   const [audioBlocked, setAudioBlocked] = useState(false);
+  const [peerStates, setPeerStates] = useState<Record<string, "connecting" | "ready" | "failed">>({});
   const handRef = useRef(false);
   const reconnectAttempts = useRef(0);
   const reconnectOnOnline = useRef(false);
@@ -136,7 +137,13 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     return () => clearInterval(timer);
   }, [minimized]);
 
+  const setPeerState = useCallback((id: string, state: "connecting" | "ready" | "failed") => {
+    setPeerStates(current => current[id] === state ? current : { ...current, [id]: state });
+  }, []);
+
   const disposePeer = useCallback((id: string) => {
+    clearTimeout(peerTimers.current.get(id));
+    peerTimers.current.delete(id);
     analysers.current.get(id)?.source.disconnect();
     analysers.current.delete(id);
     reactionSentAt.current.delete(id);
@@ -146,10 +153,18 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     audioNodes.current.delete(id);
     iceQueues.current.delete(id);
     offering.current.delete(id);
+    setPeerStates(current => {
+      const next = { ...current };
+      delete next[id];
+      return next;
+    });
   }, []);
 
   const send = useCallback(async (signal: Signal) => {
-    await channel.current?.send({ type: "broadcast", event: "rtc", payload: signal });
+    const active = channel.current;
+    if (!active || active.state !== "joined") throw new Error("Signaling channel unavailable");
+    const result = await active.send({ type: "broadcast", event: "rtc", payload: signal });
+    if (result !== "ok") throw new Error(`Signaling acknowledgment: ${result}`);
   }, []);
 
   const getPeer = useCallback((id: string): RTCPeerConnection => {
@@ -157,19 +172,43 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     if (existing) return existing;
     const pc = new RTCPeerConnection({ iceServers: iceServers.current });
     stream.current?.getTracks().forEach(track => pc.addTrack(track, stream.current!));
+    const markFailed = (reason: unknown) => {
+      if (peers.current.get(id) !== pc) return;
+      console.warn("[voice-room] peer transport failed", { ice: pc.iceConnectionState, reason });
+      setPeerState(id, "failed");
+    };
+    const watchAudio = (deadline: number) => {
+      clearTimeout(peerTimers.current.get(id));
+      const timer = setTimeout(async () => {
+        if (peers.current.get(id) !== pc) return;
+        try {
+          const stats = await pc.getStats();
+          if (peers.current.get(id) !== pc) return;
+          const receivedAudio = Array.from(stats.values()).some(report => report.type === "inbound-rtp"
+            && (report.kind ?? report.mediaType) === "audio" && report.packetsReceived > 0);
+          if (pc.connectionState === "connected" && receivedAudio) {
+            peerTimers.current.delete(id);
+            setPeerState(id, "ready");
+            return;
+          }
+        } catch (error) { console.warn("[voice-room] audio stats unavailable", error); }
+        if (peers.current.get(id) !== pc) return;
+        if (Date.now() >= deadline) markFailed("NO_INBOUND_AUDIO");
+        else watchAudio(deadline);
+      }, 1500);
+      peerTimers.current.set(id, timer);
+    };
+    setPeerState(id, "connecting");
+    watchAudio(Date.now() + 18000);
     pc.oniceconnectionstatechange = () => {
-      if (pc.iceConnectionState === "failed") {
-        console.warn("[voice-room] ICE connection failed", { groupId, peerId: id });
-        setFailed(true);
-        setStatus(language === "es" ? "No se pudo establecer el audio. Reintenta la conexión." : language === "pt" ? "Não foi possível estabelecer o áudio. Tente novamente." : "Could not establish audio. Retry the connection.");
-      }
+      if (pc.iceConnectionState === "failed") markFailed("ICE_FAILED");
     };
     pc.onicecandidate = event => {
-      if (event.candidate) void send({ from: userId, to: id, kind: "ice", data: event.candidate.toJSON() });
+      if (event.candidate) void send({ from: userId, to: id, kind: "ice", data: event.candidate.toJSON() }).catch(markFailed);
     };
     pc.ontrack = event => {
       if (event.track.kind !== "audio") return;
-      const remoteAudio = new MediaStream([event.track]);
+      const remoteAudio = event.streams[0] ?? new MediaStream([event.track]);
       analyseAudio(id, remoteAudio);
       let el = audioNodes.current.get(id);
       if (!el) {
@@ -189,31 +228,37 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         audioNodes.current.set(id, el);
       }
       el.srcObject = remoteAudio;
-      void el.play().then(() => setAudioBlocked(false)).catch(() => setAudioBlocked(true));
+      const playRemote = () => {
+        if (peers.current.get(id) !== pc) return;
+        void el.play().catch(() => { if (peers.current.get(id) === pc) setAudioBlocked(true); });
+      };
+      event.track.addEventListener("unmute", playRemote, { once: true });
+      playRemote();
     };
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === "connected") {
-        // A connected peer does not repair a failed room signaling channel.
-        // Keep any room-level error visible until the member retries.
-        if (channel.current?.state === "joined") {
-          setFailed(false);
-          setStatus(language === "es" ? "Audio conectado" : language === "pt" ? "Áudio conectado" : "Audio connected");
-        }
-      } else if (pc.connectionState === "failed") {
-        setStatus(language === "es" ? "Falló el audio con un participante. Reintenta la conexión." : language === "pt" ? "Falha no áudio com um participante. Tente novamente." : "Audio connection to a participant failed. Please retry.");
-        setFailed(true);
+      if (peers.current.get(id) !== pc) return;
+      if (pc.connectionState === "connected") watchAudio(Date.now() + 12000);
+      else if (pc.connectionState === "failed") {
+        clearTimeout(peerTimers.current.get(id));
+        markFailed("PEER_FAILED");
+      } else if (pc.connectionState === "disconnected") {
+        setPeerState(id, "connecting");
+        watchAudio(Date.now() + 18000);
       }
     };
     peers.current.set(id, pc);
     return pc;
-  }, [send, userId, language, groupId, analyseAudio]);
+  }, [send, userId, setPeerState, analyseAudio]);
 
   const flushIce = useCallback(async (id: string) => {
     const pc = peers.current.get(id);
     if (!pc?.remoteDescription) return;
     const pending = iceQueues.current.get(id) || [];
     iceQueues.current.delete(id);
-    for (const candidate of pending) await pc.addIceCandidate(candidate).catch(() => {});
+    for (const candidate of pending) {
+      try { await pc.addIceCandidate(candidate); }
+      catch (error) { console.warn("[voice-room] queued ICE candidate rejected", error); }
+    }
   }, []);
 
   // Never leave the microphone transmitting after the user backgrounds the app
@@ -249,7 +294,6 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     const roomParticipants = knownParticipants.current;
     const roomReactionTimers = reactionTimers.current;
     const roomAnalysers = analysers.current;
-    alive.current = true;
     const thisGeneration = ++generation.current;
     let cancelled = false;
     let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
@@ -328,21 +372,31 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         }).catch(() => null);
         if (cancelled || generation.current !== thisGeneration) return;
         if (relay?.data?.iceServers?.length) iceServers.current = [...(RTC_CONFIG.iceServers ?? []), ...relay.data.iceServers];
+        if (!iceServers.current?.some(server => [server.urls].flat().some(url => /^turns?:/i.test(url)))) {
+          diagnose(relay?.error ? "TURN_REQUEST_FAILED" : "TURN_NOT_CONFIGURED");
+        }
+        if (nativePrayerAudio) {
+          phase = "audio-session";
+          try { await prayerAudioRoute.prepare(); }
+          catch {
+            fail("AUDIO_SESSION_ACTIVATION_FAILED", false, t("Could not activate iPhone audio.", "No se pudo activar el audio del iPhone.", "Não foi possível ativar o áudio do iPhone."));
+            return;
+          }
+        }
+        if (cancelled || generation.current !== thisGeneration) return;
         phase = "microphone";
         const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
         if (cancelled || generation.current !== thisGeneration) { mic.getTracks().forEach(t => t.stop()); return; }
         // Join listening first: do not transmit microphone audio without an explicit tap.
         mic.getAudioTracks().forEach(track => { track.enabled = false; });
         stream.current = mic;
-        if (nativePrayerAudio) await prayerAudioRoute.prepare().catch(() => {});
-        if (cancelled || generation.current !== thisGeneration) return;
         try {
           audioContext.current = new AudioContext();
           void audioContext.current.resume().catch(() => {});
           analyseAudio(userId, mic);
         } catch { /* Voice playback does not require audio analysis. */ }
         const ch = supabase.channel(`voice-room:${groupId}`, {
-          config: { private: true, broadcast: { self: false }, presence: { key: userId } },
+          config: { private: true, broadcast: { self: false, ack: true }, presence: { key: userId } },
         });
         channel.current = ch;
         ch.on("broadcast", { event: "reaction" }, ({ payload }) => {
@@ -376,7 +430,13 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
                 iceQueues.current.set(msg.from, queued);
               }
             }
-          } catch { if (alive.current) { setStatus(language === "es" ? "No se pudo conectar con un participante." : language === "pt" ? "Não foi possível conectar a um participante." : "Could not connect to a participant"); setFailed(true); } }
+          } catch (error) {
+            if (!cancelled && generation.current === thisGeneration) {
+              diagnose(`SIGNAL_${msg.kind.toUpperCase()}_FAILED`);
+              console.warn("[voice-room] signaling error", error);
+              setPeerState(msg.from, "failed");
+            }
+          }
         };
         const enqueueSignal = (msg: Signal) => {
           const next = (signalWork.get(msg.from) ?? Promise.resolve()).then(() => handleSignal(msg));
@@ -429,9 +489,9 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
           }
           for (const id of peers.current.keys()) if (!people.some(p => p.id === id)) disposePeer(id);
           // Only the lexicographically smaller id initiates each peer connection.
-          for (const p of people) if (userId < p.id) {
-            // ICE may create a peer before presence sync; it still needs an offer.
+          for (const p of people) {
             const pc = getPeer(p.id);
+            if (userId >= p.id) continue;
             if (pc.signalingState !== "stable" || pc.localDescription || offering.current.has(p.id)) continue;
             offering.current.add(p.id);
             void (async () => {
@@ -439,7 +499,13 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
               if (cancelled || pc.signalingState === "closed") return;
               await pc.setLocalDescription(offer);
               await send({ from: userId, to: p.id, kind: "offer", data: offer });
-            })().catch(() => { if (!cancelled) { setStatus(language === "es" ? "No se pudo iniciar el audio." : language === "pt" ? "Não foi possível iniciar o áudio." : "Failed to initiate audio"); setFailed(true); } }).finally(() => offering.current.delete(p.id));
+            })().catch(error => {
+              if (!cancelled && generation.current === thisGeneration && peers.current.get(p.id) === pc) {
+                diagnose("SIGNAL_OFFER_FAILED");
+                console.warn("[voice-room] offer error", error);
+                setPeerState(p.id, "failed");
+              }
+            }).finally(() => { if (peers.current.get(p.id) === pc) offering.current.delete(p.id); });
           }
         });
         phase = "subscription";
@@ -487,7 +553,6 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       stopSubscribeTimer();
       clearTimeout(reconnectTimer);
       generation.current++;
-      alive.current = false;
       if (channel.current) channelClosed.current = Promise.all([channelClosed.current, supabase.removeChannel(channel.current)]);
       setParticipants([]);
       channel.current = null;
@@ -504,7 +569,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       audioContext.current = null;
       connecting.current = false;
     };
-  }, [groupId, userId, userName, getPeer, flushIce, send, disposePeer, attempt, channelClosed, analyseAudio, showReaction, publishPresence, language, labels.connecting, labels.connected, labels.failure]);
+  }, [groupId, userId, userName, getPeer, flushIce, send, disposePeer, attempt, channelClosed, analyseAudio, showReaction, publishPresence, setPeerState, t, language, labels.connecting, labels.connected, labels.failure]);
 
   const toggleHand = () => {
     if (!connected) return;
@@ -514,16 +579,22 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     if (channel.current?.state === "joined") void publishPresence()?.catch(() => {});
   };
 
-  const resumeRemoteAudio = async () => {
+  const resumeRemoteAudio = useCallback(async () => {
     const elements = [...audioNodes.current.values()];
     const outcomes = await Promise.allSettled(elements.map(element => element.play()));
     setAudioBlocked(outcomes.some(result => result.status === "rejected"));
-  };
+  }, []);
 
   const toggleMute = () => {
     if (!connected || !stream.current || document.visibilityState !== "visible") return;
-    const next = !muted;
-    stream.current?.getAudioTracks().forEach(t => { t.enabled = !next; });
+    const tracks = stream.current.getAudioTracks().filter(track => track.readyState === "live");
+    if (!tracks.length) {
+      setStatus(t("The microphone stopped. Retry the connection.", "El micrófono se detuvo. Reintenta la conexión.", "O microfone parou. Tente reconectar."));
+      setFailed(true);
+      return;
+    }
+    const next = !mutedRef.current;
+    tracks.forEach(track => { track.enabled = !next; });
     mutedRef.current = next;
     setMuted(next);
     void audioContext.current?.resume().catch(() => {});
@@ -539,7 +610,14 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     if (!nativePrayerAudio || !connected) return;
     refreshRoutes();
     const route = prayerAudioRoute.addListener("routeChanged", refreshRoutes);
-    const interruption = prayerAudioRoute.addListener("interrupted", () => {
+    const interruption = prayerAudioRoute.addListener("interrupted", ({ ended }) => {
+      if (ended) {
+        void prayerAudioRoute.prepare().then(() => {
+          refreshRoutes();
+          return resumeRemoteAudio();
+        }).catch(() => setAudioBlocked(true));
+        return;
+      }
       stream.current?.getAudioTracks().forEach(track => { track.enabled = false; });
       mutedRef.current = true;
       setMuted(true);
@@ -550,7 +628,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       void interruption.then(listener => listener.remove()).catch(() => {});
       void prayerAudioRoute.reset().catch(() => {});
     };
-  }, [connected, refreshRoutes, publishPresence]);
+  }, [connected, refreshRoutes, publishPresence, resumeRemoteAudio]);
 
   useEffect(() => {
     const update = () => {
@@ -581,14 +659,19 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     } catch { setRouteError(true); }
   };
 
+  const peerFailed = Object.values(peerStates).includes("failed");
+  const waitingForPeer = participants.some(person => person.id !== userId && peerStates[person.id] !== "ready");
+  const audioStatus = failed ? status : peerFailed
+    ? t("Could not establish audio with a participant.", "No se pudo establecer audio con un participante.", "Não foi possível estabelecer áudio com um participante.")
+    : waitingForPeer ? t("Connecting audio…", "Conectando audio…", "Conectando áudio…") : "";
   if (minimized) {
     const banner = <button type="button" onClick={onRestore}
       className={`flex min-h-11 w-full items-center gap-2 px-4 text-left text-sm font-medium ${minimizedCallHost
         ? "w-full border-b border-border bg-card text-foreground"
         : "fixed inset-x-3 bottom-[max(76px,calc(env(safe-area-inset-bottom)+68px))] z-[160] mx-auto w-[calc(100%-24px)] max-w-md rounded-full bg-[#5C061F] text-white shadow-lg"}`}
       aria-label={t("Return to call", "Volver a la llamada", "Voltar à chamada")}>
-      <span className={`size-2 shrink-0 rounded-full ${connected ? "bg-emerald-500" : "bg-amber-500"}`} aria-hidden="true" />
-      <span className="min-w-0 flex-1 truncate">{name} · {connected ? count : status}</span>
+      <span className={`size-2 shrink-0 rounded-full ${connected && !audioStatus && !audioBlocked ? "bg-emerald-500" : "bg-amber-500"}`} aria-hidden="true" />
+      <span className="min-w-0 flex-1 truncate">{name} · {audioStatus || (connected ? count : status)}</span>
       <span className="shrink-0 tabular-nums">{duration}</span>
       <Phone size={16} className="shrink-0" aria-hidden="true" />
     </button>;
@@ -621,11 +704,12 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
             <span className="truncate">{profiles[person.id]?.username || person.name}</span>{(person.id === userId ? muted : person.muted) ? <MicOff size={15} /> : <Mic size={15} />}
           </li>)}
         </ul>}
+        {connected && audioStatus && <p className="mt-2 text-center text-sm text-muted-foreground" role={failed || peerFailed ? "alert" : "status"}>{audioStatus}</p>}
         {audioBlocked && <button type="button" className="mt-2 rounded-lg bg-secondary p-2 text-sm"
           onClick={() => { void audioContext.current?.resume().catch(() => {}); void resumeRemoteAudio(); }}>
           {t("Enable audio", "Activar audio", "Ativar áudio")}
         </button>}
-        {failed && <button type="button" className="mt-2 rounded-lg bg-secondary p-2 text-sm" onClick={() => setAttempt(n => n + 1)}>{labels.retry}</button>}
+        {(failed || peerFailed) && <button type="button" className="mt-2 rounded-lg bg-secondary p-2 text-sm" onClick={() => setAttempt(n => n + 1)}>{labels.retry}</button>}
         <div className="min-h-0 flex-1 overflow-y-auto py-4">
           <div className="mx-auto flex max-w-lg flex-wrap justify-center gap-y-4">
             {participants.map(person => {

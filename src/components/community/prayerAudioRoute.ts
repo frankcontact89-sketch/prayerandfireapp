@@ -6,5 +6,6 @@ export const prayerAudioRoute = registerPlugin<{
   routes(): Promise<{ selected: string; options: { id: string; name: string; kind: "automatic" | "phone" | "speaker" | "bluetooth" }[] }>;
   select(options: { route: string }): Promise<void>;
   reset(): Promise<void>;
-  addListener(event: "routeChanged" | "interrupted", callback: () => void): Promise<PluginListenerHandle>;
+  addListener(event: "routeChanged", callback: () => void): Promise<PluginListenerHandle>;
+  addListener(event: "interrupted", callback: (event: { ended: boolean }) => void): Promise<PluginListenerHandle>;
 }>("PrayerAudioRoute");
