@@ -54,7 +54,7 @@ class PrayerBridgeViewController: CAPBridgeViewController {
 class PrayerAudioRoutePlugin: CAPPlugin, CAPBridgedPlugin {
     let identifier = "PrayerAudioRoutePlugin"
     let jsName = "PrayerAudioRoute"
-    let pluginMethods = [
+    let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "routes", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "select", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "reset", returnType: CAPPluginReturnPromise)
