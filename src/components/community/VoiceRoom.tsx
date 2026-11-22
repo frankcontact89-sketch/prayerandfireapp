@@ -1,7 +1,7 @@
 import { GENERAL_PRAYER_ROOM_ID } from "./generalPrayerRoom";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
-import { Mic, MicOff, Hand, MoreHorizontal, ChevronDown, Users, Volume2, AudioLines, Phone } from "lucide-react";
+import { Mic, MicOff, Hand, MoreHorizontal, ChevronDown, Users, Volume2, AudioLines, Phone, Smartphone, Bluetooth, Check, Settings2 } from "lucide-react";
 import { nativePrayerAudio, prayerAudioRoute } from "./prayerAudioRoute";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -323,7 +323,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         if (cancelled || generation.current !== thisGeneration) return;
         phase = "relay";
         iceServers.current = RTC_CONFIG.iceServers;
-        const relay = groupId === GENERAL_PRAYER_ROOM_ID ? null : await supabase.functions.invoke<{ iceServers?: RTCIceServer[] }>("community-push", {
+        const relay = await supabase.functions.invoke<{ iceServers?: RTCIceServer[] }>("community-push", {
           body: { kind: "ice", group_id: groupId }, signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(5000) : undefined,
         }).catch(() => null);
         if (cancelled || generation.current !== thisGeneration) return;
@@ -334,6 +334,8 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         // Join listening first: do not transmit microphone audio without an explicit tap.
         mic.getAudioTracks().forEach(track => { track.enabled = false; });
         stream.current = mic;
+        if (nativePrayerAudio) await prayerAudioRoute.prepare().catch(() => {});
+        if (cancelled || generation.current !== thisGeneration) return;
         try {
           audioContext.current = new AudioContext();
           void audioContext.current.resume().catch(() => {});
@@ -348,10 +350,10 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
             showReaction(payload.from, payload.emoji);
           }
         });
-        ch.on("broadcast", { event: "rtc" }, async ({ payload }) => {
-          if (cancelled || generation.current !== thisGeneration) return;
-          const msg = payload as Signal;
-          if (!msg || typeof msg.from !== "string" || msg.from === userId || (msg.to && msg.to !== userId) || !knownParticipants.current.has(msg.from)) return;
+        const earlySignals = new Map<string, { received: number; signals: Signal[] }>();
+        const signalWork = new Map<string, Promise<void>>();
+        const handleSignal = async (msg: Signal) => {
+          if (cancelled || generation.current !== thisGeneration || !roomParticipants.has(msg.from)) return;
           try {
             const pc = getPeer(msg.from);
             if (msg.kind === "offer") {
@@ -368,9 +370,33 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
               await flushIce(msg.from);
             } else if (msg.kind === "ice") {
               if (pc.remoteDescription) await pc.addIceCandidate(msg.data);
-              else iceQueues.current.set(msg.from, [...(iceQueues.current.get(msg.from) || []), msg.data]);
+              else {
+                const queued = iceQueues.current.get(msg.from) ?? [];
+                if (queued.length < 64) queued.push(msg.data);
+                iceQueues.current.set(msg.from, queued);
+              }
             }
           } catch { if (alive.current) { setStatus(language === "es" ? "No se pudo conectar con un participante." : language === "pt" ? "Não foi possível conectar a um participante." : "Could not connect to a participant"); setFailed(true); } }
+        };
+        const enqueueSignal = (msg: Signal) => {
+          const next = (signalWork.get(msg.from) ?? Promise.resolve()).then(() => handleSignal(msg));
+          signalWork.set(msg.from, next);
+          void next.finally(() => { if (signalWork.get(msg.from) === next) signalWork.delete(msg.from); });
+        };
+        ch.on("broadcast", { event: "rtc" }, ({ payload }) => {
+          if (cancelled || generation.current !== thisGeneration) return;
+          const msg = payload as Signal;
+          if (!msg || typeof msg.from !== "string" || msg.from === userId || msg.to !== userId || !msg.data ||
+              (msg.kind !== "offer" && msg.kind !== "answer" && msg.kind !== "ice")) return;
+          if (roomParticipants.has(msg.from)) { enqueueSignal(msg); return; }
+          const now = Date.now();
+          for (const [id, batch] of earlySignals) if (now - batch.received > 15000) earlySignals.delete(id);
+          const batch = earlySignals.get(msg.from);
+          if (batch) {
+            if (batch.signals.length < 64) batch.signals.push(msg);
+          } else if (earlySignals.size < 32) {
+            earlySignals.set(msg.from, { received: now, signals: [msg] });
+          }
         });
         ch.on("presence", { event: "sync" }, () => {
           if (cancelled || generation.current !== thisGeneration) return;
@@ -390,7 +416,12 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
           }
           const people = Object.entries(state).filter(([id]) => id !== userId && !id.startsWith("observer:")).map(([id, values]) => ({ id, name: values[0]?.name || "Member", hand: !!values[0]?.hand, muted: values[0]?.muted !== false }));
           roomParticipants.clear();
-          for (const person of people) roomParticipants.add(person.id);
+          for (const person of people) {
+            roomParticipants.add(person.id);
+            const batch = earlySignals.get(person.id);
+            earlySignals.delete(person.id);
+            if (batch && now - batch.received <= 15000) batch.signals.forEach(enqueueSignal);
+          }
           setParticipants([{ id: userId, name: userName }, ...people]);
           if (state[userId]?.length && !announced.current) {
             announced.current = true;
@@ -483,6 +514,12 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     if (channel.current?.state === "joined") void publishPresence()?.catch(() => {});
   };
 
+  const resumeRemoteAudio = async () => {
+    const elements = [...audioNodes.current.values()];
+    const outcomes = await Promise.allSettled(elements.map(element => element.play()));
+    setAudioBlocked(outcomes.some(result => result.status === "rejected"));
+  };
+
   const toggleMute = () => {
     if (!connected || !stream.current || document.visibilityState !== "visible") return;
     const next = !muted;
@@ -490,6 +527,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     mutedRef.current = next;
     setMuted(next);
     void audioContext.current?.resume().catch(() => {});
+    void resumeRemoteAudio();
     void publishPresence();
   };
 
@@ -539,7 +577,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       await prayerAudioRoute.select({ route });
       setRouteError(false);
       refreshRoutes();
-      closeMenu();
+      void resumeRemoteAudio();
     } catch { setRouteError(true); }
   };
 
@@ -584,7 +622,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
           </li>)}
         </ul>}
         {audioBlocked && <button type="button" className="mt-2 rounded-lg bg-secondary p-2 text-sm"
-          onClick={() => { void audioContext.current?.resume().catch(() => {}); void Promise.all([...audioNodes.current.values()].map(node => node.play())).then(() => setAudioBlocked(false)).catch(() => {}); }}>
+          onClick={() => { void audioContext.current?.resume().catch(() => {}); void resumeRemoteAudio(); }}>
           {t("Enable audio", "Activar audio", "Ativar áudio")}
         </button>}
         {failed && <button type="button" className="mt-2 rounded-lg bg-secondary p-2 text-sm" onClick={() => setAttempt(n => n + 1)}>{labels.retry}</button>}
@@ -627,14 +665,23 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
               }}>{emoji}</button>)}
           </div>}
           {menu === "route" && <div className="absolute bottom-full left-1/2 z-10 mb-2 w-60 -translate-x-1/2 rounded-2xl border border-border bg-popover p-2 text-sm shadow-lg">
-            {!!routes?.outputs.length && <p className="px-2 py-1 text-muted-foreground">{routes.outputs.join(", ")}</p>}
-            {[{ id: "automatic", name: t("Automatic", "Automática", "Automática") }, { id: "speaker", name: t("Speaker", "Altavoz", "Alto-falante") }, ...(routes?.inputs ?? [])].map(route =>
-              <button type="button" key={route.id} onClick={() => void selectRoute(route.id)} className="block min-h-10 w-full rounded-lg px-2 text-left hover:bg-accent">{route.name}</button>)}
+            <p className="px-2 py-1 font-semibold">{t("Audio output", "Salida de audio", "Saída de áudio")}</p>
+            {routes?.options.map(route => {
+              const Icon = route.kind === "automatic" ? Settings2 : route.kind === "phone" ? Smartphone : route.kind === "bluetooth" ? Bluetooth : Volume2;
+              const title = route.kind === "automatic" ? t("Automatic", "Automática", "Automática")
+                : route.kind === "speaker" ? t("Speaker", "Altavoz", "Alto-falante")
+                : route.name;
+              return <button type="button" key={route.id} onClick={() => void selectRoute(route.id)}
+                aria-pressed={routes.selected === route.id} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left hover:bg-accent">
+                <Icon size={17} className="shrink-0" aria-hidden="true" /><span className="min-w-0 flex-1">{title}</span>
+                {routes.selected === route.id && <Check size={17} aria-hidden="true" />}
+              </button>;
+            })}
             {routeError && <p role="alert" className="px-2 text-destructive">{t("Audio output unavailable", "Salida de audio no disponible", "Saída de áudio indisponível")}</p>}
           </div>}
           <button type="button" className={control(menu === "reactions" ? activeTone : undefined)} disabled={!connected} aria-expanded={menu === "reactions"}
             aria-label={t("Reactions", "Reacciones", "Reações")} onClick={() => setMenu(current => current === "reactions" ? null : "reactions")}><MoreHorizontal size={20} /></button>
-          <button type="button" className={control(routes?.speaker || menu === "route" ? activeTone : undefined)} disabled={!connected || !nativePrayerAudio}
+          <button type="button" className={control(routes?.selected === "speaker" || menu === "route" ? activeTone : undefined)} disabled={!connected || !nativePrayerAudio}
             aria-expanded={menu === "route"} aria-label={t("Audio output", "Salida de audio", "Saída de áudio")}
             onClick={() => { refreshRoutes(); setMenu(current => current === "route" ? null : "route"); }}><Volume2 size={19} /></button>
           <button type="button" className={control(hand ? handTone : undefined)} disabled={!connected} aria-pressed={hand}

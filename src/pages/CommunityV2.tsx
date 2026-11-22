@@ -1,3 +1,4 @@
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import React,{useCallback,useEffect,useMemo,useRef,useState}from"react";
 import{ArrowLeft,Ban,Bell,BellOff,Camera,Check,CheckCheck,Clock,Copy,FileText,Flag,Flame,ChevronRight,CornerUpLeft,Info,Link2,LogOut,Mic,MoreHorizontal,Paperclip,Phone,Pin,PinOff,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
 import{supabase}from"@/integrations/supabase/client";
@@ -109,6 +110,7 @@ export default function CommunityV2(){
 
  const[membersModal,setMembersModal]=useState<null|"add"|"admins"|"members">(null);
  const { activeRoomId, connectedRoomId, openCall, setMinimizedCallHost, channelClosed: voiceChannelClosed } = usePrayerCall();
+ const [generalCallPrompt, setGeneralCallPrompt] = useState(false);
  const [communityMenu, setCommunityMenu] = useState(false);
  const [discoverOpen, setDiscoverOpen] = useState(false);
  const [refreshingChats, setRefreshingChats] = useState(false);
@@ -1031,15 +1033,40 @@ export default function CommunityV2(){
 
  return <div className="fixed inset-0 bg-background text-foreground overflow-hidden" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}><div className="max-w-xl mx-auto h-full bg-background flex flex-col"><header className="shrink-0 px-4 pt-3 pb-3 border-b border-border"><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-3 min-w-0"><button onClick={goBack} aria-label={t.back} className="w-10 h-10 rounded-full bg-secondary grid place-items-center shrink-0"><ArrowLeft className="w-5 h-5"/></button><span role="img" aria-label="Prayer & Fire" className="w-11 h-11 shrink-0 rounded-full border border-[#E5BB70]/60 bg-[#5C061F] grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span><div className="flex-1 min-w-0"><div className="text-[10px] tracking-[.2em] text-[#E5BB70] font-bold">PRAYER &amp; FIRE</div><h1 className="truncate text-lg font-bold leading-tight">{t.title}</h1>{me&&<div className="text-xs text-muted-foreground truncate">{me.name}</div>}</div></div><div className="flex items-center gap-1 shrink-0"><button type="button"
    aria-label={generalPrayerLive ? `${GENERAL_PRAYER_ROOM_NAME} · ${generalPrayerNotice}` : GENERAL_PRAYER_ROOM_NAME}
-   onClick={() => {
-    if (me?.id) openCall({ groupId: GENERAL_PRAYER_ROOM_ID, name: GENERAL_PRAYER_ROOM_NAME, userId: me.id, userName: me.name || t.member, userAvatar: me.avatar, language: lang });
-   }}
+   onClick={() => setGeneralCallPrompt(true)}
    className={`grid size-9 shrink-0 place-items-center rounded-full bg-secondary ${generalPrayerLive ? "text-emerald-600 dark:text-emerald-400 motion-safe:animate-pulse" : "text-[#D5AD6C]"}`}>
    <Phone className="size-5" aria-hidden="true" />
   </button><button onClick={()=>setPushSheet(true)} aria-label={pushSettingsLabel} className="w-9 h-9 rounded-full bg-secondary text-[#D5AD6C] grid place-items-center"><Bell className="w-5 h-5"/></button>
  <button type="button" onClick={() => setCommunityMenu(true)} aria-label={t.options} className="grid size-10 place-items-center rounded-full text-[#D5AD6C]"><MoreHorizontal size={20} /></button>
  </div></div></header>
  <div ref={setMinimizedCallHost} className="shrink-0 empty:hidden" />
+ <AlertDialog open={generalCallPrompt} onOpenChange={setGeneralCallPrompt}>
+  <AlertDialogContent className="z-[190]">
+   <AlertDialogHeader>
+    <AlertDialogTitle>{GENERAL_PRAYER_ROOM_NAME}</AlertDialogTitle>
+    <AlertDialogDescription>
+     {generalPrayerLive ? <>
+      <span className="mr-2 inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-300">
+       <span className="size-2 rounded-full bg-emerald-500" />{L("LIVE", "EN VIVO", "AO VIVO")}
+      </span>
+      {(liveRooms[GENERAL_PRAYER_ROOM_ID] ?? 0) > 0 && <span>{participantCount(liveRooms[GENERAL_PRAYER_ROOM_ID])}</span>}
+     </> : L("Start a call in the general prayer room.", "Inicia una llamada en la sala general de oración.", "Inicie uma chamada na sala geral de oração.")}
+    </AlertDialogDescription>
+   </AlertDialogHeader>
+   <AlertDialogFooter>
+    <AlertDialogCancel>{L("Cancel", "Cancelar", "Cancelar")}</AlertDialogCancel>
+    <AlertDialogAction className="bg-emerald-700 text-white hover:bg-emerald-800" onClick={() => {
+     if (me?.id) openCall({ groupId: GENERAL_PRAYER_ROOM_ID, name: GENERAL_PRAYER_ROOM_NAME, userId: me.id, userName: me.name || t.member, userAvatar: me.avatar, language: lang });
+    }}>
+     {activeRoomId === GENERAL_PRAYER_ROOM_ID
+      ? L("Return to prayer call", "Volver a la llamada de oración", "Voltar à chamada de oração")
+      : generalPrayerLive
+       ? L("Join prayer call", "Unirse a la llamada de oración", "Entrar na chamada de oração")
+       : L("Start prayer call", "Iniciar llamada de oración", "Iniciar chamada de oração")}
+    </AlertDialogAction>
+   </AlertDialogFooter>
+  </AlertDialogContent>
+ </AlertDialog>
  {communityMenu && <div className="fixed inset-0 z-[140] flex items-end bg-black/60" onClick={() => setCommunityMenu(false)}>
   <div role="dialog" aria-modal="true" aria-label={t.options} onClick={event => event.stopPropagation()}
    className="w-full rounded-t-2xl border-t border-border bg-popover px-4 pt-2 text-popover-foreground pb-[max(16px,env(safe-area-inset-bottom))]">

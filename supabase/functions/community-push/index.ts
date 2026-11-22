@@ -94,13 +94,16 @@ Deno.serve(async (req) => {
   let deepLink: Record<string, string> = {};
 
   if (kind === "ice" || kind === "call") {
-    if (!groupId || !/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(groupId)) {
-      return json({ error: "BAD_REQUEST" }, 400);
+    const generalPrayerRelay = kind === "ice" && groupId === "community-general";
+    if (!generalPrayerRelay) {
+      if (!groupId || !/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(groupId)) {
+        return json({ error: "BAD_REQUEST" }, 400);
+      }
+      const { data: membership, error: membershipError } = await admin.from("community_group_members")
+        .select("user_id").eq("group_id", groupId).eq("user_id", user.id).maybeSingle();
+      if (membershipError) return json({ error: "MEMBERSHIP_LOOKUP_FAILED" }, 503);
+      if (!membership) return json({ error: "NO_PERMISSION" }, 403);
     }
-    const { data: membership, error: membershipError } = await admin.from("community_group_members")
-      .select("user_id").eq("group_id", groupId).eq("user_id", user.id).maybeSingle();
-    if (membershipError) return json({ error: "MEMBERSHIP_LOOKUP_FAILED" }, 503);
-    if (!membership) return json({ error: "NO_PERMISSION" }, 403);
     if (kind === "ice") {
       const secret = Deno.env.get("TURN_SHARED_SECRET");
       const urls = (Deno.env.get("TURN_URLS") ?? "").split(",").map(url => url.trim())

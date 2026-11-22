@@ -55,13 +55,14 @@ class PrayerAudioRoutePlugin: CAPPlugin, CAPBridgedPlugin {
     let identifier = "PrayerAudioRoutePlugin"
     let jsName = "PrayerAudioRoute"
     let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "prepare", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "routes", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "select", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "reset", returnType: CAPPluginReturnPromise)
     ]
 
     private let audio = AVAudioSession.sharedInstance()
-    private var changedRoute = false
+    private var selectedRoute = "automatic"
 
     override func load() {
         NotificationCenter.default.addObserver(self, selector: #selector(routeChanged(_:)),
@@ -80,14 +81,54 @@ class PrayerAudioRoutePlugin: CAPPlugin, CAPBridgedPlugin {
         notifyListeners("interrupted", data: [:])
     }
 
+    private func activateVoiceAudio() throws {
+        if audio.category != .playAndRecord {
+            try audio.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth])
+        }
+        try audio.setActive(true)
+    }
+
+    @objc func prepare(_ call: CAPPluginCall) {
+        do {
+            try activateVoiceAudio()
+            call.resolve()
+        } catch { call.reject("Unable to activate voice audio") }
+    }
+
+    private func selectableInputs() -> [AVAudioSessionPortDescription] {
+        (audio.availableInputs ?? []).filter {
+            $0.portType == .builtInMic || $0.portType == .bluetoothHFP || $0.portType == .bluetoothLE
+        }
+    }
+
     @objc func routes(_ call: CAPPluginCall) {
+        let inputs = selectableInputs()
         let outputs = audio.currentRoute.outputs
-        let inputs = (audio.availableInputs ?? []).filter { $0.portType != .builtInMic }
-        call.resolve([
-            "speaker": outputs.contains { $0.portType == .builtInSpeaker },
-            "outputs": outputs.map { $0.portName },
-            "inputs": inputs.map { ["id": $0.uid, "name": $0.portName] }
-        ])
+        var options = [
+            ["id": "automatic", "name": "Automatic", "kind": "automatic"]
+        ]
+        if inputs.contains(where: { $0.portType == .builtInMic }) &&
+            outputs.contains(where: { $0.portType == .builtInReceiver || $0.portType == .builtInSpeaker }) {
+            options.append(["id": "phone", "name": "iPhone", "kind": "phone"])
+        }
+        options.append(["id": "speaker", "name": "Speaker", "kind": "speaker"])
+        var seen = Set<String>()
+        for input in inputs where input.portType != .builtInMic {
+            if seen.insert(input.uid).inserted {
+                options.append(["id": input.uid, "name": input.portName, "kind": "bluetooth"])
+            }
+        }
+
+        var selection = "automatic"
+        if selectedRoute == "speaker" && outputs.contains(where: { $0.portType == .builtInSpeaker }) {
+            selection = "speaker"
+        } else if selectedRoute == "phone" && outputs.contains(where: { $0.portType == .builtInReceiver }) {
+            selection = "phone"
+        } else if selectedRoute != "automatic" && inputs.contains(where: { $0.uid == selectedRoute }) &&
+                    audio.currentRoute.inputs.contains(where: { $0.uid == selectedRoute }) {
+            selection = selectedRoute
+        }
+        call.resolve(["selected": selection, "options": options])
     }
 
     @objc func select(_ call: CAPPluginCall) {
@@ -96,15 +137,14 @@ class PrayerAudioRoutePlugin: CAPPlugin, CAPBridgedPlugin {
             return
         }
         do {
-            if audio.category != .playAndRecord {
-                try audio.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth])
-            }
-            try audio.setActive(true)
+            try activateVoiceAudio()
             if route == "speaker" {
                 try audio.setPreferredInput(nil)
                 try audio.overrideOutputAudioPort(.speaker)
             } else {
-                let input = audio.availableInputs?.first { $0.uid == route }
+                let input = selectableInputs().first {
+                    route == "phone" ? $0.portType == .builtInMic : $0.uid == route
+                }
                 guard route == "automatic" || input != nil else {
                     call.reject("Audio route unavailable")
                     return
@@ -112,17 +152,17 @@ class PrayerAudioRoutePlugin: CAPPlugin, CAPBridgedPlugin {
                 try audio.overrideOutputAudioPort(.none)
                 try audio.setPreferredInput(input)
             }
-            changedRoute = true
+            selectedRoute = route
             call.resolve()
         } catch { call.reject("Unable to switch audio route") }
     }
 
     @objc func reset(_ call: CAPPluginCall) {
-        if changedRoute && audio.category == .playAndRecord {
+        if selectedRoute != "automatic" && audio.category == .playAndRecord {
             try? audio.overrideOutputAudioPort(.none)
             try? audio.setPreferredInput(nil)
         }
-        changedRoute = false
+        selectedRoute = "automatic"
         call.resolve()
     }
 }
