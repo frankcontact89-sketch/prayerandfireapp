@@ -1,3 +1,4 @@
+import { GENERAL_PRAYER_ROOM_ID } from "./generalPrayerRoom";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 import { Mic, MicOff, Hand, MoreHorizontal, ChevronDown, Users, Volume2, AudioLines, Phone } from "lucide-react";
@@ -17,10 +18,11 @@ const RTC_CONFIG: RTCConfiguration = {
   iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }],
 };
 
-export default function VoiceRoom({ groupId, name, userId, userName, userAvatar, onClose, language, channelClosed, minimized, minimizedCallHost, onMinimize, onRestore }: {
+export default function VoiceRoom({ groupId, name, userId, userName, userAvatar, onClose, language, channelClosed, minimized, minimizedCallHost, onConnectedRoomChange, onMinimize, onRestore }: {
   groupId: string; name: string; userId: string; userName: string; onClose: () => void; language: string;
   userAvatar?: string | null;
   minimized: boolean;
+  onConnectedRoomChange?: (id: string | undefined) => void;
   minimizedCallHost?: HTMLDivElement | null;
   onMinimize: () => void;
   onRestore: () => void;
@@ -31,6 +33,10 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [status, setStatus] = useState("Connecting…");
   const [connected, setConnected] = useState(false);
+  useEffect(() => {
+    onConnectedRoomChange?.(connected ? groupId : undefined);
+    return () => onConnectedRoomChange?.(undefined);
+  }, [connected, groupId, onConnectedRoomChange]);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [profiles, setProfiles] = useState<Record<string, { avatar_url: string | null; username: string | null }>>({});
@@ -317,7 +323,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         if (cancelled || generation.current !== thisGeneration) return;
         phase = "relay";
         iceServers.current = RTC_CONFIG.iceServers;
-        const relay = await supabase.functions.invoke<{ iceServers?: RTCIceServer[] }>("community-push", {
+        const relay = groupId === GENERAL_PRAYER_ROOM_ID ? null : await supabase.functions.invoke<{ iceServers?: RTCIceServer[] }>("community-push", {
           body: { kind: "ice", group_id: groupId }, signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(5000) : undefined,
         }).catch(() => null);
         if (cancelled || generation.current !== thisGeneration) return;
@@ -388,7 +394,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
           setParticipants([{ id: userId, name: userName }, ...people]);
           if (state[userId]?.length && !announced.current) {
             announced.current = true;
-            if (!people.length) void supabase.functions.invoke("community-push", { body: { kind: "call", group_id: groupId } }).catch(() => {});
+            if (!people.length && groupId !== GENERAL_PRAYER_ROOM_ID) void supabase.functions.invoke("community-push", { body: { kind: "call", group_id: groupId } }).catch(() => {});
           }
           for (const id of peers.current.keys()) if (!people.some(p => p.id === id)) disposePeer(id);
           // Only the lexicographically smaller id initiates each peer connection.

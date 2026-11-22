@@ -4,6 +4,7 @@ export type Call = { groupId: string; name: string; userId: string; userName: st
 export const CallContext = createContext<{
   setMinimizedCallHost: (node: HTMLDivElement | null) => void;
   activeRoomId?: string;
+  connectedRoomId?: string;
   openCall: (call: Call) => void;
   channelClosed: MutableRefObject<Promise<unknown>>;
 } | null>(null);
