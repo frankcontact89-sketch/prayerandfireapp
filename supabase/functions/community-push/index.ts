@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
   let payload: any = {};
   try { payload = await req.json(); } catch { /* empty body */ }
 
-  const kind: string = ["message", "pinned", "invite"].includes(payload?.kind) ? payload.kind : "message";
+  const kind: string = ["message", "pinned", "invite", "call", "ice"].includes(payload?.kind) ? payload.kind : "message";
   const messageId: string | undefined = payload?.message_id;
   const groupId: string | undefined = payload?.group_id;
   const inviteUserIds: string[] = Array.isArray(payload?.user_ids) ? payload.user_ids.slice(0, 200) : [];
@@ -93,7 +93,36 @@ Deno.serve(async (req) => {
   let bodyText = "";
   let deepLink: Record<string, string> = {};
 
-  if (kind === "invite") {
+  if (kind === "ice" || kind === "call") {
+    if (!groupId || !/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(groupId)) {
+      return json({ error: "BAD_REQUEST" }, 400);
+    }
+    const { data: membership, error: membershipError } = await admin.from("community_group_members")
+      .select("user_id").eq("group_id", groupId).eq("user_id", user.id).maybeSingle();
+    if (membershipError) return json({ error: "MEMBERSHIP_LOOKUP_FAILED" }, 503);
+    if (!membership) return json({ error: "NO_PERMISSION" }, 403);
+    if (kind === "ice") {
+      const secret = Deno.env.get("TURN_SHARED_SECRET");
+      const urls = (Deno.env.get("TURN_URLS") ?? "").split(",").map(url => url.trim())
+        .filter(url => /^turns?:[^\s]+$/i.test(url));
+      if (!secret || !urls.length) return json({ iceServers: [] });
+      const username = `${Math.floor(Date.now() / 1000) + 3600}:${user.id}`;
+      const encoder = new TextEncoder();
+      const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
+      const credential = b64url(new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(username))))
+        .replace(/-/g, "+").replace(/_/g, "/") + "=";
+      return json({ iceServers: [{ urls, username, credential }] });
+    }
+    const { data: targets, error } = await admin.rpc("community_call_push_targets", {
+      _group_id: groupId, _caller_id: user.id,
+    });
+    if (error) return json({ error: "CALL_TARGETS_FAILED" }, 503);
+    recipients = (targets ?? []).map((target: { user_id: string }) => target.user_id);
+    const { data: group } = await admin.from("community_groups").select("name").eq("id", groupId).maybeSingle();
+    title = group?.name ?? "Prayer & Fire";
+    bodyText = "A prayer room is live";
+    deepLink = { group_id: groupId, kind: "call" };
+  } else if (kind === "invite") {
     if (!groupId || !inviteUserIds.length) return json({ error: "BAD_REQUEST" }, 400);
     // Only group leaders may trigger invite pushes.
     const { data: isAdmin } = await admin.rpc("is_group_admin", { _group_id: groupId, _user_id: user.id });
@@ -156,7 +185,7 @@ Deno.serve(async (req) => {
 
   const { data: tokens } = await admin
     .from("user_push_tokens")
-    .select("token, platform, user_id")
+    .select(kind === "call" ? "token, platform, user_id, locale" : "token, platform, user_id")
     .in("user_id", recipients)
     .eq("enabled", true);
 
@@ -175,13 +204,17 @@ Deno.serve(async (req) => {
   let dispatched = 0;
   const failures: string[] = [];
   for (const row of list as any[]) {
+    const notificationBody = kind === "call"
+      ? row.locale === "es" ? "Hay una sala de oración en vivo"
+        : row.locale === "pt" ? "Há uma sala de oração ao vivo" : bodyText
+      : bodyText;
     try {
       const isApple = (row.platform ?? "ios") === "ios";
       if (isApple && !apnsConfigured) continue;
       if (!isApple && !FCM_SERVER_KEY) continue;
       const res = isApple
-        ? await sendApns(row.token, title, bodyText, deepLink)
-        : await sendFcm(row.token, title, bodyText, deepLink);
+        ? await sendApns(row.token, title, notificationBody, deepLink)
+        : await sendFcm(row.token, title, notificationBody, deepLink);
       if (res.ok) dispatched++;
       else {
         failures.push(`${res.status}`);

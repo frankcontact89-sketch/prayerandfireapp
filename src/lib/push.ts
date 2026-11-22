@@ -109,17 +109,21 @@ async function saveToken(token: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   currentToken = token;
-  await db.from("user_push_tokens").upsert(
-    {
-      user_id: user.id,
-      token,
-      platform: await platformName(),
-      enabled: true,
-      last_seen_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "token" },
-  );
+  const record = {
+    user_id: user.id,
+    token,
+    platform: await platformName(),
+    enabled: true,
+    last_seen_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  const language = localStorage.getItem("pf_lang")?.slice(0, 2);
+  const locale = language === "es" || language === "pt" ? language : "en";
+  const { error } = await db.from("user_push_tokens").upsert({ ...record, locale }, { onConflict: "token" });
+  // Keep device registration compatible during a staggered database rollout.
+  if (error?.code === "PGRST204" || error?.code === "42703") {
+    await db.from("user_push_tokens").upsert(record, { onConflict: "token" });
+  }
 }
 
 /** Real device acknowledgement: only called when this device actually got the message. */
