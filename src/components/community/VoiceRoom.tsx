@@ -279,13 +279,13 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       reconnectOnOnline.current = retry;
       setStatus(message);
       setFailed(true);
-      if (retry && !reconnectTimer && reconnectAttempts.current < 2) {
+      if (retry && !reconnectTimer && reconnectAttempts.current < 5) {
         reconnectTimer = setTimeout(() => {
           if (!cancelled && navigator.onLine) {
             reconnectAttempts.current += 1;
             retryRef.current();
           }
-        }, 4000);
+        }, Math.min(2000 * 2 ** reconnectAttempts.current, 15000));
       }
     };
     const start = async () => {
@@ -304,7 +304,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       try {
         if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) throw new Error("Live audio is not supported on this device");
         // Finish leaving the old channel before reading the current session.
-        await channelClosed.current;
+        await channelClosed.current.catch(error => { console.warn('[voice-room] previous channel cleanup failed', error); });
         if (cancelled || generation.current !== thisGeneration) return;
         phase = "authentication";
         const { data: sessionData, error: authError } = await supabase.auth.getSession();
@@ -318,7 +318,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         phase = "relay";
         iceServers.current = RTC_CONFIG.iceServers;
         const relay = await supabase.functions.invoke<{ iceServers?: RTCIceServer[] }>("community-push", {
-          body: { kind: "ice", group_id: groupId }, signal: AbortSignal.timeout(3000),
+          body: { kind: "ice", group_id: groupId }, signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(5000) : undefined,
         }).catch(() => null);
         if (cancelled || generation.current !== thisGeneration) return;
         if (relay?.data?.iceServers?.length) iceServers.current = [...(RTC_CONFIG.iceServers ?? []), ...relay.data.iceServers];
@@ -429,7 +429,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
             } catch { fail("PRESENCE_EXCEPTION", true); }
           } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
             const denied = /unauthori[sz]ed|permission|forbidden/i.test(error?.message ?? "");
-            fail(denied ? "CHANNEL_PERMISSION_DENIED" : state, !denied);
+            fail(denied ? "CHANNEL_PERMISSION_DENIED" : state, !denied, denied ? t('Room access denied', 'Acceso a la sala denegado', 'Acesso à sala negado') : t('Connection interrupted. Reconnecting…', 'Conexión interrumpida. Reconectando…', 'Conexão interrompida. Reconectando…'));
           }
         });
         subscribeTimer = setTimeout(() => fail("ROOM_JOIN_TIMEOUT", true), 20000);
