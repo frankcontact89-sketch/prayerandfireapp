@@ -8,6 +8,7 @@ import { CallContext, type Call } from "./usePrayerCall";
 export default function PrayerCallProvider({ children }: { children: ReactNode }) {
   const [call, setCall] = useState<Call | null>(null);
   const [pending, setPending] = useState<Call | null>(null);
+  const [minimizedCallHost, setMinimizedCallHost] = useState<HTMLDivElement | null>(null);
   const [minimized, setMinimized] = useState(false);
   const channelClosed = useRef<Promise<unknown>>(Promise.resolve());
   useEffect(() => {
@@ -26,9 +27,9 @@ export default function PrayerCallProvider({ children }: { children: ReactNode }
     setMinimized(false);
   }, [call]);
   const t = (en: string, es: string, pt: string) => pending?.language === "es" ? es : pending?.language === "pt" ? pt : en;
-  return <CallContext.Provider value={{ activeRoomId: call?.groupId, openCall, channelClosed }}>
+  return <CallContext.Provider value={{ activeRoomId: call?.groupId, openCall, channelClosed, setMinimizedCallHost }}>
     {children}
-    {call && <VoiceRoom key={call.groupId} {...call} channelClosed={channelClosed} minimized={minimized}
+    {call && <VoiceRoom key={call.groupId} {...call} channelClosed={channelClosed} minimized={minimized} minimizedCallHost={minimizedCallHost}
       onMinimize={() => setMinimized(true)} onRestore={() => setMinimized(false)} onClose={() => setCall(null)} />}
     <AlertDialog open={!!pending} onOpenChange={open => { if (!open) setPending(null); }}>
       <AlertDialogContent className="z-[190]">
