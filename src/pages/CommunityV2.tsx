@@ -124,7 +124,6 @@ export default function CommunityV2(){
  const[chatAppearanceOpen,setChatAppearanceOpen]=useState(false);
  const[chatPrefs,setChatPrefs]=useState<ChatPrefs>({wallpaper:"default",bubble:"#5C061F"});
  const pendingDeepLink=useRef<{groupId:string;messageId?:string;call?:boolean}|null>(null);
- const [pendingCall, setPendingCall] = useState<string | null>(null);
 
  const[listLoading,setListLoading]=useState(true),[listError,setListError]=useState(false);
  const[discoverList,setDiscoverList]=useState<DiscoverGroup[]>([]),[discoverLoading,setDiscoverLoading]=useState(false),[noAccessGroup,setNoAccessGroup]=useState<DiscoverGroup|null>(null),[confirmDelGroup,setConfirmDelGroup]=useState(false),[confirmLeave,setConfirmLeave]=useState(false),[showArchived,setShowArchived]=useState(false);
@@ -746,7 +745,7 @@ export default function CommunityV2(){
   const params=new URLSearchParams(window.location.search);
   const g=params.get("group");
   if(g){apply({groupId:g,messageId:params.get("message")||undefined,call:params.get("call")==="1"});params.delete("group");params.delete("message");params.delete("call");window.history.replaceState({},"",`${window.location.pathname}${params.toString()?`?${params}`:""}`)}
-  const onOpen=(e:any)=>{apply(e?.detail);const target=groups.find(x=>x.id===e?.detail?.groupId);if(target){setSelected(target);if(e.detail.call)setPendingCall(target.id);}};
+  const onOpen=(e:any)=>{apply(e?.detail);const target=groups.find(x=>x.id===e?.detail?.groupId);if(target)setSelected(target)};
   window.addEventListener("pf-push-open",onOpen as EventListener);
   return()=>window.removeEventListener("pf-push-open",onOpen as EventListener);
  },[groups]);
@@ -758,7 +757,6 @@ export default function CommunityV2(){
   if(!target)return;
   pendingDeepLink.current=null;
   setSelected(target);
-  if(d.call)setPendingCall(target.id);
   if(d.messageId)window.setTimeout(()=>jumpToMsg(d.messageId!),900);
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[groups]);
@@ -823,10 +821,10 @@ export default function CommunityV2(){
    if (!stopped) setLiveRooms(current => current[id] === count ? current : { ...current, [id]: count });
   };
   void (async () => {
+   await voiceChannelClosed.current;
    const { data: { session } } = await supabase.auth.getSession();
    if (!session || stopped) return;
-   await voiceChannelClosed.current;
-   await supabase.realtime.setAuth(session.access_token);
+   await supabase.realtime.setAuth();
    if (stopped) return;
    for (const id of ids) {
     const watch = supabase.channel(`voice-room:${id}`, { config: { private: true, presence: { key: `observer:${me.id}` } } });
@@ -843,16 +841,6 @@ export default function CommunityV2(){
    voiceChannelClosed.current = Promise.all([voiceChannelClosed.current, ...watches.map(watch => supabase.removeChannel(watch))]);
   };
  }, [roomIds, activeRoomId, me?.id, access]);
- useEffect(() => {
-  if (!pendingCall) return;
-  const timer = window.setTimeout(() => setPendingCall(null), 8000);
-  return () => window.clearTimeout(timer);
- }, [pendingCall]);
- useEffect(() => {
-  if (!pendingCall || !selected || selected.id !== pendingCall || !liveRooms[pendingCall] || !me?.id || rec) return;
-  openCall({ groupId: selected.id, name: selected.name, userId: me.id, userName: me.name || t.member, language: lang });
-  setPendingCall(null);
- }, [pendingCall, selected, liveRooms, me, rec, openCall, lang, t.member]);
  const liveVoiceCount = selected ? liveRooms[selected.id] || 0 : 0;
  const joinRoomLabel = L("Join", "Entrar", "Entrar");
  const participantCount = (count: number) => count === 1

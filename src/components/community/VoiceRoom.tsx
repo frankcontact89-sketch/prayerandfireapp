@@ -249,6 +249,42 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       if (subscribeTimer !== null) clearTimeout(subscribeTimer);
       subscribeTimer = null;
     };
+    let phase = "channel-cleanup";
+    const diagnose = (code: string) => {
+      console.warn("[prayer-room]", { code, phase, attempt, online: navigator.onLine });
+    };
+    const release = () => {
+      stopSubscribeTimer();
+      generation.current += 1;
+      stream.current?.getTracks().forEach(track => track.stop());
+      stream.current = null;
+      for (const id of roomPeers.keys()) disposePeer(id);
+      const activeChannel = channel.current;
+      channel.current = null;
+      if (activeChannel) {
+        channelClosed.current = Promise.all([channelClosed.current, supabase.removeChannel(activeChannel)]);
+      }
+      setParticipants([]);
+      mutedRef.current = true;
+      setMuted(true);
+      setConnected(false);
+    };
+    const fail = (code: string, retry = false, message = labels.failure) => {
+      if (cancelled || generation.current !== thisGeneration) return;
+      diagnose(code);
+      release();
+      reconnectOnOnline.current = retry;
+      setStatus(message);
+      setFailed(true);
+      if (retry && !reconnectTimer && reconnectAttempts.current < 2) {
+        reconnectTimer = setTimeout(() => {
+          if (!cancelled && navigator.onLine) {
+            reconnectAttempts.current += 1;
+            retryRef.current();
+          }
+        }, 4000);
+      }
+    };
     const start = async () => {
       if (connecting.current) return;
       connecting.current = true;
@@ -264,22 +300,26 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       setStatus(labels.connecting);
       try {
         if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) throw new Error("Live audio is not supported on this device");
-        // Private Realtime channels need the current signed-in member's JWT. Without
-        // this, the signaling subscription can fail even when the app UI is logged in.
+        // Finish leaving the old channel before reading the current session.
+        await channelClosed.current;
+        if (cancelled || generation.current !== thisGeneration) return;
+        phase = "authentication";
         const { data: sessionData, error: authError } = await supabase.auth.getSession();
         if (authError || !sessionData.session?.access_token) {
-          throw new Error(language === "es" ? "Tu sesión expiró. Inicia sesión de nuevo." : language === "pt" ? "Sua sessão expirou. Entre novamente." : "Your session expired. Please sign in again.");
+          fail("SESSION_UNAVAILABLE", false, language === "es" ? "Tu sesión expiró. Inicia sesión de nuevo." : language === "pt" ? "Sua sessão expirou. Entre novamente." : "Your session expired. Please sign in again.");
+          return;
         }
-        // Let a previous listener leave the topic before subscribing again.
-        await channelClosed.current;
-        await supabase.realtime.setAuth(sessionData.session.access_token);
+        // Let Realtime use the Supabase client's current access token callback.
+        await supabase.realtime.setAuth();
         if (cancelled || generation.current !== thisGeneration) return;
+        phase = "relay";
         iceServers.current = RTC_CONFIG.iceServers;
         const relay = await supabase.functions.invoke<{ iceServers?: RTCIceServer[] }>("community-push", {
           body: { kind: "ice", group_id: groupId }, signal: AbortSignal.timeout(3000),
         }).catch(() => null);
         if (cancelled || generation.current !== thisGeneration) return;
         if (relay?.data?.iceServers?.length) iceServers.current = [...(RTC_CONFIG.iceServers ?? []), ...relay.data.iceServers];
+        phase = "microphone";
         const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
         if (cancelled || generation.current !== thisGeneration) { mic.getTracks().forEach(t => t.stop()); return; }
         // Join listening first: do not transmit microphone audio without an explicit tap.
@@ -362,88 +402,43 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
             })().catch(() => { if (!cancelled) { setStatus(language === "es" ? "No se pudo iniciar el audio." : language === "pt" ? "Não foi possível iniciar o áudio." : "Failed to initiate audio"); setFailed(true); } }).finally(() => offering.current.delete(p.id));
           }
         });
+        phase = "subscription";
         ch.subscribe(async (state, error) => {
           if (cancelled || generation.current !== thisGeneration) return;
           if (state === "SUBSCRIBED") {
-            stopSubscribeTimer();
-            if (!stream.current) {
-              retryRef.current();
-              return;
-            }
+            if (!stream.current) return;
+            phase = "presence";
             joinedAt.current ??= Date.now();
-            const presenceStatus = await ch.track({ name: userName, hand: handRef.current, muted: mutedRef.current, startedAt: joinedAt.current });
-            if (cancelled) return;
-            if (presenceStatus !== "ok") { stream.current?.getTracks().forEach(t => t.stop()); stream.current = null; setParticipants([]); console.warn("[voice-room] presence tracking failed", { groupId, presenceStatus }); setConnected(false); setStatus(labels.failure); setFailed(true); }
-            else if (stream.current?.getAudioTracks().some(track => track.readyState === "live")) { reconnectAttempts.current = 0; setFailed(false); setConnected(true); joinedAt.current ??= Date.now(); setStatus(labels.connected); }
-          } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
-            stopSubscribeTimer();
-            reconnectOnOnline.current = true;
-            console.warn("[voice-room] signaling channel unavailable", { groupId, state, error });
-            // The WebRTC media connection can remain alive after signaling fails.
-            // Immediately stop transmitting and close peer audio connections so
-            // a user never unknowingly broadcasts while the UI says disconnected.
-            stream.current?.getTracks().forEach(track => track.stop());
-            stream.current = null;
-            setParticipants([]);
-            setMuted(true);
-            for (const peerId of Array.from(peers.current.keys())) disposePeer(peerId);
-            setConnected(false);
-            setStatus(labels.failure);
-            setFailed(true);
-            if (!reconnectTimer && reconnectAttempts.current < 2) reconnectTimer = setTimeout(() => {
-              if (!cancelled && navigator.onLine) {
-                reconnectAttempts.current += 1;
-                retryRef.current();
+            try {
+              const result = await ch.track({ name: userName, hand: handRef.current, muted: mutedRef.current, startedAt: joinedAt.current });
+              if (cancelled || generation.current !== thisGeneration) return;
+              if (result !== "ok") { fail(`PRESENCE_${result.toUpperCase()}`, true); return; }
+              stopSubscribeTimer();
+              if (!stream.current?.getAudioTracks().some(track => track.readyState === "live")) {
+                fail("MICROPHONE_TRACK_ENDED", true);
+                return;
               }
-            }, 4000);
+              phase = "connected";
+              reconnectAttempts.current = 0;
+              setFailed(false);
+              setConnected(true);
+              setStatus(labels.connected);
+            } catch { fail("PRESENCE_EXCEPTION", true); }
+          } else if (state === "CHANNEL_ERROR" || state === "TIMED_OUT" || state === "CLOSED") {
+            const denied = /unauthori[sz]ed|permission|forbidden/i.test(error?.message ?? "");
+            fail(denied ? "CHANNEL_PERMISSION_DENIED" : state, !denied);
           }
         });
-        // A missing SUBSCRIBED/CHANNEL_ERROR callback must not leave the room
-        // displaying "Connecting…" forever. Offer an explicit retry instead.
-        subscribeTimer = setTimeout(() => {
-          if (cancelled || generation.current !== thisGeneration || ch.state === "joined") return;
-          stream.current?.getTracks().forEach(track => track.stop());
-          stream.current = null;
-          setParticipants([]);
-          setMuted(true);
-          setConnected(false);
-          setStatus(labels.failure);
-          setFailed(true);
-        }, 20000);
+        subscribeTimer = setTimeout(() => fail("ROOM_JOIN_TIMEOUT", true), 20000);
       } catch (error) {
-        stopSubscribeTimer();
-        if (cancelled || generation.current !== thisGeneration) return;
-        stream.current?.getTracks().forEach(track => track.stop());
-        stream.current = null;
-        setParticipants([]);
         const reason = error instanceof Error ? error.name : "";
         const micDenied = reason === "NotAllowedError" || reason === "PermissionDeniedError";
-        setStatus(micDenied
+        fail(micDenied ? "MICROPHONE_PERMISSION_DENIED" : "ROOM_START_FAILED", false, micDenied
           ? (language === "es" ? "Permite el acceso al micrófono en Ajustes para entrar a la sala." : language === "pt" ? "Permita o acesso ao microfone nos Ajustes para entrar na sala." : "Allow microphone access in Settings to join the room.")
           : labels.failure);
-        console.error("[voice-room] connection failed", { groupId, reason, error });
-        setFailed(true);
       }
     };
-    const stopOnOffline = () => {
-      reconnectOnOnline.current = true;
-      const activeChannel = channel.current;
-      generation.current += 1;
-      stopSubscribeTimer();
-      stream.current?.getTracks().forEach(track => track.stop());
-      stream.current = null;
-      for (const id of roomPeers.keys()) disposePeer(id);
-      if (activeChannel) {
-        channel.current = null;
-        channelClosed.current = supabase.removeChannel(activeChannel);
-      }
-      setParticipants([]);
-      mutedRef.current = true;
-      setMuted(true);
-      setConnected(false);
-      setStatus(labels.failure);
-      setFailed(true);
-    };
+    const stopOnOffline = () => fail("NETWORK_OFFLINE", true);
     window.addEventListener("offline", stopOnOffline);
     void start();
     return () => {
@@ -453,7 +448,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       clearTimeout(reconnectTimer);
       generation.current++;
       alive.current = false;
-      if (channel.current) channelClosed.current = supabase.removeChannel(channel.current);
+      if (channel.current) channelClosed.current = Promise.all([channelClosed.current, supabase.removeChannel(channel.current)]);
       setParticipants([]);
       channel.current = null;
       roomOffers.clear();
