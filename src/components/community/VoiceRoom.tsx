@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 import { Mic, MicOff, PhoneOff, Hand, Users, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -10,8 +10,9 @@ const RTC_CONFIG: RTCConfiguration = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
 
-export default function VoiceRoom({ groupId, name, userId, userName, onClose, language }: {
+export default function VoiceRoom({ groupId, name, userId, userName, onClose, language, channelClosed }: {
   groupId: string; name: string; userId: string; userName: string; onClose: () => void; language: string;
+  channelClosed: MutableRefObject<Promise<unknown>>;
 }) {
   const [muted, setMuted] = useState(true);
   const [hand, setHand] = useState(false);
@@ -35,10 +36,10 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   const retryRef = useRef<() => void>(() => {});
   retryRef.current = () => setAttempt(n => n + 1);
   const labels = language === "es"
-    ? { connecting: "Conectando…", connected: "Conectado", you: "Tú", title: "Sala de oración", mute: "Silenciar", unmute: "Activar micrófono", leave: "Salir", raised: "Mano levantada", hand: "Levantar la mano", beta: "Beta · audio en vivo", participants: "Participantes", retry: "Reintentar conexión", failure: "No se pudo conectar. Comprueba tu conexión y los permisos de la sala." }
+    ? { connecting: "Conectando…", connected: "Conectado", you: "Tú", title: "Sala de oración", mute: "Silenciar", unmute: "Activar micrófono", leave: "Salir", raised: "Mano levantada", hand: "Levantar la mano", participants: "Participantes", retry: "Reintentar conexión", failure: "No se pudo conectar. Comprueba tu conexión y los permisos de la sala." }
     : language === "pt"
-    ? { connecting: "Conectando…", connected: "Conectado", you: "Você", title: "Sala de oração", mute: "Silenciar", unmute: "Ativar microfone", leave: "Sair", raised: "Mão levantada", hand: "Levantar a mão", beta: "Beta · áudio ao vivo", participants: "Participantes", retry: "Tentar novamente", failure: "Não foi possível conectar. Verifique a conexão e as permissões da sala." }
-    : { connecting: "Connecting…", connected: "Connected", you: "You", title: "Prayer room", mute: "Mute", unmute: "Unmute", leave: "Leave", raised: "Hand raised", hand: "Raise hand", beta: "Beta · live audio", participants: "Participants", retry: "Retry connection", failure: "Could not connect. Check your connection and room permissions." };
+    ? { connecting: "Conectando…", connected: "Conectado", you: "Você", title: "Sala de oração", mute: "Silenciar", unmute: "Ativar microfone", leave: "Sair", raised: "Mão levantada", hand: "Levantar a mão", participants: "Participantes", retry: "Tentar novamente", failure: "Não foi possível conectar. Verifique a conexão e as permissões da sala." }
+    : { connecting: "Connecting…", connected: "Connected", you: "You", title: "Prayer room", mute: "Mute", unmute: "Unmute", leave: "Leave", raised: "Hand raised", hand: "Raise hand", participants: "Participants", retry: "Retry connection", failure: "Could not connect. Check your connection and room permissions." };
 
   const disposePeer = useCallback((id: string) => {
     peers.current.get(id)?.close(); peers.current.delete(id);
@@ -70,7 +71,22 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
     };
     pc.ontrack = event => {
       let el = audioNodes.current.get(id);
-      if (!el) { el = document.createElement("audio"); el.autoplay = true; el.style.display = "none"; document.body.appendChild(el); audioNodes.current.set(id, el); }
+      if (!el) {
+        el = document.createElement("audio");
+        el.autoplay = true;
+        el.setAttribute("playsinline", "");
+        // On iOS WKWebView, display:none can prevent remote audio playback.
+        // Keep the element visually hidden without removing it from layout.
+        Object.assign(el.style, {
+          position: "absolute",
+          width: "1px",
+          height: "1px",
+          opacity: "0",
+          pointerEvents: "none",
+        });
+        document.body.appendChild(el);
+        audioNodes.current.set(id, el);
+      }
       el.srcObject = event.streams[0];
       void el.play().then(() => setAudioBlocked(false)).catch(() => setAudioBlocked(true));
     };
@@ -152,6 +168,8 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
         if (authError || !sessionData.session?.access_token) {
           throw new Error(language === "es" ? "Tu sesión expiró. Inicia sesión de nuevo." : language === "pt" ? "Sua sessão expirou. Entre novamente." : "Your session expired. Please sign in again.");
         }
+        // Let a previous listener leave the topic before subscribing again.
+        await channelClosed.current;
         await supabase.realtime.setAuth(sessionData.session.access_token);
         if (cancelled) return;
         const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
@@ -262,7 +280,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       stopSubscribeTimer();
       generation.current++;
       alive.current = false;
-      if (channel.current) void supabase.removeChannel(channel.current);
+      if (channel.current) channelClosed.current = supabase.removeChannel(channel.current);
       setParticipants([]);
       channel.current = null;
       offering.current.clear();
@@ -272,7 +290,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
       stream.current = null;
       connecting.current = false;
     };
-  }, [groupId, userId, userName, getPeer, flushIce, send, disposePeer, attempt]);
+  }, [groupId, userId, userName, getPeer, flushIce, send, disposePeer, attempt, channelClosed]);
 
   const toggleHand = () => {
     if (!connected) return;
@@ -294,7 +312,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, onClose, la
   return (
     <section role="dialog" aria-modal="true" aria-label={labels.title} className="fixed inset-0 z-[90] flex flex-col bg-[#090709] p-5 text-white" style={{ paddingTop: "max(22px, env(safe-area-inset-top))", paddingBottom: "max(24px, env(safe-area-inset-bottom))" }}>
       <header className="flex items-center justify-between">
-        <div><p className="text-xs uppercase tracking-widest text-[#E5BB70]">{labels.beta}</p><h2 className="mt-1 text-xl font-bold">{name}</h2></div>
+        <div><p className="text-xs uppercase tracking-widest text-[#E5BB70]">{labels.title}</p><h2 className="mt-1 text-xl font-bold">{name}</h2></div>
         <button onClick={onClose} aria-label={labels.leave} className="grid h-11 w-11 place-items-center rounded-full bg-white/10"><X /></button>
       </header>
       <p role="status" className={`mt-3 text-sm ${connected ? "text-emerald-300" : "text-zinc-400"}`}>{status === "Connecting…" ? labels.connecting : status}</p>
