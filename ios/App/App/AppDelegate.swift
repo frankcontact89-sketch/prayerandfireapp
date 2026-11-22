@@ -91,11 +91,15 @@ class PrayerAudioRoutePlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func select(_ call: CAPPluginCall) {
-        guard let route = call.getString("route"), audio.category == .playAndRecord else {
-            call.reject("Audio session unavailable")
+        guard let route = call.getString("route") else {
+            call.reject("Missing audio route")
             return
         }
         do {
+            if audio.category != .playAndRecord {
+                try audio.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth])
+            }
+            try audio.setActive(true)
             if route == "speaker" {
                 try audio.setPreferredInput(nil)
                 try audio.overrideOutputAudioPort(.speaker)
