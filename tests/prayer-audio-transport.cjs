@@ -1,0 +1,96 @@
+// Run with Node 24 and werift@0.28.0 available on NODE_PATH.
+// For relay-only coverage, set PRAYER_TEST_TURN_URL and PRAYER_TEST_TURN_SECRET
+// to a local coturn fixture with TURN REST authentication enabled.
+const assert = require("node:assert/strict");
+const os = require("node:os");
+// A restricted runner may deny interface enumeration while allowing loopback UDP.
+try { os.networkInterfaces(); } catch (error) {
+  if (error.info?.syscall !== "uv_interface_addresses") throw error;
+  os.networkInterfaces = () => ({});
+}
+const { createHmac } = require("node:crypto");
+const { setTimeout: sleep } = require("node:timers/promises");
+const { RTCPeerConnection, MediaStreamTrack, RtpHeader, RtpPacket } = require("werift");
+const { localAudioDescription, audioTransportStats, usableTurnServers } = require(
+  "../src/components/community/prayerAudioTransport.ts",
+);
+
+const turnUrl = process.env.PRAYER_TEST_TURN_URL;
+const turnSecret = process.env.PRAYER_TEST_TURN_SECRET;
+assert.equal(Boolean(turnUrl), Boolean(turnSecret), "Set both TURN fixture variables");
+const expiresAt = Math.floor(Date.now() / 1000) + 3600;
+
+function client(name, frequency) {
+  const username = `${expiresAt}:${name}`;
+  const iceServers = turnUrl ? usableTurnServers({
+    expiresAt,
+    iceServers: [{ urls: turnUrl, username, credential: createHmac("sha1", turnSecret).update(username).digest("base64") }],
+  }) : [];
+  const peer = new RTCPeerConnection({
+    iceUseIpv6: false,
+    iceInterfaceAddresses: { udp4: "127.0.0.1" },
+    iceAdditionalHostAddresses: ["127.0.0.1"],
+    iceTransportPolicy: turnUrl ? "relay" : "all",
+    iceServers,
+  });
+  const track = new MediaStreamTrack({ kind: "audio" });
+  peer.addTrack(track);
+  const received = new Set();
+  peer.onTrack.subscribe(remote => remote.onReceiveRtp.subscribe(packet => received.add(packet.payload.toString("hex"))));
+
+  // Both senders use PCMU at 8 kHz, but their tones have different frequencies.
+  const tone = Buffer.from(Array.from({ length: 160 }, (_, index) => {
+    const sample = Math.round(8000 * Math.sin(2 * Math.PI * frequency * index / 8000));
+    const magnitude = Math.min(32635, Math.abs(sample)) + 132;
+    const exponent = Math.max(0, Math.floor(Math.log2(magnitude)) - 7);
+    const mantissa = (magnitude >> (exponent + 3)) & 15;
+    return ~(Number(sample < 0) * 128 | exponent << 4 | mantissa) & 255;
+  }));
+  return { peer, track, tone, received };
+}
+
+async function run() {
+  const alice = client("alice", 400);
+  const bob = client("bob", 600);
+  try {
+    const bareOffer = await alice.peer.createOffer();
+    assert.doesNotMatch(bareOffer.sdp, /a=candidate:/);
+    const offer = await localAudioDescription(alice.peer, bareOffer);
+    assert.match(offer.sdp, /m=audio/);
+    assert.match(offer.sdp, /a=fingerprint:/);
+    assert.match(offer.sdp, /a=candidate:/);
+    await bob.peer.setRemoteDescription(offer);
+    const answer = await localAudioDescription(bob.peer, await bob.peer.createAnswer());
+    assert.match(answer.sdp, /a=candidate:/);
+    await alice.peer.setRemoteDescription(answer);
+
+    // Deliberately transmit only SDP to reproduce dropped trickle messages.
+    for (let i = 0; i < 150; i++) {
+      if (alice.peer.connectionState === "connected" && bob.peer.connectionState === "connected") break;
+      await sleep(100);
+    }
+    assert.equal(alice.peer.connectionState, "connected");
+    assert.equal(bob.peer.connectionState, "connected");
+
+    for (let index = 0; index < 64; index++) {
+      for (const sender of [alice, bob]) {
+        sender.track.writeRtp(new RtpPacket(new RtpHeader({
+          payloadType: 0, sequenceNumber: index, timestamp: index * 160,
+        }), sender.tone));
+      }
+      await sleep(20);
+    }
+    for (const [receiver, sender] of [[alice, bob], [bob, alice]]) {
+      const stats = await audioTransportStats(receiver.peer);
+      assert.ok(receiver.received.has(sender.tone.toString("hex")), "Received the other client's synthetic tone");
+      assert.ok(stats.inboundPackets > 10 && stats.outboundPackets > 10, JSON.stringify(stats));
+      assert.equal(stats.dtlsState, "connected");
+      assert.equal(stats.selectedPair?.local, turnUrl ? "relay" : "host");
+      assert.equal(stats.selectedPair?.remote, turnUrl ? "relay" : "host");
+      console.log(JSON.stringify(stats));
+    }
+  } finally {
+    await Promise.all([alice.peer.close(), bob.peer.close()]);
+  }
+}
+run().then(() => process.exit(0)).catch(error => { console.error(error); process.exit(1); });

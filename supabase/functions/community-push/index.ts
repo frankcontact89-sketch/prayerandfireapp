@@ -109,12 +109,13 @@ Deno.serve(async (req) => {
       const urls = (Deno.env.get("TURN_URLS") ?? "").split(",").map(url => url.trim())
         .filter(url => /^turns?:[^\s]+$/i.test(url));
       if (!secret || !urls.length) return json({ iceServers: [] });
-      const username = `${Math.floor(Date.now() / 1000) + 3600}:${user.id}`;
+      const expiresAt = Math.floor(Date.now() / 1000) + 3600;
+      const username = `${expiresAt}:${user.id}`;
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
-      const credential = b64url(new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(username))))
-        .replace(/-/g, "+").replace(/_/g, "/") + "=";
-      return json({ iceServers: [{ urls, username, credential }] });
+      const signature = new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(username)));
+      const credential = btoa(String.fromCharCode(...signature));
+      return json({ iceServers: [{ urls, username, credential }], expiresAt });
     }
     const { data: targets, error } = await admin.rpc("community_call_push_targets", {
       _group_id: groupId, _caller_id: user.id,

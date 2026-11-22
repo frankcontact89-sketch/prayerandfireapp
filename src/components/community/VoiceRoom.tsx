@@ -1,3 +1,4 @@
+import { audioTransportStats, localAudioDescription, usableTurnServers } from "./prayerAudioTransport";
 import { GENERAL_PRAYER_ROOM_ID } from "./generalPrayerRoom";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
@@ -174,7 +175,9 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     stream.current?.getTracks().forEach(track => pc.addTrack(track, stream.current!));
     const markFailed = (reason: unknown) => {
       if (peers.current.get(id) !== pc) return;
-      console.warn("[voice-room] peer transport failed", { ice: pc.iceConnectionState, reason });
+      void audioTransportStats(pc).then(stats => {
+        console.warn("[voice-room] peer transport failed", { reason, ...stats });
+      }).catch(() => console.warn("[voice-room] peer transport failed", { reason, ice: pc.iceConnectionState }));
       setPeerState(id, "failed");
     };
     const watchAudio = (deadline: number) => {
@@ -182,11 +185,9 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       const timer = setTimeout(async () => {
         if (peers.current.get(id) !== pc) return;
         try {
-          const stats = await pc.getStats();
+          const stats = await audioTransportStats(pc);
           if (peers.current.get(id) !== pc) return;
-          const receivedAudio = Array.from(stats.values()).some(report => report.type === "inbound-rtp"
-            && (report.kind ?? report.mediaType) === "audio" && report.packetsReceived > 0);
-          if (pc.connectionState === "connected" && receivedAudio) {
+          if (pc.connectionState === "connected" && stats.inboundPackets > 0) {
             peerTimers.current.delete(id);
             setPeerState(id, "ready");
             return;
@@ -203,8 +204,12 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     pc.oniceconnectionstatechange = () => {
       if (pc.iceConnectionState === "failed") markFailed("ICE_FAILED");
     };
+    pc.onicecandidateerror = event => {
+      console.warn("[voice-room] ICE server error", { code: event.errorCode });
+    };
     pc.onicecandidate = event => {
-      if (event.candidate) void send({ from: userId, to: id, kind: "ice", data: event.candidate.toJSON() }).catch(markFailed);
+      if (event.candidate) void send({ from: userId, to: id, kind: "ice", data: event.candidate.toJSON() })
+        .catch(error => console.warn("[voice-room] trickle ICE delivery failed", error));
     };
     pc.ontrack = event => {
       if (event.track.kind !== "audio") return;
@@ -367,14 +372,13 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         if (cancelled || generation.current !== thisGeneration) return;
         phase = "relay";
         iceServers.current = RTC_CONFIG.iceServers;
-        const relay = await supabase.functions.invoke<{ iceServers?: RTCIceServer[] }>("community-push", {
-          body: { kind: "ice", group_id: groupId }, signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(5000) : undefined,
+        const relay = await supabase.functions.invoke<{ iceServers?: RTCIceServer[]; expiresAt?: number }>("community-push", {
+          body: { kind: "ice", group_id: groupId }, signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(8000) : undefined,
         }).catch(() => null);
         if (cancelled || generation.current !== thisGeneration) return;
-        if (relay?.data?.iceServers?.length) iceServers.current = [...(RTC_CONFIG.iceServers ?? []), ...relay.data.iceServers];
-        if (!iceServers.current?.some(server => [server.urls].flat().some(url => /^turns?:/i.test(url)))) {
-          diagnose(relay?.error ? "TURN_REQUEST_FAILED" : "TURN_NOT_CONFIGURED");
-        }
+        const turnServers = usableTurnServers(relay?.data);
+        iceServers.current = [...(RTC_CONFIG.iceServers ?? []), ...turnServers];
+        if (!turnServers.length) diagnose(!relay || relay.error ? "TURN_REQUEST_FAILED" : "TURN_CREDENTIALS_UNAVAILABLE");
         if (nativePrayerAudio) {
           phase = "audio-session";
           try { await prayerAudioRoute.prepare(); }
@@ -416,8 +420,8 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
               for (const transceiver of pc.getTransceivers()) {
                 if (transceiver.receiver.track.kind === "video") transceiver.direction = "inactive";
               }
-              const answer = await pc.createAnswer();
-              await pc.setLocalDescription(answer);
+              const answer = await localAudioDescription(pc, await pc.createAnswer());
+              if (cancelled || generation.current !== thisGeneration || peers.current.get(msg.from) !== pc) return;
               await send({ from: userId, to: msg.from, kind: "answer", data: answer });
             } else if (msg.kind === "answer") {
               await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
@@ -497,8 +501,9 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
             void (async () => {
               const offer = await pc.createOffer();
               if (cancelled || pc.signalingState === "closed") return;
-              await pc.setLocalDescription(offer);
-              await send({ from: userId, to: p.id, kind: "offer", data: offer });
+              const description = await localAudioDescription(pc, offer);
+              if (cancelled || generation.current !== thisGeneration || peers.current.get(p.id) !== pc) return;
+              await send({ from: userId, to: p.id, kind: "offer", data: description });
             })().catch(error => {
               if (!cancelled && generation.current === thisGeneration && peers.current.get(p.id) === pc) {
                 diagnose("SIGNAL_OFFER_FAILED");
