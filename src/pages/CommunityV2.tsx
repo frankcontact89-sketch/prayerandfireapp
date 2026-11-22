@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState}from"react";
-import{ArrowLeft,Ban,Bell,BellOff,Camera,Check,CheckCheck,Clock,Copy,FileText,Flag,Flame,ChevronRight,CornerUpLeft,Info,Link2,LogOut,Mic,MoreHorizontal,Paperclip,Phone,Pin,PinOff,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,Video,X}from"lucide-react";
+import{ArrowLeft,Ban,Bell,BellOff,Camera,Check,CheckCheck,Clock,Copy,FileText,Flag,Flame,ChevronRight,CornerUpLeft,Info,Link2,LogOut,Mic,MoreHorizontal,Paperclip,Phone,Pin,PinOff,Plus,Search,Send,Settings,ShieldCheck,Star,Trash2,UserPlus,Users,X}from"lucide-react";
 import{supabase}from"@/integrations/supabase/client";
 import { useBrandLogo } from "@/hooks/useBrandLogo";
 import CreateGroupModal,{type CreatedGroup}from"@/components/community/CreateGroupModal";
@@ -8,7 +8,7 @@ import CommunityAdminPanel from"@/components/community/CommunityAdminPanel";
 import MembersModal from"@/components/community/MembersModal";
 import AudioBubble from"@/components/community/AudioBubble";
 import VoiceRecorder from"@/components/community/VoiceRecorder";
-import VoiceRoom from "@/components/community/VoiceRoom";
+import { usePrayerCall } from "@/components/community/usePrayerCall";
 import ReactionEmojiPicker from"@/components/community/ReactionEmojiPicker";
 import ImageViewer from"@/components/community/ImageViewer";
 import ChatAppearanceModal,{readChatPrefs,wallpaperCss,type ChatPrefs}from"@/components/community/ChatAppearanceModal";
@@ -106,19 +106,12 @@ export default function CommunityV2(){
  const[panel,setPanel]=useState(false);
 
  const[membersModal,setMembersModal]=useState<null|"add"|"admins"|"members">(null);
- const [voiceGroup, setVoiceGroup] = useState<Group | null>(null);
- const [startWithVideo, setStartWithVideo] = useState(false);
+ const { activeRoomId, openCall, channelClosed: voiceChannelClosed } = usePrayerCall();
  const [communityMenu, setCommunityMenu] = useState(false);
- const openRoom = (group: Group, video = false) => {
-  setStartWithVideo(video);
-  setVoiceGroup(group);
+ const openRoom = (group: Group) => {
+  if (me?.id) openCall({ groupId: group.id, name: group.name, userId: me.id, userName: me.name || t.member, language: lang });
  };
  const prayerRoomLabel = L("Prayer room", "Sala de oración", "Sala de oração");
- const voiceChannelClosed = useRef<Promise<unknown>>(Promise.resolve());
- const voiceRoom = voiceGroup && me?.id && (
-  <VoiceRoom groupId={voiceGroup.id} name={voiceGroup.name} userId={me.id}
-   userName={me.name || t.member} language={lang} startWithVideo={startWithVideo} onClose={() => setVoiceGroup(null)} channelClosed={voiceChannelClosed} />
- );
  const [liveRooms, setLiveRooms] = useState<Record<string, number>>({});
  const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups"|"discover">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[emojiPicker,setEmojiPicker]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[starredIds,setStarredIds]=useState<Set<string>>(new Set()),[flash,setFlash]=useState("");
  const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[imageViewer,setImageViewer]=useState<{url:string;title?:string}|null>(null),[readCounts,setReadCounts]=useState<Record<string,number>>({}),[deliveredCounts,setDeliveredCounts]=useState<Record<string,number>>({});
@@ -130,7 +123,8 @@ export default function CommunityV2(){
  selectedGroupIdRef.current=selected?.id??null;
  const[chatAppearanceOpen,setChatAppearanceOpen]=useState(false);
  const[chatPrefs,setChatPrefs]=useState<ChatPrefs>({wallpaper:"default",bubble:"#5C061F"});
- const pendingDeepLink=useRef<{groupId:string;messageId?:string}|null>(null);
+ const pendingDeepLink=useRef<{groupId:string;messageId?:string;call?:boolean}|null>(null);
+ const [pendingCall, setPendingCall] = useState<string | null>(null);
 
  const[listLoading,setListLoading]=useState(true),[listError,setListError]=useState(false);
  const[discoverList,setDiscoverList]=useState<DiscoverGroup[]>([]),[discoverLoading,setDiscoverLoading]=useState(false),[noAccessGroup,setNoAccessGroup]=useState<DiscoverGroup|null>(null),[confirmDelGroup,setConfirmDelGroup]=useState(false),[confirmLeave,setConfirmLeave]=useState(false),[showArchived,setShowArchived]=useState(false);
@@ -747,12 +741,12 @@ export default function CommunityV2(){
 
  // ---- notification tap deep link ----
  useEffect(()=>{
-  const apply=(d:{groupId:string;messageId?:string}|null)=>{if(d?.groupId)pendingDeepLink.current=d};
+  const apply=(d:{groupId:string;messageId?:string;call?:boolean}|null)=>{if(d?.groupId)pendingDeepLink.current=d};
   apply(takePushOpen());
   const params=new URLSearchParams(window.location.search);
   const g=params.get("group");
-  if(g){apply({groupId:g,messageId:params.get("message")||undefined});params.delete("group");params.delete("message");window.history.replaceState({},"",`${window.location.pathname}${params.toString()?`?${params}`:""}`)}
-  const onOpen=(e:any)=>{apply(e?.detail);const target=groups.find(x=>x.id===e?.detail?.groupId);if(target)setSelected(target)};
+  if(g){apply({groupId:g,messageId:params.get("message")||undefined,call:params.get("call")==="1"});params.delete("group");params.delete("message");params.delete("call");window.history.replaceState({},"",`${window.location.pathname}${params.toString()?`?${params}`:""}`)}
+  const onOpen=(e:any)=>{apply(e?.detail);const target=groups.find(x=>x.id===e?.detail?.groupId);if(target){setSelected(target);if(e.detail.call)setPendingCall(target.id);}};
   window.addEventListener("pf-push-open",onOpen as EventListener);
   return()=>window.removeEventListener("pf-push-open",onOpen as EventListener);
  },[groups]);
@@ -764,6 +758,7 @@ export default function CommunityV2(){
   if(!target)return;
   pendingDeepLink.current=null;
   setSelected(target);
+  if(d.call)setPendingCall(target.id);
   if(d.messageId)window.setTimeout(()=>jumpToMsg(d.messageId!),900);
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[groups]);
@@ -819,7 +814,6 @@ export default function CommunityV2(){
  const receiptRows=(receipts:Array<ReadReceipt|DeliveryReceipt|PlayReceipt>,timeKey:"read_at"|"delivered_at"|"played_at")=>receipts.length===0?<div className="px-4 pb-4 text-sm text-muted-foreground">—</div>:receipts.map(receipt=>{const person=messageInfoMembers.find(member=>member.id===receipt.user_id);if(!person)return null;const timestamp=String((receipt as any)[timeKey]);return <div key={receipt.user_id} className="mx-4 flex items-center gap-3 border-t border-border py-3 first:border-t-0"><div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-muted font-bold text-primary ring-1 ring-border">{person.avatar?<img src={person.avatar} alt="" className="h-full w-full object-cover"/>:person.name[0]?.toUpperCase()}</div><div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-foreground">{person.name}</div><div className="text-xs text-muted-foreground">{new Date(timestamp).toLocaleDateString()}</div></div><time className="shrink-0 text-sm tabular-nums text-muted-foreground">{new Date(timestamp).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</time></div>});
 
  const roomIds = (selected ? [selected.id] : visible.map(group => group.id)).sort().join(",");
- const activeRoomId = voiceGroup?.id;
  useEffect(() => {
   const ids = roomIds.split(",").filter(id => id && id !== activeRoomId);
   if (!ids.length || !me?.id || access !== "approved") return;
@@ -849,6 +843,16 @@ export default function CommunityV2(){
    voiceChannelClosed.current = Promise.all([voiceChannelClosed.current, ...watches.map(watch => supabase.removeChannel(watch))]);
   };
  }, [roomIds, activeRoomId, me?.id, access]);
+ useEffect(() => {
+  if (!pendingCall) return;
+  const timer = window.setTimeout(() => setPendingCall(null), 8000);
+  return () => window.clearTimeout(timer);
+ }, [pendingCall]);
+ useEffect(() => {
+  if (!pendingCall || !selected || selected.id !== pendingCall || !liveRooms[pendingCall] || !me?.id || rec) return;
+  openCall({ groupId: selected.id, name: selected.name, userId: me.id, userName: me.name || t.member, language: lang });
+  setPendingCall(null);
+ }, [pendingCall, selected, liveRooms, me, rec, openCall, lang, t.member]);
  const liveVoiceCount = selected ? liveRooms[selected.id] || 0 : 0;
  const joinRoomLabel = L("Join", "Entrar", "Entrar");
  const participantCount = (count: number) => count === 1
@@ -866,8 +870,7 @@ export default function CommunityV2(){
   <header className="shrink-0 min-h-16 px-2 bg-background text-foreground border-b border-border flex items-center gap-2 backdrop-blur"><button onClick={()=>{setSelected(null);if(me)loadGroups(me.id)}} aria-label={t.back} className="w-11 h-11 grid place-items-center"><ArrowLeft className="h-5 w-5"/></button><button onClick={()=>setInfo(true)} className="flex-1 min-w-0 flex items-center gap-2.5 text-left">{selected.avatar?<img src={selected.avatar} alt="" className="w-11 h-11 rounded-full object-cover ring-1 ring-white/10"/>:<span className="w-11 h-11 shrink-0 rounded-full border border-[#E5BB70]/45 bg-[#5C061F] grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span>}<div className="min-w-0"><b className="block truncate text-[15px] leading-tight">{selected.name}</b></div></button>
   <button type="button" disabled={rec} onClick={() => openRoom(selected)} aria-label={prayerRoomLabel}
    className="grid size-10 shrink-0 place-items-center rounded-full text-[#D5AD6C] disabled:opacity-50"><Phone size={18} /></button>
-  <button type="button" disabled={rec} onClick={() => openRoom(selected, true)} aria-label={L("Video call", "Videollamada", "Videochamada")}
-   className="grid size-10 shrink-0 place-items-center rounded-full text-[#D5AD6C] disabled:opacity-50"><Video size={18} /></button>
+
   <button onClick={()=>setInfo(true)} aria-label={t.info} className="w-11 h-11 grid place-items-center"><MoreHorizontal className="w-5 h-5"/></button></header>
   {liveVoiceCount > 0 && <div className="flex shrink-0 items-center gap-2 border-b border-border bg-card px-4 py-1 text-sm text-foreground">
    <span className="size-2 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
@@ -875,7 +878,7 @@ export default function CommunityV2(){
    <button type="button" disabled={rec} onClick={() => openRoom(selected)}
     className="min-h-10 rounded-lg px-3 font-semibold text-emerald-700 dark:text-emerald-300 disabled:opacity-50">{joinRoomLabel}</button>
   </div>}
-  {voiceRoom}
+
   {chatSearch&&<div className="shrink-0 border-b border-border bg-background px-3 py-2"><div className="h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 flex items-center gap-2"><Search className="w-4 h-4 text-zinc-500"/><input autoFocus value={csq} onChange={e=>setCsq(e.target.value)} placeholder={searchMessagesLabel} className="flex-1 bg-transparent outline-none text-sm min-w-0"/><button onClick={()=>{setChatSearch(false);setCsq("")}} aria-label={t.cancel}><X className="w-4 h-4"/></button></div></div>}
   {pinned.length>0&&<div className="shrink-0 px-3 py-2 bg-zinc-950 border-b border-white/10 space-y-1.5">{pinned.slice(0,3).map(p=><div key={p.id} className="flex items-center gap-2"><button onClick={()=>jumpToMsg(p.id)} className="flex-1 min-w-0 flex items-center gap-2 text-left"><Pin className="w-4 h-4 text-[#E5BB70] shrink-0"/><span className="flex-1 min-w-0 truncate text-xs"><b className="text-[#E7BC7B]">{pinnedLabel}</b> <span className="text-zinc-300">{replyPreview(p)}</span></span></button>{canManageGroup(selected)&&<button onClick={()=>togglePin(p)} aria-label={unpinLabel} className="w-7 h-7 rounded-full bg-zinc-900 grid place-items-center shrink-0"><PinOff className="w-3.5 h-3.5 text-zinc-400"/></button>}</div>)}</div>}
   <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pt-3 pb-6 space-y-3.5" style={chatBackgroundStyle}>
@@ -1044,5 +1047,5 @@ export default function CommunityV2(){
   className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
   <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" /><Phone size={14} aria-hidden="true" />{liveRooms[g.id]}
  </button>}
- </div>)}</div>{voiceRoom}{noAccessGroup&&<div className="fixed inset-0 z-[130] bg-black/80 grid place-items-center px-8" onClick={()=>setNoAccessGroup(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-card border border-border p-6 text-center">{noAccessGroup.avatar?<img src={noAccessGroup.avatar} alt="" className="w-16 h-16 rounded-full object-cover mx-auto"/>:<span className="w-16 h-16 rounded-full bg-[#5C061F] border border-[#E5BB70]/45 mx-auto grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span>}<b className="block mt-4 text-lg">{noAccessGroup.name}</b><p className="mt-1 text-xs text-muted-foreground">{noAccessGroup.memberCount} {noAccessGroup.memberCount===1?t.member:t.members}</p><b className="block mt-4 text-[#E5BB70] text-sm">{t.noAccessTitle}</b><p className="mt-2 text-sm text-muted-foreground">{t.noAccessBody}</p><button onClick={()=>setNoAccessGroup(null)} className="mt-6 w-full h-12 rounded-2xl bg-secondary">{t.back}</button></div></div>}{pushSheet&&<div className="fixed inset-0 z-[140] bg-black/80 flex items-end" onClick={()=>setPushSheet(false)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-card border-t border-border p-5 pb-[max(20px,env(safe-area-inset-bottom))]"><div className="flex justify-between items-center mb-3"><b>{pushSettingsLabel}</b><button onClick={()=>setPushSheet(false)} aria-label={t.cancel}><X/></button></div><PushToggle lang={lang}/></div></div>}{canCreate&&<CreateGroupModal open={create} onClose={()=>setCreate(false)} onCreate={createGroup} language={lang}/>}</div></div>;
+ </div>)}</div>{noAccessGroup&&<div className="fixed inset-0 z-[130] bg-black/80 grid place-items-center px-8" onClick={()=>setNoAccessGroup(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-card border border-border p-6 text-center">{noAccessGroup.avatar?<img src={noAccessGroup.avatar} alt="" className="w-16 h-16 rounded-full object-cover mx-auto"/>:<span className="w-16 h-16 rounded-full bg-[#5C061F] border border-[#E5BB70]/45 mx-auto grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span>}<b className="block mt-4 text-lg">{noAccessGroup.name}</b><p className="mt-1 text-xs text-muted-foreground">{noAccessGroup.memberCount} {noAccessGroup.memberCount===1?t.member:t.members}</p><b className="block mt-4 text-[#E5BB70] text-sm">{t.noAccessTitle}</b><p className="mt-2 text-sm text-muted-foreground">{t.noAccessBody}</p><button onClick={()=>setNoAccessGroup(null)} className="mt-6 w-full h-12 rounded-2xl bg-secondary">{t.back}</button></div></div>}{pushSheet&&<div className="fixed inset-0 z-[140] bg-black/80 flex items-end" onClick={()=>setPushSheet(false)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-card border-t border-border p-5 pb-[max(20px,env(safe-area-inset-bottom))]"><div className="flex justify-between items-center mb-3"><b>{pushSettingsLabel}</b><button onClick={()=>setPushSheet(false)} aria-label={t.cancel}><X/></button></div><PushToggle lang={lang}/></div></div>}{canCreate&&<CreateGroupModal open={create} onClose={()=>setCreate(false)} onCreate={createGroup} language={lang}/>}</div></div>;
 }

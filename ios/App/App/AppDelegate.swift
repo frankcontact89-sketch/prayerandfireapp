@@ -1,4 +1,5 @@
 import UIKit
+import AVFoundation
 import Capacitor
 
 @UIApplicationMain
@@ -40,5 +41,84 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
+    }
+}
+
+class PrayerBridgeViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        bridge?.registerPluginInstance(PrayerAudioRoutePlugin())
+    }
+}
+
+@objc(PrayerAudioRoutePlugin)
+class PrayerAudioRoutePlugin: CAPPlugin, CAPBridgedPlugin {
+    let identifier = "PrayerAudioRoutePlugin"
+    let jsName = "PrayerAudioRoute"
+    let pluginMethods = [
+        CAPPluginMethod(name: "routes", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "select", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "reset", returnType: CAPPluginReturnPromise)
+    ]
+
+    private let audio = AVAudioSession.sharedInstance()
+    private var changedRoute = false
+
+    override func load() {
+        NotificationCenter.default.addObserver(self, selector: #selector(routeChanged(_:)),
+            name: AVAudioSession.routeChangeNotification, object: audio)
+        NotificationCenter.default.addObserver(self, selector: #selector(interrupted(_:)),
+            name: AVAudioSession.interruptionNotification, object: audio)
+    }
+
+    @objc private func routeChanged(_ notification: Notification) {
+        notifyListeners("routeChanged", data: [:])
+    }
+
+    @objc private func interrupted(_ notification: Notification) {
+        guard let type = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+              type == AVAudioSession.InterruptionType.began.rawValue else { return }
+        notifyListeners("interrupted", data: [:])
+    }
+
+    @objc func routes(_ call: CAPPluginCall) {
+        let outputs = audio.currentRoute.outputs
+        let inputs = (audio.availableInputs ?? []).filter { $0.portType != .builtInMic }
+        call.resolve([
+            "speaker": outputs.contains { $0.portType == .builtInSpeaker },
+            "outputs": outputs.map { $0.portName },
+            "inputs": inputs.map { ["id": $0.uid, "name": $0.portName] }
+        ])
+    }
+
+    @objc func select(_ call: CAPPluginCall) {
+        guard let route = call.getString("route"), audio.category == .playAndRecord else {
+            call.reject("Audio session unavailable")
+            return
+        }
+        do {
+            if route == "speaker" {
+                try audio.setPreferredInput(nil)
+                try audio.overrideOutputAudioPort(.speaker)
+            } else {
+                let input = audio.availableInputs?.first { $0.uid == route }
+                guard route == "automatic" || input != nil else {
+                    call.reject("Audio route unavailable")
+                    return
+                }
+                try audio.overrideOutputAudioPort(.none)
+                try audio.setPreferredInput(input)
+            }
+            changedRoute = true
+            call.resolve()
+        } catch { call.reject("Unable to switch audio route") }
+    }
+
+    @objc func reset(_ call: CAPPluginCall) {
+        if changedRoute && audio.category == .playAndRecord {
+            try? audio.overrideOutputAudioPort(.none)
+            try? audio.setPreferredInput(nil)
+        }
+        changedRoute = false
+        call.resolve()
     }
 }

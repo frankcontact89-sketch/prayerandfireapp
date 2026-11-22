@@ -1,0 +1,15 @@
+import { createContext, useContext, type MutableRefObject } from "react";
+
+export type Call = { groupId: string; name: string; userId: string; userName: string; language: string };
+export const CallContext = createContext<{
+  activeRoomId?: string;
+  openCall: (call: Call) => void;
+  channelClosed: MutableRefObject<Promise<unknown>>;
+} | null>(null);
+
+export function usePrayerCall() {
+  const context = useContext(CallContext);
+  if (!context) throw new Error("PrayerCallProvider is required");
+  return context;
+}
+

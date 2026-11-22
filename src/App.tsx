@@ -8,6 +8,8 @@ import ResetPassword from "./pages/ResetPassword";
 import OAuthConsent from "./pages/OAuthConsent";
 import Community from "./pages/CommunityV2";
 
+import PrayerCallProvider from "./components/community/PrayerCallProvider";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -16,13 +18,13 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
+        <PrayerCallProvider><Routes>
           <Route path="/" element={<Index />} />
           <Route path="/community" element={<Community />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="*" element={<Index />} />
-        </Routes>
+        </Routes></PrayerCallProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

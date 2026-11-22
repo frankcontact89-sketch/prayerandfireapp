@@ -141,13 +141,14 @@ function openFromNotification(data: any) {
   const groupId = data?.group_id || data?.groupId;
   const messageId = data?.message_id || data?.messageId;
   if (!groupId) return;
-  const detail = { groupId, messageId };
+  const call = data?.kind === "call";
+  const detail = { groupId, messageId, ...(call ? { call } : {}) };
   try {
     sessionStorage.setItem("pf_push_open", JSON.stringify(detail));
   } catch { /* ignore */ }
   window.dispatchEvent(new CustomEvent("pf-push-open", { detail }));
   if (!window.location.pathname.startsWith("/community")) {
-    const q = new URLSearchParams({ group: groupId, ...(messageId ? { message: messageId } : {}) });
+    const q = new URLSearchParams({ group: groupId, ...(messageId ? { message: messageId } : {}), ...(call ? { call: "1" } : {}) });
     window.location.assign(`/community?${q.toString()}`);
   }
 }
@@ -253,7 +254,7 @@ export async function resumePush() {
 }
 
 /** Reads a pending deep-link stored by a notification tap. */
-export function takePushOpen(): { groupId: string; messageId?: string } | null {
+export function takePushOpen(): { groupId: string; messageId?: string; call?: boolean } | null {
   try {
     const raw = sessionStorage.getItem("pf_push_open");
     if (!raw) return null;
