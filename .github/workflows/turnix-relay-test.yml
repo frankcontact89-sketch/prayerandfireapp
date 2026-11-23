@@ -19,14 +19,15 @@ jobs:
     env:
       # Public API key for the isolated Supabase test project.
       PRAYER_TEST_PUBLISHABLE_KEY: sb_publishable_tuOqa-o2MpSBjQHvbi3NEw_RghmA9tN
-      PRAYER_TEST_ICE_FILE: ${{ runner.temp }}/turnix-ice.json
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
       - name: Request temporary TURN credentials
-        run: node tests/turnix-live.mjs
+        run: |
+          echo "PRAYER_TEST_ICE_FILE=$RUNNER_TEMP/turnix-ice.json" >> "$GITHUB_ENV"
+          PRAYER_TEST_ICE_FILE="$RUNNER_TEMP/turnix-ice.json" node tests/turnix-live.mjs
       - name: Check bidirectional audio with TURN as the only route
         run: |
           npm install --prefix "$RUNNER_TEMP/turn-test" werift@0.28.0 --no-audit --no-fund
