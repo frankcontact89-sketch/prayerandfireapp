@@ -13,6 +13,7 @@ type Signal = { from: string; to: string } & (
   { kind: "ice"; data: RTCIceCandidateInit }
 );
 type Participant = { id: string; name: string; hand?: boolean; muted?: boolean };
+const EXTRA_REACTIONS = ["🫶", "🙇", "😇", "🥹", "🕯️", "📖", "🌍", "🌿", "☀️", "🎶", "💛", "💙"];
 const REACTIONS = ["🙏", "❤️", "🔥", "👏", "🙌", "👍", "😂", "😊", "😮", "😢", "🕊️", "🎉", "😍", "💪", "🤝", "✨", "💯", "👋"];
 
 const RTC_CONFIG: RTCConfiguration = {
@@ -45,6 +46,10 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
   const [speaking, setSpeaking] = useState<Set<string>>(new Set());
   const iceCredentials = useRef<{ generation: number; expiresAt: number; servers: RTCIceServer[] }>();
   const iceRequest = useRef<{ generation: number; promise: Promise<RTCIceServer[]> }>();
+  const [extraReactions, setExtraReactions] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<string>();
+  const [localMutes, setLocalMutes] = useState<Set<string>>(() => new Set());
+  const localMutesRef = useRef(new Set<string>());
   const [menu, setMenu] = useState<"reactions" | "route" | "participants" | null>(null);
   const [routes, setRoutes] = useState<Awaited<ReturnType<typeof prayerAudioRoute.routes>>>();
   const [routeError, setRouteError] = useState(false);
@@ -125,7 +130,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
   }, [participantIds]);
 
   useEffect(() => {
-    if (minimized) return;
+    if (!connected) return;
     const timer = setInterval(() => {
       const next = new Set<string>();
       for (const [id, { analyser }] of analysers.current) {
@@ -137,7 +142,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       setSpeaking(previous => previous.size === next.size && [...next].every(id => previous.has(id)) ? previous : next);
     }, 180);
     return () => clearInterval(timer);
-  }, [minimized]);
+  }, [connected]);
 
   const setPeerState = useCallback((id: string, state: "connecting" | "ready" | "failed") => {
     setPeerStates(current => current[id] === state ? current : { ...current, [id]: state });
@@ -267,6 +272,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         document.body.appendChild(el);
         audioNodes.current.set(id, el);
       }
+      el.muted = localMutesRef.current.has(id);
       el.srcObject = remoteAudio;
       const playRemote = () => {
         if (peers.current.get(id) !== pc) return;
@@ -453,7 +459,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         });
         channel.current = ch;
         ch.on("broadcast", { event: "reaction" }, ({ payload }) => {
-          if (!cancelled && generation.current === thisGeneration && knownParticipants.current.has(payload?.from) && REACTIONS.includes(payload?.emoji)) {
+          if (!cancelled && generation.current === thisGeneration && knownParticipants.current.has(payload?.from) && (REACTIONS.includes(payload?.emoji) || EXTRA_REACTIONS.includes(payload?.emoji))) {
             showReaction(payload.from, payload.emoji);
           }
         });
@@ -726,16 +732,31 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     ? t("Could not establish audio with a participant.", "No se pudo establecer audio con un participante.", "Não foi possível estabelecer áudio com um participante.")
     : waitingForPeer ? t("Connecting audio…", "Conectando audio…", "Conectando áudio…") : "";
   if (minimized) {
-    const banner = <button type="button" onClick={onRestore}
-      className={`flex min-h-11 w-full items-center gap-2 px-4 text-left text-sm font-medium ${minimizedCallHost
-        ? "w-full border-b border-border bg-card text-foreground"
-        : "fixed inset-x-3 bottom-[max(76px,calc(env(safe-area-inset-bottom)+68px))] z-[160] mx-auto w-[calc(100%-24px)] max-w-md rounded-full bg-[#5C061F] text-white shadow-lg"}`}
-      aria-label={t("Return to call", "Volver a la llamada", "Voltar à chamada")}>
-      <span className={`size-2 shrink-0 rounded-full ${connected && !audioStatus && !audioBlocked ? "bg-emerald-500" : "bg-amber-500"}`} aria-hidden="true" />
-      <span className="min-w-0 flex-1 truncate">{name} · {audioStatus || (connected ? count : status)}</span>
-      <span className="shrink-0 tabular-nums">{duration}</span>
-      <Phone size={16} className="shrink-0" aria-hidden="true" />
-    </button>;
+    const banner = <div className={`flex min-h-14 items-center gap-1 px-2 ${minimizedCallHost
+      ? "border-b border-border bg-card text-foreground"
+      : "fixed inset-x-3 bottom-[max(76px,calc(env(safe-area-inset-bottom)+68px))] z-[160] mx-auto max-w-md rounded-full bg-card text-foreground shadow-lg"}`}>
+      <button type="button" onClick={onRestore} className="flex min-h-11 min-w-0 flex-1 items-center gap-2 text-left"
+        aria-label={t("Return to call", "Volver a la llamada", "Voltar à chamada")}>
+        <span className="flex shrink-0 -space-x-1">
+          {participants.slice(0, 2).map(person => {
+            const avatar = profiles[person.id]?.avatar_url || (person.id === userId ? userAvatar : null);
+            return <span key={person.id} className={`relative grid size-7 place-items-center rounded-full bg-[#5C061F] text-xs text-[#FFE6B2] ring-2 ${speaking.has(person.id) ? "ring-[#C39143]" : "ring-card"}`}>
+              {person.name.charAt(0).toUpperCase()}
+              {avatar && <img src={avatar} alt="" className="absolute inset-0 size-full rounded-full object-cover" onError={event => { event.currentTarget.hidden = true; }} />}
+            </span>;
+          })}
+          {participants.length > 2 && <span className="grid size-7 place-items-center rounded-full bg-secondary text-[10px]">+{participants.length - 2}</span>}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-xs font-semibold">{name}</span>
+          <span className="block truncate text-xs text-muted-foreground">{audioStatus || (connected ? `${count} · ${duration}` : status)}</span>
+        </span>
+      </button>
+      <button type="button" className="grid size-11 place-items-center rounded-full bg-secondary" disabled={!connected} aria-label={muted ? labels.unmute : labels.mute}
+        onClick={toggleMute}>{muted ? <MicOff size={17} /> : <Mic size={17} />}</button>
+      <button type="button" className="grid size-11 place-items-center rounded-full bg-red-600 text-white" aria-label={labels.leave}
+        onClick={onClose}><Phone size={17} className="rotate-[135deg]" /></button>
+    </div>;
     return minimizedCallHost ? createPortal(banner, minimizedCallHost) : banner;
   }
 
@@ -780,8 +801,9 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
               const displayName = profile?.username || person.name;
               const avatar = profile?.avatar_url || (local ? userAvatar : null);
               const talking = !isMuted && speaking.has(person.id);
-              return <div key={person.id} className={`flex min-w-0 flex-col items-center gap-2 px-1 ${participants.length === 1 ? "basis-full" : participants.length > 4 ? "basis-1/3" : "basis-1/2"}`}>
-                <div className={`relative grid place-items-center rounded-full bg-[#5C061F] font-semibold text-[#FFE6B2] ${participants.length === 1 ? "size-28 text-3xl sm:size-32" : participants.length <= 4 ? "size-[76px] text-xl sm:size-24" : "size-14 text-sm sm:size-20"} ${talking ? "ring-2 ring-[#BB8A3E] ring-offset-2 ring-offset-background" : ""}`}>
+              return <div key={person.id} className={`flex min-w-0 flex-col items-center gap-2 px-1 ${participants.length === 1 ? "basis-full" : "basis-1/3"}`}>
+                <button type="button" disabled={local} aria-label={displayName} onClick={() => setSelectedPerson(person.id)}
+                  className={`relative grid place-items-center rounded-full bg-[#5C061F] font-semibold text-[#FFE6B2] ${participants.length === 1 ? "size-28 text-3xl sm:size-32" : participants.length <= 4 ? "size-[76px] text-xl sm:size-24" : "size-14 text-sm sm:size-20"} ${talking ? "ring-2 ring-[#BB8A3E] ring-offset-2 ring-offset-background" : ""}`}>
                   {talking && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-[#C39143] motion-safe:animate-ping" />}
                   {displayName.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join("").toUpperCase()}
                   {avatar && <img key={avatar} src={avatar} alt="" className="absolute inset-0 size-full rounded-full object-cover"
@@ -790,24 +812,46 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
                     {isMuted ? <MicOff size={13} aria-label={t("Muted", "Silenciado", "Silenciado")} /> : <Mic size={13} aria-label={t("Microphone on", "Micrófono activo", "Microfone ativo")} />}
                   </span>
                   {(local ? hand : person.hand) && <Hand size={15} aria-label={labels.raised} className="absolute -left-2 -top-1 rounded bg-background text-[#A8782D]" />}
-                  {talking && <AudioLines size={16} aria-hidden="true" className="absolute -left-4 bottom-1 text-[#A8782D]" />}
+                  {talking && <AudioLines size={16} aria-hidden="true" className="absolute -left-4 bottom-1 text-[#A8782D] motion-safe:animate-pulse" />}
                   {reactions[person.id] && <span key={reactions[person.id]} className="absolute -right-3 -top-2 z-[1] rounded-full bg-background px-1 text-lg shadow motion-safe:animate-in motion-safe:fade-in" role="status">{reactions[person.id]}</span>}
-                </div>
+                </button>
                 <span className="max-w-full truncate text-xs font-medium">{displayName}{local ? ` · ${labels.you}` : ""}</span>
               </div>;
             })}
           </div>
         </div>
+        {selectedPerson && participants.some(person => person.id === selectedPerson) && (
+          <div className="mb-2 rounded-xl border border-border bg-card p-3">
+            <p className="truncate font-semibold">{profiles[selectedPerson]?.username || participants.find(person => person.id === selectedPerson)?.name}</p>
+            <button type="button" className="min-h-11 px-2 text-sm" onClick={() => {
+              const next = new Set(localMutesRef.current);
+              if (next.has(selectedPerson)) next.delete(selectedPerson);
+              else next.add(selectedPerson);
+              localMutesRef.current = next;
+              setLocalMutes(next);
+              const audio = audioNodes.current.get(selectedPerson);
+              if (audio) audio.muted = next.has(selectedPerson);
+            }}>{localMutes.has(selectedPerson)
+              ? t("Restore audio for me", "Restaurar audio para mí", "Restaurar áudio para mim")
+              : t("Mute for me", "Silenciar para mí", "Silenciar para mim")}</button>
+            <button type="button" className="min-h-11 px-2 text-sm" onClick={() => setSelectedPerson(undefined)}>
+              {t("Close", "Cerrar", "Fechar")}
+            </button>
+          </div>
+        )}
         <footer className="relative mx-auto flex w-full max-w-[360px] shrink-0 items-center justify-between gap-1 rounded-full bg-secondary px-2 py-2 shadow-md sm:px-3"
           onClick={event => event.stopPropagation()}>
-          {menu === "reactions" && <div className="absolute bottom-full left-1/2 z-10 mb-2 grid w-full min-w-[288px] -translate-x-1/2 grid-cols-6 gap-0.5 rounded-2xl border border-border bg-popover p-1.5 shadow-lg">
-            {REACTIONS.map(emoji => <button type="button" key={emoji} className="grid min-h-11 min-w-11 place-items-center rounded-lg text-lg hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
+          {menu === "reactions" && <div className="absolute bottom-full left-1/2 z-10 mb-2 grid w-full -translate-x-1/2 grid-cols-6 gap-0.5 rounded-2xl border border-border bg-popover p-1.5 shadow-lg">
+            {(extraReactions ? EXTRA_REACTIONS : REACTIONS).map(emoji => <button type="button" key={emoji} className="grid min-h-11 min-w-0 place-items-center rounded-lg text-lg hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
               onClick={() => {
                 closeMenu();
                 if (!connected || Date.now() - (reactionSentAt.current.get(userId) ?? 0) < 750) return;
                 showReaction(userId, emoji);
                 void channel.current?.send({ type: "broadcast", event: "reaction", payload: { from: userId, emoji } });
               }}>{emoji}</button>)}
+            <button type="button" className="col-span-6 min-h-11 rounded-lg text-sm hover:bg-accent" onClick={() => setExtraReactions(value => !value)}>
+              {extraReactions ? t("Back", "Volver", "Voltar") : t("More emojis", "Más emojis", "Mais emojis")}
+            </button>
           </div>}
           {menu === "route" && <div className="absolute bottom-full left-1/2 z-10 mb-2 w-60 -translate-x-1/2 rounded-2xl border border-border bg-popover p-2 text-sm shadow-lg">
             <p className="px-2 py-1 font-semibold">{t("Audio output", "Salida de audio", "Saída de áudio")}</p>

@@ -19,13 +19,13 @@ export default function PrayerCallProvider({ children }: { children: ReactNode }
     });
     return () => data.subscription.unsubscribe();
   }, []);
-  const openCall = useCallback((next: Call) => {
+  const openCall = useCallback((next: Call, startMinimized = false) => {
     if (call && call.groupId !== next.groupId) {
       setPending(next);
       return;
     }
     setCall(next);
-    setMinimized(false);
+    setMinimized(startMinimized);
   }, [call]);
   const t = (en: string, es: string, pt: string) => pending?.language === "es" ? es : pending?.language === "pt" ? pt : en;
   return <CallContext.Provider value={{ activeRoomId: call?.groupId, connectedRoomId: call?.groupId === connectedRoomId ? connectedRoomId : undefined, openCall, channelClosed, setMinimizedCallHost }}>

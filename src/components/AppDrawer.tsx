@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, MessageCircle, BookOpen, Library, ShoppingBag, Share2, Link2, Info, Settings as SettingsIcon, X, Star } from "lucide-react";
+import { Home, MessageCircle, BookOpen, Library, Share2, Link2, Info, Settings as SettingsIcon, X, Star } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { toast } from "@/hooks/use-toast";
@@ -72,7 +72,6 @@ export function AppDrawer({ open, onOpenChange, onNavigate, language }: AppDrawe
     { id: "community", icon: MessageCircle, label: L(language, "Community", "Comunidad", "Comunidade"), action: openCommunity },
     { id: "bible", icon: BookOpen, label: L(language, "Bible", "Biblia", "Bíblia"), action: () => go("bible") },
     { id: "library", icon: Library, label: L(language, "Christian Library", "Biblioteca Cristiana", "Biblioteca Cristã"), action: () => go("library") },
-    { id: "store", icon: ShoppingBag, label: L(language, "Store", "Tienda", "Loja"), action: () => go("shopping") },
     { id: "favorites", icon: Star, label: L(language, "Favorites", "Favoritos", "Favoritos"), action: () => go("favorites") },
     { id: "share", icon: Share2, label: L(language, "Share Prayer & Fire", "Compartir Prayer & Fire", "Compartilhar Prayer & Fire"), action: share },
     { id: "connect", icon: Link2, label: L(language, "Connect", "Conectar", "Conectar"), action: () => go("social") },

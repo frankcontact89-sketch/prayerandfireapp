@@ -5,7 +5,7 @@ export const CallContext = createContext<{
   setMinimizedCallHost: (node: HTMLDivElement | null) => void;
   activeRoomId?: string;
   connectedRoomId?: string;
-  openCall: (call: Call) => void;
+  openCall: (call: Call, startMinimized?: boolean) => void;
   channelClosed: MutableRefObject<Promise<unknown>>;
 } | null>(null);
 

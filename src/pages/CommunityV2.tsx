@@ -117,6 +117,8 @@ export default function CommunityV2(){
  const [refreshingChats, setRefreshingChats] = useState(false);
  const refreshTouch = useRef<{x:number;y:number}|null>(null);
  const refreshBusy = useRef(false);
+ const [livePrayerIds, setLivePrayerIds] = useState<string[]>([]);
+ const [livePrayerProfiles, setLivePrayerProfiles] = useState<{ id: string; avatar_url: string | null; username: string | null }[]>([]);
  const [liveRooms, setLiveRooms] = useState<Record<string, number>>({});
  const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups"|"discover">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[emojiPicker,setEmojiPicker]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[starredIds,setStarredIds]=useState<Set<string>>(new Set()),[flash,setFlash]=useState("");
  const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[imageViewer,setImageViewer]=useState<{url:string;title?:string}|null>(null),[readCounts,setReadCounts]=useState<Record<string,number>>({}),[deliveredCounts,setDeliveredCounts]=useState<Record<string,number>>({});
@@ -837,26 +839,65 @@ export default function CommunityV2(){
    const generalWatch = supabase.channel(`voice-room:${id}`, { config: { private: true, presence: { key: `observer:${me.id}` } } });
    watch = generalWatch;
    generalWatch.on("presence", { event: "sync" }, () => {
-    const count = Object.entries(generalWatch.presenceState()).filter(([key, entries]) => !key.startsWith("observer:") && entries.length > 0).length;
+    const ids = Object.entries(generalWatch.presenceState())
+     .filter(([key, entries]) => /^[a-f0-9-]{36}$/i.test(key) && entries.length > 0).map(([key]) => key).sort();
+    const count = ids.length;
     if (!stopped) {
      if (count > 0 && generalPrayerWasLive.current === false && pushPreferred()) {
       communityToast.info(generalPrayerNotice, { id: GENERAL_PRAYER_ROOM_ID });
      }
      generalPrayerWasLive.current = count > 0;
+     setLivePrayerIds(current => current.join(",") === ids.join(",") ? current : ids);
     }
     updateCount(id, count);
    });
-   generalWatch.subscribe(state => { if (state !== "SUBSCRIBED") updateCount(id, 0); });
+   generalWatch.subscribe(state => { if (state !== "SUBSCRIBED") { updateCount(id, 0); if (!stopped) setLivePrayerIds([]); } });
   })().catch(() => {});
   return () => {
    stopped = true;
    setLiveRooms({});
+   setLivePrayerIds([]);
    if (watch) voiceChannelClosed.current = Promise.all([voiceChannelClosed.current, supabase.removeChannel(watch)]);
   };
  }, [activeRoomId, me?.id, access, generalPrayerNotice, voiceChannelClosed]);
+ useEffect(() => {
+  let cancelled = false;
+  setLivePrayerProfiles([]);
+  if (livePrayerIds.length) {
+   void (async () => {
+    const { data } = await supabase.from("profiles").select("id,avatar_url,username").in("id", livePrayerIds.slice(0, 3));
+    if (!cancelled) setLivePrayerProfiles(data ?? []);
+   })();
+  }
+  return () => { cancelled = true; };
+ }, [livePrayerIds]);
  const participantCount = (count: number) => count === 1
   ? L("1 participant", "1 participante", "1 participante")
   : L(`${count} participants`, `${count} participantes`, `${count} participantes`);
+
+ const livePrayerInvite = !activeRoomId && me?.id && livePrayerIds.length > 0 && (
+  <div className="flex min-h-14 shrink-0 items-center gap-2 border-b border-border bg-card px-3 py-1">
+   <span className="size-2 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
+   <span className="flex -space-x-1">
+    {livePrayerProfiles.map(person => (
+     <span key={person.id} className="relative grid size-7 place-items-center rounded-full bg-secondary text-xs ring-2 ring-card">
+      {person.username?.charAt(0).toUpperCase()}
+      {person.avatar_url && <img src={person.avatar_url} alt="" className="absolute inset-0 size-full rounded-full object-cover"
+       onError={event => { event.currentTarget.hidden = true; }} />}
+     </span>
+    ))}
+   </span>
+   <span className="min-w-0 flex-1">
+    <span className="block truncate text-xs font-semibold">{GENERAL_PRAYER_ROOM_NAME}</span>
+    <span className="block truncate text-xs text-muted-foreground">{participantCount(livePrayerIds.length)}</span>
+   </span>
+   <button type="button" className="min-h-11 shrink-0 rounded-full bg-emerald-700 px-3 text-xs font-semibold text-white"
+    onClick={() => openCall({ groupId: GENERAL_PRAYER_ROOM_ID, name: GENERAL_PRAYER_ROOM_NAME,
+     userId: me.id, userName: me.name || t.member, userAvatar: me.avatar, language: lang }, true)}>
+    {L("Join", "Unirse", "Participar")}
+   </button>
+  </div>
+ );
 
  if(access==="loading")return <div className="fixed inset-0 bg-black" />;
  if(access!=="approved")return <AccessGate t={t} status={access} busy={requesting} onRequest={requestAccess} onBack={goBack} />;
@@ -869,6 +910,7 @@ export default function CommunityV2(){
   <header className="shrink-0 min-h-16 px-2 bg-background text-foreground border-b border-border flex items-center gap-2 backdrop-blur"><button onClick={()=>{setSelected(null);if(me)loadGroups(me.id)}} aria-label={t.back} className="w-11 h-11 grid place-items-center"><ArrowLeft className="h-5 w-5"/></button><button onClick={()=>setInfo(true)} className="flex-1 min-w-0 flex items-center gap-2.5 text-left">{selected.avatar?<img src={selected.avatar} alt="" className="w-11 h-11 rounded-full object-cover ring-1 ring-white/10"/>:<span className="w-11 h-11 shrink-0 rounded-full border border-[#E5BB70]/45 bg-[#5C061F] grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span>}<div className="min-w-0"><b className="block truncate text-[15px] leading-tight">{selected.name}</b><span className="block truncate text-xs text-muted-foreground">{memberCountLabel(selected.memberCount ?? members.length)}</span></div></button>
   <button onClick={()=>setInfo(true)} aria-label={t.info} className="w-11 h-11 grid place-items-center"><MoreHorizontal className="w-5 h-5"/></button></header>
   <div ref={setMinimizedCallHost} className="shrink-0 empty:hidden" />
+ {livePrayerInvite}
   {chatSearch&&<div className="shrink-0 border-b border-border bg-background px-3 py-2"><div className="h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 flex items-center gap-2"><Search className="w-4 h-4 text-zinc-500"/><input autoFocus value={csq} onChange={e=>setCsq(e.target.value)} placeholder={searchMessagesLabel} className="flex-1 bg-transparent outline-none text-sm min-w-0"/><button onClick={()=>{setChatSearch(false);setCsq("")}} aria-label={t.cancel}><X className="w-4 h-4"/></button></div></div>}
   {pinned.length>0&&<div className="shrink-0 px-3 py-2 bg-zinc-950 border-b border-white/10 space-y-1.5">{pinned.slice(0,3).map(p=><div key={p.id} className="flex items-center gap-2"><button onClick={()=>jumpToMsg(p.id)} className="flex-1 min-w-0 flex items-center gap-2 text-left"><Pin className="w-4 h-4 text-[#E5BB70] shrink-0"/><span className="flex-1 min-w-0 truncate text-xs"><b className="text-[#E7BC7B]">{pinnedLabel}</b> <span className="text-zinc-300">{replyPreview(p)}</span></span></button>{canManageGroup(selected)&&<button onClick={()=>togglePin(p)} aria-label={unpinLabel} className="w-7 h-7 rounded-full bg-zinc-900 grid place-items-center shrink-0"><PinOff className="w-3.5 h-3.5 text-zinc-400"/></button>}</div>)}</div>}
   <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 pt-3 pb-6 space-y-3.5" style={chatBackgroundStyle}>
@@ -1023,6 +1065,7 @@ export default function CommunityV2(){
  <button type="button" onClick={() => setCommunityMenu(true)} aria-label={t.options} className="grid size-10 place-items-center rounded-full text-[#D5AD6C]"><MoreHorizontal size={20} /></button>
  </div></div></header>
  <div ref={setMinimizedCallHost} className="shrink-0 empty:hidden" />
+ {livePrayerInvite}
  <AlertDialog open={generalCallPrompt} onOpenChange={setGeneralCallPrompt}>
   <AlertDialogContent className="z-[190]">
    <AlertDialogHeader>
