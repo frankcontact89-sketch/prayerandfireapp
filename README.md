@@ -91,3 +91,17 @@ Run the mock provider tests with Node 24 and
 `.env.production` contains public Vite settings for the current production build.
 For local development, copy it to the ignored `.env` and use the appropriate
 public URL and publishable key for your test project.
+
+## Independent backend verification
+
+The iOS production environment is still defined by the existing `.env.production`.
+For an isolated build, set the three Vite Supabase variables in the build process
+to the public URL, project reference and publishable key of `xikmhnulxksadgvzajdk`.
+This selects the app-only store catalog and the separate Academy bridge for that
+issuer. The existing Academy website and bridge remain available separately.
+
+The SQL in `supabase/bootstrap` is the additive bootstrap applied to the
+existing destination in this order: foundation, content, chat receipts, avatar
+permissions, chat invites, profile and audio privacy, phone and submissions,
+store, compatibility columns. These scripts assume the destination already has its original Community
+schema. The administrator is provisioned separately with the verified Auth UUID.

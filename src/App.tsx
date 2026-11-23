@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/IndexWithCommunity";
 import ResetPassword from "./pages/ResetPassword";
-import OAuthConsent from "./pages/OAuthConsent";
 import Community from "./pages/CommunityV2";
 
 import PrayerCallProvider from "./components/community/PrayerCallProvider";
@@ -22,7 +21,6 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/community" element={<Community />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="*" element={<Index />} />
         </Routes></PrayerCallProvider>
       </BrowserRouter>

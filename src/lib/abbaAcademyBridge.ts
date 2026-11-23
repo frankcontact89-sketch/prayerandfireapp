@@ -10,7 +10,10 @@ import type { AcademyAccess } from "./abbaAcademy";
 // This prevents build-time variables from redirecting Prayer & Fire credentials
 // to a third-party host. Deploy and audit the function before enabling it.
 const ACADEMY_BRIDGE_HOST = "yecywtxbuhfukergbwfc.supabase.co";
-const ACADEMY_BRIDGE_PATH = "/functions/v1/abba-mobile-bridge";
+const ACADEMY_BRIDGE_PATH = import.meta.env.VITE_SUPABASE_URL === "https://xikmhnulxksadgvzajdk.supabase.co"
+  ? "/functions/v1/abba-mobile-bridge-independent"
+  : "/functions/v1/abba-mobile-bridge";
+const ACADEMY_BRIDGE_URL = `https://${ACADEMY_BRIDGE_HOST}${ACADEMY_BRIDGE_PATH}`;
 
 export function getTrustedAcademyBridgeUrl(raw: string | undefined): URL | null {
   if (!raw) return null;
@@ -98,7 +101,7 @@ export async function loadAcademyAccess(signal?: AbortSignal): Promise<AcademyAc
   // Keep the destination fixed so Prayer & Fire credentials cannot be redirected
   // by build-time variables to another host.
   const url = getTrustedAcademyBridgeUrl(
-    "https://yecywtxbuhfukergbwfc.supabase.co/functions/v1/abba-mobile-bridge",
+    ACADEMY_BRIDGE_URL,
   );
   if (!url) return { status: "unavailable" };
 
@@ -146,7 +149,7 @@ export async function loadAcademyAccess(signal?: AbortSignal): Promise<AcademyAc
 export async function completeAcademyLesson(lessonId: string): Promise<boolean> {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lessonId)) return false;
   const url = getTrustedAcademyBridgeUrl(
-    "https://yecywtxbuhfukergbwfc.supabase.co/functions/v1/abba-mobile-bridge",
+    ACADEMY_BRIDGE_URL,
   );
   if (!url) return false;
   const { data: { session }, error } = await supabase.auth.getSession();
@@ -188,7 +191,7 @@ export type AcademyLessonContent = {
 export async function getAcademyLessonContent(lessonId: string, signal?: AbortSignal): Promise<AcademyLessonContent | null> {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lessonId)) return null;
   const url = getTrustedAcademyBridgeUrl(
-    "https://yecywtxbuhfukergbwfc.supabase.co/functions/v1/abba-mobile-bridge",
+    ACADEMY_BRIDGE_URL,
   );
   if (!url || signal?.aborted) return null;
   const { data: { session }, error } = await supabase.auth.getSession();
@@ -248,7 +251,7 @@ export async function saveAcademyPlaybackPosition(lessonId: string, seconds: num
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lessonId) ||
       !Number.isFinite(seconds) || seconds < 0 || seconds > 86400) return false;
   const url = getTrustedAcademyBridgeUrl(
-    "https://yecywtxbuhfukergbwfc.supabase.co/functions/v1/abba-mobile-bridge",
+    ACADEMY_BRIDGE_URL,
   );
   if (!url) return false;
   const { data: { session }, error } = await supabase.auth.getSession();

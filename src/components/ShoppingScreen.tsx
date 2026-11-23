@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { prayerProductsTable, supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ExternalLink, ShoppingBag } from "lucide-react";
 
@@ -37,7 +37,7 @@ export function ShoppingScreen({ t }: ShoppingScreenProps) {
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
-      .from("products")
+      .from(prayerProductsTable)
       .select("*")
       .eq("is_active", true)
       .order("is_featured", { ascending: false })

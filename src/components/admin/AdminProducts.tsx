@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { prayerProductsTable, supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,7 +90,7 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
-      .from("products")
+      .from(prayerProductsTable)
       .select("id,name,image_url,description,purchase_url,is_active,category,button_label,is_featured")
       .order("created_at", { ascending: false });
     if (error) {
@@ -120,7 +120,7 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
     };
 
     if (editingProduct) {
-      const { error } = await supabase.from("products").update(productData).eq("id", editingProduct.id);
+      const { error } = await supabase.from(prayerProductsTable).update(productData).eq("id", editingProduct.id);
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
       } else {
@@ -131,7 +131,7 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
         fetchProducts();
       }
     } else {
-      const { error } = await supabase.from("products").insert([productData]);
+      const { error } = await supabase.from(prayerProductsTable).insert([productData]);
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
       } else {
@@ -145,7 +145,7 @@ export function AdminProducts({ t }: { t: (en: string, es: string) => string }) 
 
   const handleDelete = async (id: string) => {
     if (!confirm(t("Delete this product?", "¿Eliminar este producto?"))) return;
-    const { error } = await supabase.from("products").delete().eq("id", id);
+    const { error } = await supabase.from(prayerProductsTable).delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
