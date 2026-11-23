@@ -62,9 +62,16 @@ export async function audioTransportStats(peer: RTCPeerConnection) {
   };
 }
 
-export function usableTurnServers(response: { iceServers?: RTCIceServer[]; expiresAt?: number } | null | undefined) {
+export type PrayerIceCredentials = { iceServers?: RTCIceServer[]; expiresAt?: number | string };
+
+export function iceExpiryMs(expiresAt: PrayerIceCredentials["expiresAt"]): number {
+  if (typeof expiresAt === "number") return expiresAt * 1000;
+  return typeof expiresAt === "string" ? Date.parse(expiresAt) : NaN;
+}
+
+export function usableTurnServers(response: PrayerIceCredentials | null | undefined) {
   if (!Array.isArray(response?.iceServers)) return [];
-  if (typeof response.expiresAt === "number" && response.expiresAt <= Date.now() / 1000 + 30) return [];
+  if (response.expiresAt !== undefined && !(iceExpiryMs(response.expiresAt) > Date.now() + 60_000)) return [];
   return response.iceServers.flatMap(server => {
     if (!server || !server.username || typeof server.credential !== "string" || !server.credential) return [];
     const urls = [server.urls].flat().filter(url => typeof url === "string" && /^turns?:[^\s]+$/i.test(url));

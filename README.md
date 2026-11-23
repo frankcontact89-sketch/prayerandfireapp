@@ -71,3 +71,23 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Prayer room TURN credentials
+
+The app requests ICE configuration through the authenticated `community-push` Edge Function
+with `{ "kind": "ice", "group_id": "community-general" }`. The function keeps
+`TURNIX_API_TOKEN` on the server and issues one-hour Turnix credentials. On the
+hosted Supabase gateway, it forwards `CF-Connecting-IP` when available for relay selection.
+
+For migration testing, use Supabase project `xikmhnulxksadgvzajdk`. Add
+`TURNIX_API_TOKEN` in **Edge Functions → Secrets** and deploy `community-push`
+to that project. Use a separate test build pointing to that project after its
+schema and test accounts are ready. Production keeps its existing project URL
+until the migration is verified.
+
+Run the mock provider tests with Node 24 and
+`node --disable-warning=ExperimentalWarning --test tests/turnix.test.mjs`.
+
+`.env.production` contains public Vite settings for the current production build.
+For local development, copy it to the ignored `.env` and use the appropriate
+public URL and publishable key for your test project.

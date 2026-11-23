@@ -1,4 +1,4 @@
-import { audioTransportStats, localAudioDescription, usableTurnServers } from "./prayerAudioTransport";
+import { audioTransportStats, iceExpiryMs, localAudioDescription, usableTurnServers, type PrayerIceCredentials } from "./prayerAudioTransport";
 import { GENERAL_PRAYER_ROOM_ID } from "./generalPrayerRoom";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
@@ -43,7 +43,8 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
   const [profiles, setProfiles] = useState<Record<string, { avatar_url: string | null; username: string | null }>>({});
   const [reactions, setReactions] = useState<Record<string, string>>({});
   const [speaking, setSpeaking] = useState<Set<string>>(new Set());
-  const iceServers = useRef(RTC_CONFIG.iceServers);
+  const iceCredentials = useRef<{ generation: number; expiresAt: number; servers: RTCIceServer[] }>();
+  const iceRequest = useRef<{ generation: number; promise: Promise<RTCIceServer[]> }>();
   const [menu, setMenu] = useState<"reactions" | "route" | "participants" | null>(null);
   const [routes, setRoutes] = useState<Awaited<ReturnType<typeof prayerAudioRoute.routes>>>();
   const [routeError, setRouteError] = useState(false);
@@ -168,10 +169,44 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     if (result !== "ok") throw new Error(`Signaling acknowledgment: ${result}`);
   }, []);
 
-  const getPeer = useCallback((id: string): RTCPeerConnection => {
+  const getIceServers = useCallback(async () => {
+    const version = generation.current;
+    const cached = iceCredentials.current;
+    if (cached?.generation === version && cached.expiresAt > Date.now() + 60_000) return cached.servers;
+    if (iceRequest.current?.generation === version) return iceRequest.current.promise;
+
+    const fallback = RTC_CONFIG.iceServers ?? [];
+    const promise = (async () => {
+      const relay = await supabase.functions.invoke<PrayerIceCredentials>("community-push", {
+        body: { kind: "ice", group_id: groupId },
+        signal: typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(12_000) : undefined,
+      }).catch(() => null);
+      const turnServers = usableTurnServers(relay?.data);
+      const providerStun = relay?.data?.iceServers?.flatMap(server => {
+        const urls = [server?.urls].flat().filter(url => typeof url === "string" && /^stun:/i.test(url));
+        return urls.length ? [{ urls }] : [];
+      }) ?? [];
+      const servers = [...(turnServers.length && providerStun.length ? providerStun : fallback), ...turnServers];
+      if (generation.current === version && turnServers.length) {
+        iceCredentials.current = { generation: version, expiresAt: iceExpiryMs(relay?.data?.expiresAt), servers };
+      }
+      if (!turnServers.length) console.warn("[voice-room] TURN credentials unavailable; using STUN");
+      return servers;
+    })();
+    iceRequest.current = { generation: version, promise };
+    try { return await promise; }
+    finally { if (iceRequest.current?.promise === promise) iceRequest.current = undefined; }
+  }, [groupId]);
+
+  const getPeer = useCallback(async (id: string): Promise<RTCPeerConnection> => {
     const existing = peers.current.get(id);
     if (existing) return existing;
-    const pc = new RTCPeerConnection({ iceServers: iceServers.current });
+    const version = generation.current;
+    const iceServers = await getIceServers();
+    if (version !== generation.current || !knownParticipants.current.has(id)) throw new Error("Audio participant no longer present");
+    const concurrent = peers.current.get(id);
+    if (concurrent) return concurrent;
+    const pc = new RTCPeerConnection({ iceServers });
     stream.current?.getTracks().forEach(track => pc.addTrack(track, stream.current!));
     const markFailed = (reason: unknown) => {
       if (peers.current.get(id) !== pc) return;
@@ -240,12 +275,25 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       event.track.addEventListener("unmute", playRemote, { once: true });
       playRemote();
     };
+    let restartAttempted = false;
     pc.onconnectionstatechange = () => {
       if (peers.current.get(id) !== pc) return;
       if (pc.connectionState === "connected") watchAudio(Date.now() + 12000);
       else if (pc.connectionState === "failed") {
         clearTimeout(peerTimers.current.get(id));
-        markFailed("PEER_FAILED");
+        if (userId < id && !restartAttempted && pc.signalingState === "stable") {
+          restartAttempted = true;
+          setPeerState(id, "connecting");
+          void (async () => {
+            const freshServers = await getIceServers();
+            if (peers.current.get(id) !== pc) return;
+            pc.setConfiguration({ ...pc.getConfiguration(), iceServers: freshServers });
+            pc.restartIce();
+            watchAudio(Date.now() + 18000);
+            const description = await localAudioDescription(pc, await pc.createOffer({ iceRestart: true }));
+            if (peers.current.get(id) === pc) await send({ from: userId, to: id, kind: "offer", data: description });
+          })().catch(() => markFailed("ICE_RESTART_FAILED"));
+        } else markFailed("PEER_FAILED");
       } else if (pc.connectionState === "disconnected") {
         setPeerState(id, "connecting");
         watchAudio(Date.now() + 18000);
@@ -253,7 +301,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     };
     peers.current.set(id, pc);
     return pc;
-  }, [send, userId, setPeerState, analyseAudio]);
+  }, [send, userId, setPeerState, analyseAudio, getIceServers]);
 
   const flushIce = useCallback(async (id: string) => {
     const pc = peers.current.get(id);
@@ -370,15 +418,6 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         // Let Realtime use the Supabase client's current access token callback.
         await supabase.realtime.setAuth();
         if (cancelled || generation.current !== thisGeneration) return;
-        phase = "relay";
-        iceServers.current = RTC_CONFIG.iceServers;
-        const relay = await supabase.functions.invoke<{ iceServers?: RTCIceServer[]; expiresAt?: number }>("community-push", {
-          body: { kind: "ice", group_id: groupId }, signal: typeof AbortSignal.timeout === 'function' ? AbortSignal.timeout(8000) : undefined,
-        }).catch(() => null);
-        if (cancelled || generation.current !== thisGeneration) return;
-        const turnServers = usableTurnServers(relay?.data);
-        iceServers.current = [...(RTC_CONFIG.iceServers ?? []), ...turnServers];
-        if (!turnServers.length) diagnose(!relay || relay.error ? "TURN_REQUEST_FAILED" : "TURN_CREDENTIALS_UNAVAILABLE");
         if (nativePrayerAudio) {
           phase = "audio-session";
           try { await prayerAudioRoute.prepare(); }
@@ -413,8 +452,15 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         const handleSignal = async (msg: Signal) => {
           if (cancelled || generation.current !== thisGeneration || !roomParticipants.has(msg.from)) return;
           try {
-            const pc = getPeer(msg.from);
+            const existing = peers.current.has(msg.from);
+            const pc = await getPeer(msg.from);
+            if (cancelled || generation.current !== thisGeneration || peers.current.get(msg.from) !== pc) return;
             if (msg.kind === "offer") {
+              if (existing && pc.remoteDescription) {
+                const iceServers = await getIceServers();
+                if (cancelled || generation.current !== thisGeneration || peers.current.get(msg.from) !== pc) return;
+                pc.setConfiguration({ ...pc.getConfiguration(), iceServers });
+              }
               await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
               await flushIce(msg.from);
               for (const transceiver of pc.getTransceivers()) {
@@ -494,23 +540,23 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
           for (const id of peers.current.keys()) if (!people.some(p => p.id === id)) disposePeer(id);
           // Only the lexicographically smaller id initiates each peer connection.
           for (const p of people) {
-            const pc = getPeer(p.id);
-            if (userId >= p.id) continue;
-            if (pc.signalingState !== "stable" || pc.localDescription || offering.current.has(p.id)) continue;
+            if (userId >= p.id || offering.current.has(p.id) || peers.current.get(p.id)?.localDescription) continue;
             offering.current.add(p.id);
             void (async () => {
+              const pc = await getPeer(p.id);
+              if (cancelled || generation.current !== thisGeneration || pc.signalingState !== "stable" || pc.localDescription) return;
               const offer = await pc.createOffer();
-              if (cancelled || pc.signalingState === "closed") return;
+              if (cancelled || peers.current.get(p.id) !== pc) return;
               const description = await localAudioDescription(pc, offer);
               if (cancelled || generation.current !== thisGeneration || peers.current.get(p.id) !== pc) return;
               await send({ from: userId, to: p.id, kind: "offer", data: description });
             })().catch(error => {
-              if (!cancelled && generation.current === thisGeneration && peers.current.get(p.id) === pc) {
+              if (!cancelled && generation.current === thisGeneration && roomParticipants.has(p.id)) {
                 diagnose("SIGNAL_OFFER_FAILED");
                 console.warn("[voice-room] offer error", error);
                 setPeerState(p.id, "failed");
               }
-            }).finally(() => { if (peers.current.get(p.id) === pc) offering.current.delete(p.id); });
+            }).finally(() => { if (generation.current === thisGeneration) offering.current.delete(p.id); });
           }
         });
         phase = "subscription";
@@ -574,7 +620,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       audioContext.current = null;
       connecting.current = false;
     };
-  }, [groupId, userId, userName, getPeer, flushIce, send, disposePeer, attempt, channelClosed, analyseAudio, showReaction, publishPresence, setPeerState, t, language, labels.connecting, labels.connected, labels.failure]);
+  }, [groupId, userId, userName, getPeer, getIceServers, flushIce, send, disposePeer, attempt, channelClosed, analyseAudio, showReaction, publishPresence, setPeerState, t, language, labels.connecting, labels.connected, labels.failure]);
 
   const toggleHand = () => {
     if (!connected) return;
