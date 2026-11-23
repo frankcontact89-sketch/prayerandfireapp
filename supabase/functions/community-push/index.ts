@@ -81,6 +81,12 @@ Deno.serve(async (req) => {
   const user = userData?.user;
   if (userErr || !user) return json({ error: "UNAUTHORIZED" }, 401);
 
+  // Group-admin RPC policies use auth.uid(), so check as the verified caller.
+  const caller = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
   let payload: any = {};
   try { payload = await req.json(); } catch { /* empty body */ }
 
@@ -120,7 +126,7 @@ Deno.serve(async (req) => {
   } else if (kind === "invite") {
     if (!groupId || !inviteUserIds.length) return json({ error: "BAD_REQUEST" }, 400);
     // Only group leaders may trigger invite pushes.
-    const { data: isAdmin } = await admin.rpc("is_group_admin", { _group_id: groupId, _user_id: user.id });
+    const { data: isAdmin } = await caller.rpc("is_group_admin", { _group_id: groupId, _user_id: user.id });
     if (!isAdmin) return json({ error: "NO_PERMISSION" }, 403);
     const { data: memberRows } = await admin
       .from("community_group_members").select("user_id").eq("group_id", groupId).in("user_id", inviteUserIds);
@@ -141,7 +147,7 @@ Deno.serve(async (req) => {
     if (kind === "message") {
       if (msg.sender_id !== user.id) return json({ error: "NO_PERMISSION" }, 403);
     } else {
-      const { data: isAdmin } = await admin.rpc("is_group_admin", { _group_id: msg.group_id, _user_id: user.id });
+      const { data: isAdmin } = await caller.rpc("is_group_admin", { _group_id: msg.group_id, _user_id: user.id });
       if (!isAdmin) return json({ error: "NO_PERMISSION" }, 403);
     }
 

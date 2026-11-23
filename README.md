@@ -105,3 +105,23 @@ existing destination in this order: foundation, content, chat receipts, avatar
 permissions, chat invites, profile and audio privacy, phone and submissions,
 store, compatibility columns. These scripts assume the destination already has its original Community
 schema. The administrator is provisioned separately with the verified Auth UUID.
+
+### Final verification against the independent project
+
+The Academy bridge snapshot is under `supabase/academy` because it deploys to
+the Academy project, independently from the Prayer & Fire Edge Functions.
+The app reuses its existing session; linked accounts must still have an active
+enrollment. The UI/bridge fixture never writes to either project's database.
+
+Run the isolated Academy fixture from the repository root with Node 24:
+
+```sh
+npm install --prefix /tmp/pf-academy-test jsdom@26.1.0 --no-audit --no-fund
+NODE_PATH=/tmp/pf-academy-test/node_modules node --test tests/abba-independent.test.mjs
+```
+
+In the independent Supabase project's Edge Function Secrets, iOS push requires
+`APNS_KEY_ID`, `APNS_TEAM_ID` and `APNS_PRIVATE_KEY` from the existing
+Apple Push Notifications key. TestFlight uses `APNS_ENV=production` (the
+default) and bundle ID `com.frankcontact89.prayerandfiremobile`. Do not put
+the private key in Git or in Vite variables.
