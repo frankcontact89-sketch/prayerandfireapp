@@ -15,22 +15,27 @@ const { localAudioDescription, audioTransportStats, usableTurnServers } = requir
   "../src/components/community/prayerAudioTransport.ts",
 );
 
+const credentialsPath = process.env.PRAYER_TEST_ICE_FILE;
+const managedIce = credentialsPath ? JSON.parse(require("node:fs").readFileSync(credentialsPath, "utf8")) : null;
 const turnUrl = process.env.PRAYER_TEST_TURN_URL;
+const relayOnly = Boolean(managedIce || turnUrl);
 const turnSecret = process.env.PRAYER_TEST_TURN_SECRET;
 assert.equal(Boolean(turnUrl), Boolean(turnSecret), "Set both TURN fixture variables");
 const expiresAt = Math.floor(Date.now() / 1000) + 3600;
 
 function client(name, frequency) {
   const username = `${expiresAt}:${name}`;
-  const iceServers = turnUrl ? usableTurnServers({
+  const iceServers = managedIce ? usableTurnServers(managedIce[name]) : turnUrl ? usableTurnServers({
     expiresAt,
     iceServers: [{ urls: turnUrl, username, credential: createHmac("sha1", turnSecret).update(username).digest("base64") }],
   }) : [];
   const peer = new RTCPeerConnection({
     iceUseIpv6: false,
-    iceInterfaceAddresses: { udp4: "127.0.0.1" },
-    iceAdditionalHostAddresses: ["127.0.0.1"],
-    iceTransportPolicy: turnUrl ? "relay" : "all",
+    ...(managedIce ? {} : {
+      iceInterfaceAddresses: { udp4: "127.0.0.1" },
+      iceAdditionalHostAddresses: ["127.0.0.1"],
+    }),
+    iceTransportPolicy: relayOnly ? "relay" : "all",
     iceServers,
   });
   const track = new MediaStreamTrack({ kind: "audio" });
@@ -53,15 +58,16 @@ async function run() {
   const alice = client("alice", 400);
   const bob = client("bob", 600);
   try {
+    if (managedIce) assert.ok(usableTurnServers(managedIce.alice).length && usableTurnServers(managedIce.bob).length, "Missing fresh relay credentials");
     const bareOffer = await alice.peer.createOffer();
     assert.doesNotMatch(bareOffer.sdp, /a=candidate:/);
     const offer = await localAudioDescription(alice.peer, bareOffer);
     assert.match(offer.sdp, /m=audio/);
     assert.match(offer.sdp, /a=fingerprint:/);
-    assert.match(offer.sdp, /a=candidate:/);
+    assert.ok(/a=candidate:/.test(offer.sdp), "Missing offer ICE candidates");
     await bob.peer.setRemoteDescription(offer);
     const answer = await localAudioDescription(bob.peer, await bob.peer.createAnswer());
-    assert.match(answer.sdp, /a=candidate:/);
+    assert.ok(/a=candidate:/.test(answer.sdp), "Missing answer ICE candidates");
     await alice.peer.setRemoteDescription(answer);
 
     // Deliberately transmit only SDP to reproduce dropped trickle messages.
@@ -85,8 +91,8 @@ async function run() {
       assert.ok(receiver.received.has(sender.tone.toString("hex")), "Received the other client's synthetic tone");
       assert.ok(stats.inboundPackets > 10 && stats.outboundPackets > 10, JSON.stringify(stats));
       assert.equal(stats.dtlsState, "connected");
-      assert.equal(stats.selectedPair?.local, turnUrl ? "relay" : "host");
-      assert.equal(stats.selectedPair?.remote, turnUrl ? "relay" : "host");
+      assert.equal(stats.selectedPair?.local, relayOnly ? "relay" : "host");
+      assert.equal(stats.selectedPair?.remote, relayOnly ? "relay" : "host");
       console.log(JSON.stringify(stats));
     }
   } finally {
