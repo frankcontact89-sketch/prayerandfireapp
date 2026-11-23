@@ -48,6 +48,9 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
   const iceRequest = useRef<{ generation: number; promise: Promise<RTCIceServer[]> }>();
   const [extraReactions, setExtraReactions] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string>();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [contactError, setContactError] = useState(false);
+  const [reportStatus, setReportStatus] = useState<"confirm" | "sending" | "sent" | "error">();
   const [localMutes, setLocalMutes] = useState<Set<string>>(() => new Set());
   const localMutesRef = useRef(new Set<string>());
   const [menu, setMenu] = useState<"reactions" | "route" | "participants" | null>(null);
@@ -652,21 +655,67 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     setAudioBlocked(outcomes.some(result => result.status === "rejected"));
   }, []);
 
+  const systemCall = useRef<string>();
+  const closeRoom = useRef(onClose);
+  closeRoom.current = onClose;
+
+  const applyMute = useCallback((next: boolean) => {
+    const tracks = stream.current?.getAudioTracks().filter(track => track.readyState === "live");
+    if (!tracks?.length) return false;
+    tracks.forEach(track => { track.enabled = !next; });
+    mutedRef.current = next;
+    setMuted(next);
+    void publishPresence();
+    return true;
+  }, [publishPresence]);
+
+  useEffect(() => {
+    if (!nativePrayerAudio || !connected) return;
+    let disposed = false;
+    let callId: string | undefined;
+    const muteListener = prayerAudioRoute.addListener("systemMute", ({ id, actionID, muted }) => {
+      void prayerAudioRoute.completeSystemMute({ actionID, applied: !disposed && id === callId && applyMute(muted) }).catch(() => {});
+    });
+    const endListener = prayerAudioRoute.addListener("systemCallEnded", ({ id }) => {
+      if (disposed || id !== callId) return;
+      applyMute(true);
+      closeRoom.current();
+    });
+    void Promise.all([muteListener, endListener]).then(async () => {
+      if (disposed) return;
+      const { id } = await prayerAudioRoute.startSystemCall({ name });
+      if (disposed) { await prayerAudioRoute.endSystemCall({ id }); return; }
+      callId = id;
+      systemCall.current = id;
+      await prayerAudioRoute.requestSystemMute({ id, muted: mutedRef.current });
+    }).catch(error => {
+      console.warn("[prayer-room] CallKit unavailable", error);
+      if (callId) {
+        if (systemCall.current === callId) systemCall.current = undefined;
+        void prayerAudioRoute.endSystemCall({ id: callId }).catch(() => {});
+      }
+    });
+    return () => {
+      disposed = true;
+      if (callId && systemCall.current === callId) systemCall.current = undefined;
+      if (callId) void prayerAudioRoute.endSystemCall({ id: callId }).catch(() => {});
+      void muteListener.then(listener => listener.remove()).catch(() => {});
+      void endListener.then(listener => listener.remove()).catch(() => {});
+    };
+  }, [connected, name, applyMute]);
+
   const toggleMute = () => {
-    if (!connected || !stream.current || document.visibilityState !== "visible") return;
-    const tracks = stream.current.getAudioTracks().filter(track => track.readyState === "live");
-    if (!tracks.length) {
+    if (!connected || document.visibilityState !== "visible") return;
+    const next = !mutedRef.current;
+    const id = systemCall.current;
+    if (id) void prayerAudioRoute.requestSystemMute({ id, muted: next }).catch(() => setAudioBlocked(true));
+    else if (!applyMute(next)) {
       setStatus(t("The microphone stopped. Retry the connection.", "El micrófono se detuvo. Reintenta la conexión.", "O microfone parou. Tente reconectar."));
       setFailed(true);
       return;
     }
-    const next = !mutedRef.current;
-    tracks.forEach(track => { track.enabled = !next; });
-    mutedRef.current = next;
-    setMuted(next);
     void audioContext.current?.resume().catch(() => {});
     void resumeRemoteAudio();
-    void publishPresence();
   };
 
   const refreshRoutes = useCallback(() => {
@@ -802,7 +851,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
               const avatar = profile?.avatar_url || (local ? userAvatar : null);
               const talking = !isMuted && speaking.has(person.id);
               return <div key={person.id} className={`flex min-w-0 flex-col items-center gap-2 px-1 ${participants.length === 1 ? "basis-full" : "basis-1/3"}`}>
-                <button type="button" disabled={local} aria-label={displayName} onClick={() => setSelectedPerson(person.id)}
+                <button type="button" disabled={local} aria-label={displayName} onClick={() => { setSelectedPerson(person.id); setProfileOpen(false); setContactError(false); setReportStatus(undefined); }}
                   className={`relative grid place-items-center rounded-full bg-[#5C061F] font-semibold text-[#FFE6B2] ${participants.length === 1 ? "size-28 text-3xl sm:size-32" : participants.length <= 4 ? "size-[76px] text-xl sm:size-24" : "size-14 text-sm sm:size-20"} ${talking ? "ring-2 ring-[#BB8A3E] ring-offset-2 ring-offset-background" : ""}`}>
                   {talking && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-[#C39143] motion-safe:animate-ping" />}
                   {displayName.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join("").toUpperCase()}
@@ -834,7 +883,41 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
             }}>{localMutes.has(selectedPerson)
               ? t("Restore audio for me", "Restaurar audio para mí", "Restaurar áudio para mim")
               : t("Mute for me", "Silenciar para mí", "Silenciar para mim")}</button>
-            <button type="button" className="min-h-11 px-2 text-sm" onClick={() => setSelectedPerson(undefined)}>
+            <button type="button" className="min-h-11 px-2 text-sm" aria-expanded={profileOpen} onClick={() => setProfileOpen(show => !show)}>
+              {t("View profile", "Ver perfil", "Ver perfil")}
+            </button>
+            <button type="button" className="min-h-11 px-2 text-sm" disabled={reportStatus === "sending" || reportStatus === "sent"}
+              onClick={() => setReportStatus("confirm")}>{t("Report", "Denunciar", "Denunciar")}</button>
+            {nativePrayerAudio && <button type="button" className="min-h-11 px-2 text-sm" onClick={() => {
+              const displayName = profiles[selectedPerson]?.username || participants.find(person => person.id === selectedPerson)?.name;
+              if (displayName) {
+                setContactError(false);
+                void prayerAudioRoute.presentContact({ name: displayName }).catch(() => setContactError(true));
+              }
+            }}>{t("Add contact", "Agregar contacto", "Adicionar contato")}</button>}
+            {contactError && <p role="alert" className="text-sm text-destructive">{t("Could not open Contacts", "No se pudo abrir Contactos", "Não foi possível abrir Contatos")}</p>}
+            {profileOpen && (
+              <div className="mb-1 flex items-center gap-2 rounded-lg bg-secondary p-2">
+                {profiles[selectedPerson]?.avatar_url && <img src={profiles[selectedPerson].avatar_url!} alt="" className="size-10 rounded-full object-cover"
+                  onError={event => { event.currentTarget.hidden = true; }} />}
+                <span className="truncate text-sm">{profiles[selectedPerson]?.username || participants.find(person => person.id === selectedPerson)?.name}</span>
+              </div>
+            )}
+            {reportStatus === "confirm" && <div className="flex flex-wrap items-center gap-2 text-sm">
+              <p>{t("Send a report to Community moderators?", "¿Enviar un reporte a los moderadores de Community?", "Enviar uma denúncia aos moderadores da Community?")}</p>
+              <button type="button" className="min-h-11 px-2 font-semibold text-destructive" onClick={async () => {
+                setReportStatus("sending");
+                try {
+                  const { error } = await supabase.from("community_reports").insert({
+                    reporter_id: userId, reported_user_id: selectedPerson, reason: "prayer_room_conduct",
+                  });
+                  setReportStatus(error ? "error" : "sent");
+                } catch { setReportStatus("error"); }
+              }}>{t("Send report", "Enviar reporte", "Enviar denúncia")}</button>
+            </div>}
+            {reportStatus === "sent" && <p role="status" className="text-sm">{t("Report sent", "Reporte enviado", "Denúncia enviada")}</p>}
+            {reportStatus === "error" && <p role="alert" className="text-sm text-destructive">{t("Could not send the report", "No se pudo enviar el reporte", "Não foi possível enviar a denúncia")}</p>}
+            <button type="button" className="min-h-11 px-2 text-sm" disabled={reportStatus === "sending"} onClick={() => setSelectedPerson(undefined)}>
               {t("Close", "Cerrar", "Fechar")}
             </button>
           </div>
