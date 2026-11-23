@@ -50,6 +50,8 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSContactsUsageDescription</key>
+	<string>Prayer &amp; Fire opens the iPhone contact editor when you choose to save a participant’s display name.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Prayer &amp; Fire uses the camera when you choose to take a profile, group, or community photo.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
