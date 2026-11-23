@@ -49,7 +49,12 @@ Deno.serve(async (req: Request) => {
     const enrolledIds = new Set((enrollment ?? [])
       .filter(e => !e.expires_at || Date.parse(e.expires_at) > now).map(e => e.course_id));
     const entitledCourses = courses.filter(c => enrolledIds.has(c.id));
-    if (!entitledCourses.length) return json({ status: "not_enrolled", courses });
+    if (!entitledCourses.length) {
+      if (!enrolledIds.size) return json({ status: "not_enrolled", courses });
+      // An active enrollment can exist before the course is published. Keep draft content private.
+      if (req.method === "GET") return json({ status: "enrolled", courses: [], lessons: [], progress: [] });
+      return json({ error: "Lesson not available" }, 403);
+    }
     if (req.method === "POST") {
       let body: unknown;
       try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }

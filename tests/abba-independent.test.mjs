@@ -92,6 +92,17 @@ test("Academy app opens and navigates linked enrollment, resolves media and relo
   assert.equal(rows.abba_lesson_progress.length, 0, "Expired enrollment wrote no data");
   enrollment.expires_at = null;
 
+  course.is_published = false;
+  try {
+    const access = await (await request(url, { headers: auth })).json();
+    assert.deepEqual(access, { status: "enrolled", courses: [], lessons: [], progress: [] });
+    assert.equal((await call({ action: "lesson_content", lesson_id: first.id })).status, 403);
+    assert.equal((await call({ action: "save_position", lesson_id: first.id, position_seconds: 20 })).status, 403);
+    assert.equal(rows.abba_lesson_progress.length, 0);
+  } finally {
+    course.is_published = true;
+  }
+
   let ui;
   try {
     globalThis.window = dom.window;

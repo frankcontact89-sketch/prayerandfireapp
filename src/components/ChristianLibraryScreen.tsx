@@ -102,7 +102,7 @@ export function ChristianLibraryScreen({ onBack, language, onOpenArticle, onNavi
         {/* Keep the original Prayer & Fire burgundy/gold theme; ABBA blue applies only inside its portal. */}
         <section aria-label="ABBA Academy" className="rounded-xl border border-[#E5BB70]/30 bg-[#220D19]/70 p-4">
           <div className="flex items-start gap-3">
-            <GraduationCap className="w-6 h-6 shrink-0 text-[#E5BB70]" aria-hidden="true" />
+            <img src="/abba-academy-official-logo.webp" width={320} height={213} alt="" className="w-16 shrink-0 rounded-md" />
             <div className="min-w-0">
               <h2 className="font-semibold text-white">ABBA Academy</h2>
               <p className="mt-1 text-sm text-slate-300">
@@ -362,7 +362,10 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
     <section className="min-h-[70vh] bg-[#071A34] px-5 py-8 text-white" aria-label="ABBA Academy">
       <div className="mx-auto max-w-2xl">
         <div className="mb-6 flex items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold tracking-wide text-[#D9BD81]">ABBA Academy</h1>
+          <div className="flex min-w-0 items-center gap-3">
+            <img src="/abba-academy-official-logo.webp" width={320} height={213} alt="" className="w-14 shrink-0 rounded-md" />
+            <h1 className="text-xl font-semibold tracking-wide text-[#D9BD81]">ABBA Academy</h1>
+          </div>
           <button type="button" onClick={() => {
             if (selectedLesson) setSelectedLesson(null);
             else if (selectedCourse) setSelectedCourse(null);
@@ -464,9 +467,9 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
           <div className="rounded-2xl border border-[#365D87] bg-[#102A4A] p-6">
             <h2 className="text-xl font-semibold">{L(language, "Academy courses", "Cursos de la Academia", "Cursos da Academia")}</h2>
             <p className="mt-3 text-sm text-slate-200">
-              {L(language, "You do not have an active enrollment. Enrollment is managed on the Academy website, not inside this app.",
-                "No tienes una inscripción activa. Las inscripciones se gestionan en el website de la Academia, no dentro del app.",
-                "Você não tem uma matrícula ativa. As inscrições são gerenciadas no site da Academia, não no aplicativo.")}
+              {L(language, "This account has no active Academy enrollment. If you are already enrolled, contact Academy support.",
+                "Esta cuenta no tiene una inscripción activa. Si ya estás inscrito, contacta al equipo de la Academia.",
+                "Esta conta não tem uma matrícula ativa. Se você já está matriculado, entre em contato com a equipe da Academia.")}
             </p>
             {courses.map((course) => (
               <div key={course.id} className="mt-4 rounded-lg border border-[#365D87] p-4">
@@ -482,7 +485,7 @@ export function AbbaAcademyPortalScreen({ onBack, language }: { onBack: () => vo
                 <h2 className="mb-4 text-lg font-semibold">{L(language, "My courses", "Mis cursos", "Meus cursos")}</h2>
                 {courses.length === 0 && (
                   <p role="status" className="rounded-xl border border-[#365D87] p-4 text-sm text-slate-200">
-                    {L(language, "No courses are available yet.", "Todavía no hay cursos disponibles.", "Ainda não há cursos disponíveis.")}
+                    {L(language, "Your enrollment is active. Your courses will appear here when they open.", "Tu inscripción está activa. Tus cursos aparecerán aquí cuando estén disponibles.", "Sua matrícula está ativa. Seus cursos aparecerão aqui quando estiverem disponíveis.")}
                   </p>
                 )}
                 {courses.map((course) => (
