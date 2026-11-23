@@ -1,0 +1,52 @@
+name: Check TestFlight build 127901
+on:
+  push:
+    branches: [ops/verify-testflight-127901]
+    paths: [.github/workflows/check-testflight-127901.yml]
+permissions: {}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Read build processing and beta availability
+        env:
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          ASC_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          node <<'JS'
+          const { sign } = require('node:crypto');
+          const raw = (process.env.ASC_KEY || '').trim();
+          const normalize = s => s.trim().replace(/^["']|["']$/g,'').replace(/\\n/g,'\n').replaceAll('\r','');
+          let key = normalize(raw);
+          if (!key.includes('BEGIN PRIVATE KEY')) key = normalize(Buffer.from(raw.replace(/\s+/g, ''),'base64').toString('utf8'));
+          const pem = key.match(/-----BEGIN PRIVATE KEY-----[\s\S]+?-----END PRIVATE KEY-----/)?.[0];
+          const b64 = obj => Buffer.from(JSON.stringify(obj)).toString('base64url');
+          async function get(path) {
+            const now = Math.floor(Date.now()/1000);
+            const payload = b64({alg:'ES256',kid:'NGM28WWYM2',typ:'JWT'})+'.'+b64({iss: process.env.ASC_ISSUER,iat:now,exp:now+600,aud:'appstoreconnect-v1'});
+            const signed = sign('sha256',Buffer.from(payload),{key:pem,dsaEncoding:'ieee-p1363'}).toString('base64url');
+            const r = await fetch('https://api.appstoreconnect.apple.com'+path,{headers:{authorization:'Bearer '+payload+'.'+signed},signal:AbortSignal.timeout(15000)});
+            if (!r.ok) throw Error('App Store Connect HTTP '+r.status);
+            return r.json();
+          }
+          (async()=>{
+            const app = (await get('/v1/apps?filter%5BbundleId%5D=com.frankcontact89.prayerandfiremobile')).data[0];
+            if (!app) throw Error('Prayer & Fire not found');
+            for (let i=0;i<20;i++){
+              const build=(await get('/v1/builds?filter%5Bapp%5D='+app.id+'&filter%5Bversion%5D=127901')).data[0];
+              const state=build?.attributes?.processingState || 'NOT_LISTED';
+              if(state==='FAILED'||state==='INVALID') throw Error('Build '+state);
+              if(state==='VALID'){
+                const beta=(await get('/v1/buildBetaDetails?filter%5Bbuild%5D='+build.id)).data[0]?.attributes;
+                console.log(JSON.stringify({build:127901,processing:state,internal:beta?.internalBuildState,external:beta?.externalBuildState}));
+                if(beta?.internalBuildState==='IN_BETA_TESTING')return;
+              }else console.log(JSON.stringify({build:127901,processing:state}));
+              await new Promise(r=>setTimeout(r,40000));
+            }
+            throw Error('TestFlight internal availability still pending');
+          })().catch(e=>{console.error(e.message);process.exitCode=1;});
+          JS
