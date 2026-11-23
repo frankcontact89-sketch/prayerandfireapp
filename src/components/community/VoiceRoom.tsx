@@ -314,22 +314,23 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     }
   }, []);
 
-  // Never leave the microphone transmitting after the user backgrounds the app
-  // or switches away from the prayer room. Returning requires another tap.
   useEffect(() => {
-    const muteWhenHidden = () => {
-      if (document.visibilityState === "hidden") {
-        stream.current?.getAudioTracks().forEach(track => { track.enabled = false; });
-        mutedRef.current = true;
-        setMuted(true);
-        void publishPresence();
-      }
+    const muteMicrophone = () => {
+      stream.current?.getAudioTracks().forEach(track => { track.enabled = false; });
+      mutedRef.current = true;
+      setMuted(true);
+      void publishPresence();
     };
-    document.addEventListener("visibilitychange", muteWhenHidden);
-    window.addEventListener("pagehide", muteWhenHidden);
+    // The native iOS call can continue behind the lock screen. A real page
+    // exit still mutes immediately, as does hiding the browser version.
+    const onVisibilityChange = () => {
+      if (!nativePrayerAudio && document.visibilityState === "hidden") muteMicrophone();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pagehide", muteMicrophone);
     return () => {
-      document.removeEventListener("visibilitychange", muteWhenHidden);
-      window.removeEventListener("pagehide", muteWhenHidden);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pagehide", muteMicrophone);
     };
   }, [publishPresence]);
 
@@ -433,6 +434,15 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         // Join listening first: do not transmit microphone audio without an explicit tap.
         mic.getAudioTracks().forEach(track => { track.enabled = false; });
         stream.current = mic;
+        for (const track of mic.getAudioTracks()) {
+          track.addEventListener("ended", () => {
+            fail("MICROPHONE_TRACK_ENDED", true, t(
+              "The microphone stopped. Reconnecting…",
+              "El micrófono se detuvo. Reconectando…",
+              "O microfone parou. Reconectando…",
+            ));
+          }, { once: true });
+        }
         try {
           audioContext.current = new AudioContext();
           void audioContext.current.resume().catch(() => {});

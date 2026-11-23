@@ -107,8 +107,8 @@ class PrayerAudioRoutePlugin: CAPPlugin, CAPBridgedPlugin {
         var options = [
             ["id": "automatic", "name": "Automatic", "kind": "automatic"]
         ]
-        if inputs.contains(where: { $0.portType == .builtInMic }) &&
-            outputs.contains(where: { $0.portType == .builtInReceiver || $0.portType == .builtInSpeaker }) {
+        if UIDevice.current.userInterfaceIdiom == .phone &&
+            inputs.contains(where: { $0.portType == .builtInMic }) {
             options.append(["id": "phone", "name": "iPhone", "kind": "phone"])
         }
         options.append(["id": "speaker", "name": "Speaker", "kind": "speaker"])
@@ -145,7 +145,8 @@ class PrayerAudioRoutePlugin: CAPPlugin, CAPBridgedPlugin {
                 let input = selectableInputs().first {
                     route == "phone" ? $0.portType == .builtInMic : $0.uid == route
                 }
-                guard route == "automatic" || input != nil else {
+                guard route == "automatic" ||
+                      (input != nil && (route != "phone" || UIDevice.current.userInterfaceIdiom == .phone)) else {
                     call.reject("Audio route unavailable")
                     return
                 }
