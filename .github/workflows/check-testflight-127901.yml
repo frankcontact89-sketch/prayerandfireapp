@@ -1,4 +1,4 @@
-name: Check TestFlight build 127901
+name: Check TestFlight build 128001
 on:
   push:
     branches: [ops/verify-testflight-127901]
@@ -37,14 +37,14 @@ jobs:
             const app = (await get('/v1/apps?filter%5BbundleId%5D=com.frankcontact89.prayerandfiremobile')).data[0];
             if (!app) throw Error('Prayer & Fire not found');
             for (let i=0;i<20;i++){
-              const build=(await get('/v1/builds?filter%5Bapp%5D='+app.id+'&filter%5Bversion%5D=127901')).data[0];
+              const build=(await get('/v1/builds?filter%5Bapp%5D='+app.id+'&filter%5Bversion%5D=128001')).data[0];
               const state=build?.attributes?.processingState || 'NOT_LISTED';
               if(state==='FAILED'||state==='INVALID') throw Error('Build '+state);
               if(state==='VALID'){
                 const beta=(await get('/v1/buildBetaDetails?filter%5Bbuild%5D='+build.id)).data[0]?.attributes;
-                console.log(JSON.stringify({build:127901,processing:state,internal:beta?.internalBuildState,external:beta?.externalBuildState}));
+                console.log(JSON.stringify({build:128001,processing:state,internal:beta?.internalBuildState,external:beta?.externalBuildState}));
                 if(beta?.internalBuildState==='IN_BETA_TESTING')return;
-              }else console.log(JSON.stringify({build:127901,processing:state}));
+              }else console.log(JSON.stringify({build:128001,processing:state}));
               await new Promise(r=>setTimeout(r,40000));
             }
             throw Error('TestFlight internal availability still pending');
