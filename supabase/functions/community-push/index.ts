@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
   let payload: any = {};
   try { payload = await req.json(); } catch { /* empty body */ }
 
-  const kind: string = ["message", "pinned", "invite"].includes(payload?.kind) ? payload.kind : "message";
+  const kind: string = ["message", "pinned", "invite", "ice"].includes(payload?.kind) ? payload.kind : "message";
   const messageId: string | undefined = payload?.message_id;
   const groupId: string | undefined = payload?.group_id;
   const inviteUserIds: string[] = Array.isArray(payload?.user_ids) ? payload.user_ids.slice(0, 200) : [];
@@ -92,6 +92,30 @@ Deno.serve(async (req) => {
   let title = "Prayer & Fire";
   let bodyText = "";
   let deepLink: Record<string, string> = {};
+
+  if (kind === "ice") {
+    const generalPrayerRelay = groupId === "community-general";
+    if (!generalPrayerRelay) {
+      if (!groupId || !/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(groupId)) {
+        return json({ error: "BAD_REQUEST" }, 400);
+      }
+      const { data: membership, error: membershipError } = await admin.from("community_group_members")
+        .select("user_id").eq("group_id", groupId).eq("user_id", user.id).maybeSingle();
+      if (membershipError) return json({ error: "MEMBERSHIP_LOOKUP_FAILED" }, 503);
+      if (!membership) return json({ error: "NO_PERMISSION" }, 403);
+    }
+    const secret = Deno.env.get("TURN_SHARED_SECRET");
+    const urls = (Deno.env.get("TURN_URLS") ?? "").split(",").map(url => url.trim())
+      .filter(url => /^turns?:[^\s]+$/i.test(url));
+    if (!secret || !urls.length) return json({ iceServers: [] });
+    const expiresAt = Math.floor(Date.now() / 1000) + 3600;
+    const username = `${expiresAt}:${user.id}`;
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
+    const signature = new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(username)));
+    const credential = btoa(String.fromCharCode(...signature));
+    return json({ iceServers: [{ urls, username, credential }], expiresAt });
+  }
 
   if (kind === "invite") {
     if (!groupId || !inviteUserIds.length) return json({ error: "BAD_REQUEST" }, 400);
