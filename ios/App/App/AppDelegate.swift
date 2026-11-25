@@ -231,7 +231,8 @@ class PrayerAudioRoutePlugin: CAPPlugin, CAPBridgedPlugin, CXProviderDelegate, C
 
     private func selectableInputs() -> [AVAudioSessionPortDescription] {
         (audio.availableInputs ?? []).filter {
-            $0.portType == .builtInMic || $0.portType == .bluetoothHFP || $0.portType == .bluetoothLE
+            $0.portType == .builtInMic || $0.portType == .bluetoothHFP || $0.portType == .bluetoothLE ||
+                $0.portType == .headsetMic
         }
     }
 
@@ -249,7 +250,8 @@ class PrayerAudioRoutePlugin: CAPPlugin, CAPBridgedPlugin, CXProviderDelegate, C
         var seen = Set<String>()
         for input in inputs where input.portType != .builtInMic {
             if seen.insert(input.uid).inserted {
-                options.append(["id": input.uid, "name": input.portName, "kind": "bluetooth"])
+                let kind = input.portType == .headsetMic ? "headphones" : "bluetooth"
+                options.append(["id": input.uid, "name": input.portName, "kind": kind])
             }
         }
 

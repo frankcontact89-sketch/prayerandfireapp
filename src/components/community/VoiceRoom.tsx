@@ -2,7 +2,7 @@ import { audioTransportStats, iceExpiryMs, localAudioDescription, usableTurnServ
 import { GENERAL_PRAYER_ROOM_ID } from "./generalPrayerRoom";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
-import { Mic, MicOff, Hand, MoreHorizontal, ChevronDown, Users, Volume2, AudioLines, Phone, Smartphone, Bluetooth, Check, Settings2 } from "lucide-react";
+import { Mic, MicOff, Hand, MoreHorizontal, ChevronDown, Users, Volume2, AudioLines, Phone, Smartphone, Bluetooth, Headphones, Check, Settings2 } from "lucide-react";
 import { nativePrayerAudio, prayerAudioRoute } from "./prayerAudioRoute";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -759,6 +759,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     ...(elapsed >= 3600 ? [Math.floor(elapsed / 3600)] : []),
     Math.floor(elapsed / 60) % 60, elapsed % 60,
   ].map(value => String(value).padStart(2, "0")).join(":");
+  const lowerHandLabel = t("Lower hand", "Bajar la mano", "Abaixar a mão");
   const count = `${participants.length} ${participants.length === 1 ? t("participant", "participante", "participante") : labels.participants.toLowerCase()}`;
   const control = (tone = "bg-background text-foreground ring-border") =>
     `grid size-12 shrink-0 place-items-center rounded-full ring-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-40 sm:size-14 ${tone}`;
@@ -832,16 +833,23 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         </header>
         {menu === "participants" && <ul onClick={event => event.stopPropagation()} className="absolute inset-x-3 top-24 z-10 max-h-[45%] overflow-auto rounded-2xl border border-border bg-popover p-3 shadow-lg" aria-label={labels.participants}>
           {participants.map(person => <li key={person.id} className="flex min-h-10 items-center justify-between gap-2 border-b border-border text-sm last:border-0">
-            <span className="truncate">{profiles[person.id]?.username || person.name}</span>{(person.id === userId ? muted : person.muted) ? <MicOff size={15} /> : <Mic size={15} />}
+            <span className="flex min-w-0 items-center gap-2"><span className="truncate">{profiles[person.id]?.username || person.name}</span>{(person.id === userId ? hand : person.hand) && <Hand size={15} className="shrink-0 text-[#B7893E]" aria-label={labels.raised} />}</span>{(person.id === userId ? muted : person.muted) ? <MicOff size={15} /> : <Mic size={15} />}
           </li>)}
         </ul>}
+        {connected && hand && (
+          <div className="pointer-events-none absolute inset-x-0 top-24 z-[5] flex justify-center">
+            <button type="button" onClick={toggleHand} className="pointer-events-auto inline-flex min-h-11 items-center gap-2 rounded-full border border-[#B7893E] bg-[#5C061F] px-4 text-sm font-semibold text-white shadow-md">
+              <Hand size={16} aria-hidden="true" />{lowerHandLabel}
+            </button>
+          </div>
+        )}
         {connected && audioStatus && <p className="mt-2 text-center text-sm text-muted-foreground" role={failed || peerFailed ? "alert" : "status"}>{audioStatus}</p>}
         {audioBlocked && <button type="button" className="mt-2 rounded-lg bg-secondary p-2 text-sm"
           onClick={() => { void audioContext.current?.resume().catch(() => {}); void resumeRemoteAudio(); }}>
           {t("Enable audio", "Activar audio", "Ativar áudio")}
         </button>}
         {(failed || peerFailed) && <button type="button" className="mt-2 rounded-lg bg-secondary p-2 text-sm" onClick={() => setAttempt(n => n + 1)}>{labels.retry}</button>}
-        <div className="min-h-0 flex-1 overflow-y-auto py-4">
+        <div className={`min-h-0 flex-1 overflow-y-auto overscroll-contain pb-4 ${hand ? "pt-16" : "pt-5"}`}>
           <div className="mx-auto flex max-w-lg flex-wrap justify-center gap-y-4">
             {participants.map(person => {
               const local = person.id === userId;
@@ -852,7 +860,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
               const talking = !isMuted && speaking.has(person.id);
               return <div key={person.id} className={`flex min-w-0 flex-col items-center gap-2 px-1 ${participants.length === 1 ? "basis-full" : "basis-1/3"}`}>
                 <button type="button" disabled={local} aria-label={displayName} onClick={() => { setSelectedPerson(person.id); setProfileOpen(false); setContactError(false); setReportStatus(undefined); }}
-                  className={`relative grid place-items-center rounded-full bg-[#5C061F] font-semibold text-[#FFE6B2] ${participants.length === 1 ? "size-28 text-3xl sm:size-32" : participants.length <= 4 ? "size-[76px] text-xl sm:size-24" : "size-14 text-sm sm:size-20"} ${talking ? "ring-2 ring-[#BB8A3E] ring-offset-2 ring-offset-background" : ""}`}>
+                  className={`relative grid place-items-center rounded-full bg-[#5C061F] font-semibold text-[#FFE6B2] size-[clamp(3.75rem,22vw,6rem)] text-xl sm:text-2xl ${talking ? "ring-2 ring-[#BB8A3E] ring-offset-2 ring-offset-background" : ""}`}>
                   {talking && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-[#C39143] motion-safe:animate-ping" />}
                   {displayName.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join("").toUpperCase()}
                   {avatar && <img key={avatar} src={avatar} alt="" className="absolute inset-0 size-full rounded-full object-cover"
@@ -861,16 +869,18 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
                     {isMuted ? <MicOff size={13} aria-label={t("Muted", "Silenciado", "Silenciado")} /> : <Mic size={13} aria-label={t("Microphone on", "Micrófono activo", "Microfone ativo")} />}
                   </span>
                   {(local ? hand : person.hand) && <Hand size={15} aria-label={labels.raised} className="absolute -left-2 -top-1 rounded bg-background text-[#A8782D]" />}
-                  {talking && <AudioLines size={16} aria-hidden="true" className="absolute -left-4 bottom-1 text-[#A8782D] motion-safe:animate-pulse" />}
                   {reactions[person.id] && <span key={reactions[person.id]} className="absolute -right-3 -top-2 z-[1] rounded-full bg-background px-1 text-lg shadow motion-safe:animate-in motion-safe:fade-in" role="status">{reactions[person.id]}</span>}
                 </button>
-                <span className="max-w-full truncate text-xs font-medium">{displayName}{local ? ` · ${labels.you}` : ""}</span>
+                <span className="relative flex h-4 w-full justify-center">
+                  {talking && <AudioLines size={16} aria-hidden="true" className="text-[#A8782D] dark:text-[#E5BB70] motion-safe:animate-pulse" />}
+                </span>
+                <span className="-mt-1 max-w-full truncate text-xs font-medium">{displayName}{local ? ` · ${labels.you}` : ""}</span>
               </div>;
             })}
           </div>
         </div>
         {selectedPerson && participants.some(person => person.id === selectedPerson) && (
-          <div className="mb-2 rounded-xl border border-border bg-card p-3">
+          <div className="mb-2 max-h-[35%] shrink-0 overflow-y-auto rounded-xl border border-border bg-card p-3">
             <p className="truncate font-semibold">{profiles[selectedPerson]?.username || participants.find(person => person.id === selectedPerson)?.name}</p>
             <button type="button" className="min-h-11 px-2 text-sm" onClick={() => {
               const next = new Set(localMutesRef.current);
@@ -939,9 +949,10 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
           {menu === "route" && <div className="absolute bottom-full left-1/2 z-10 mb-2 w-60 -translate-x-1/2 rounded-2xl border border-border bg-popover p-2 text-sm shadow-lg">
             <p className="px-2 py-1 font-semibold">{t("Audio output", "Salida de audio", "Saída de áudio")}</p>
             {routes?.options.map(route => {
-              const Icon = route.kind === "automatic" ? Settings2 : route.kind === "phone" ? Smartphone : route.kind === "bluetooth" ? Bluetooth : Volume2;
+              const Icon = route.kind === "automatic" ? Settings2 : route.kind === "phone" ? Smartphone : route.kind === "bluetooth" ? Bluetooth : route.kind === "headphones" ? Headphones : Volume2;
               const title = route.kind === "automatic" ? t("Automatic", "Automática", "Automática")
                 : route.kind === "speaker" ? t("Speaker", "Altavoz", "Alto-falante")
+                : route.kind === "headphones" ? t("Headphones", "Auriculares", "Fones de ouvido")
                 : route.name;
               return <button type="button" key={route.id} onClick={() => void selectRoute(route.id)}
                 aria-pressed={routes.selected === route.id} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left hover:bg-accent">
@@ -957,7 +968,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
             aria-expanded={menu === "route"} aria-label={t("Audio output", "Salida de audio", "Saída de áudio")}
             onClick={() => { refreshRoutes(); setMenu(current => current === "route" ? null : "route"); }}><Volume2 size={19} /></button>
           <button type="button" className={control(hand ? handTone : undefined)} disabled={!connected} aria-pressed={hand}
-            aria-label={hand ? t("Lower hand", "Bajar la mano", "Abaixar a mão") : labels.hand} onClick={toggleHand}><Hand size={19} /></button>
+            aria-label={hand ? lowerHandLabel : labels.hand} onClick={toggleHand}><Hand size={19} /></button>
           <button type="button" className={control(muted ? "bg-muted text-muted-foreground ring-border" : activeTone)} disabled={!connected} aria-pressed={!muted}
             aria-label={muted ? labels.unmute : labels.mute} onClick={toggleMute}>{muted ? <MicOff size={19} /> : <Mic size={19} />}</button>
           <button type="button" className={control("bg-red-600 text-white ring-red-700 hover:bg-red-700")} aria-label={labels.leave} onClick={onClose}><Phone size={19} className="rotate-[135deg]" /></button>

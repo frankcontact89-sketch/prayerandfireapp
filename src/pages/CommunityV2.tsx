@@ -130,7 +130,7 @@ export default function CommunityV2(){
  selectedGroupIdRef.current=selected?.id??null;
  const[chatAppearanceOpen,setChatAppearanceOpen]=useState(false);
  const[chatPrefs,setChatPrefs]=useState<ChatPrefs>({wallpaper:"default",bubble:"#5C061F"});
- const pendingDeepLink=useRef<{groupId:string;messageId?:string;call?:boolean}|null>(null);
+ const [pendingDeepLink, setPendingDeepLink] = useState<{groupId:string;messageId?:string;call?:boolean}|null>(null);
 
  const[listLoading,setListLoading]=useState(true),[listError,setListError]=useState(false);
  const[discoverList,setDiscoverList]=useState<DiscoverGroup[]>([]),[discoverLoading,setDiscoverLoading]=useState(false),[noAccessGroup,setNoAccessGroup]=useState<DiscoverGroup|null>(null),[confirmDelGroup,setConfirmDelGroup]=useState(false),[confirmLeave,setConfirmLeave]=useState(false),[showArchived,setShowArchived]=useState(false);
@@ -747,26 +747,31 @@ export default function CommunityV2(){
 
  // ---- notification tap deep link ----
  useEffect(()=>{
-  const apply=(d:{groupId:string;messageId?:string;call?:boolean}|null)=>{if(d?.groupId)pendingDeepLink.current=d};
+  const apply=(d:{groupId:string;messageId?:string;call?:boolean}|null)=>{if(d?.groupId)setPendingDeepLink(d)};
   apply(takePushOpen());
   const params=new URLSearchParams(window.location.search);
   const g=params.get("group");
   if(g){apply({groupId:g,messageId:params.get("message")||undefined,call:params.get("call")==="1"});params.delete("group");params.delete("message");params.delete("call");window.history.replaceState({},"",`${window.location.pathname}${params.toString()?`?${params}`:""}`)}
-  const onOpen=(e:any)=>{apply(e?.detail);const target=groups.find(x=>x.id===e?.detail?.groupId);if(target)setSelected(target)};
+  const onOpen=(event: Event)=>{
+   const stored = takePushOpen();
+   apply(stored ?? (event as CustomEvent).detail);
+  };
   window.addEventListener("pf-push-open",onOpen as EventListener);
   return()=>window.removeEventListener("pf-push-open",onOpen as EventListener);
- },[groups]);
+ },[]);
 
  useEffect(()=>{
-  const d=pendingDeepLink.current;
-  if(!d||!groups.length)return;
+  const d=pendingDeepLink;
+  if(!d||access!=="approved"||!me?.id)return;
   const target=groups.find(x=>x.id===d.groupId);
   if(!target)return;
-  pendingDeepLink.current=null;
+  setPendingDeepLink(null);
+  setInfo(false);
   setSelected(target);
+  if(d.call)openCall({groupId:target.id,name:target.name,userId:me.id,userName:me.name||t.member,userAvatar:me.avatar,language:lang});
   if(d.messageId)window.setTimeout(()=>jumpToMsg(d.messageId!),900);
  // eslint-disable-next-line react-hooks/exhaustive-deps
- },[groups]);
+ },[pendingDeepLink,groups,access,me,lang,t.member,openCall]);
 
  // ---- pinned messages ----
 
@@ -875,6 +880,11 @@ export default function CommunityV2(){
   ? L("1 participant", "1 participante", "1 participante")
   : L(`${count} participants`, `${count} participantes`, `${count} participantes`);
 
+ const livePrayerHost = livePrayerIds.length === 1 ? livePrayerProfiles[0]?.username : null;
+ const livePrayerSubtitle = livePrayerHost
+  ? L(`👋 ${livePrayerHost} wants to talk…`, `👋 ${livePrayerHost} quiere hablar…`, `👋 ${livePrayerHost} quer falar…`)
+  : participantCount(livePrayerIds.length);
+
  const livePrayerInvite = !activeRoomId && me?.id && livePrayerIds.length > 0 && (
   <div className="flex min-h-14 shrink-0 items-center gap-2 border-b border-border bg-card px-3 py-1">
    <span className="size-2 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
@@ -889,7 +899,7 @@ export default function CommunityV2(){
    </span>
    <span className="min-w-0 flex-1">
     <span className="block truncate text-xs font-semibold">{GENERAL_PRAYER_ROOM_NAME}</span>
-    <span className="block truncate text-xs text-muted-foreground">{participantCount(livePrayerIds.length)}</span>
+    <span className="block truncate text-xs text-muted-foreground">{livePrayerSubtitle}</span>
    </span>
    <button type="button" className="min-h-11 shrink-0 rounded-full bg-emerald-700 px-3 text-xs font-semibold text-white"
     onClick={() => openCall({ groupId: GENERAL_PRAYER_ROOM_ID, name: GENERAL_PRAYER_ROOM_NAME,

@@ -3,7 +3,7 @@ import { Capacitor, registerPlugin, type PluginListenerHandle } from "@capacitor
 export const nativePrayerAudio = Capacitor.getPlatform() === "ios";
 export const prayerAudioRoute = registerPlugin<{
   prepare(): Promise<void>;
-  routes(): Promise<{ selected: string; options: { id: string; name: string; kind: "automatic" | "phone" | "speaker" | "bluetooth" }[] }>;
+  routes(): Promise<{ selected: string; options: { id: string; name: string; kind: "automatic" | "phone" | "speaker" | "bluetooth" | "headphones" }[] }>;
   select(options: { route: string }): Promise<void>;
   reset(): Promise<void>;
   presentContact(options: { name: string }): Promise<void>;
