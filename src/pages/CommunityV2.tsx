@@ -120,6 +120,7 @@ export default function CommunityV2(){
  const refreshBusy = useRef(false);
  const [livePrayerIds, setLivePrayerIds] = useState<string[]>([]);
  const [livePrayerProfiles, setLivePrayerProfiles] = useState<{ id: string; avatar_url: string | null; username: string | null }[]>([]);
+ const [groupPrayerActivity, setGroupPrayerActivity] = useState<Record<string, { count: number; name?: string }>>({});
  const [liveRooms, setLiveRooms] = useState<Record<string, number>>({});
  const[groups,setGroups]=useState<Group[]>([]),[selected,setSelected]=useState<Group|null>(null),[msgs,setMsgs]=useState<Msg[]>([]),[senders,setSenders]=useState<Record<string,Sender>>({}),[q,setQ]=useState(""),[filter,setFilter]=useState<"all"|"unread"|"groups"|"discover">("all"),[create,setCreate]=useState(false),[info,setInfo]=useState(false),[draft,setDraft]=useState(""),[rec,setRec]=useState(false),[edit,setEdit]=useState(false),[name,setName]=useState(""),[desc,setDesc]=useState(""),[confirmDel,setConfirmDel]=useState<Msg|null>(null),[menu,setMenu]=useState<Msg|null>(null),[replyTo,setReplyTo]=useState<Msg|null>(null),[reactions,setReactions]=useState<Record<string,Rx[]>>({}),[reactBar,setReactBar]=useState<Msg|null>(null),[emojiPicker,setEmojiPicker]=useState<Msg|null>(null),[rxDetail,setRxDetail]=useState<Msg|null>(null),[starredIds,setStarredIds]=useState<Set<string>>(new Set()),[flash,setFlash]=useState("");
  const[chatSearch,setChatSearch]=useState(false),[csq,setCsq]=useState(""),[mediaOpen,setMediaOpen]=useState(false),[imageViewer,setImageViewer]=useState<{url:string;title?:string}|null>(null),[readCounts,setReadCounts]=useState<Record<string,number>>({}),[deliveredCounts,setDeliveredCounts]=useState<Record<string,number>>({});
@@ -744,7 +745,7 @@ export default function CommunityV2(){
  // ---- push notifications: only resume users who already opted in ----
  useEffect(()=>{if(access!=="approved"||!me)return;
   if(pushPreferred())void resumePush();
- },[access,me?.id]);
+ },[access,me]);
 
  // ---- notification tap deep link ----
  useEffect(()=>{
@@ -771,7 +772,6 @@ export default function CommunityV2(){
   setSelected(target);
   if(d.call)openCall({groupId:target.id,name:target.name,userId:me.id,userName:me.name||t.member,userAvatar:me.avatar,language:lang,notifyOnStart:false});
   if(d.messageId)window.setTimeout(()=>jumpToMsg(d.messageId!),900);
- // eslint-disable-next-line react-hooks/exhaustive-deps
  },[pendingDeepLink,groups,access,me,lang,t.member,openCall]);
 
  // ---- pinned messages ----
@@ -824,6 +824,47 @@ export default function CommunityV2(){
  const messageStatusIcon=(m:Msg)=>messageStatus(m)==="read"?<CheckCheck className="w-3.5 h-3.5 text-sky-200 drop-shadow-[0_0_1px_#172033]"/>:messageStatus(m)==="delivered"?<CheckCheck className="w-3.5 h-3.5 text-white drop-shadow-[0_0_1px_#172033]"/>:<Check className="w-3.5 h-3.5 text-white drop-shadow-[0_0_1px_#172033]"/>;
  const receiptRows=(receipts:Array<ReadReceipt|DeliveryReceipt|PlayReceipt>,timeKey:"read_at"|"delivered_at"|"played_at")=>receipts.length===0?<div className="px-4 pb-4 text-sm text-muted-foreground">—</div>:receipts.map(receipt=>{const person=messageInfoMembers.find(member=>member.id===receipt.user_id);if(!person)return null;const timestamp=String((receipt as any)[timeKey]);return <div key={receipt.user_id} className="mx-4 flex items-center gap-3 border-t border-border py-3 first:border-t-0"><div className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-muted font-bold text-primary ring-1 ring-border">{person.avatar?<img src={person.avatar} alt="" className="h-full w-full object-cover"/>:person.name[0]?.toUpperCase()}</div><div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-foreground">{person.name}</div><div className="text-xs text-muted-foreground">{new Date(timestamp).toLocaleDateString()}</div></div><time className="shrink-0 text-sm tabular-nums text-muted-foreground">{new Date(timestamp).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</time></div>});
 
+
+ const watchedPrayerGroups = groups.map(group => group.id).sort().join(",");
+ const prayerObserverId = me?.id as string | undefined;
+ useEffect(() => {
+  if (access !== "approved" || !prayerObserverId || !watchedPrayerGroups) return;
+  let disposed = false;
+  const watches: ReturnType<typeof supabase.channel>[] = [];
+  const update = (id: string, count: number, name?: string) => {
+   if (disposed) return;
+   setGroupPrayerActivity(current => current[id]?.count === count && current[id]?.name === name
+    ? current : { ...current, [id]: { count, name } });
+  };
+
+  void (async () => {
+   await voiceChannelClosed.current.catch(() => {});
+   const { data: { session } } = await supabase.auth.getSession();
+   if (disposed || session?.user.id !== prayerObserverId) return;
+   await supabase.realtime.setAuth();
+   if (disposed) return;
+   for (const id of watchedPrayerGroups.split(",")) {
+    if (id === activeRoomId) continue;
+    const watch = supabase.channel(`voice-room:${id}`, {
+     config: { private: true, presence: { key: `observer:${prayerObserverId}` } },
+    });
+    watches.push(watch);
+    watch.on("presence", { event: "sync" }, () => {
+     const participants = Object.entries(watch.presenceState<{ name?: string }>())
+      .filter(([key, entries]) => /^[a-f0-9-]{36}$/i.test(key) && entries.length > 0);
+     const name = participants.length === 1 ? participants[0][1][0]?.name : undefined;
+     update(id, participants.length, name);
+    }).subscribe(status => {
+     if (status !== "SUBSCRIBED") update(id, 0);
+    });
+   }
+  })().catch(() => {});
+  return () => {
+   disposed = true;
+   setGroupPrayerActivity({});
+   voiceChannelClosed.current = Promise.all([voiceChannelClosed.current, ...watches.map(watch => supabase.removeChannel(watch))]);
+  };
+ }, [access, activeRoomId, prayerObserverId, watchedPrayerGroups, voiceChannelClosed]);
 
  const generalPrayerWasLive = useRef<boolean | null>(null);
  const generalPrayerNotice = L("The general prayer room is live", "La sala general de oración está en vivo", "A sala geral de oração está ao vivo");
@@ -1149,6 +1190,19 @@ export default function CommunityV2(){
   </DialogContent>
 </Dialog>
 <div className="shrink-0 px-4 pt-3 pb-2"><div className="bg-secondary border border-border rounded-2xl h-12 px-4 flex items-center gap-2"><Search className="w-5 h-5 text-muted-foreground"/><input value={q} onChange={e=>setQ(e.target.value)} placeholder={t.search} className="bg-transparent outline-none flex-1 min-w-0"/></div><div className="mt-2 grid grid-cols-2 gap-2"><button onClick={()=>setShowArchived(false)} className={`h-10 rounded-xl text-sm font-semibold ${!showArchived?"bg-[#5C061F] text-[#FFE6B2] border border-[#D5AD6C]/30":"bg-secondary text-muted-foreground"}`}>{activeLabel}</button><button onClick={()=>setShowArchived(true)} className={`h-10 rounded-xl text-sm font-semibold ${showArchived?"bg-[#5C061F] text-[#FFE6B2] border border-[#D5AD6C]/30":"bg-secondary text-muted-foreground"}`}>{archivedLabel}</button></div></div><div className="flex-1 min-h-0 overflow-y-auto px-3 pb-8" style={{overscrollBehaviorY:"contain"}} onTouchStart={e=>{const p=e.touches[0];refreshTouch.current=e.currentTarget.scrollTop<=0&&p?{x:p.clientX,y:p.clientY}:null}} onTouchCancel={()=>{refreshTouch.current=null}} onTouchEnd={async e=>{const start=refreshTouch.current;refreshTouch.current=null;const p=e.changedTouches[0];if(!start||!p||p.clientY-start.y<65||Math.abs(p.clientX-start.x)>45||refreshBusy.current||!me?.id)return;refreshBusy.current=true;setRefreshingChats(true);try{await Promise.all([loadGroups(me.id),loadDiscover()])}finally{refreshBusy.current=false;setRefreshingChats(false)}}}>{refreshingChats&&<div role="status" className="py-3 text-center text-sm text-muted-foreground"><span className="inline-block size-5 animate-spin rounded-full border-2 border-current border-t-transparent align-middle mr-2"/>{t.loading}</div>}{listLoading?<div className="py-20 text-center text-muted-foreground text-sm">{t.loading}</div>:listError?<div className="py-20 text-center px-8"><p className="text-sm text-muted-foreground">{t.loadError}</p><button onClick={()=>me&&loadGroups(me.id)} className="mt-4 h-11 px-6 rounded-2xl bg-[#5C061F] text-black font-black">{t.retry}</button></div>:visible.length===0?<div className="py-20 text-center px-8"><div className="w-16 h-16 rounded-full bg-[#5C061F]/30 text-[#E5BB70] grid place-items-center mx-auto mb-4"><Users className="w-7 h-7"/></div><h2 className="font-bold text-lg">{t.empty}</h2><p className="text-sm text-muted-foreground mt-2">{canCreate?t.sub:`${t.sub} ${t.onlyAdminsCreate}`}</p></div>:visible.map(g=><div key={g.id} className="flex items-center gap-1 border-b border-border">
- <button type="button" onClick={()=>setSelected(g)} className="min-w-0 flex-1 min-h-[76px] text-left flex items-center gap-3 px-2 py-3 active:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D5AD6C] rounded-lg">{g.avatar?<img src={g.avatar} alt="" className="w-14 h-14 shrink-0 rounded-full object-cover border border-[#D5AD6C]/20"/>:<span className="w-14 h-14 shrink-0 rounded-full border border-[#E5BB70]/45 bg-[#5C061F] grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span>}<div className="min-w-0 flex-1"><div className="flex justify-between items-baseline gap-2"><div className="font-bold text-[16px] truncate flex items-center gap-1">{g.favorite&&<Star className="w-3.5 h-3.5 fill-current text-[#E5BB70] shrink-0"/>}<span className="truncate">{g.name}</span></div><span className={`shrink-0 text-[11px] tabular-nums ${g.unread>0?"text-[#D5AD6C] font-semibold":"text-muted-foreground"}`}>{g.lastTime}</span></div><div className="flex justify-between items-center gap-2"><div className={`min-w-0 flex-1 text-[13px] truncate mt-1 ${g.unread>0?"text-foreground font-medium":"text-muted-foreground"}`}>{g.subtitle}</div><div className="flex items-center gap-1 shrink-0">{g.muted&&<BellOff className="w-3.5 h-3.5 text-muted-foreground"/>}{g.unread>0&&<span className="min-w-5 h-5 px-1.5 rounded-full bg-[#5C061F] border border-[#D5AD6C]/40 text-[#FFE3AE] text-[11px] font-bold grid place-items-center shrink-0">{g.unread}</span>}</div></div></div></button>
+ <button type="button" onClick={()=>setSelected(g)} className="min-w-0 flex-1 min-h-[76px] text-left flex items-center gap-3 px-2 py-3 active:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D5AD6C] rounded-lg">{g.avatar?<img src={g.avatar} alt="" className="w-14 h-14 shrink-0 rounded-full object-cover border border-[#D5AD6C]/20"/>:<span className="w-14 h-14 shrink-0 rounded-full border border-[#E5BB70]/45 bg-[#5C061F] grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span>}<div className="min-w-0 flex-1"><div className="flex justify-between items-baseline gap-2"><div className="font-bold text-[16px] truncate flex items-center gap-1">{g.favorite&&<Star className="w-3.5 h-3.5 fill-current text-[#E5BB70] shrink-0"/>}<span className="truncate">{g.name}</span></div><span className={`shrink-0 text-[11px] tabular-nums ${g.unread>0?"text-[#D5AD6C] font-semibold":"text-muted-foreground"}`}>{g.lastTime}</span></div><div className="flex justify-between items-center gap-2"><div className={`min-w-0 flex-1 text-[13px] truncate mt-1 ${g.unread>0?"text-foreground font-medium":"text-muted-foreground"}`}>{g.subtitle}</div><div className="flex items-center gap-1 shrink-0">{g.muted&&<BellOff className="w-3.5 h-3.5 text-muted-foreground"/>}{g.unread>0&&<span className="min-w-5 h-5 px-1.5 rounded-full bg-[#5C061F] border border-[#D5AD6C]/40 text-[#FFE3AE] text-[11px] font-bold grid place-items-center shrink-0">{g.unread}</span>}</div></div>
+  {groupPrayerActivity[g.id]?.count > 0 && <span className="mt-1 block truncate text-xs font-medium text-emerald-700 dark:text-emerald-400">
+   {groupPrayerActivity[g.id].name
+    ? L(`👋 ${groupPrayerActivity[g.id].name} wants to talk…`, `👋 ${groupPrayerActivity[g.id].name} quiere hablar…`, `👋 ${groupPrayerActivity[g.id].name} quer falar…`)
+    : participantCount(groupPrayerActivity[g.id].count)}
+  </span>}</div></button>
+  {((groupPrayerActivity[g.id]?.count ?? 0) > 0 || connectedRoomId === g.id) && <button type="button"
+   className="mr-2 grid size-11 shrink-0 place-items-center rounded-full bg-secondary text-emerald-700 dark:text-emerald-400"
+   aria-label={L(`Join prayer in ${g.name}`, `Unirse a la oración en ${g.name}`, `Entrar na oração em ${g.name}`)}
+   onClick={() => {
+    if (!me?.id) return;
+    setSelected(g);
+    openCall({groupId:g.id,name:g.name,userId:me.id,userName:me.name||t.member,userAvatar:me.avatar,language:lang,notifyOnStart:false});
+   }}><Phone className="size-4" aria-hidden="true" /></button>}
  </div>)}</div>{noAccessGroup&&<div className="fixed inset-0 z-[130] bg-black/80 grid place-items-center px-8" onClick={()=>setNoAccessGroup(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-card border border-border p-6 text-center">{noAccessGroup.avatar?<img src={noAccessGroup.avatar} alt="" className="w-16 h-16 rounded-full object-cover mx-auto"/>:<span className="w-16 h-16 rounded-full bg-[#5C061F] border border-[#E5BB70]/45 mx-auto grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span>}<b className="block mt-4 text-lg">{noAccessGroup.name}</b><p className="mt-1 text-xs text-muted-foreground">{noAccessGroup.memberCount} {noAccessGroup.memberCount===1?t.member:t.members}</p><b className="block mt-4 text-[#E5BB70] text-sm">{t.noAccessTitle}</b><p className="mt-2 text-sm text-muted-foreground">{t.noAccessBody}</p><button onClick={()=>setNoAccessGroup(null)} className="mt-6 w-full h-12 rounded-2xl bg-secondary">{t.back}</button></div></div>}{pushSheet&&<div className="fixed inset-0 z-[140] bg-black/80 flex items-end" onClick={()=>setPushSheet(false)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-card border-t border-border p-5 pb-[max(20px,env(safe-area-inset-bottom))]"><div className="flex justify-between items-center mb-3"><b>{pushSettingsLabel}</b><button onClick={()=>setPushSheet(false)} aria-label={t.cancel}><X/></button></div><PushToggle lang={lang}/></div></div>}{canCreate&&<CreateGroupModal open={create} onClose={()=>setCreate(false)} onCreate={createGroup} language={lang}/>}</div></div>;
 }

@@ -48,16 +48,6 @@ const checklist: ChecklistItem[] = [
     ],
   },
   {
-    category: "Store & Products",
-    items: [
-      { name: "Product listing page", completed: true },
-      { name: "Product detail modal", completed: true },
-      { name: "Shopping cart", completed: true },
-      { name: "Checkout redirect to external store", completed: true },
-      { name: "Purchased items visible in My Courses", completed: true },
-    ],
-  },
-  {
     category: "Courses",
     items: [
       { name: "My Courses section", completed: true },

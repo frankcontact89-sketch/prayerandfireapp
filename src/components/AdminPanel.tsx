@@ -5,7 +5,6 @@ import { AdminLinks } from "./admin/AdminLinks";
 import { AdminBranding } from "./admin/AdminBranding";
 import { AdminEvents } from "./admin/AdminEvents";
 import { AdminNotifications } from "./admin/AdminNotifications";
-import { AdminProducts } from "./admin/AdminProducts";
 import { AdminCourses } from "./admin/AdminCourses";
 import { AdminContent } from "./admin/AdminContent";
 import { AdminVerses } from "./admin/AdminVerses";
@@ -81,7 +80,6 @@ export function AdminPanel({ t, onBack }: AdminPanelProps) {
             <TabsTrigger value="branding" className="min-h-11 rounded-xl px-1.5 py-2 text-center text-xs text-zinc-300 data-[state=active]:bg-[#5C061F] data-[state=active]:text-[#F3D5A3]">Logo</TabsTrigger>
             <TabsTrigger value="links" className="min-h-11 whitespace-normal break-words rounded-xl px-1.5 py-2 text-center text-xs leading-tight text-zinc-300 data-[state=active]:bg-[#681B3D] data-[state=active]:text-[#F3D5A3] data-[state=active]:shadow-sm">Links</TabsTrigger>
             <TabsTrigger value="events" className="min-h-11 whitespace-normal break-words rounded-xl px-1.5 py-2 text-center text-xs leading-tight text-zinc-300 data-[state=active]:bg-[#681B3D] data-[state=active]:text-[#F3D5A3] data-[state=active]:shadow-sm">Events</TabsTrigger>
-            <TabsTrigger value="products" className="min-h-11 whitespace-normal break-words rounded-xl px-1.5 py-2 text-center text-xs leading-tight text-zinc-300 data-[state=active]:bg-[#681B3D] data-[state=active]:text-[#F3D5A3] data-[state=active]:shadow-sm">Products</TabsTrigger>
             <TabsTrigger value="courses" className="min-h-11 whitespace-normal break-words rounded-xl px-1.5 py-2 text-center text-xs leading-tight text-zinc-300 data-[state=active]:bg-[#681B3D] data-[state=active]:text-[#F3D5A3] data-[state=active]:shadow-sm">Courses</TabsTrigger>
             <TabsTrigger value="content" className="min-h-11 whitespace-normal break-words rounded-xl px-1.5 py-2 text-center text-xs leading-tight text-zinc-300 data-[state=active]:bg-[#681B3D] data-[state=active]:text-[#F3D5A3] data-[state=active]:shadow-sm">Content</TabsTrigger>
             <TabsTrigger value="verses" className="min-h-11 whitespace-normal break-words rounded-xl px-1.5 py-2 text-center text-xs leading-tight text-zinc-300 data-[state=active]:bg-[#681B3D] data-[state=active]:text-[#F3D5A3] data-[state=active]:shadow-sm">Verses</TabsTrigger>
@@ -101,10 +99,6 @@ export function AdminPanel({ t, onBack }: AdminPanelProps) {
 
         <TabsContent value="events" className="mt-6">
           <AdminEvents t={t} />
-        </TabsContent>
-
-        <TabsContent value="products" className="mt-6">
-          <AdminProducts t={t} />
         </TabsContent>
 
         <TabsContent value="courses" className="mt-6">

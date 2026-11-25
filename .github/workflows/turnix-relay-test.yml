@@ -2,7 +2,7 @@ name: Test Turnix relay in isolated Supabase
 
 on:
   push:
-    branches: [test/turnix-relay]
+    branches: [test/turnix-relay, improve/prayer-room-128001]
     paths:
       - .github/workflows/turnix-relay-test.yml
       - tests/turnix-live.mjs
