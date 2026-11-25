@@ -1660,6 +1660,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      prayer_room_controls: { Args: { _room: string }; Returns: { admin: boolean; moderator: boolean; removed_users: string[]; turn_at: string | null } }
+      prayer_room_moderate: { Args: { _room: string; _target: string; _action: string }; Returns: undefined }
+
       ack_message_delivery: {
         Args: { _message_ids: string[] }
         Returns: number

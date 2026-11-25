@@ -52,6 +52,13 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
   const iceRequest = useRef<{ generation: number; promise: Promise<RTCIceServer[]> }>();
   const [extraReactions, setExtraReactions] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string>();
+  const [authority, setAuthority] = useState({ admin: false, moderator: false });
+  const [moderationStatus, setModerationStatus] = useState<"saving" | "saved" | "error" | "confirm">();
+  const [turnNotice, setTurnNotice] = useState(false);
+  const lastTurn = useRef<string>();
+  const removedParticipants = useRef(new Set<string>());
+  const closeRoomRef = useRef(onClose);
+  closeRoomRef.current = onClose;
   const [directPerson, setDirectPerson] = useState<string>();
   const [profileOpen, setProfileOpen] = useState(false);
   const [contactError, setContactError] = useState(false);
@@ -244,6 +251,45 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     try { return await promise; }
     finally { if (iceRequest.current?.promise === promise) iceRequest.current = undefined; }
   }, [groupId]);
+
+  const refreshModeration = useCallback(async (cancelled: () => boolean = () => false) => {
+    const { data, error } = await supabase.rpc("prayer_room_controls", { _room: groupId });
+    if (cancelled() || error || !data) return;
+    setAuthority({ admin: data.admin, moderator: data.moderator });
+    removedParticipants.current = new Set(data.removed_users);
+    if (removedParticipants.current.has(userId)) {
+      stream.current?.getAudioTracks().forEach(track => { track.enabled = false; });
+      closeRoomRef.current();
+      return;
+    }
+    for (const id of data.removed_users) {
+      knownParticipants.current.delete(id);
+      disposePeer(id);
+    }
+    setParticipants(current => current.some(person => removedParticipants.current.has(person.id))
+      ? current.filter(person => !removedParticipants.current.has(person.id)) : current);
+    if (data.turn_at && data.turn_at !== lastTurn.current) {
+      lastTurn.current = data.turn_at;
+      setTurnNotice(true);
+    }
+  }, [disposePeer, groupId, userId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const update = () => { void refreshModeration(() => cancelled); };
+    update();
+    const timer = window.setInterval(update, 4000);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, [refreshModeration]);
+
+  const moderate = async (id: string, action: "turn" | "moderator" | "remove") => {
+    setModerationStatus("saving");
+    try {
+      const { error } = await supabase.rpc("prayer_room_moderate", { _room: groupId, _target: id, _action: action });
+      setModerationStatus(error ? "error" : "saved");
+      if (!error) await refreshModeration();
+    } catch { setModerationStatus("error"); }
+  };
 
   const getPeer = useCallback(async (id: string): Promise<RTCPeerConnection> => {
     const existing = peers.current.get(id);
@@ -554,7 +600,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         ch.on("broadcast", { event: "rtc" }, ({ payload }) => {
           if (cancelled || generation.current !== thisGeneration) return;
           const msg = payload as Signal;
-          if (!msg || typeof msg.from !== "string" || msg.from === userId || msg.to !== userId || !msg.data ||
+          if (!msg || typeof msg.from !== "string" || msg.from === userId || removedParticipants.current.has(msg.from) || msg.to !== userId || !msg.data ||
               (msg.kind !== "offer" && msg.kind !== "answer" && msg.kind !== "ice")) return;
           if (roomParticipants.has(msg.from)) { enqueueSignal(msg); return; }
           const now = Date.now();
@@ -582,7 +628,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
             setElapsed(Math.floor((now - earliest) / 1000));
             if (state[userId]?.length) void publishPresence();
           }
-          const people = Object.entries(state).filter(([id]) => id !== userId && !id.startsWith("observer:")).map(([id, values]) => ({ id, name: values[0]?.name || "Member", hand: !!values[0]?.hand, muted: values[0]?.muted !== false }));
+          const people = Object.entries(state).filter(([id]) => id !== userId && !id.startsWith("observer:") && !removedParticipants.current.has(id)).map(([id, values]) => ({ id, name: values[0]?.name || "Member", hand: !!values[0]?.hand, muted: values[0]?.muted !== false }));
           roomParticipants.clear();
           for (const person of people) {
             roomParticipants.add(person.id);
@@ -706,8 +752,6 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
   }, []);
 
   const systemCall = useRef<string>();
-  const closeRoom = useRef(onClose);
-  closeRoom.current = onClose;
 
   const applyMute = useCallback((next: boolean) => {
     const tracks = stream.current?.getAudioTracks().filter(track => track.readyState === "live");
@@ -729,7 +773,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
     const endListener = prayerAudioRoute.addListener("systemCallEnded", ({ id }) => {
       if (disposed || id !== callId) return;
       applyMute(true);
-      closeRoom.current();
+      closeRoomRef.current();
     });
     void Promise.all([muteListener, endListener]).then(async () => {
       if (disposed) return;
@@ -909,7 +953,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
               const avatar = profile?.avatar_url || (local ? userAvatar : null);
               const talking = !isMuted && !blockedUsers.has(person.id) && speaking.has(person.id);
               return <div key={person.id} className={`flex min-w-0 flex-col items-center gap-2 px-1 ${participants.length === 1 ? "basis-full" : "basis-1/3"}`}>
-                <button type="button" disabled={local || blockStatus === "sending"} aria-label={displayName} onClick={() => { setSelectedPerson(person.id); setProfileOpen(false); setContactError(false); setReportStatus(undefined); setBlockStatus(undefined); }}
+                <button type="button" disabled={local || blockStatus === "sending"} aria-label={displayName} onClick={() => { setSelectedPerson(person.id); setProfileOpen(false); setContactError(false); setReportStatus(undefined); setBlockStatus(undefined); setModerationStatus(undefined); }}
                   className={`relative grid place-items-center rounded-full bg-[#5C061F] font-semibold text-[#FFE6B2] size-[clamp(3.75rem,22vw,6rem)] text-xl sm:text-2xl ${talking ? "ring-2 ring-[#BB8A3E] ring-offset-2 ring-offset-background" : ""}`}>
                   {talking && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-[#C39143] motion-safe:animate-ping" />}
                   {displayName.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join("").toUpperCase()}
@@ -929,6 +973,10 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
             })}
           </div>
         </div>
+        {turnNotice && <div role="status" className="mb-2 flex items-center gap-2 rounded-xl border border-border bg-card px-3 text-sm">
+          <span className="flex-1">{t("You have the floor. Turn on your microphone when ready.", "Te dieron la palabra. Activa el micrófono cuando estés listo.", "Você está com a palavra. Ative o microfone quando estiver pronto.")}</span>
+          <button type="button" className="min-h-11 px-2" onClick={() => setTurnNotice(false)}>{t("Dismiss", "Cerrar", "Fechar")}</button>
+        </div>}
         {selectedPerson && participants.some(person => person.id === selectedPerson) && (
           <div className="mb-2 max-h-[35%] shrink-0 overflow-y-auto rounded-xl border border-border bg-card p-3">
             <p className="truncate font-semibold">{profiles[selectedPerson]?.username || participants.find(person => person.id === selectedPerson)?.name}</p>
@@ -948,6 +996,14 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
             </button>
             <button type="button" className="min-h-11 px-2 text-sm" disabled={reportStatus === "sending" || reportStatus === "sent"}
               onClick={() => setReportStatus("confirm")}>{t("Report", "Denunciar", "Denunciar")}</button>
+            {authority.moderator && <>
+              <button type="button" disabled={moderationStatus === "saving"} className="min-h-11 px-2 text-sm" onClick={() => void moderate(selectedPerson, "turn")}>{t("Give the floor", "Dar la palabra", "Dar a palavra")}</button>
+              {authority.admin && <button type="button" disabled={moderationStatus === "saving"} className="min-h-11 px-2 text-sm" onClick={() => void moderate(selectedPerson, "moderator")}>{t("Make moderator", "Asignar moderador", "Nomear moderador")}</button>}
+              <button type="button" disabled={moderationStatus === "saving"} className="min-h-11 px-2 text-sm text-destructive" onClick={() => setModerationStatus("confirm")}>{t("Remove from room", "Retirar de la sala", "Remover da sala")}</button>
+              {moderationStatus === "confirm" && <button type="button" className="min-h-11 px-2 text-sm font-semibold text-destructive" onClick={() => void moderate(selectedPerson, "remove")}>{t("Confirm removal", "Confirmar retiro", "Confirmar remoção")}</button>}
+              {moderationStatus === "saved" && <p role="status" className="text-sm">{t("Action applied", "Acción aplicada", "Ação aplicada")}</p>}
+              {moderationStatus === "error" && <p role="alert" className="text-sm text-destructive">{t("Action could not be applied", "No se pudo aplicar la acción", "Não foi possível aplicar a ação")}</p>}
+            </>}
             {!blockedUsers.has(selectedPerson) && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(selectedPerson) && <button type="button" className="min-h-11 px-2 text-sm" onClick={() => setDirectPerson(selectedPerson)}>
               {t("Private message", "Mensaje privado", "Mensagem privada")}
             </button>}
