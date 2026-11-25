@@ -20,9 +20,10 @@ const RTC_CONFIG: RTCConfiguration = {
   iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }],
 };
 
-export default function VoiceRoom({ groupId, name, userId, userName, userAvatar, onClose, language, channelClosed, minimized, minimizedCallHost, onConnectedRoomChange, onMinimize, onRestore }: {
+export default function VoiceRoom({ groupId, name, userId, userName, userAvatar, onClose, language, notifyOnStart = true, channelClosed, minimized, minimizedCallHost, onConnectedRoomChange, onMinimize, onRestore }: {
   groupId: string; name: string; userId: string; userName: string; onClose: () => void; language: string;
   userAvatar?: string | null;
+  notifyOnStart?: boolean;
   minimized: boolean;
   onConnectedRoomChange?: (id: string | undefined) => void;
   minimizedCallHost?: HTMLDivElement | null;
@@ -588,7 +589,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
           setParticipants([{ id: userId, name: userName }, ...people]);
           if (state[userId]?.length && !announced.current) {
             announced.current = true;
-            if (!people.length && groupId !== GENERAL_PRAYER_ROOM_ID) void supabase.functions.invoke("community-push", { body: { kind: "call", group_id: groupId } }).catch(() => {});
+            if (notifyOnStart && !people.length && groupId !== GENERAL_PRAYER_ROOM_ID) void supabase.functions.invoke("community-push", { body: { kind: "call", group_id: groupId } }).catch(() => {});
           }
           for (const id of peers.current.keys()) if (!people.some(p => p.id === id)) disposePeer(id);
           // Only the lexicographically smaller id initiates each peer connection.
@@ -673,7 +674,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       audioContext.current = null;
       connecting.current = false;
     };
-  }, [groupId, userId, userName, getPeer, getIceServers, flushIce, send, disposePeer, attempt, channelClosed, analyseAudio, showReaction, publishPresence, setPeerState, t, language, labels.connecting, labels.connected, labels.failure]);
+  }, [groupId, userId, userName, notifyOnStart, getPeer, getIceServers, flushIce, send, disposePeer, attempt, channelClosed, analyseAudio, showReaction, publishPresence, setPeerState, t, language, labels.connecting, labels.connected, labels.failure]);
 
   const toggleHand = () => {
     if (!connected) return;

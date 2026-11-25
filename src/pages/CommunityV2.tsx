@@ -112,6 +112,7 @@ export default function CommunityV2(){
  const[membersModal,setMembersModal]=useState<null|"add"|"admins"|"members">(null);
  const { activeRoomId, connectedRoomId, openCall, setMinimizedCallHost, channelClosed: voiceChannelClosed } = usePrayerCall();
  const [generalCallPrompt, setGeneralCallPrompt] = useState(false);
+ const [groupCallPrompt, setGroupCallPrompt] = useState(false);
  const [communityMenu, setCommunityMenu] = useState(false);
  const [discoverOpen, setDiscoverOpen] = useState(false);
  const [refreshingChats, setRefreshingChats] = useState(false);
@@ -768,7 +769,7 @@ export default function CommunityV2(){
   setPendingDeepLink(null);
   setInfo(false);
   setSelected(target);
-  if(d.call)openCall({groupId:target.id,name:target.name,userId:me.id,userName:me.name||t.member,userAvatar:me.avatar,language:lang});
+  if(d.call)openCall({groupId:target.id,name:target.name,userId:me.id,userName:me.name||t.member,userAvatar:me.avatar,language:lang,notifyOnStart:false});
   if(d.messageId)window.setTimeout(()=>jumpToMsg(d.messageId!),900);
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[pendingDeepLink,groups,access,me,lang,t.member,openCall]);
@@ -918,7 +919,29 @@ export default function CommunityV2(){
 
  if(selected)return <div className="fixed inset-0 flex flex-col bg-background text-foreground" style={{paddingTop:"env(safe-area-inset-top)"}}>
   <header className="shrink-0 min-h-16 px-2 bg-background text-foreground border-b border-border flex items-center gap-2 backdrop-blur"><button onClick={()=>{setSelected(null);if(me)loadGroups(me.id)}} aria-label={t.back} className="w-11 h-11 grid place-items-center"><ArrowLeft className="h-5 w-5"/></button><button onClick={()=>setInfo(true)} className="flex-1 min-w-0 flex items-center gap-2.5 text-left">{selected.avatar?<img src={selected.avatar} alt="" className="w-11 h-11 rounded-full object-cover ring-1 ring-white/10"/>:<span className="w-11 h-11 shrink-0 rounded-full border border-[#E5BB70]/45 bg-[#5C061F] grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span>}<div className="min-w-0"><b className="block truncate text-[15px] leading-tight">{selected.name}</b><span className="block truncate text-xs text-muted-foreground">{memberCountLabel(selected.memberCount ?? members.length)}</span></div></button>
+  {canManageGroup(selected) && <button type="button" onClick={() => setGroupCallPrompt(true)}
+   aria-label={L("Group prayer", "Oración del grupo", "Oração do grupo")}
+   className="grid size-11 shrink-0 place-items-center text-[#A8782D] dark:text-[#E5BB70]">
+   <Phone className="size-5" aria-hidden="true" />
+  </button>}
   <button onClick={()=>setInfo(true)} aria-label={t.info} className="w-11 h-11 grid place-items-center"><MoreHorizontal className="w-5 h-5"/></button></header>
+  <AlertDialog open={groupCallPrompt} onOpenChange={setGroupCallPrompt}>
+   <AlertDialogContent className="z-[190]">
+    <AlertDialogHeader>
+     <AlertDialogTitle>{selected.name}</AlertDialogTitle>
+     <AlertDialogDescription>{L("Open the prayer room for this group?", "¿Abrir la sala de oración de este grupo?", "Abrir a sala de oração deste grupo?")}</AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+     <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+     <AlertDialogAction onClick={() => {
+      if (me?.id && canManageGroup(selected)) openCall({
+       groupId: selected.id, name: selected.name, userId: me.id, userName: me.name || t.member,
+       userAvatar: me.avatar, language: lang,
+      });
+     }}>{L("Open prayer room", "Abrir sala de oración", "Abrir sala de oração")}</AlertDialogAction>
+    </AlertDialogFooter>
+   </AlertDialogContent>
+  </AlertDialog>
   <div ref={setMinimizedCallHost} className="shrink-0 empty:hidden" />
  {livePrayerInvite}
   {chatSearch&&<div className="shrink-0 border-b border-border bg-background px-3 py-2"><div className="h-11 rounded-xl bg-zinc-900 border border-white/10 px-3 flex items-center gap-2"><Search className="w-4 h-4 text-zinc-500"/><input autoFocus value={csq} onChange={e=>setCsq(e.target.value)} placeholder={searchMessagesLabel} className="flex-1 bg-transparent outline-none text-sm min-w-0"/><button onClick={()=>{setChatSearch(false);setCsq("")}} aria-label={t.cancel}><X className="w-4 h-4"/></button></div></div>}

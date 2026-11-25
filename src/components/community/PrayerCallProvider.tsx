@@ -24,7 +24,7 @@ export default function PrayerCallProvider({ children }: { children: ReactNode }
       setPending(next);
       return;
     }
-    setCall(next);
+    if (!call) setCall(next);
     setMinimized(startMinimized);
   }, [call]);
   const t = (en: string, es: string, pt: string) => pending?.language === "es" ? es : pending?.language === "pt" ? pt : en;
