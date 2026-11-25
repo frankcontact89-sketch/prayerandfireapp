@@ -7,6 +7,8 @@ import { turnixCredentials } from "./turnix.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
+const uuid = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
@@ -90,7 +92,7 @@ Deno.serve(async (req) => {
   let payload: any = {};
   try { payload = await req.json(); } catch { /* empty body */ }
 
-  const kind: string = ["message", "pinned", "invite", "call", "ice"].includes(payload?.kind) ? payload.kind : "message";
+  const kind: string = ["message", "pinned", "invite", "call", "call_selected", "ice"].includes(payload?.kind) ? payload.kind : "message";
   const messageId: string | undefined = payload?.message_id;
   const groupId: string | undefined = payload?.group_id;
   const inviteUserIds: string[] = Array.isArray(payload?.user_ids) ? payload.user_ids.slice(0, 200) : [];
@@ -100,10 +102,11 @@ Deno.serve(async (req) => {
   let bodyText = "";
   let deepLink: Record<string, string> = {};
 
-  if (kind === "ice" || kind === "call") {
+  const prayerCall = kind === "call" || kind === "call_selected";
+  if (kind === "ice" || prayerCall) {
     const generalPrayerRelay = kind === "ice" && groupId === "community-general";
     if (!generalPrayerRelay) {
-      if (!groupId || !/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(groupId)) {
+      if (!groupId || !uuid.test(groupId)) {
         return json({ error: "BAD_REQUEST" }, 400);
       }
       const { data: membership, error: membershipError } = await admin.from("community_group_members")
@@ -114,11 +117,25 @@ Deno.serve(async (req) => {
     if (kind === "ice") {
       return turnixCredentials(req, groupId!, user.id, Deno.env.get("TURNIX_API_TOKEN"), corsHeaders);
     }
+    let selected: Set<string> | undefined;
+    if (kind === "call_selected") {
+      if (!Array.isArray(payload.user_ids) || payload.user_ids.length < 1 || payload.user_ids.length > 200 ||
+        payload.user_ids.some((id: unknown) => typeof id !== "string" || !uuid.test(id))) {
+        return json({ error: "BAD_REQUEST" }, 400);
+      }
+      const { data: allowed, error: permissionError } = await caller.rpc("is_group_admin", {
+        _group_id: groupId, _user_id: user.id,
+      });
+      if (permissionError) return json({ error: "PERMISSION_LOOKUP_FAILED" }, 503);
+      if (!allowed) return json({ error: "NO_PERMISSION" }, 403);
+      selected = new Set(payload.user_ids.map((id: string) => id.toLowerCase()));
+    }
     const { data: targets, error } = await admin.rpc("community_call_push_targets", {
       _group_id: groupId, _caller_id: user.id,
     });
     if (error) return json({ error: "CALL_TARGETS_FAILED" }, 503);
-    recipients = (targets ?? []).map((target: { user_id: string }) => target.user_id);
+    recipients = (targets ?? []).map((target: { user_id: string }) => target.user_id)
+      .filter((id: string) => !selected || selected.has(id));
     const { data: group } = await admin.from("community_groups").select("name").eq("id", groupId).maybeSingle();
     title = group?.name ?? "Prayer & Fire";
     bodyText = "A prayer room is live";
@@ -186,7 +203,7 @@ Deno.serve(async (req) => {
 
   const { data: tokens } = await admin
     .from("user_push_tokens")
-    .select(kind === "call" ? "token, platform, user_id, locale" : "token, platform, user_id")
+    .select(prayerCall ? "token, platform, user_id, locale" : "token, platform, user_id")
     .in("user_id", recipients)
     .eq("enabled", true);
 
@@ -205,7 +222,7 @@ Deno.serve(async (req) => {
   let dispatched = 0;
   const failures: string[] = [];
   for (const row of list as any[]) {
-    const notificationBody = kind === "call"
+    const notificationBody = prayerCall
       ? row.locale === "es" ? "Hay una sala de oración en vivo"
         : row.locale === "pt" ? "Há uma sala de oração ao vivo" : bodyText
       : bodyText;

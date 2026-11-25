@@ -1,6 +1,6 @@
 import { createContext, useContext, type MutableRefObject } from "react";
 
-export type Call = { groupId: string; name: string; userId: string; userName: string; userAvatar?: string | null; language: string; notifyOnStart?: boolean };
+export type Call = { groupId: string; name: string; userId: string; userName: string; userAvatar?: string | null; language: string; notifyOnStart?: boolean; inviteUserIds?: string[] };
 export const CallContext = createContext<{
   setMinimizedCallHost: (node: HTMLDivElement | null) => void;
   activeRoomId?: string;

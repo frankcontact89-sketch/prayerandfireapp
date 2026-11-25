@@ -209,7 +209,7 @@ export function SignInScreen({ setUser, t, currentLanguage = "en" }: SignInScree
     >
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <img src="/prayer-fire-official-logo.webp" alt="Prayer & Fire Logo" className="w-32 h-32 object-contain animate-pulse" />
+          <img src="/prayer-fire-sign-in-logo.svg" alt="Prayer & Fire" className="w-32 h-32 object-contain animate-pulse" />
           <h1 className="text-[32px] font-bold text-foreground text-center mt-6 tracking-tight">{t("appName")}</h1>
           {isSignUp && (
             <p className="text-sm text-muted-foreground mt-2 text-center">
@@ -331,7 +331,7 @@ export function SignInScreen({ setUser, t, currentLanguage = "en" }: SignInScree
                   setIsForgotPassword(false);
                   setIsSignUp(false);
                 }}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="text-sm font-medium text-foreground underline underline-offset-4 hover:text-foreground/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground transition-colors"
                 disabled={loading}
               >
                 {t("forgotUsername")}

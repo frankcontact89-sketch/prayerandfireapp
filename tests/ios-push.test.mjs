@@ -77,3 +77,63 @@ test("push checks group ownership as the authenticated caller and signs a produc
   assert.equal(result.dispatched, 1);
   assert.equal(posts, 1);
 });
+
+test("selected prayer invitations require group authority and intersect eligible recipients", async () => {
+  const groupId = "00000000-0000-4000-8000-000000000001";
+  const selected = "00000000-0000-4000-8000-000000000002";
+  const other = "00000000-0000-4000-8000-000000000003";
+  const ineligible = "00000000-0000-4000-8000-000000000004";
+  let handler;
+  let canInvite = false;
+  let claimed = 0;
+  let addressed = [];
+  const service = {
+    auth: { getUser: async () => ({ data: { user: { id: "caller" } } }) },
+    rpc: async (name, args) => {
+      assert.equal(name, "community_call_push_targets");
+      assert.equal(args._group_id, groupId);
+      assert.equal(args._caller_id, "caller");
+      claimed++;
+      return { data: [{ user_id: selected }, { user_id: other }] };
+    },
+    from(table) {
+      const query = {
+        select: () => query,
+        eq: () => query,
+        in: (column, ids) => {
+          assert.equal(table, "user_push_tokens");
+          assert.equal(column, "user_id");
+          addressed = Array.from(ids);
+          return query;
+        },
+        maybeSingle: async () => ({ data: { user_id: "caller", name: "Group" } }),
+        then: resolve => resolve({ data: [] }),
+      };
+      return query;
+    },
+  };
+  runInNewContext(stripTypeScriptTypes(source.replace(/^import .*;$/gm, "")), {
+    Deno: { env: { get: name => name === "SUPABASE_SERVICE_ROLE_KEY" ? "service" : "fixture" }, serve: fn => { handler = fn; } },
+    Response, corsHeaders: {},
+    createClient: (_, role) => role === "service" ? service : {
+      rpc: async (name, args) => {
+        assert.equal(name, "is_group_admin");
+        assert.equal(args._group_id, groupId);
+        assert.equal(args._user_id, "caller");
+        return { data: canInvite };
+      },
+    },
+  });
+  const invoke = ids => handler(new Request("https://fixture.supabase.co/community-push", {
+    method: "POST",
+    headers: { Authorization: "Bearer fixture-session" },
+    body: JSON.stringify({ kind: "call_selected", group_id: groupId, user_ids: ids }),
+  }));
+  assert.equal((await invoke(["invalid"])).status, 400);
+  assert.equal((await invoke([selected])).status, 403);
+  assert.equal(claimed, 0);
+  canInvite = true;
+  await invoke([selected, selected, ineligible]);
+  assert.equal(claimed, 1);
+  assert.deepEqual(addressed, [selected]);
+});
