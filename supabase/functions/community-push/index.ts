@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
   let payload: any = {};
   try { payload = await req.json(); } catch { /* empty body */ }
 
-  const kind: string = ["message", "pinned", "invite", "call", "call_selected", "ice"].includes(payload?.kind) ? payload.kind : "message";
+  const kind: string = ["message", "pinned", "invite", "call", "call_selected", "call_audience", "ice"].includes(payload?.kind) ? payload.kind : "message";
   const messageId: string | undefined = payload?.message_id;
   const groupId: string | undefined = payload?.group_id;
   const inviteUserIds: string[] = Array.isArray(payload?.user_ids) ? payload.user_ids.slice(0, 200) : [];
@@ -102,8 +102,25 @@ Deno.serve(async (req) => {
   let bodyText = "";
   let deepLink: Record<string, string> = {};
 
-  const prayerCall = kind === "call" || kind === "call_selected";
-  if (kind === "ice" || prayerCall) {
+  const prayerCall = kind === "call" || kind === "call_selected" || kind === "call_audience";
+  if (kind === "call_audience") {
+    const requested = payload.group_ids;
+    if (requested !== null && (!Array.isArray(requested) || requested.length < 1 ||
+        requested.length > 100 || requested.some((id: unknown) => typeof id !== "string" || !uuid.test(id)))) {
+      return json({ error: "BAD_REQUEST" }, 400);
+    }
+    const { data: allowed, error: permissionError } = await admin.from("community_admins")
+      .select("user_id").eq("user_id", user.id).maybeSingle();
+    if (permissionError) return json({ error: "PERMISSION_LOOKUP_FAILED" }, 503);
+    if (!allowed) return json({ error: "NO_PERMISSION" }, 403);
+    const { data: targets, error } = await admin.rpc("community_general_prayer_targets", {
+      _caller: user.id, _groups: requested === null ? null : [...new Set(requested)],
+    });
+    if (error) return json({ error: "CALL_TARGETS_FAILED" }, 503);
+    recipients = [...new Set<string>((targets ?? []).map((row: { user_id: string }) => row.user_id))];
+    bodyText = "A prayer room is live";
+    deepLink = { group_id: "community-general", kind: "call" };
+  } else if (kind === "ice" || prayerCall) {
     const generalPrayerRelay = kind === "ice" && groupId === "community-general";
     if (!generalPrayerRelay) {
       if (!groupId || !uuid.test(groupId)) {
@@ -201,13 +218,18 @@ Deno.serve(async (req) => {
 
   if (!recipients.length) return json({ configured: apnsConfigured, recipients: 0, dispatched: 0 });
 
-  const { data: tokens } = await admin
+  const tokenRows: { token: string; platform?: string; locale?: string }[] = [];
+  // Keep PostgREST URLs bounded even when the general audience is large.
+  for (let offset = 0; offset < recipients.length; offset += 100) {
+   const { data: tokens, error } = await admin
     .from("user_push_tokens")
     .select(prayerCall ? "token, platform, user_id, locale" : "token, platform, user_id")
-    .in("user_id", recipients)
+    .in("user_id", recipients.slice(offset, offset + 100))
     .eq("enabled", true);
-
-  const list = tokens ?? [];
+   if (error) return json({ error: "PUSH_TOKEN_LOOKUP_FAILED" }, 503);
+   tokenRows.push(...(tokens ?? []));
+  }
+  const list = [...new Map(tokenRows.map(row => [row.token, row])).values()];
   if (!apnsConfigured && !FCM_SERVER_KEY) {
     return json({
       configured: false,
@@ -221,7 +243,7 @@ Deno.serve(async (req) => {
 
   let dispatched = 0;
   const failures: string[] = [];
-  for (const row of list as any[]) {
+  for (const row of list) {
     const notificationBody = prayerCall
       ? row.locale === "es" ? "Hay una sala de oración en vivo"
         : row.locale === "pt" ? "Há uma sala de oração ao vivo" : bodyText

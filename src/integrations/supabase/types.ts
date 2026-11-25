@@ -229,6 +229,12 @@ export type Database = {
           },
         ]
       }
+      community_direct_messages: {
+        Row: { id: string; sender_id: string; recipient_id: string; body: string; created_at: string }
+        Insert: { recipient_id: string; body: string }
+        Update: never
+        Relationships: []
+      }
       community_blocks: {
         Row: {
           blocked_id: string

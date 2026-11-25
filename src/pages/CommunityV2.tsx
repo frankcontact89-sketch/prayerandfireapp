@@ -5,6 +5,7 @@ import{ArrowLeft,Ban,Bell,BellOff,Camera,Check,CheckCheck,Clock,Copy,FileText,Fl
 import{supabase}from"@/integrations/supabase/client";
 import { useBrandLogo } from "@/hooks/useBrandLogo";
 import CreateGroupModal,{type CreatedGroup}from"@/components/community/CreateGroupModal";
+import { DirectInbox } from "@/components/community/DirectMessages";
 import AccessGate from"@/components/community/AccessGate";
 import CommunityAdminPanel from"@/components/community/CommunityAdminPanel";
 import MembersModal from"@/components/community/MembersModal";
@@ -112,8 +113,11 @@ export default function CommunityV2(){
  const[membersModal,setMembersModal]=useState<null|"add"|"admins"|"members">(null);
  const { activeRoomId, connectedRoomId, openCall, setMinimizedCallHost, channelClosed: voiceChannelClosed } = usePrayerCall();
  const [generalCallPrompt, setGeneralCallPrompt] = useState(false);
+ const [generalInviteMode, setGeneralInviteMode] = useState<"none" | "groups" | "global">("none");
+ const [generalInviteGroups, setGeneralInviteGroups] = useState<string[]>([]);
  const [groupCallPrompt, setGroupCallPrompt] = useState(false);
  const [prayerInvitees, setPrayerInvitees] = useState<string[]>([]);
+ const [directInbox, setDirectInbox] = useState(false);
  const [communityMenu, setCommunityMenu] = useState(false);
  const [discoverOpen, setDiscoverOpen] = useState(false);
  const [refreshingChats, setRefreshingChats] = useState(false);
@@ -766,6 +770,11 @@ export default function CommunityV2(){
  useEffect(()=>{
   const d=pendingDeepLink;
   if(!d||access!=="approved"||!me?.id)return;
+  if (d.call && d.groupId === GENERAL_PRAYER_ROOM_ID) {
+   setPendingDeepLink(null);
+   openCall({groupId:GENERAL_PRAYER_ROOM_ID,name:GENERAL_PRAYER_ROOM_NAME,userId:me.id,userName:me.name||t.member,userAvatar:me.avatar,language:lang,notifyOnStart:false});
+   return;
+  }
   const target=groups.find(x=>x.id===d.groupId);
   if(!target)return;
   setPendingDeepLink(null);
@@ -1144,7 +1153,7 @@ export default function CommunityV2(){
 
  return <div className="fixed inset-0 bg-background text-foreground overflow-hidden" style={{paddingTop:"env(safe-area-inset-top)",paddingBottom:"env(safe-area-inset-bottom)"}}><div className="max-w-xl mx-auto h-full bg-background flex flex-col"><header className="shrink-0 px-4 pt-3 pb-3 border-b border-border"><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-3 min-w-0"><button onClick={goBack} aria-label={t.back} className="w-10 h-10 rounded-full bg-secondary grid place-items-center shrink-0"><ArrowLeft className="w-5 h-5"/></button><span role="img" aria-label="Prayer & Fire" className="w-11 h-11 shrink-0 rounded-full border border-[#E5BB70]/60 bg-[#5C061F] grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span><div className="flex-1 min-w-0"><div className="text-[10px] tracking-[.2em] text-[#E5BB70] font-bold">PRAYER &amp; FIRE</div><h1 className="truncate text-lg font-bold leading-tight">{t.title}</h1>{me&&<div className="text-xs text-muted-foreground truncate">{me.name}</div>}</div></div><div className="flex items-center gap-1 shrink-0"><button type="button"
    aria-label={generalPrayerLive ? `${GENERAL_PRAYER_ROOM_NAME} · ${generalPrayerNotice}` : GENERAL_PRAYER_ROOM_NAME}
-   onClick={() => setGeneralCallPrompt(true)}
+   onClick={() => { setGeneralInviteMode("none"); setGeneralInviteGroups([]); setGeneralCallPrompt(true); }}
    className={`grid size-9 shrink-0 place-items-center rounded-full bg-secondary ${generalPrayerLive ? "text-emerald-600 dark:text-emerald-400 motion-safe:animate-pulse" : "text-[#D5AD6C]"}`}>
    <Phone className="size-5" aria-hidden="true" />
   </button><button onClick={()=>setPushSheet(true)} aria-label={pushSettingsLabel} className="w-9 h-9 rounded-full bg-secondary text-[#D5AD6C] grid place-items-center"><Bell className="w-5 h-5"/></button>
@@ -1165,10 +1174,22 @@ export default function CommunityV2(){
      </> : L("Start a call in the general prayer room.", "Inicia una llamada en la sala general de oración.", "Inicie uma chamada na sala geral de oração.")}
     </AlertDialogDescription>
    </AlertDialogHeader>
+   {isStaff && activeRoomId !== GENERAL_PRAYER_ROOM_ID && <fieldset className="max-h-52 space-y-2 overflow-auto text-sm">
+    <legend className="font-medium">{L("Notify", "Notificar", "Notificar")}</legend>
+    <label className="block"><input type="radio" name="prayer-audience" checked={generalInviteMode === "none"} onChange={() => setGeneralInviteMode("none")} /> {L("Nobody", "A nadie", "Ninguém")}</label>
+    <label className="block"><input type="radio" name="prayer-audience" checked={generalInviteMode === "groups"} onChange={() => setGeneralInviteMode("groups")} /> {L("Selected groups", "Grupos seleccionados", "Grupos selecionados")}</label>
+    <label className="block"><input type="radio" name="prayer-audience" checked={generalInviteMode === "global"} onChange={() => setGeneralInviteMode("global")} /> {L("All Community members", "Toda la Comunidad", "Toda a Comunidade")}</label>
+    {generalInviteMode === "groups" && groups.map(group => <label key={group.id} className="block pl-4">
+     <input type="checkbox" checked={generalInviteGroups.includes(group.id)} onChange={event => {
+      const checked = event.currentTarget.checked;
+      setGeneralInviteGroups(ids => checked ? [...ids, group.id] : ids.filter(id => id !== group.id));
+     }} /> {group.name}
+    </label>)}
+   </fieldset>}
    <AlertDialogFooter>
     <AlertDialogCancel>{L("Cancel", "Cancelar", "Cancelar")}</AlertDialogCancel>
-    <AlertDialogAction className="bg-emerald-700 text-white hover:bg-emerald-800" onClick={() => {
-     if (me?.id) openCall({ groupId: GENERAL_PRAYER_ROOM_ID, name: GENERAL_PRAYER_ROOM_NAME, userId: me.id, userName: me.name || t.member, userAvatar: me.avatar, language: lang });
+    <AlertDialogAction disabled={generalInviteMode === "groups" && !generalInviteGroups.length} className="bg-emerald-700 text-white hover:bg-emerald-800" onClick={() => {
+     if (me?.id) openCall({ groupId: GENERAL_PRAYER_ROOM_ID, name: GENERAL_PRAYER_ROOM_NAME, userId: me.id, userName: me.name || t.member, userAvatar: me.avatar, language: lang, inviteGroupIds: isStaff ? generalInviteMode === "global" ? null : generalInviteMode === "groups" ? generalInviteGroups : undefined : undefined });
     }}>
      {activeRoomId === GENERAL_PRAYER_ROOM_ID
       ? L("Return to prayer call", "Volver a la llamada de oración", "Voltar à chamada de oração")
@@ -1184,6 +1205,8 @@ export default function CommunityV2(){
    className="w-full rounded-t-2xl border-t border-border bg-popover px-4 pt-2 text-popover-foreground pb-[max(16px,env(safe-area-inset-bottom))]">
    <div className="flex items-center justify-between"><b>{t.options}</b><button type="button" onClick={() => setCommunityMenu(false)} aria-label={t.cancel} className="grid size-11 place-items-center"><X size={19} /></button></div>
    <button type="button" onClick={()=>{setCommunityMenu(false);setDiscoverOpen(true);void loadDiscover()}} className="flex min-h-12 w-full items-center gap-3 border-t border-border text-left"><Users size={19}/>{L("Explore community groups","Explorar grupos de la comunidad","Explorar grupos da comunidade")}</button>
+   <button type="button" onClick={() => { setCommunityMenu(false); setDirectInbox(true); }}
+    className="flex min-h-12 w-full items-center gap-3 border-t border-border text-left"><Send size={19} />{L("Private messages", "Mensajes privados", "Mensagens privadas")}</button>
    {canCreate && <button type="button" onClick={() => { setCommunityMenu(false); setCreate(true); }} className="flex min-h-12 w-full items-center gap-3 border-t border-border text-left"><Plus size={19} />{t.new}</button>}
    {isStaff && <button type="button" onClick={() => { setCommunityMenu(false); setPanel(true); }} className="flex min-h-12 w-full items-center gap-3 border-t border-border text-left">
     <ShieldCheck size={19} />{L("Administration and moderation", "Administración y moderación", "Administração e moderação")}
@@ -1193,6 +1216,7 @@ export default function CommunityV2(){
    </button>
   </div>
  </div>}
+ {directInbox && me?.id && <DirectInbox userId={me.id} language={lang} onClose={() => setDirectInbox(false)} />}
  {safety && <SafetyRulesModal lang={lang} onClose={() => setSafety(false)} />}
 <Dialog open={discoverOpen} onOpenChange={setDiscoverOpen}>
   <DialogContent className="max-h-[80dvh] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-2xl">

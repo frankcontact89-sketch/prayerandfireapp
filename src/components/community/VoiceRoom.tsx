@@ -1,5 +1,6 @@
 import { audioTransportStats, iceExpiryMs, localAudioDescription, usableTurnServers, type PrayerIceCredentials } from "./prayerAudioTransport";
 import { GENERAL_PRAYER_ROOM_ID } from "./generalPrayerRoom";
+import DirectMessages from "./DirectMessages";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 import { Mic, MicOff, Hand, MoreHorizontal, ChevronDown, Users, Volume2, AudioLines, Phone, Smartphone, Bluetooth, Headphones, Check, Settings2 } from "lucide-react";
@@ -20,11 +21,12 @@ const RTC_CONFIG: RTCConfiguration = {
   iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }],
 };
 
-export default function VoiceRoom({ groupId, name, userId, userName, userAvatar, onClose, language, notifyOnStart = true, inviteUserIds, channelClosed, minimized, minimizedCallHost, onConnectedRoomChange, onMinimize, onRestore }: {
+export default function VoiceRoom({ groupId, name, userId, userName, userAvatar, onClose, language, notifyOnStart = true, inviteUserIds, inviteGroupIds, channelClosed, minimized, minimizedCallHost, onConnectedRoomChange, onMinimize, onRestore }: {
   groupId: string; name: string; userId: string; userName: string; onClose: () => void; language: string;
   userAvatar?: string | null;
   notifyOnStart?: boolean;
   inviteUserIds?: string[];
+  inviteGroupIds?: string[] | null;
   minimized: boolean;
   onConnectedRoomChange?: (id: string | undefined) => void;
   minimizedCallHost?: HTMLDivElement | null;
@@ -50,6 +52,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
   const iceRequest = useRef<{ generation: number; promise: Promise<RTCIceServer[]> }>();
   const [extraReactions, setExtraReactions] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string>();
+  const [directPerson, setDirectPerson] = useState<string>();
   const [profileOpen, setProfileOpen] = useState(false);
   const [contactError, setContactError] = useState(false);
   const [reportStatus, setReportStatus] = useState<"confirm" | "sending" | "sent" | "error">();
@@ -590,6 +593,11 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
           setParticipants([{ id: userId, name: userName }, ...people]);
           if (state[userId]?.length && !announced.current) {
             announced.current = true;
+            if (notifyOnStart && groupId === GENERAL_PRAYER_ROOM_ID && inviteGroupIds !== undefined) {
+              void supabase.functions.invoke("community-push", {
+                body: { kind: "call_audience", group_ids: inviteGroupIds },
+              }).catch(() => {});
+            }
             if (notifyOnStart && groupId !== GENERAL_PRAYER_ROOM_ID && (inviteUserIds?.length || !people.length)) {
               void supabase.functions.invoke("community-push", {
                 body: inviteUserIds?.length
@@ -681,7 +689,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       audioContext.current = null;
       connecting.current = false;
     };
-  }, [groupId, userId, userName, notifyOnStart, inviteUserIds, getPeer, getIceServers, flushIce, send, disposePeer, attempt, channelClosed, analyseAudio, showReaction, publishPresence, setPeerState, t, language, labels.connecting, labels.connected, labels.failure]);
+  }, [groupId, userId, userName, notifyOnStart, inviteUserIds, inviteGroupIds, getPeer, getIceServers, flushIce, send, disposePeer, attempt, channelClosed, analyseAudio, showReaction, publishPresence, setPeerState, t, language, labels.connecting, labels.connected, labels.failure]);
 
   const toggleHand = () => {
     if (!connected) return;
@@ -940,6 +948,9 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
             </button>
             <button type="button" className="min-h-11 px-2 text-sm" disabled={reportStatus === "sending" || reportStatus === "sent"}
               onClick={() => setReportStatus("confirm")}>{t("Report", "Denunciar", "Denunciar")}</button>
+            {!blockedUsers.has(selectedPerson) && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(selectedPerson) && <button type="button" className="min-h-11 px-2 text-sm" onClick={() => setDirectPerson(selectedPerson)}>
+              {t("Private message", "Mensaje privado", "Mensagem privada")}
+            </button>}
             {nativePrayerAudio && <button type="button" className="min-h-11 px-2 text-sm" onClick={() => {
               const displayName = profiles[selectedPerson]?.username || participants.find(person => person.id === selectedPerson)?.name;
               if (displayName) {
@@ -985,6 +996,11 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
             </button>
           </div>
         )}
+        {directPerson && !blockedUsers.has(directPerson) && <DirectMessages
+          key={directPerson} otherId={directPerson} userId={userId}
+          name={profiles[directPerson]?.username || participants.find(person => person.id === directPerson)?.name || labels.participants}
+          language={language} onClose={() => setDirectPerson(undefined)}
+        />}
         <footer className="relative mx-auto flex w-full max-w-[360px] shrink-0 items-center justify-between gap-1 rounded-full bg-secondary px-2 py-2 shadow-md sm:px-3"
           onClick={event => event.stopPropagation()}>
           {menu === "reactions" && <div className="absolute bottom-full left-1/2 z-10 mb-2 grid w-full -translate-x-1/2 grid-cols-6 gap-0.5 rounded-2xl border border-border bg-popover p-1.5 shadow-lg">

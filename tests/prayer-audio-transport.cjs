@@ -54,7 +54,7 @@ function client(name, frequency) {
   return { peer, track, tone, received };
 }
 
-async function run() {
+async function run({ log = true } = {}) {
   const alice = client("alice", 400);
   const bob = client("bob", 600);
   try {
@@ -93,10 +93,21 @@ async function run() {
       assert.equal(stats.dtlsState, "connected");
       assert.equal(stats.selectedPair?.local, relayOnly ? "relay" : "host");
       assert.equal(stats.selectedPair?.remote, relayOnly ? "relay" : "host");
-      console.log(JSON.stringify(stats));
+      if (log) console.log(JSON.stringify(stats));
     }
   } finally {
     await Promise.all([alice.peer.close(), bob.peer.close()]);
   }
 }
-run().then(() => process.exit(0)).catch(error => { console.error(error); process.exit(1); });
+async function main() {
+  const links = Number(process.env.PRAYER_TEST_CONCURRENT_LINKS || 1);
+  assert.ok(Number.isInteger(links) && links >= 1 && links <= 99, "Expected 1–99 concurrent links");
+  if (links === 1) { await run(); return; }
+  assert.ok(!relayOnly, "Use the local transport for load tests");
+  const started = performance.now();
+  const results = await Promise.allSettled(Array.from({ length: links }, () => run({ log: false })));
+  const failed = results.filter(result => result.status === "rejected");
+  console.log(JSON.stringify({ links, passing: links - failed.length, failed: failed.length, durationMs: Math.round(performance.now() - started) }));
+  if (failed.length) throw failed[0].reason;
+}
+main().then(() => process.exit(0)).catch(error => { console.error(error); process.exit(1); });

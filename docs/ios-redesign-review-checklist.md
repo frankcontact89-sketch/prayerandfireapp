@@ -33,3 +33,29 @@ Working branch: `improve/community-ui-review-2026-10-27`
 - Community AccessGate starts burgundy and gold styling.
 
 No database migrations, member data edits or production release are included.
+
+## Prayer transport capacity
+
+Prayer Room uses a WebRTC full mesh. Each participant maintains one connection
+per other participant and transmits a separate audio stream over each active
+connection. TURN relays traffic when required and does not mix or forward one
+publisher stream to multiple listeners.
+
+| Participants | Connections per participant | Connections in the room | Concurrent local two-peer links that passed |
+| ---: | ---: | ---: | ---: |
+| 15 | 14 | 105 | 14 of 14 |
+| 30 | 29 | 435 | 29 of 29 |
+| 50 | 49 | 1,225 | 49 of 49 |
+| 100 | 99 | 4,950 | 99 of 99 |
+
+The test uses separate synthetic peer pairs with ICE, DTLS and bidirectional
+RTP. Each case models the number of links per participant. It does not join
+clients to one room, measure phone battery or bandwidth, or establish a
+supported participant limit. Use `PRAYER_TEST_CONCURRENT_LINKS=99` with
+`tests/prayer-audio-transport.cjs` and the `werift` dependency to repeat.
+
+A room-level claim requires a full signaling test with the actual client, plus
+Wi-Fi and cellular interruptions, relay traffic and sustained device audio.
+Test CallKit, screen lock, background audio, Bluetooth, headphones and APNs on
+physical iPhones. The App Review account must have access to the room and
+Community moderation flows, with the backend available throughout review.
