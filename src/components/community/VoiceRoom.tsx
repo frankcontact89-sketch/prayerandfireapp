@@ -53,6 +53,9 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
   const [reportStatus, setReportStatus] = useState<"confirm" | "sending" | "sent" | "error">();
   const [localMutes, setLocalMutes] = useState<Set<string>>(() => new Set());
   const localMutesRef = useRef(new Set<string>());
+  const [blockedUsers, setBlockedUsers] = useState<Set<string>>(() => new Set());
+  const blockedUsersRef = useRef(new Set<string>());
+  const [blockStatus, setBlockStatus] = useState<"confirm" | "sending" | "error">();
   const [menu, setMenu] = useState<"reactions" | "route" | "participants" | null>(null);
   const [routes, setRoutes] = useState<Awaited<ReturnType<typeof prayerAudioRoute.routes>>>();
   const [routeError, setRouteError] = useState(false);
@@ -120,6 +123,37 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
       analysers.current.set(id, { source, analyser });
     } catch { /* Some devices allow playback without an analysis node. */ }
   }, []);
+
+  const applyBlocks = useCallback((ids: string[]) => {
+    const next = new Set([...blockedUsersRef.current, ...ids]);
+    blockedUsersRef.current = next;
+    setBlockedUsers(next);
+    for (const [id, audio] of audioNodes.current) {
+      audio.muted = next.has(id) || localMutesRef.current.has(id);
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void supabase.from("community_blocks").select("blocked_id").eq("blocker_id", userId)
+      .then(({ data }) => {
+        if (active && data) applyBlocks(data.map(row => row.blocked_id));
+      });
+    return () => { active = false; };
+  }, [applyBlocks, userId]);
+
+  const blockParticipant = async (id: string) => {
+    setBlockStatus("sending");
+    try {
+      const { error } = await supabase.from("community_blocks").upsert(
+        { blocker_id: userId, blocked_id: id },
+        { onConflict: "blocker_id,blocked_id", ignoreDuplicates: true },
+      );
+      if (error) throw error;
+      applyBlocks([id]);
+      setBlockStatus(undefined);
+    } catch { setBlockStatus("error"); }
+  };
 
   const participantIds = participants.map(person => person.id).sort().join(",");
   useEffect(() => {
@@ -275,7 +309,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         document.body.appendChild(el);
         audioNodes.current.set(id, el);
       }
-      el.muted = localMutesRef.current.has(id);
+      el.muted = localMutesRef.current.has(id) || blockedUsersRef.current.has(id);
       el.srcObject = remoteAudio;
       const playRemote = () => {
         if (peers.current.get(id) !== pc) return;
@@ -857,9 +891,9 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
               const profile = profiles[person.id];
               const displayName = profile?.username || person.name;
               const avatar = profile?.avatar_url || (local ? userAvatar : null);
-              const talking = !isMuted && speaking.has(person.id);
+              const talking = !isMuted && !blockedUsers.has(person.id) && speaking.has(person.id);
               return <div key={person.id} className={`flex min-w-0 flex-col items-center gap-2 px-1 ${participants.length === 1 ? "basis-full" : "basis-1/3"}`}>
-                <button type="button" disabled={local} aria-label={displayName} onClick={() => { setSelectedPerson(person.id); setProfileOpen(false); setContactError(false); setReportStatus(undefined); }}
+                <button type="button" disabled={local || blockStatus === "sending"} aria-label={displayName} onClick={() => { setSelectedPerson(person.id); setProfileOpen(false); setContactError(false); setReportStatus(undefined); setBlockStatus(undefined); }}
                   className={`relative grid place-items-center rounded-full bg-[#5C061F] font-semibold text-[#FFE6B2] size-[clamp(3.75rem,22vw,6rem)] text-xl sm:text-2xl ${talking ? "ring-2 ring-[#BB8A3E] ring-offset-2 ring-offset-background" : ""}`}>
                   {talking && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-[#C39143] motion-safe:animate-ping" />}
                   {displayName.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join("").toUpperCase()}
@@ -882,14 +916,14 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
         {selectedPerson && participants.some(person => person.id === selectedPerson) && (
           <div className="mb-2 max-h-[35%] shrink-0 overflow-y-auto rounded-xl border border-border bg-card p-3">
             <p className="truncate font-semibold">{profiles[selectedPerson]?.username || participants.find(person => person.id === selectedPerson)?.name}</p>
-            <button type="button" className="min-h-11 px-2 text-sm" onClick={() => {
+            <button type="button" className="min-h-11 px-2 text-sm" disabled={blockedUsers.has(selectedPerson)} onClick={() => {
               const next = new Set(localMutesRef.current);
               if (next.has(selectedPerson)) next.delete(selectedPerson);
               else next.add(selectedPerson);
               localMutesRef.current = next;
               setLocalMutes(next);
               const audio = audioNodes.current.get(selectedPerson);
-              if (audio) audio.muted = next.has(selectedPerson);
+              if (audio) audio.muted = next.has(selectedPerson) || blockedUsersRef.current.has(selectedPerson);
             }}>{localMutes.has(selectedPerson)
               ? t("Restore audio for me", "Restaurar audio para mí", "Restaurar áudio para mim")
               : t("Mute for me", "Silenciar para mí", "Silenciar para mim")}</button>
@@ -905,6 +939,17 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
                 void prayerAudioRoute.presentContact({ name: displayName }).catch(() => setContactError(true));
               }
             }}>{t("Add contact", "Agregar contacto", "Adicionar contato")}</button>}
+            {blockedUsers.has(selectedPerson)
+              ? <p role="status" className="text-sm">{t("User blocked", "Usuario bloqueado", "Usuário bloqueado")}</p>
+              : <button type="button" className="min-h-11 px-2 text-sm text-destructive" disabled={blockStatus === "sending"}
+                onClick={() => setBlockStatus("confirm")}>{t("Block", "Bloquear", "Bloquear")}</button>}
+            {blockStatus === "confirm" && <div className="flex flex-wrap items-center gap-2 text-sm">
+              <p>{t("Block this participant in Community?", "¿Bloquear a este participante en Community?", "Bloquear este participante na Comunidade?")}</p>
+              <button type="button" className="min-h-11 px-2 font-semibold text-destructive" onClick={() => void blockParticipant(selectedPerson)}>
+                {t("Confirm block", "Confirmar bloqueo", "Confirmar bloqueio")}
+              </button>
+            </div>}
+            {blockStatus === "error" && <p role="alert" className="text-sm text-destructive">{t("Could not block the user", "No se pudo bloquear al usuario", "Não foi possível bloquear o usuário")}</p>}
             {contactError && <p role="alert" className="text-sm text-destructive">{t("Could not open Contacts", "No se pudo abrir Contactos", "Não foi possível abrir Contatos")}</p>}
             {profileOpen && (
               <div className="mb-1 flex items-center gap-2 rounded-lg bg-secondary p-2">
@@ -927,7 +972,7 @@ export default function VoiceRoom({ groupId, name, userId, userName, userAvatar,
             </div>}
             {reportStatus === "sent" && <p role="status" className="text-sm">{t("Report sent", "Reporte enviado", "Denúncia enviada")}</p>}
             {reportStatus === "error" && <p role="alert" className="text-sm text-destructive">{t("Could not send the report", "No se pudo enviar el reporte", "Não foi possível enviar a denúncia")}</p>}
-            <button type="button" className="min-h-11 px-2 text-sm" disabled={reportStatus === "sending"} onClick={() => setSelectedPerson(undefined)}>
+            <button type="button" className="min-h-11 px-2 text-sm" disabled={reportStatus === "sending" || blockStatus === "sending"} onClick={() => setSelectedPerson(undefined)}>
               {t("Close", "Cerrar", "Fechar")}
             </button>
           </div>
