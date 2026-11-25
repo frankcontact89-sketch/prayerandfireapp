@@ -230,9 +230,9 @@ export type Database = {
         ]
       }
       community_direct_messages: {
-        Row: { id: string; sender_id: string; recipient_id: string; body: string; created_at: string }
+        Row: { id: string; sender_id: string; recipient_id: string; body: string; created_at: string; read_at: string | null }
         Insert: { recipient_id: string; body: string }
-        Update: never
+        Update: { read_at: string }
         Relationships: []
       }
       community_blocks: {
@@ -1660,6 +1660,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      community_can_create_group: { Args: Record<string, never>; Returns: boolean }
+      community_create_group: { Args: { _id: string; _name: string; _description: string; _avatar: string | null; _members: string[] }; Returns: string }
+      community_find_contacts: { Args: { _query: string }; Returns: { id: string; username: string | null; avatar_url: string | null }[] }
+      community_direct_threads: { Args: Record<string, never>; Returns: { id: string; username: string | null; avatar_url: string | null; body: string; created_at: string; unread: number }[] }
+
       prayer_room_controls: { Args: { _room: string }; Returns: { admin: boolean; moderator: boolean; removed_users: string[]; turn_at: string | null } }
       prayer_room_moderate: { Args: { _room: string; _target: string; _action: string }; Returns: undefined }
 

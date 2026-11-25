@@ -5,7 +5,8 @@ import{ArrowLeft,Ban,Bell,BellOff,Camera,Check,CheckCheck,Clock,Copy,FileText,Fl
 import{supabase}from"@/integrations/supabase/client";
 import { useBrandLogo } from "@/hooks/useBrandLogo";
 import CreateGroupModal,{type CreatedGroup}from"@/components/community/CreateGroupModal";
-import { DirectInbox } from "@/components/community/DirectMessages";
+import DirectMessages from "@/components/community/DirectMessages";
+import { useContactSearch } from "@/components/community/contactSearch";
 import AccessGate from"@/components/community/AccessGate";
 import CommunityAdminPanel from"@/components/community/CommunityAdminPanel";
 import MembersModal from"@/components/community/MembersModal";
@@ -25,7 +26,7 @@ import{ackDelivered,pushPreferred,resumePush,takePushOpen}from"@/lib/push";
 
 
 
-type Group=CreatedGroup&{role?:string;createdBy?:string;muted?:boolean;mutedUntil?:string|null;archived?:boolean;favorite?:boolean;memberCount?:number;description?:string};
+type Group=CreatedGroup&{stamp?:string;role?:string;createdBy?:string;muted?:boolean;mutedUntil?:string|null;archived?:boolean;favorite?:boolean;memberCount?:number;description?:string};
 type DiscoverGroup={id:string;name:string;description?:string|null;avatar?:string;memberCount:number};
 type Msg={id:string;sender_id:string;body?:string|null;media_url?:string|null;media_type?:string|null;created_at:string;deleted_at?:string|null;starred?:boolean;reply_to?:string|null;pinned_at?:string|null;mine?:boolean;url?:string};
 type GroupMember={id:string;name:string;role?:string;avatar?:string|null};
@@ -117,7 +118,12 @@ export default function CommunityV2(){
  const [generalInviteGroups, setGeneralInviteGroups] = useState<string[]>([]);
  const [groupCallPrompt, setGroupCallPrompt] = useState(false);
  const [prayerInvitees, setPrayerInvitees] = useState<string[]>([]);
- const [directInbox, setDirectInbox] = useState(false);
+ const [newConversation, setNewConversation] = useState(false);
+ const [contactQuery, setContactQuery] = useState("");
+ const [directPeer, setDirectPeer] = useState<{id:string;name:string}>();
+ const [directThreads, setDirectThreads] = useState<{id:string;username:string|null;avatar_url:string|null;body:string;created_at:string;unread:number}[]>([]);
+ const [directListError, setDirectListError] = useState(false);
+ const { people: contacts, loading: contactsLoading, failed: contactsFailed } = useContactSearch(contactQuery, newConversation);
  const [communityMenu, setCommunityMenu] = useState(false);
  const [discoverOpen, setDiscoverOpen] = useState(false);
  const [refreshingChats, setRefreshingChats] = useState(false);
@@ -186,7 +192,8 @@ export default function CommunityV2(){
   // Any authenticated account may participate; admin privileges remain restricted.
   const{data:adm}=await db.from("community_admins").select("role,can_create_groups").eq("user_id",uid).maybeSingle();
   setStaffRole(adm?(adm.role==="owner"?"owner":"admin"):null);
-  setCanCreate(!!adm&&(adm.role==="owner"||adm.can_create_groups!==false));
+  const {data:allowed} = await supabase.rpc("community_can_create_group");
+  setCanCreate(allowed === true);
   setAccess("approved");
   return true;
  },[]);
@@ -203,7 +210,7 @@ export default function CommunityV2(){
   // Show the chat list immediately. Unread counts, member counts and signed avatars hydrate below.
   const quickRows=(g||[]).map((x:any)=>{
    const z:any=mm.get(x.id)||{};
-   return{id:x.id,name:x.name,subtitle:x.description||"",description:x.description||"",unread:0,lastTime:new Date(x.updated_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:undefined,createdBy:x.created_by,role:z.role,muted:z.muted,mutedUntil:z.muted_until||null,archived:z.archived,favorite:z.favorite,memberCount:0};
+   return{id:x.id,name:x.name,subtitle:x.description||"",description:x.description||"",stamp:x.updated_at,unread:0,lastTime:new Date(x.updated_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:undefined,createdBy:x.created_by,role:z.role,muted:z.muted,mutedUntil:z.muted_until||null,archived:z.archived,favorite:z.favorite,memberCount:0};
   });
   setGroups(quickRows);setListLoading(false);
   // Hydrate real unread counts and previews without blocking the Community screen.
@@ -233,7 +240,7 @@ export default function CommunityV2(){
    const senderLabel=last?(last.sender_id===uid?L("You","Tú","Você"):(lastSenderNames.get(last.sender_id)||t.member)):"";
    const preview=last&&rawPreview?`${senderLabel}: ${rawPreview}`:rawPreview;
    const stamp=last?last.created_at:x.updated_at;
-   return{id:x.id,name:x.name,subtitle:preview||x.description||`${count||0} ${(count||0)===1?t.member:t.members}`,description:x.description||"",unread:unreadBy[x.id]||0,lastTime:new Date(stamp).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:x.avatar_url?await signed(x.avatar_url):undefined,createdBy:x.created_by,role:z.role,muted:z.muted,mutedUntil:z.muted_until||null,archived:z.archived,favorite:z.favorite,memberCount:count||0};
+   return{id:x.id,name:x.name,subtitle:preview||x.description||`${count||0} ${(count||0)===1?t.member:t.members}`,description:x.description||"",stamp,unread:unreadBy[x.id]||0,lastTime:new Date(stamp).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),avatar:x.avatar_url?await signed(x.avatar_url):undefined,createdBy:x.created_by,role:z.role,muted:z.muted,mutedUntil:z.muted_until||null,archived:z.archived,favorite:z.favorite,memberCount:count||0};
   }));
   setGroups(rows);setListLoading(false);
  },[t.member,t.members,t.media]);
@@ -424,6 +431,28 @@ export default function CommunityV2(){
   toast(L("You joined the group","Te uniste al grupo","Você entrou no grupo"));
  };
 
+ const refreshDirectThreads = useCallback(async () => {
+  const {data,error} = await supabase.rpc("community_direct_threads");
+  setDirectListError(!!error);
+  if(data) setDirectThreads(data);
+ },[]);
+ const communityUserId: string | undefined = me?.id;
+ useEffect(() => {
+  if (!communityUserId || access !== "approved") return;
+  void refreshDirectThreads();
+  const channel = supabase.channel(`community-direct-list:${communityUserId}`)
+   .on("postgres_changes", {event:"*",schema:"public",table:"community_direct_messages",filter:`recipient_id=eq.${communityUserId}`}, () => {void refreshDirectThreads();})
+   .on("postgres_changes", {event:"INSERT",schema:"public",table:"community_direct_messages",filter:`sender_id=eq.${communityUserId}`}, () => {void refreshDirectThreads();})
+   .on("postgres_changes", {event:"INSERT",schema:"public",table:"community_group_members",filter:`user_id=eq.${communityUserId}`}, () => {void loadGroups(communityUserId);})
+   .subscribe(status => {if(status==="SUBSCRIBED")void refreshDirectThreads();});
+  return () => {void supabase.removeChannel(channel);};
+ },[communityUserId,access,refreshDirectThreads,loadGroups]);
+ const unifiedChats = [
+  ...visible.map(group=>({type:"group" as const, group, stamp:group.stamp??"", pinned:!!group.favorite})),
+  ...directThreads.filter(thread=>!showArchived&&(filter!=="unread"||thread.unread>0)
+    && `${thread.username??""} ${thread.body}`.toLowerCase().includes(q.toLowerCase()))
+   .map(thread=>({type:"direct" as const, thread, stamp:thread.created_at,pinned:false})),
+ ].sort((a,b)=>Number(b.pinned)-Number(a.pinned)||b.stamp.localeCompare(a.stamp));
  const createGroup=async(g:CreatedGroup):Promise<boolean>=>{
   if(!me||!canCreate){toast(t.noPermission);return false}
   let path:string|undefined;
@@ -435,15 +464,12 @@ export default function CommunityV2(){
     if(uploadError){toast(uploadError.message||actionFailedLabel);return false}
     path=imagePath;
    }
-   const{data:x,error}=await db.from("community_groups").insert({name:g.name,description:g.subtitle,avatar_url:path||null,created_by:me.id}).select().single();
-   if(error||!x){toast(error?.message||actionFailedLabel);return false}
    const invitedIds=Array.from(new Set((g.memberIds||[]).filter(id=>id!==me.id)));
-   const{error:membersError}=await db.from("community_group_members").insert([{group_id:x.id,user_id:me.id,role:"owner"},...invitedIds.map(id=>({group_id:x.id,user_id:id,role:"member"}))]);
-   if(membersError){
-    toast(L("Group created, but members could not be added. Open the group to retry.","Grupo creado, pero no se pudieron agregar los miembros. Abre el grupo e inténtalo de nuevo.","Grupo criado, mas não foi possível adicionar os membros. Abra o grupo e tente novamente."));
-    await loadGroups(me.id);return true;
-   }
-   if(invitedIds.length)void dispatchPush({kind:"invite",group_id:x.id,user_ids:invitedIds});
+   const {data:groupId,error}=await supabase.rpc("community_create_group", {
+    _id:g.id,_name:g.name,_description:g.subtitle,_avatar:path??null,_members:invitedIds,
+   });
+   if(error||!groupId){toast(error?.message||actionFailedLabel);return false}
+   if(invitedIds.length)void dispatchPush({kind:"invite",group_id:groupId,user_ids:invitedIds});
    await loadGroups(me.id);
    return true;
   } catch(e){
@@ -1157,6 +1183,7 @@ export default function CommunityV2(){
    className={`grid size-9 shrink-0 place-items-center rounded-full bg-secondary ${generalPrayerLive ? "text-emerald-600 dark:text-emerald-400 motion-safe:animate-pulse" : "text-[#D5AD6C]"}`}>
    <Phone className="size-5" aria-hidden="true" />
   </button><button onClick={()=>setPushSheet(true)} aria-label={pushSettingsLabel} className="w-9 h-9 rounded-full bg-secondary text-[#D5AD6C] grid place-items-center"><Bell className="w-5 h-5"/></button>
+ <button type="button" onClick={() => {setContactQuery("");setNewConversation(true);}} aria-label={L("New conversation","Nueva conversación","Nova conversa")} className="grid size-10 place-items-center rounded-full text-[#D5AD6C]"><Plus size={20}/></button>
  <button type="button" onClick={() => setCommunityMenu(true)} aria-label={t.options} className="grid size-10 place-items-center rounded-full text-[#D5AD6C]"><MoreHorizontal size={20} /></button>
  </div></div></header>
  <div ref={setMinimizedCallHost} className="shrink-0 empty:hidden" />
@@ -1205,9 +1232,6 @@ export default function CommunityV2(){
    className="w-full rounded-t-2xl border-t border-border bg-popover px-4 pt-2 text-popover-foreground pb-[max(16px,env(safe-area-inset-bottom))]">
    <div className="flex items-center justify-between"><b>{t.options}</b><button type="button" onClick={() => setCommunityMenu(false)} aria-label={t.cancel} className="grid size-11 place-items-center"><X size={19} /></button></div>
    <button type="button" onClick={()=>{setCommunityMenu(false);setDiscoverOpen(true);void loadDiscover()}} className="flex min-h-12 w-full items-center gap-3 border-t border-border text-left"><Users size={19}/>{L("Explore community groups","Explorar grupos de la comunidad","Explorar grupos da comunidade")}</button>
-   <button type="button" onClick={() => { setCommunityMenu(false); setDirectInbox(true); }}
-    className="flex min-h-12 w-full items-center gap-3 border-t border-border text-left"><Send size={19} />{L("Private messages", "Mensajes privados", "Mensagens privadas")}</button>
-   {canCreate && <button type="button" onClick={() => { setCommunityMenu(false); setCreate(true); }} className="flex min-h-12 w-full items-center gap-3 border-t border-border text-left"><Plus size={19} />{t.new}</button>}
    {isStaff && <button type="button" onClick={() => { setCommunityMenu(false); setPanel(true); }} className="flex min-h-12 w-full items-center gap-3 border-t border-border text-left">
     <ShieldCheck size={19} />{L("Administration and moderation", "Administración y moderación", "Administração e moderação")}
    </button>}
@@ -1216,7 +1240,22 @@ export default function CommunityV2(){
    </button>
   </div>
  </div>}
- {directInbox && me?.id && <DirectInbox userId={me.id} language={lang} onClose={() => setDirectInbox(false)} />}
+
+ {directListError && <button type="button" className="px-4 py-2 text-sm text-destructive" onClick={()=>void refreshDirectThreads()}>{L("Reload private chats","Recargar chats privados","Recarregar conversas privadas")}</button>}
+ {newConversation && <section className="fixed inset-0 z-[105] flex flex-col bg-background text-foreground pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+  <header className="flex items-center gap-2 border-b border-border p-2"><button type="button" onClick={()=>setNewConversation(false)} className="grid size-11 place-items-center rounded-full bg-secondary" aria-label={t.back}><ArrowLeft size={20}/></button><h2 className="font-semibold">{L("New conversation","Nueva conversación","Nova conversa")}</h2></header>
+  <div className="space-y-3 px-4 pt-4">
+   {canCreate&&<button type="button" className="flex min-h-12 w-full items-center gap-3 rounded-2xl bg-secondary px-3 text-left font-medium" onClick={()=>{setNewConversation(false);setCreate(true);}}><Users size={18}/>{L("New group","Nuevo grupo","Novo grupo")}</button>}
+   <label className="flex min-h-12 items-center gap-2 rounded-2xl bg-secondary px-3"><Search size={18}/><input autoFocus value={contactQuery} onChange={e=>setContactQuery(e.target.value)} className="min-w-0 flex-1 bg-transparent outline-none" placeholder={L("Name, username or phone","Nombre, usuario o teléfono","Nome, usuário ou telefone")}/></label>
+  </div>
+  <div className="flex-1 overflow-y-auto px-4 pt-2">
+   {contactsLoading&&<p className="py-4 text-sm text-muted-foreground">{t.loading}</p>}
+   {contactsFailed&&<p role="alert" className="py-4 text-sm text-destructive">{L("Search unavailable","Búsqueda no disponible","Busca indisponível")}</p>}
+   {!contactsLoading&&!contactsFailed&&contactQuery.trim().length>=2&&!contacts.length&&<p className="py-4 text-sm text-muted-foreground">{L("No matching contacts","No se encontraron contactos","Nenhum contato encontrado")}</p>}
+   {contacts.map(contact=><button key={contact.id} type="button" onClick={()=>{setDirectPeer({id:contact.id,name:contact.username||t.member});setNewConversation(false);}} className="flex min-h-14 w-full items-center gap-3 border-b border-border text-left"><span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-secondary">{contact.avatar_url?<img src={contact.avatar_url} alt="" className="size-full object-cover"/>:(contact.username||t.member).slice(0,1).toUpperCase()}</span><span className="truncate">{contact.username||t.member}</span></button>)}
+  </div>
+ </section>}
+ {directPeer&&me?.id&&<DirectMessages key={directPeer.id} inline otherId={directPeer.id} name={directPeer.name} userId={me.id} language={lang} onClose={()=>{setDirectPeer(undefined);void refreshDirectThreads();}}/>}
  {safety && <SafetyRulesModal lang={lang} onClose={() => setSafety(false)} />}
 <Dialog open={discoverOpen} onOpenChange={setDiscoverOpen}>
   <DialogContent className="max-h-[80dvh] w-[calc(100%-2rem)] max-w-md overflow-y-auto rounded-2xl">
@@ -1225,7 +1264,13 @@ export default function CommunityV2(){
     <div>{discoverLoading?<p className="mt-2 text-xs text-muted-foreground">{t.loading}</p>:discoverList.filter(group=>!groups.some(joined=>joined.id===group.id)).map(group=><div key={group.id} className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{group.name}</p><p className="truncate text-xs text-muted-foreground">{group.description||""}</p></div><button onClick={()=>joinPublicGroup(group)} className="shrink-0 rounded-xl border border-[#E5BB70]/40 px-3 py-2 text-xs font-bold text-[#E5BB70]">{L("Join","Unirse","Entrar")}</button></div>)}</div>
   </DialogContent>
 </Dialog>
-<div className="shrink-0 px-4 pt-3 pb-2"><div className="bg-secondary border border-border rounded-2xl h-12 px-4 flex items-center gap-2"><Search className="w-5 h-5 text-muted-foreground"/><input value={q} onChange={e=>setQ(e.target.value)} placeholder={t.search} className="bg-transparent outline-none flex-1 min-w-0"/></div><div className="mt-2 grid grid-cols-2 gap-2"><button onClick={()=>setShowArchived(false)} className={`h-10 rounded-xl text-sm font-semibold ${!showArchived?"bg-[#5C061F] text-[#FFE6B2] border border-[#D5AD6C]/30":"bg-secondary text-muted-foreground"}`}>{activeLabel}</button><button onClick={()=>setShowArchived(true)} className={`h-10 rounded-xl text-sm font-semibold ${showArchived?"bg-[#5C061F] text-[#FFE6B2] border border-[#D5AD6C]/30":"bg-secondary text-muted-foreground"}`}>{archivedLabel}</button></div></div><div className="flex-1 min-h-0 overflow-y-auto px-3 pb-8" style={{overscrollBehaviorY:"contain"}} onTouchStart={e=>{const p=e.touches[0];refreshTouch.current=e.currentTarget.scrollTop<=0&&p?{x:p.clientX,y:p.clientY}:null}} onTouchCancel={()=>{refreshTouch.current=null}} onTouchEnd={async e=>{const start=refreshTouch.current;refreshTouch.current=null;const p=e.changedTouches[0];if(!start||!p||p.clientY-start.y<65||Math.abs(p.clientX-start.x)>45||refreshBusy.current||!me?.id)return;refreshBusy.current=true;setRefreshingChats(true);try{await Promise.all([loadGroups(me.id),loadDiscover()])}finally{refreshBusy.current=false;setRefreshingChats(false)}}}>{refreshingChats&&<div role="status" className="py-3 text-center text-sm text-muted-foreground"><span className="inline-block size-5 animate-spin rounded-full border-2 border-current border-t-transparent align-middle mr-2"/>{t.loading}</div>}{listLoading?<div className="py-20 text-center text-muted-foreground text-sm">{t.loading}</div>:listError?<div className="py-20 text-center px-8"><p className="text-sm text-muted-foreground">{t.loadError}</p><button onClick={()=>me&&loadGroups(me.id)} className="mt-4 h-11 px-6 rounded-2xl bg-[#5C061F] text-black font-black">{t.retry}</button></div>:visible.length===0?<div className="py-20 text-center px-8"><div className="w-16 h-16 rounded-full bg-[#5C061F]/30 text-[#E5BB70] grid place-items-center mx-auto mb-4"><Users className="w-7 h-7"/></div><h2 className="font-bold text-lg">{t.empty}</h2><p className="text-sm text-muted-foreground mt-2">{canCreate?t.sub:`${t.sub} ${t.onlyAdminsCreate}`}</p></div>:visible.map(g=><div key={g.id} className="flex items-center gap-1 border-b border-border">
+<div className="shrink-0 px-4 pt-3 pb-2"><div className="bg-secondary border border-border rounded-2xl h-12 px-4 flex items-center gap-2"><Search className="w-5 h-5 text-muted-foreground"/><input value={q} onChange={e=>setQ(e.target.value)} placeholder={t.search} className="bg-transparent outline-none flex-1 min-w-0"/></div><div className="mt-2 grid grid-cols-2 gap-2"><button onClick={()=>setShowArchived(false)} className={`h-10 rounded-xl text-sm font-semibold ${!showArchived?"bg-[#5C061F] text-[#FFE6B2] border border-[#D5AD6C]/30":"bg-secondary text-muted-foreground"}`}>{activeLabel}</button><button onClick={()=>setShowArchived(true)} className={`h-10 rounded-xl text-sm font-semibold ${showArchived?"bg-[#5C061F] text-[#FFE6B2] border border-[#D5AD6C]/30":"bg-secondary text-muted-foreground"}`}>{archivedLabel}</button></div></div><div className="flex-1 min-h-0 overflow-y-auto px-3 pb-8" style={{overscrollBehaviorY:"contain"}} onTouchStart={e=>{const p=e.touches[0];refreshTouch.current=e.currentTarget.scrollTop<=0&&p?{x:p.clientX,y:p.clientY}:null}} onTouchCancel={()=>{refreshTouch.current=null}} onTouchEnd={async e=>{const start=refreshTouch.current;refreshTouch.current=null;const p=e.changedTouches[0];if(!start||!p||p.clientY-start.y<65||Math.abs(p.clientX-start.x)>45||refreshBusy.current||!me?.id)return;refreshBusy.current=true;setRefreshingChats(true);try{await Promise.all([loadGroups(me.id),loadDiscover(),refreshDirectThreads()])}finally{refreshBusy.current=false;setRefreshingChats(false)}}}>{refreshingChats&&<div role="status" className="py-3 text-center text-sm text-muted-foreground"><span className="inline-block size-5 animate-spin rounded-full border-2 border-current border-t-transparent align-middle mr-2"/>{t.loading}</div>}{listLoading?<div className="py-20 text-center text-muted-foreground text-sm">{t.loading}</div>:listError?<div className="py-20 text-center px-8"><p className="text-sm text-muted-foreground">{t.loadError}</p><button onClick={()=>me&&loadGroups(me.id)} className="mt-4 h-11 px-6 rounded-2xl bg-[#5C061F] text-black font-black">{t.retry}</button></div>:unifiedChats.length===0?<div className="py-20 text-center px-8"><div className="w-16 h-16 rounded-full bg-[#5C061F]/30 text-[#E5BB70] grid place-items-center mx-auto mb-4"><Users className="w-7 h-7"/></div><h2 className="font-bold text-lg">{t.empty}</h2><p className="text-sm text-muted-foreground mt-2">{canCreate?t.sub:`${t.sub} ${t.onlyAdminsCreate}`}</p></div>:unifiedChats.map(chat=>chat.type==="direct"?<button key={`direct:${chat.thread.id}`} type="button"
+ onClick={()=>setDirectPeer({id:chat.thread.id,name:chat.thread.username||t.member})}
+ className="flex min-h-[76px] w-full items-center gap-3 border-b border-border px-2 text-left">
+ <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-primary text-primary-foreground">{chat.thread.avatar_url?<img src={chat.thread.avatar_url} alt="" className="size-full object-cover"/>:(chat.thread.username||t.member).slice(0,1).toUpperCase()}</span>
+ <span className="min-w-0 flex-1"><strong className="block truncate">{chat.thread.username||t.member}</strong><span className="block truncate text-sm text-muted-foreground">{chat.thread.body}</span></span>
+ <span className="text-xs text-muted-foreground">{new Date(chat.thread.created_at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}{chat.thread.unread>0&&<span className="ml-auto mt-1 grid size-5 place-items-center rounded-full bg-primary text-primary-foreground">{chat.thread.unread}</span>}</span>
+ </button>:((g)=><div key={g.id} className="flex items-center gap-1 border-b border-border">
  <button type="button" onClick={()=>setSelected(g)} className="min-w-0 flex-1 min-h-[76px] text-left flex items-center gap-3 px-2 py-3 active:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D5AD6C] rounded-lg">{g.avatar?<img src={g.avatar} alt="" className="w-14 h-14 shrink-0 rounded-full object-cover border border-[#D5AD6C]/20"/>:<span className="w-14 h-14 shrink-0 rounded-full border border-[#E5BB70]/45 bg-[#5C061F] grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span>}<div className="min-w-0 flex-1"><div className="flex justify-between items-baseline gap-2"><div className="font-bold text-[16px] truncate flex items-center gap-1">{g.favorite&&<Star className="w-3.5 h-3.5 fill-current text-[#E5BB70] shrink-0"/>}<span className="truncate">{g.name}</span></div><span className={`shrink-0 text-[11px] tabular-nums ${g.unread>0?"text-[#D5AD6C] font-semibold":"text-muted-foreground"}`}>{g.lastTime}</span></div><div className="flex justify-between items-center gap-2"><div className={`min-w-0 flex-1 text-[13px] truncate mt-1 ${g.unread>0?"text-foreground font-medium":"text-muted-foreground"}`}>{g.subtitle}</div><div className="flex items-center gap-1 shrink-0">{g.muted&&<BellOff className="w-3.5 h-3.5 text-muted-foreground"/>}{g.unread>0&&<span className="min-w-5 h-5 px-1.5 rounded-full bg-[#5C061F] border border-[#D5AD6C]/40 text-[#FFE3AE] text-[11px] font-bold grid place-items-center shrink-0">{g.unread}</span>}</div></div>
   {groupPrayerActivity[g.id]?.count > 0 && <span className="mt-1 block truncate text-xs font-medium text-emerald-700 dark:text-emerald-400">
    {groupPrayerActivity[g.id].name
@@ -1240,5 +1285,5 @@ export default function CommunityV2(){
     setSelected(g);
     openCall({groupId:g.id,name:g.name,userId:me.id,userName:me.name||t.member,userAvatar:me.avatar,language:lang,notifyOnStart:false});
    }}><Phone className="size-4" aria-hidden="true" /></button>}
- </div>)}</div>{noAccessGroup&&<div className="fixed inset-0 z-[130] bg-black/80 grid place-items-center px-8" onClick={()=>setNoAccessGroup(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-card border border-border p-6 text-center">{noAccessGroup.avatar?<img src={noAccessGroup.avatar} alt="" className="w-16 h-16 rounded-full object-cover mx-auto"/>:<span className="w-16 h-16 rounded-full bg-[#5C061F] border border-[#E5BB70]/45 mx-auto grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span>}<b className="block mt-4 text-lg">{noAccessGroup.name}</b><p className="mt-1 text-xs text-muted-foreground">{noAccessGroup.memberCount} {noAccessGroup.memberCount===1?t.member:t.members}</p><b className="block mt-4 text-[#E5BB70] text-sm">{t.noAccessTitle}</b><p className="mt-2 text-sm text-muted-foreground">{t.noAccessBody}</p><button onClick={()=>setNoAccessGroup(null)} className="mt-6 w-full h-12 rounded-2xl bg-secondary">{t.back}</button></div></div>}{pushSheet&&<div className="fixed inset-0 z-[140] bg-black/80 flex items-end" onClick={()=>setPushSheet(false)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-card border-t border-border p-5 pb-[max(20px,env(safe-area-inset-bottom))]"><div className="flex justify-between items-center mb-3"><b>{pushSettingsLabel}</b><button onClick={()=>setPushSheet(false)} aria-label={t.cancel}><X/></button></div><PushToggle lang={lang}/></div></div>}{canCreate&&<CreateGroupModal open={create} onClose={()=>setCreate(false)} onCreate={createGroup} language={lang}/>}</div></div>;
+ </div>)(chat.group))}</div>{noAccessGroup&&<div className="fixed inset-0 z-[130] bg-black/80 grid place-items-center px-8" onClick={()=>setNoAccessGroup(null)}><div onClick={e=>e.stopPropagation()} className="w-full max-w-sm rounded-3xl bg-card border border-border p-6 text-center">{noAccessGroup.avatar?<img src={noAccessGroup.avatar} alt="" className="w-16 h-16 rounded-full object-cover mx-auto"/>:<span className="w-16 h-16 rounded-full bg-[#5C061F] border border-[#E5BB70]/45 mx-auto grid place-items-center"><img src={brandLogo} alt="" className="h-full w-full rounded-full object-cover" /></span>}<b className="block mt-4 text-lg">{noAccessGroup.name}</b><p className="mt-1 text-xs text-muted-foreground">{noAccessGroup.memberCount} {noAccessGroup.memberCount===1?t.member:t.members}</p><b className="block mt-4 text-[#E5BB70] text-sm">{t.noAccessTitle}</b><p className="mt-2 text-sm text-muted-foreground">{t.noAccessBody}</p><button onClick={()=>setNoAccessGroup(null)} className="mt-6 w-full h-12 rounded-2xl bg-secondary">{t.back}</button></div></div>}{pushSheet&&<div className="fixed inset-0 z-[140] bg-black/80 flex items-end" onClick={()=>setPushSheet(false)}><div onClick={e=>e.stopPropagation()} className="w-full rounded-t-3xl bg-card border-t border-border p-5 pb-[max(20px,env(safe-area-inset-bottom))]"><div className="flex justify-between items-center mb-3"><b>{pushSettingsLabel}</b><button onClick={()=>setPushSheet(false)} aria-label={t.cancel}><X/></button></div><PushToggle lang={lang}/></div></div>}{canCreate&&<CreateGroupModal open={create} onClose={()=>setCreate(false)} onCreate={createGroup} language={lang}/>}</div></div>;
 }
